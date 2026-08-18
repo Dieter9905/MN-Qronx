@@ -1,0 +1,90 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,jsx}'],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+      },
+      colors: {
+        // MN-Qronx brand palette (brand guidelines)
+        navy: {
+          DEFAULT: '#0D1B2A',
+          50: '#F0F4FA',
+          100: '#DCE6F2',
+          200: '#B9CDE5',
+          300: '#8FAED4',
+          400: '#5F8BBF',
+          500: '#3D6AA5',
+          600: '#2B5088',
+          700: '#1F3D6B',
+          800: '#162C4E',
+          900: '#0D1B2A',
+        },
+        brand: {
+          blue: '#2563EB',
+          cyan: '#06B6D4',
+          purple: '#8B5CF6',
+        },
+      },
+      backgroundImage: {
+        'brand-gradient': 'linear-gradient(120deg, #2563EB 0%, #06B6D4 55%, #8B5CF6 110%)',
+        'brand-gradient-soft': 'linear-gradient(120deg, rgba(37,99,235,0.10), rgba(6,182,212,0.10), rgba(139,92,246,0.10))',
+        'hero-glow': 'radial-gradient(60% 50% at 70% 20%, rgba(139,92,246,0.28) 0%, rgba(6,182,212,0.18) 45%, rgba(13,27,42,0) 75%)',
+        'alarm-gradient': 'linear-gradient(160deg, #0D1B2A 0%, #1e3a8a 55%, #6d28d9 130%)',
+      },
+      boxShadow: {
+        card: '0 1px 2px rgba(13,27,42,0.05), 0 4px 16px rgba(13,27,42,0.06)',
+        'card-hover': '0 2px 4px rgba(13,27,42,0.06), 0 12px 32px rgba(13,27,42,0.12)',
+        'glow-blue': '0 8px 30px rgba(37,99,235,0.35)',
+        'glow-purple': '0 8px 30px rgba(139,92,246,0.35)',
+        'alarm': '0 0 0 1px rgba(255,255,255,0.08), 0 24px 80px rgba(13,27,42,0.6)',
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.25s ease-out both',
+        'slide-up': 'slideUp 0.3s cubic-bezier(0.16,1,0.3,1) both',
+        'slide-down': 'slideDown 0.25s cubic-bezier(0.16,1,0.3,1) both',
+        'scale-in': 'scaleIn 0.2s cubic-bezier(0.16,1,0.3,1) both',
+        'alarm-ring': 'alarmRing 0.5s ease-in-out infinite',
+        'alarm-bell': 'alarmBell 0.9s ease-in-out infinite',
+        'pop-in': 'popIn 0.4s cubic-bezier(0.16,1,0.3,1) both',
+        'pulse-soft': 'pulseSoft 2.4s ease-in-out infinite',
+        'float': 'float 6s ease-in-out infinite',
+        'shimmer': 'shimmer 1.6s linear infinite',
+        'progress-stripes': 'progressStripes 1s linear infinite',
+      },
+      keyframes: {
+        fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
+        slideUp: { from: { opacity: '0', transform: 'translateY(16px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+        slideDown: { from: { opacity: '0', transform: 'translateY(-12px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
+        scaleIn: { from: { opacity: '0', transform: 'scale(0.96)' }, to: { opacity: '1', transform: 'scale(1)' } },
+        popIn: { from: { opacity: '0', transform: 'scale(0.9) translateY(8px)' }, to: { opacity: '1', transform: 'scale(1) translateY(0)' } },
+        alarmRing: {
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(255,255,255,0.35)' },
+          '50%': { boxShadow: '0 0 0 18px rgba(255,255,255,0)' },
+        },
+        alarmBell: {
+          '0%, 100%': { transform: 'rotate(-12deg)' },
+          '50%': { transform: 'rotate(12deg)' },
+        },
+        pulseSoft: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.55' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-12px)' },
+        },
+        shimmer: {
+          from: { backgroundPosition: '-200% 0' },
+          to: { backgroundPosition: '200% 0' },
+        },
+        progressStripes: {
+          from: { backgroundPosition: '1rem 0' },
+          to: { backgroundPosition: '0 0' },
+        },
+      },
+    },
+  },
+  plugins: [],
+}

@@ -1,0 +1,15 @@
+# Dependencies & build artifacts
+node_modules/
+dist/
+build/
+*.log
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Tooling nội bộ (không thuộc dự án)
+.freebuff/
+.claude/
