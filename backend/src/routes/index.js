@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { success } from '../dto/response/apiResponse.js'
-// import authRoutes from './authRoutes.js'
+import authRoutes from './authRoutes.js'
 // import userRoutes from './userRoutes.js'
 // import categoryRoutes from './categoryRoutes.js'
 // import taskRoutes from './taskRoutes.js'
@@ -45,8 +45,7 @@ router.get('/health', (req, res) => {
 })
 
 // ── API v1 routes ──────────────────────────────────────────
-// Uncomment each as modules are implemented:
-// router.use('/auth',          authRoutes)
+router.use('/auth',          authRoutes)
 // router.use('/me',            userRoutes)
 // router.use('/categories',    categoryRoutes)
 // router.use('/tasks',         taskRoutes)

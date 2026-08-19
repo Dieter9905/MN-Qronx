@@ -93,6 +93,7 @@ model User {
   tasks                  Task[]
   devices                Device[]
   notificationSetting    NotificationSetting?
+  refreshTokens          RefreshToken[]
 
   @@index([roleId])
   @@map("app_users")
@@ -234,4 +235,17 @@ model NotificationSetting {
   user User @relation(fields: [userId], references: [userId])
 
   @@map("notification_settings")
+}
+
+model RefreshToken {
+  tokenId   Int      @id @default(autoincrement()) @map("token_id")
+  userId    Int      @map("user_id")
+  token     String   @unique @db.VarChar(500)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@index([userId])
+  @@map("refresh_tokens")
 }

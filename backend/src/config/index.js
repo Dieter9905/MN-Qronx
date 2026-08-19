@@ -19,7 +19,7 @@ const config = {
 
   jwt: {
     secret: required('JWT_SECRET'),
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    expiresIn: '1h', // AccessToken hết hạn 1 giờ
   },
 
   vapid: {
