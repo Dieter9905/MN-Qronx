@@ -13,6 +13,33 @@ import { success } from '../dto/response/apiResponse.js'
 const router = Router()
 
 // ── Health check ───────────────────────────────────────────
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     tags: [System]
+ *     summary: Kiểm tra trạng thái server
+ *     responses:
+ *       200:
+ *         description: Server đang hoạt động
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Server đang hoạt động
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     status:
+ *                       type: string
+ *                       example: ok
+ */
 router.get('/health', (req, res) => {
   success(res, 200, 'Server đang hoạt động', { status: 'ok' })
 })

@@ -4,6 +4,7 @@ import config from './config/index.js'
 // ── Start server ───────────────────────────────────────────
 const server = app.listen(config.port, () => {
   console.log(`[TaskAlarm] Server đang chạy trên port ${config.port} (${config.nodeEnv})`)
+  console.log(`[TaskAlarm] Swagger UI: http://localhost:${config.port}/docs`)
 })
 
 // ── Graceful shutdown ──────────────────────────────────────
