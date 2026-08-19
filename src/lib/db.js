@@ -1,4 +1,4 @@
-// Mock database tầng localStorage – mô phỏng REST API của backend (Spring Boot)
+// Mock database tầng localStorage – mô phỏng REST API của backend (Node.js + Express)
 // Cấu trúc theo ERD/BA: users, categories, tasks, subtasks, reminders,
 // devices, notification_settings, notification_logs
 

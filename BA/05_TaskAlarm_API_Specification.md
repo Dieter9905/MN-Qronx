@@ -245,21 +245,21 @@ Nếu đã hoãn đủ 3 lần, trả `400`:
 
 > Admin **không có** endpoint xem chi tiết nội dung Task/Category của User (BR-19); chỉ thao tác trên trạng thái tài khoản.
 
-## 12. Bean Validation tóm tắt theo Entity
+## 12. Validation Rules tóm tắt theo Entity
 
-| Entity | Field | Validation |
+| Entity | Field | Validation (express-validator) |
 |---|---|---|
-| RegisterRequest | `email` | `@NotBlank @Email` |
-| RegisterRequest | `password` | `@NotBlank @Size(min = 6, max = 50)` |
-| TaskRequest | `title` | `@NotBlank @Size(max = 255)` |
-| TaskRequest | `dueAt` | `@NotNull` |
-| TaskRequest | `priority` | `@NotNull`, thuộc `{LOW, MEDIUM, HIGH, URGENT}` |
-| TaskRequest | `repeatType` | thuộc `{NONE, DAILY, WEEKLY, MONTHLY}`, mặc định `NONE` |
-| ReminderRequest | `remindAt` | `@NotNull`, phải `<= task.dueAt` |
-| CategoryRequest | `categoryName` | `@NotBlank @Size(max = 100)` |
-| SnoozeRequest | `snoozeMinutes` | `@Min(1) @Max(60)` (tùy chọn) |
-| DeviceRequest | `deviceToken` | `@NotBlank` |
-| DeviceRequest | `platform` | thuộc `{WEB, ANDROID, IOS}` |
+| RegisterRequest | `email` | `notEmpty().isEmail()` |
+| RegisterRequest | `password` | `notEmpty().isLength({ min: 6, max: 50 })` |
+| TaskRequest | `title` | `notEmpty().isLength({ max: 255 })` |
+| TaskRequest | `dueAt` | `notEmpty().isISO8601()` |
+| TaskRequest | `priority` | `notEmpty().isIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT'])` |
+| TaskRequest | `repeatType` | `isIn(['NONE', 'DAILY', 'WEEKLY', 'MONTHLY']).default('NONE')` |
+| ReminderRequest | `remindAt` | `notEmpty().isISO8601()`, phải `<= task.dueAt` (kiểm tra ở service layer) |
+| CategoryRequest | `categoryName` | `notEmpty().isLength({ max: 100 })` |
+| SnoozeRequest | `snoozeMinutes` | `optional().isInt({ min: 1, max: 60 })` |
+| DeviceRequest | `deviceToken` | `notEmpty()` |
+| DeviceRequest | `platform` | `notEmpty().isIn(['WEB', 'ANDROID', 'IOS'])` |
 
 ## 13. Mã lỗi nghiệp vụ thường gặp
 
