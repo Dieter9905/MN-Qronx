@@ -105,13 +105,13 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-5 animate-fade-in">
       <div>
-        <h1 className="page-title">Cài đặt</h1>
-        <p className="mt-1 text-sm font-medium text-navy-400">
+        <h1 className="page-title dark:text-white">Cài đặt</h1>
+        <p className="mt-1 text-sm font-medium text-navy-400 dark:text-slate-500">
           Tùy chỉnh cách MN-Qronx nhắc nhở bạn và quản lý thiết bị nhận thông báo
         </p>
       </div>
 
-      <div className="flex rounded-xl bg-white p-1 shadow-card ring-1 ring-navy-100" role="tablist" aria-label="Cài đặt">
+      <div className="flex rounded-xl bg-white p-1 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700" role="tablist" aria-label="Cài đặt">
         {TABS.map((t) => (
           <button
             key={t.value}
@@ -120,7 +120,7 @@ export default function SettingsPage() {
             aria-selected={tab === t.value}
             onClick={() => setTab(t.value)}
             className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition ${
-              tab === t.value ? 'bg-navy-900 text-white' : 'text-navy-500 hover:text-navy-800'
+              tab === t.value ? 'bg-navy-900 text-white dark:bg-blue-600' : 'text-navy-500 hover:text-navy-800 dark:text-slate-400 dark:hover:text-white'
             }`}
           >
             {t.value === 'notifications' ? <Bell size={17} weight="bold" /> : <Devices size={17} weight="bold" />}
@@ -130,20 +130,20 @@ export default function SettingsPage() {
       </div>
 
       {tab === 'notifications' ? (
-        <section className="card space-y-2 p-5 sm:p-6">
+        <section className="card space-y-2 p-5 sm:p-6 dark:bg-slate-800">
           <div className="flex items-center justify-between gap-3 border-b border-navy-100 pb-4">
             <div>
-              <h2 className="flex items-center gap-2 font-bold text-navy-900">
-                <BellRinging size={19} weight="fill" className="text-amber-500" />
+              <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
+                <BellRinging size={19} weight="fill" className="text-amber-500 dark:text-amber-400" />
                 Cài đặt thông báo
               </h2>
-              <p className="mt-0.5 text-xs text-navy-400">Áp dụng cho mọi báo thức được kích hoạt</p>
+              <p className="mt-0.5 text-xs text-navy-400 dark:text-slate-500">Áp dụng cho mọi báo thức được kích hoạt</p>
             </div>
             {saving && <span className="text-xs font-semibold text-blue-600">Đang lưu…</span>}
           </div>
 
           <div className="px-1 py-2">
-            <label className="mb-1.5 block text-sm font-semibold text-navy-800">Âm thanh báo thức</label>
+            <label className="mb-1.5 block text-sm font-semibold text-navy-800 dark:text-white">Âm thanh báo thức</label>
             <div className="flex gap-2">
               <Select
                 value={settings.alarmSound}
@@ -162,7 +162,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="px-1 py-2">
-            <label className="mb-1.5 block text-sm font-semibold text-navy-800">Thời gian hoãn mặc định</label>
+            <label className="mb-1.5 block text-sm font-semibold text-navy-800 dark:text-white">Thời gian hoãn mặc định</label>
             <SegmentedControl
               options={DEFAULT_SNOOZE_OPTIONS.map((m) => ({ value: String(m), label: `${m} phút` }))}
               value={String(settings.defaultSnoozeMinutes)}
@@ -181,14 +181,14 @@ export default function SettingsPage() {
           </div>
         </section>
       ) : (
-        <section className="card p-5 sm:p-6">
+        <section className="card p-5 sm:p-6 dark:bg-slate-800">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-navy-100 pb-4">
             <div>
-              <h2 className="flex items-center gap-2 font-bold text-navy-900">
-                <Devices size={19} weight="fill" className="text-purple-500" />
+              <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
+                <Devices size={19} weight="fill" className="text-purple-500 dark:text-purple-400" />
                 Thiết bị nhận thông báo
               </h2>
-              <p className="mt-0.5 text-xs text-navy-400">
+              <p className="mt-0.5 text-xs text-navy-400 dark:text-slate-500">
                 Báo thức sẽ được gửi tới mọi thiết bị đang hoạt động của bạn
               </p>
             </div>
@@ -213,13 +213,13 @@ export default function SettingsPage() {
               {devices.map((d) => {
                 const Icon = platformIcon(d.platform)
                 return (
-                  <li key={d.id} className="flex items-center gap-4 rounded-xl bg-navy-50/70 p-3.5">
+                  <li key={d.id} className="flex items-center gap-4 rounded-xl bg-navy-50/70 p-3.5 dark:bg-slate-900/50">
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-purple-500 ring-1 ring-navy-100">
                       <Icon size={21} weight="duotone" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-navy-900">{d.name}</p>
-                      <p className="text-xs text-navy-400">
+                      <p className="truncate text-sm font-bold text-navy-900 dark:text-white">{d.name}</p>
+                      <p className="text-xs text-navy-400 dark:text-slate-500">
                         {PLATFORM[d.platform]} · Hoạt động {relativeTime(d.lastSeenAt)}
                       </p>
                     </div>
@@ -235,23 +235,23 @@ export default function SettingsPage() {
       )}
 
       {/* Liên kết tài khoản */}
-      <section className="card divide-y divide-navy-100 p-2">
-        <Link to="/app/profile" className="flex items-center gap-3 rounded-xl p-3.5 transition hover:bg-navy-50">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+      <section className="card divide-y divide-navy-100 p-2 dark:divide-slate-700 dark:bg-slate-800">
+        <Link to="/app/profile" className="flex items-center gap-3 rounded-xl p-3.5 transition hover:bg-navy-50 dark:hover:bg-slate-700">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
             <UserCircle size={20} weight="duotone" />
           </span>
           <span className="flex-1">
-            <span className="block text-sm font-bold text-navy-900">Hồ sơ cá nhân</span>
-            <span className="block text-xs text-navy-400">Cập nhật họ tên, số điện thoại</span>
+            <span className="block text-sm font-bold text-navy-900 dark:text-white">Hồ sơ cá nhân</span>
+            <span className="block text-xs text-navy-400 dark:text-slate-500">Cập nhật họ tên, số điện thoại</span>
           </span>
         </Link>
-        <Link to="/app/change-password" className="flex items-center gap-3 rounded-xl p-3.5 transition hover:bg-navy-50">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+        <Link to="/app/change-password" className="flex items-center gap-3 rounded-xl p-3.5 transition hover:bg-navy-50 dark:hover:bg-slate-700">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
             <Key size={20} weight="duotone" />
           </span>
           <span className="flex-1">
-            <span className="block text-sm font-bold text-navy-900">Đổi mật khẩu</span>
-            <span className="block text-xs text-navy-400">Thay đổi mật khẩu đăng nhập</span>
+            <span className="block text-sm font-bold text-navy-900 dark:text-white">Đổi mật khẩu</span>
+            <span className="block text-xs text-navy-400 dark:text-slate-500">Thay đổi mật khẩu đăng nhập</span>
           </span>
         </Link>
       </section>

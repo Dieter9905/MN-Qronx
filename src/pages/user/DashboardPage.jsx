@@ -19,10 +19,10 @@ import { formatDate } from '../../lib/format'
 
 function StatCard({ icon: Icon, label, value, tone, sub, delay }) {
   const tones = {
-    blue: 'bg-blue-50 text-blue-600 ring-blue-100',
-    amber: 'bg-amber-50 text-amber-600 ring-amber-100',
-    emerald: 'bg-emerald-50 text-emerald-600 ring-emerald-100',
-    purple: 'bg-purple-50 text-purple-600 ring-purple-100',
+    blue: 'bg-blue-50 text-blue-600 ring-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-800/50',
+    amber: 'bg-amber-50 text-amber-600 ring-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-800/50',
+    emerald: 'bg-emerald-50 text-emerald-600 ring-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:ring-emerald-800/50',
+    purple: 'bg-purple-50 text-purple-600 ring-purple-100 dark:bg-purple-900/30 dark:text-purple-400 dark:ring-purple-800/50',
   }
   return (
     <div className="card p-4 transition-all duration-200 hover:shadow-card-hover sm:p-5" style={{ animationDelay: `${delay}ms` }}>
@@ -31,9 +31,9 @@ function StatCard({ icon: Icon, label, value, tone, sub, delay }) {
           <Icon size={20} weight="duotone" />
         </span>
       </div>
-      <p className="mt-3 text-3xl font-extrabold tracking-tight text-navy-900">{value}</p>
-      <p className="text-sm font-semibold text-navy-500">{label}</p>
-      {sub && <p className="mt-0.5 text-xs text-navy-400">{sub}</p>}
+      <p className="mt-3 text-3xl font-extrabold tracking-tight text-navy-900 dark:text-white">{value}</p>
+      <p className="text-sm font-semibold text-navy-500 dark:text-slate-400">{label}</p>
+      {sub && <p className="mt-0.5 text-xs text-navy-400 dark:text-slate-500">{sub}</p>}
     </div>
   )
 }
@@ -84,8 +84,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="page-title">Xin chào, {user?.fullName?.split(' ').slice(-1)[0]}! 👋</h1>
-        <p className="mt-1 text-sm font-medium text-navy-400">{today}</p>
+        <h1 className="page-title dark:text-white">Xin chào, {user?.fullName?.split(' ').slice(-1)[0]}! 👋</h1>
+        <p className="mt-1 text-sm font-medium text-navy-400 dark:text-slate-500">{today}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -99,8 +99,8 @@ export default function DashboardPage() {
         {/* Công việc hôm nay */}
         <section className="card p-4 sm:p-5">
           <div className="flex items-center justify-between">
-            <h2 className="flex items-center gap-2 font-bold text-navy-900">
-              <CalendarDots size={18} weight="fill" className="text-blue-600" />
+            <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
+              <CalendarDots size={18} weight="fill" className="text-blue-600 dark:text-blue-400" />
               Lịch trình hôm nay
             </h2>
             <Link to="/app/tasks" className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline">
@@ -132,8 +132,8 @@ export default function DashboardPage() {
         {/* Quá hạn */}
         <section className="card p-4 sm:p-5">
           <div className="flex items-center justify-between">
-            <h2 className="flex items-center gap-2 font-bold text-navy-900">
-              <WarningCircle size={18} weight="fill" className="text-amber-500" />
+            <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
+              <WarningCircle size={18} weight="fill" className="text-amber-500 dark:text-amber-400" />
               Công việc quá hạn
             </h2>
             <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-200">
@@ -158,7 +158,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Nhắc nhở gợi ý */}
-      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl bg-navy-900 p-5 text-white sm:flex-row sm:items-center">
+      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl bg-navy-900 p-5 text-white dark:bg-slate-800 sm:flex-row sm:items-center">
         <div className="flex items-start gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-gradient">
             <BellRinging size={22} weight="bold" className="animate-alarm-bell" />

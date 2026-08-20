@@ -6,7 +6,7 @@ export default function BottomNav() {
   return (
     <nav
       aria-label="Điều hướng dưới cùng"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-navy-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-navy-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 lg:hidden"
     >
       <div className="grid h-16 grid-cols-5 items-center px-2">
         {BOTTOM_NAV.slice(0, 2).map((item) => (
@@ -38,7 +38,7 @@ function BottomNavItem({ to, label, icon: Icon, end }) {
         [
           'flex flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 text-[10px] font-semibold transition',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
-          isActive ? 'text-blue-600' : 'text-navy-400 hover:text-navy-700',
+          isActive ? 'text-blue-600 dark:text-blue-400' : 'text-navy-400 hover:text-navy-700 dark:text-slate-500 dark:hover:text-white',
         ].join(' ')
       }
     >

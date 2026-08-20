@@ -10,14 +10,22 @@ import {
   SignOut,
   ShieldCheck,
   List,
+  Moon,
+  Sun,
+  Translate,
+  Keyboard,
+  Lightning,
 } from '@phosphor-icons/react'
 import Button from '../common/Button'
 import Avatar from '../common/Avatar'
 import { useAuth } from '../../context/AuthContext'
 import { useAlarm } from '../../context/AlarmContext'
+import { useTheme } from '../../context/ThemeContext'
+import { useLanguage } from '../../context/LanguageContext'
 import { useToast } from '../common/Toast'
 import { Logo } from '../Logo'
 import { getTasks } from '../../services/taskService'
+import { app } from '../../i18n/app'
 
 function DemoAlarmButton() {
   const { triggerDemo, demoLoading } = useAlarm()
@@ -107,6 +115,9 @@ function DemoAlarmButton() {
 
 export default function Header({ title, onOpenDrawer }) {
   const { user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
+  const { lang, toggleLang } = useLanguage()
+  const t = app[lang]
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
@@ -127,7 +138,7 @@ export default function Header({ title, onOpenDrawer }) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-navy-100 bg-white/90 px-4 backdrop-blur sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-navy-100 bg-white/90 px-4 backdrop-blur dark:border-slate-700 dark:bg-slate-900/90 sm:px-6">
       <button
         type="button"
         onClick={onOpenDrawer}
@@ -139,12 +150,31 @@ export default function Header({ title, onOpenDrawer }) {
       <div className="lg:hidden">
         <Logo size={30} />
       </div>
-      <h1 className="hidden text-lg font-bold text-navy-900 lg:block">{title}</h1>
+      <h1 className="hidden text-lg font-bold text-navy-900 dark:text-white lg:block">{title}</h1>
       <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy-100/70 text-navy-600 transition-all hover:scale-110 hover:bg-navy-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+          aria-label={theme === 'light' ? 'Dark mode' : 'Light mode'}
+          title={theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
+        >
+          {theme === 'light' ? <Moon size={18} weight="bold" /> : <Sun size={18} weight="bold" />}
+        </button>
+        <button
+          type="button"
+          onClick={toggleLang}
+          className="flex h-9 items-center gap-1 rounded-xl bg-navy-100/70 px-2.5 text-[11px] font-bold text-navy-600 transition-all hover:scale-110 hover:bg-navy-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+          aria-label="Đổi ngôn ngữ"
+          title="Đổi ngôn ngữ"
+        >
+          <Translate size={14} weight="bold" />
+          {lang.toUpperCase()}
+        </button>
         <DemoAlarmButton />
         <Link to="/app/tasks/new" className="hidden sm:block">
           <Button variant="gradient" size="sm" icon={Plus}>
-            Tạo công việc
+            {t.createTask}
           </Button>
         </Link>
         <div className="relative" ref={menuRef}>
@@ -155,13 +185,12 @@ export default function Header({ title, onOpenDrawer }) {
             aria-expanded={menuOpen}
             className="flex cursor-pointer items-center gap-2 rounded-full p-1 pr-2 transition hover:bg-navy-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            <Avatar name={user?.fullName} size="sm" />
-            <span className="hidden text-left sm:block">
-              <span className="block max-w-[140px] truncate text-sm font-semibold leading-tight text-navy-800">
+            <Avatar name={user?.fullName} size="sm" />              <span className="hidden text-left sm:block">
+              <span className="block max-w-[140px] truncate text-sm font-semibold leading-tight text-navy-800 dark:text-white">
                 {user?.fullName}
               </span>
-              <span className="block text-[11px] leading-tight text-navy-400">
-                {isAdmin ? 'Quản trị viên' : 'Người dùng'}
+              <span className="block text-[11px] leading-tight text-navy-400 dark:text-slate-500">
+                {isAdmin ? t.roleAdmin : t.roleUser}
               </span>
             </span>
             <CaretDown size={14} className="hidden text-navy-400 sm:block" weight="bold" />
@@ -169,27 +198,27 @@ export default function Header({ title, onOpenDrawer }) {
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-12 w-56 overflow-hidden rounded-2xl bg-white py-1.5 shadow-2xl ring-1 ring-navy-100 animate-scale-in"
+              className="absolute right-0 top-12 w-56 overflow-hidden rounded-2xl bg-white py-1.5 shadow-2xl ring-1 ring-navy-100 animate-scale-in dark:bg-slate-800 dark:ring-slate-700"
             >
-              <div className="border-b border-navy-100 px-4 py-2.5">
-                <p className="truncate text-sm font-bold text-navy-900">{user?.fullName}</p>
-                <p className="truncate text-xs text-navy-400">{user?.email}</p>
+              <div className="border-b border-navy-100 dark:border-slate-700 px-4 py-2.5">
+                <p className="truncate text-sm font-bold text-navy-900 dark:text-white">{user?.fullName}</p>
+                <p className="truncate text-xs text-navy-400 dark:text-slate-500">{user?.email}</p>
               </div>
               <button role="menuitem" type="button" onClick={() => go('/app/profile')} className="menu-item">
-                <UserCircle size={18} weight="bold" /> Hồ sơ cá nhân
+                <UserCircle size={18} weight="bold" /> {t.profile}
               </button>
               <button role="menuitem" type="button" onClick={() => go('/app/change-password')} className="menu-item">
-                <Key size={18} weight="bold" /> Đổi mật khẩu
+                <Key size={18} weight="bold" /> {t.changePassword}
               </button>
               <button role="menuitem" type="button" onClick={() => go('/app/settings')} className="menu-item">
-                <Gear size={18} weight="bold" /> Cài đặt
+                <Gear size={18} weight="bold" /> {t.settings}
               </button>
               {isAdmin && (
                 <button role="menuitem" type="button" onClick={() => go('/admin')} className="menu-item">
-                  <ShieldCheck size={18} weight="bold" /> Khu vực quản trị
+                  <ShieldCheck size={18} weight="bold" /> {t.adminArea}
                 </button>
               )}
-              <div className="my-1 border-t border-navy-100" />
+              <div className="my-1 border-t border-navy-100 dark:border-slate-700" />
               <button
                 role="menuitem"
                 type="button"
@@ -197,9 +226,9 @@ export default function Header({ title, onOpenDrawer }) {
                   logout()
                   navigate('/')
                 }}
-                className="menu-item text-rose-600 hover:bg-rose-50"
+                className="menu-item text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20"
               >
-                <SignOut size={18} weight="bold" /> Đăng xuất
+                <SignOut size={18} weight="bold" /> {t.logout}
               </button>
             </div>
           )}
