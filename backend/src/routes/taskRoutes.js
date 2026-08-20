@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import auth from '../middleware/auth.js'
+import subtaskRoutes from './subtaskRoutes.js'
 import validate from '../middleware/validate.js'
 import * as taskController from '../controllers/taskController.js'
 import {
@@ -28,5 +29,7 @@ router.delete('/:taskId', taskIdParamValidation, validate, taskController.delete
 router.post('/:taskId/complete', taskIdParamValidation, validate, taskController.completeTask)
 router.post('/:taskId/reopen', taskIdParamValidation, validate, taskController.reopenTask)
 router.post('/:taskId/cancel', taskIdParamValidation, validate, taskController.cancelTask)
+
+router.use('/:taskId/subtasks', subtaskRoutes)
 
 export default router
