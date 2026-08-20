@@ -1,5 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { AlarmProvider } from './context/AlarmContext'
+import { ThemeProvider } from './context/ThemeContext'
+import { LanguageProvider } from './context/LanguageContext'
 import { ProtectedRoute, AdminRoute, GuestOnlyRoute } from './components/ProtectedRoute'
 import AlarmOverlay from './components/AlarmOverlay'
 import AppShell from './components/layout/AppShell'
@@ -25,6 +27,8 @@ import NotFoundPage from './pages/NotFoundPage'
 
 export default function App() {
   return (
+    <ThemeProvider>
+    <LanguageProvider>
     <AlarmProvider>
       <Routes>
         {/* Guest */}
@@ -103,5 +107,7 @@ export default function App() {
       {/* Overlay báo thức toàn màn hình – độc lập với route (SCR-U-07) */}
       <AlarmOverlay />
     </AlarmProvider>
+    </LanguageProvider>
+    </ThemeProvider>
   )
 }
