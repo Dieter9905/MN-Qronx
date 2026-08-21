@@ -4,7 +4,7 @@ import authRoutes from './authRoutes.js'
 import userRoutes from './userRoutes.js'
 import categoryRoutes from './categoryRoutes.js'
 import taskRoutes from './taskRoutes.js'
-// import reminderRoutes from './reminderRoutes.js'
+import reminderRoutes from './reminderRoutes.js'
 // import deviceRoutes from './deviceRoutes.js'
 // import notificationRoutes from './notificationRoutes.js'
 // import dashboardRoutes from './dashboardRoutes.js'
@@ -49,7 +49,7 @@ router.use('/auth',          authRoutes)
 router.use('/me',            userRoutes)
 router.use('/categories',    categoryRoutes)
 router.use('/tasks',         taskRoutes)
-// router.use('/reminders',     reminderRoutes)
+router.use('/reminders',     reminderRoutes)
 // router.use('/devices',       deviceRoutes)
 // router.use('/notification-settings',  notificationRoutes.settings)
 // router.use('/notification-logs',      notificationRoutes.logs)

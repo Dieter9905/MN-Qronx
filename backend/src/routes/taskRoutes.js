@@ -2,6 +2,8 @@ import { Router } from 'express'
 import auth from '../middleware/auth.js'
 import subtaskRoutes from './subtaskRoutes.js'
 import validate from '../middleware/validate.js'
+import * as reminderController from '../controllers/reminderController.js'
+import { createReminderValidation, updateReminderValidation, reminderIdParamValidation } from '../dto/request/reminderValidation.js'
 import * as taskController from '../controllers/taskController.js'
 import {
   createTaskValidation,
@@ -31,5 +33,16 @@ router.post('/:taskId/reopen', taskIdParamValidation, validate, taskController.r
 router.post('/:taskId/cancel', taskIdParamValidation, validate, taskController.cancelTask)
 
 router.use('/:taskId/subtasks', subtaskRoutes)
+
+// ── Reminder routes (nested under /tasks/:taskId) ───────
+const reminderSubRouter = Router({ mergeParams: true })
+reminderSubRouter.use(auth)
+reminderSubRouter.get('/', reminderController.getByTask)
+reminderSubRouter.post('/', createReminderValidation, validate, reminderController.createReminder)
+reminderSubRouter.put('/:reminderId', updateReminderValidation, validate, reminderController.updateReminder)
+reminderSubRouter.delete('/:reminderId', reminderIdParamValidation, validate, reminderController.deleteReminder)
+
+router.use('/:taskId/reminders', reminderSubRouter)
+
 
 export default router
