@@ -44,3 +44,25 @@ export function calculateNextDueDate(dueAt, repeatType) {
       return dueAt
   }
 }
+
+/**
+ * Get the start of day (00:00:00) for a Date.
+ * @param {Date} date
+ * @returns {Date}
+ */
+export function startOfDay(date) {
+  const result = new Date(date)
+  result.setHours(0, 0, 0, 0)
+  return result
+}
+
+/**
+ * Get the end of day (23:59:59.999) for a Date.
+ * @param {Date} date
+ * @returns {Date}
+ */
+export function endOfDay(date) {
+  const result = new Date(date)
+  result.setHours(23, 59, 59, 999)
+  return result
+}
