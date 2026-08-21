@@ -8,10 +8,8 @@ export async function getDashboard(userId) {
   const todayStart = startOfDay(now)
   const todayEnd = endOfDay(now)
 
-  // Promise.all chạy song song 4 query đếm
-  const [todayCount, overdueCount, completedCount, upcomingCount] =
+  const [todayCount, overdueCount, completedCount, upcomingCount, todayTasksRaw, overdueTasksRaw] =
     await Promise.all([
-      // Task hôm nay (đến hạn hôm nay, chưa xong)
       prisma.task.count({
         where: {
           userId,
@@ -19,7 +17,6 @@ export async function getDashboard(userId) {
           status: { in: ['TODO', 'IN_PROGRESS'] },
         },
       }),
-      // Task quá hạn (đến hạn < now, chưa xong)
       prisma.task.count({
         where: {
           userId,
@@ -27,11 +24,9 @@ export async function getDashboard(userId) {
           status: { in: ['TODO', 'IN_PROGRESS'] },
         },
       }),
-      // Task đã hoàn thành
       prisma.task.count({
         where: { userId, status: 'COMPLETED' },
       }),
-      // Task sắp tới (đến hạn > now, chưa xong)
       prisma.task.count({
         where: {
           userId,
@@ -39,7 +34,43 @@ export async function getDashboard(userId) {
           status: { in: ['TODO', 'IN_PROGRESS'] },
         },
       }),
+      prisma.task.findMany({
+        where: {
+          userId,
+          dueAt: { gte: todayStart, lte: todayEnd },
+          status: { in: ['TODO', 'IN_PROGRESS'] },
+        },
+        include: {
+          category: true,
+          subtasks: true,
+          reminders: { orderBy: { remindAt: 'asc' } },
+        },
+        orderBy: { dueAt: 'asc' },
+      }),
+      prisma.task.findMany({
+        where: {
+          userId,
+          dueAt: { lt: now },
+          status: { in: ['TODO', 'IN_PROGRESS'] },
+        },
+        include: {
+          category: true,
+          subtasks: true,
+          reminders: { orderBy: { remindAt: 'asc' } },
+        },
+        orderBy: { dueAt: 'asc' },
+      }),
     ])
 
-  return { todayCount, overdueCount, completedCount, upcomingCount }
+  const todayTasks = todayTasksRaw.map((t) => ({ ...t, overdue: false }))
+  const overdueTasks = overdueTasksRaw.map((t) => ({ ...t, overdue: true }))
+
+  return {
+    todayCount,
+    overdueCount,
+    completedCount,
+    upcomingCount,
+    todayTasks,
+    overdueTasks,
+  }
 }

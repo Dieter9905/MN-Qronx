@@ -15,7 +15,7 @@ beforeAll(async () => {
     token,
     body: { categoryName: 'Test Category' },
   })
-  categoryId = catRes.data.data.categoryId
+  categoryId = catRes.data.data.id
 })
 
 afterAll(async () => {
@@ -37,8 +37,10 @@ describe('POST /tasks', () => {
       },
     })
     expect(res.status).toBe(201)
-    expect(res.data.data.task.title).toBe('Test Task')
-    expect(res.data.data.task.status).toBe('TODO')
+    // Transformed: { id, title, status, ... }
+    expect(res.data.data.title).toBe('Test Task')
+    expect(res.data.data.status).toBe('TODO')
+    expect(res.data.data.id).toBeDefined()
   })
 
   it('should reject empty title', async () => {
@@ -71,10 +73,10 @@ describe('GET /tasks', () => {
 describe('GET /tasks/:id', () => {
   it('should get task detail', async () => {
     const list = await api('GET', '/tasks', { token })
-    const taskId = list.data.data.items[0].taskId
+    const taskId = list.data.data.items[0].id
     const res = await api('GET', `/tasks/${taskId}`, { token })
     expect(res.status).toBe(200)
-    expect(res.data.data.taskId).toBe(taskId)
+    expect(res.data.data.id).toBe(taskId)
   })
 })
 
@@ -86,7 +88,7 @@ describe('POST /tasks/:id/complete', () => {
       body: { title: 'Task to Complete', dueAt, categoryId },
     })
     if (createRes.status !== 201) return
-    const taskId = createRes.data.data.task.taskId
+    const taskId = createRes.data.data.id
 
     const res = await api('POST', `/tasks/${taskId}/complete`, { token })
     expect(res.status).toBe(200)
@@ -102,7 +104,7 @@ describe('POST /tasks/:id/cancel', () => {
       body: { title: 'Task to Cancel', dueAt, categoryId },
     })
     if (createRes.status !== 201) return
-    const taskId = createRes.data.data.task.taskId
+    const taskId = createRes.data.data.id
 
     const res = await api('POST', `/tasks/${taskId}/cancel`, { token })
     expect(res.status).toBe(200)

@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import config from '../config/index.js'
 import authRepo from '../repositories/authRepo.js'
 import ApiError from '../utils/ApiError.js'
+import { transformUser } from '../utils/transformers.js'
 
 const REFRESH_TOKEN_EXPIRY_DAYS = 7
 const RESET_TOKEN_EXPIRY_HOURS = 1
@@ -23,11 +24,7 @@ export async function register({ fullName, email, password }) {
   // Create user + notificationSetting
   const user = await authRepo.create({ fullName, email, passwordHash })
 
-  return {
-    userId: user.userId,
-    fullName: user.fullName,
-    email: user.email,
-  }
+  return transformUser(user)
 }
 
 // ─── Login ─────────────────────────────────────────────────
@@ -65,12 +62,7 @@ export async function login(email, password) {
   return {
     accessToken,
     refreshToken,
-    user: {
-      userId: user.userId,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role.roleName,
-    },
+    user: transformUser(user),
   }
 }
 

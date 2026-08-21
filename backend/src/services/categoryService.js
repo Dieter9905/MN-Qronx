@@ -10,7 +10,6 @@ export async function getCategories(userId, isActive) {
 // ─── Create Category ────────────────────────────────────
 
 export async function create(userId, { categoryName, colorCode }) {
-  // Check unique name per user (ERD-R-03)
   const existing = await categoryRepo.findByName(userId, categoryName)
   if (existing) {
     throw ApiError.badRequest('Danh mục này đã tồn tại')
@@ -27,7 +26,6 @@ export async function update(userId, categoryId, { categoryName, colorCode }) {
     throw ApiError.notFound('Không tìm thấy danh mục')
   }
 
-  // Check unique name if changing name
   if (categoryName && categoryName !== category.categoryName) {
     const duplicate = await categoryRepo.findByName(userId, categoryName)
     if (duplicate) {
@@ -50,6 +48,5 @@ export async function toggleActive(userId, categoryId, isActive) {
     throw ApiError.notFound('Không tìm thấy danh mục')
   }
 
-  // ERD-R-17: Không xóa cứng, chỉ toggle isActive
   return categoryRepo.toggleActive(categoryId, isActive)
 }

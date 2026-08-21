@@ -10,7 +10,6 @@ beforeAll(async () => {
   await register(email, 'Test@1234', 'Dashboard User')
   const loginRes = await login(email, 'Test@1234')
   userToken = loginRes.data.data.accessToken
-  // Admin token (user_id=1 from seed)
   adminToken = makeToken(1, 'ADMIN')
 })
 
@@ -27,6 +26,10 @@ describe('GET /dashboard', () => {
     expect(res.data.data.overdueCount).toBeDefined()
     expect(res.data.data.completedCount).toBeDefined()
     expect(res.data.data.upcomingCount).toBeDefined()
+    expect(res.data.data.todayTasks).toBeDefined()
+    expect(res.data.data.overdueTasks).toBeDefined()
+    expect(res.data.data.todayTasks).toBeInstanceOf(Array)
+    expect(res.data.data.overdueTasks).toBeInstanceOf(Array)
   })
 
   it('should require auth', async () => {
@@ -40,8 +43,10 @@ describe('GET /admin/dashboard', () => {
     const res = await api('GET', '/admin/dashboard', { token: adminToken })
     expect(res.status).toBe(200)
     expect(res.data.data.totalUsers).toBeDefined()
+    expect(res.data.data.activeUsers).toBeDefined()
     expect(res.data.data.totalTasks).toBeDefined()
-    expect(res.data.data.activeTasks).toBeDefined()
+    expect(res.data.data.notificationsToday).toBeDefined()
+    expect(res.data.data.tasksByStatus).toBeDefined()
   })
 
   it('should reject non-admin', async () => {
@@ -55,6 +60,6 @@ describe('GET /admin/users', () => {
     const res = await api('GET', '/admin/users', { token: adminToken })
     expect(res.status).toBe(200)
     expect(res.data.data.items).toBeInstanceOf(Array)
-    expect(res.data.data.pagination).toBeDefined()
+    expect(res.data.data.total).toBeDefined()
   })
 })

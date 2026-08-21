@@ -10,7 +10,7 @@ export const createTaskValidation = [
     .isISO8601().withMessage('Thời hạn phải là định dạng ISO-8601'),
 
   body('priority')
-    .notEmpty().withMessage('Mức ưu tiên không được để trống')
+    .optional()
     .isIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).withMessage('Mức ưu tiên không hợp lệ'),
 
   body('repeatType')

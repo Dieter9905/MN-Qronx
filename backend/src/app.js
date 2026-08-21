@@ -5,6 +5,7 @@ import swaggerUi from 'swagger-ui-express'
 import swaggerSpec from './config/swagger.js'
 import routes from './routes/index.js'
 import notFound from './middleware/notFound.js'
+import transformResponse from './middleware/transformResponse.js'
 import errorHandler from './middleware/errorHandler.js'
 
 const app = express()
@@ -27,6 +28,7 @@ app.get('/docs.json', (req, res) => {
 })
 
 // ── API routes (all under /api/v1) ────────────────────────
+app.use(transformResponse)
 app.use('/api/v1', routes)
 
 // ── 404 catch-all ──────────────────────────────────────────

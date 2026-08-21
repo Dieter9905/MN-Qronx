@@ -5,7 +5,6 @@ let token
 
 beforeAll(async () => {
   await startServer()
-  // Create test user
   const email = `cat_${Date.now()}@example.com`
   await register(email, 'Test@1234', 'Category Test')
   const loginRes = await login(email, 'Test@1234')
@@ -37,7 +36,10 @@ describe('POST /categories', () => {
       body: { categoryName: 'Work', colorCode: '#FF0000' },
     })
     expect(res.status).toBe(201)
-    expect(res.data.data.categoryName).toBe('Work')
+    // Transformed: { id, name, color, isActive }
+    expect(res.data.data.name).toBe('Work')
+    expect(res.data.data.color).toBe('#FF0000')
+    expect(res.data.data.id).toBeDefined()
   })
 
   it('should reject duplicate name', async () => {
@@ -59,16 +61,15 @@ describe('POST /categories', () => {
 
 describe('PUT /categories/:id', () => {
   it('should update category name', async () => {
-    // Get categories first
     const list = await api('GET', '/categories', { token })
     const cat = list.data.data[0]
 
-    const res = await api('PUT', `/categories/${cat.categoryId}`, {
+    const res = await api('PUT', `/categories/${cat.id}`, {
       token,
       body: { categoryName: 'Office Work' },
     })
     expect(res.status).toBe(200)
-    expect(res.data.data.categoryName).toBe('Office Work')
+    expect(res.data.data.name).toBe('Office Work')
   })
 })
 
@@ -77,7 +78,7 @@ describe('PATCH /categories/:id/active', () => {
     const list = await api('GET', '/categories', { token })
     const cat = list.data.data[0]
 
-    const res = await api('PATCH', `/categories/${cat.categoryId}/active`, {
+    const res = await api('PATCH', `/categories/${cat.id}/active`, {
       token,
       body: { isActive: false },
     })
@@ -88,7 +89,6 @@ describe('PATCH /categories/:id/active', () => {
   it('should filter inactive categories', async () => {
     const res = await api('GET', '/categories', { token, query: { isActive: 'true' } })
     expect(res.status).toBe(200)
-    // Should not include inactive
     const inactive = res.data.data.find(c => c.isActive === false)
     expect(inactive).toBeUndefined()
   })
