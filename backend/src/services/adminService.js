@@ -11,7 +11,7 @@ export async function getDashboard() {
 // ─── List Users ────────────────────────────────────────
 
 export async function getUsers(query) {
-  const { page, pageSize } = parsePagination(query.page, query.pageSize)
+  const { page, pageSize } = parsePagination(query)
 
   const result = await adminRepo.findUsers({
     keyword: query.keyword,

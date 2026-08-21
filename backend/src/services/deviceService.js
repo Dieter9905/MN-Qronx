@@ -61,7 +61,7 @@ export async function updateSettings(userId, data) {
 // ─── Get Notification Logs ─────────────────────────────
 
 export async function getLogs(userId, query) {
-  const { page, pageSize } = parsePagination(query.page, query.pageSize)
+  const { page, pageSize } = parsePagination(query)
 
   const result = await deviceRepo.findLogs(userId, {
     from: query.from,
