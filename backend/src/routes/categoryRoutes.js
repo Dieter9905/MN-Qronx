@@ -1,28 +1,119 @@
 import { Router } from 'express'
 import auth from '../middleware/auth.js'
 import validate from '../middleware/validate.js'
+import * as categoryValidation from '../dto/request/categoryValidation.js'
 import * as categoryController from '../controllers/categoryController.js'
-import {
-  createCategoryValidation,
-  updateCategoryValidation,
-  toggleActiveValidation,
-  getCategoriesValidation,
-} from '../dto/request/categoryValidation.js'
 
 const router = Router()
 
 /**
  * @swagger
- * tags:
- *   name: Categories
- *   description: Quản lý danh mục công việc
+ * /categories:
+ *   get:
+ *     tags: [Categories]
+ *     summary: Danh sách danh mục
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: isActive
+ *         schema:
+ *           type: boolean
+ *     responses:
+ *       200:
+ *         description: Danh sách categories
  */
+router.get('/', auth, categoryController.getCategories)
 
-router.use(auth)
+/**
+ * @swagger
+ * /categories:
+ *   post:
+ *     tags: [Categories]
+ *     summary: Tạo danh mục mới
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CategoryRequest'
+ *     responses:
+ *       201:
+ *         description: Tạo thành công
+ */
+router.post(
+  '/',
+  auth,
+  categoryValidation.createCategoryValidation,
+  validate,
+  categoryController.create,
+)
 
-router.get('/', getCategoriesValidation, validate, categoryController.getCategories)
-router.post('/', createCategoryValidation, validate, categoryController.create)
-router.put('/:categoryId', updateCategoryValidation, validate, categoryController.update)
-router.patch('/:categoryId/active', toggleActiveValidation, validate, categoryController.toggleActive)
+/**
+ * @swagger
+ * /categories/{categoryId}:
+ *   put:
+ *     tags: [Categories]
+ *     summary: Cập nhật danh mục
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: categoryId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CategoryRequest'
+ *     responses:
+ *       200:
+ *         description: Cập nhật thành công
+ */
+router.put(
+  '/:categoryId',
+  auth,
+  categoryValidation.updateCategoryValidation,
+  validate,
+  categoryController.update,
+)
+
+/**
+ * @swagger
+ * /categories/{categoryId}/active:
+ *   patch:
+ *     tags: [Categories]
+ *     summary: Ẩn/hiện danh mục (soft toggle)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: categoryId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               isActive:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Toggle thành công
+ */
+router.patch(
+  '/:categoryId/active',
+  auth,
+  categoryValidation.toggleActiveValidation,
+  validate,
+  categoryController.toggleActive,
+)
 
 export default router

@@ -4,10 +4,18 @@ import * as dashboardController from '../controllers/dashboardController.js'
 
 const router = Router()
 
-router.get(
-  '/',
-  auth,
-  dashboardController.getDashboard,
-)
+/**
+ * @swagger
+ * /dashboard:
+ *   get:
+ *     tags: [Dashboard]
+ *     summary: Dashboard cá nhân (todayCount, overdueCount, completedCount, upcomingCount)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Thống kê dashboard
+ */
+router.get('/', auth, dashboardController.getDashboard)
 
 export default router
