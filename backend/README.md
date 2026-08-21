@@ -53,6 +53,36 @@ npm test                      # Chạy 35 tests
 
 Server chạy tại `http://localhost:8080`. Swagger UI tại `/docs`.
 
+## Deploy lên Render (Free)
+
+### Cách 1: Render Blueprint (tự động)
+
+1. Push code lên GitHub
+2. Vào [render.com](https://render.com) → New → Blueprint
+3. Chọn repo → Render tự đọc `render.yaml`
+4. Deploy xong, có URL: `https://taskalarm-api.onrender.com`
+
+### Cách 2: Manual
+
+1. Tạo **Web Service** trên Render
+   - Build Command: `npm install && npx prisma generate && npx prisma db push && npm run seed`
+   - Start Command: `node src/server.js`
+   - Plan: Free
+2. Tạo **PostgreSQL** database trên Render
+3. Copy Internal Database URL vào env var `DATABASE_URL`
+4. Thêm env vars:
+   - `JWT_SECRET` = random string
+   - `NODE_ENV` = production
+   - `PORT` = 10000
+
+### Sau khi deploy
+
+- API URL: `https://taskalarm-api.onrender.com/api/v1`
+- Swagger: `https://taskalarm-api.onrender.com/docs`
+- Set `VITE_API_URL` trên frontend: `https://taskalarm-api.onrender.com/api/v1`
+
+> ⚠️ Render Free tier: server sẽ sleep sau 15 phút không có request. First request sau sleep mất ~30s.
+
 ## API Endpoints
 
 > Prefix: `/api/v1/` | Auth: `Authorization: Bearer <JWT>`
