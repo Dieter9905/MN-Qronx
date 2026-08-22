@@ -84,9 +84,7 @@ export async function deleteReminder(userId, taskId, reminderId) {
 
 export async function findDue(userId) {
   const now = new Date()
-  const reminders = await reminderRepo.findDueReminders(now)
-  // Filter by userId
-  return reminders.filter((r) => r.task.userId === userId)
+  return reminderRepo.findDueReminders(now, userId)
 }
 
 // ─── Snooze (max 3 times) ──────────────────────────────

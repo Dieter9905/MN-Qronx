@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs'
 import userRepo from '../repositories/userRepo.js'
 import ApiError from '../utils/ApiError.js'
+import { startOfDay, endOfDay } from '../utils/dateUtils.js'
 
 // ─── Get Profile ────────────────────────────────────────
 
@@ -105,18 +106,4 @@ export async function getRecentActivity(userId) {
     taskId: log.reminder.task.taskId,
     remindAt: log.reminder.remindAt,
   }))
-}
-
-// ─── Helpers ────────────────────────────────────────────
-
-function startOfDay(date) {
-  const d = new Date(date)
-  d.setHours(0, 0, 0, 0)
-  return d
-}
-
-function endOfDay(date) {
-  const d = new Date(date)
-  d.setHours(23, 59, 59, 999)
-  return d
 }

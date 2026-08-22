@@ -28,7 +28,18 @@ const DASHBOARD_PATHS = ['/dashboard']
 const ADMIN_PATHS = ['/admin']
 
 function matchPath(urlpath, prefixes) {
-  return prefixes.some((p) => urlpath.includes(p))
+  // Split path into segments and check against prefixes
+  const segments = urlpath.split('/').filter(Boolean)
+  // Remove 'api/v1' prefix if present
+  const apiIndex = segments.indexOf('api')
+  const pathSegments = apiIndex >= 0 ? segments.slice(apiIndex + 2) : segments
+  
+  return prefixes.some((p) => {
+    const prefixSegments = p.split('/').filter(Boolean)
+    // Check if path starts with prefix segments
+    if (pathSegments.length < prefixSegments.length) return false
+    return prefixSegments.every((seg, i) => pathSegments[i] === seg)
+  })
 }
 
 function isTaskListResponse(data) {

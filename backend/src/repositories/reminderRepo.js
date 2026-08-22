@@ -20,12 +20,16 @@ async function findById(reminderId) {
   })
 }
 
-async function findDueReminders(now) {
+async function findDueReminders(now, userId) {
+  const where = {
+    status: 'SCHEDULED',
+    remindAt: { lte: now },
+  }
+  if (userId) {
+    where.task = { userId }
+  }
   return prisma.reminder.findMany({
-    where: {
-      status: 'SCHEDULED',
-      remindAt: { lte: now },
-    },
+    where,
     include: {
       task: {
         include: {

@@ -50,6 +50,20 @@ async function create({ fullName, email, passwordHash }) {
 }
 
 /**
+ * Find user by ID with passwordHash (for password verification).
+ */
+async function findByIdWithPassword(userId) {
+  return prisma.user.findUnique({
+    where: { userId },
+    select: {
+      userId: true,
+      email: true,
+      passwordHash: true,
+    },
+  })
+}
+
+/**
  * Update user password hash.
  */
 async function updatePassword(userId, passwordHash) {
@@ -136,6 +150,7 @@ export default {
   findRefreshToken,
   deleteRefreshTokensByUserId,
   deleteRefreshToken,
+  findByIdWithPassword,
   createPasswordResetRequest,
   findPasswordResetRequest,
   markResetRequestUsed,

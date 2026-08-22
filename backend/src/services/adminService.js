@@ -1,12 +1,13 @@
 import prisma from '../config/prisma.js'
-import { parsePagination } from '../utils/pagination.js'
+import { parsePagination, paginationMeta } from '../utils/pagination.js'
 import ApiError from '../utils/ApiError.js'
+import { startOfDay } from '../utils/dateUtils.js'
 
 // ─── Admin Dashboard ───────────────────────────────────
 
 export async function getDashboard() {
   const now = new Date()
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const todayStart = startOfDay(now)
 
   const [totalUsers, activeUsers, totalTasks, notificationsToday, totalNotifications, tasksByStatus] =
     await Promise.all([
@@ -80,9 +81,7 @@ export async function getUsers(query) {
 
   return {
     items: result,
-    total,
-    page,
-    pageSize,
+    pagination: paginationMeta(total, page, pageSize),
   }
 }
 

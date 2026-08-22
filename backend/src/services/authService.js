@@ -109,8 +109,7 @@ export async function changePassword(userId, currentPassword, newPassword) {
     throw ApiError.notFound()
   }
 
-  // Lấy passwordHash từ DB (findById không trả passwordHash)
-  const fullUser = await authRepo.findByEmail(user.email)
+  const fullUser = await authRepo.findByIdWithPassword(userId)
   const isMatch = await bcrypt.compare(currentPassword, fullUser.passwordHash)
   if (!isMatch) {
     throw ApiError.badRequest('Mật khẩu hiện tại không đúng')

@@ -29,8 +29,9 @@ export async function findAll(userId, query) {
   if (query.sort === 'dueAsc') orderBy = { dueAt: 'asc' }
   else if (query.sort === 'dueDesc') orderBy = { dueAt: 'desc' }
   else if (query.sort === 'priorityDesc') {
-    // Prisma không sort by enum directly, dùng createdAt thay thế
-    orderBy = { createdAt: 'desc' }
+    // Sort by priority using a custom order via _count or manual sort
+    // Prisma doesn't support enum sorting directly, use createdAt as tiebreaker
+    orderBy = [{ priority: 'desc' }, { createdAt: 'desc' }]
   }
 
   const { items, total } = await taskRepo.findByUser(userId, where, orderBy, skip, take)
@@ -160,7 +161,7 @@ export async function complete(userId, taskId) {
   return prisma.$transaction(async (tx) => {
     // 1. Đánh dấu hoàn thành
     await tx.task.update({
-      where: { taskId },
+      where: { taskId, userId },
       data: { status: 'COMPLETED', completedAt: new Date() },
     })
 
@@ -231,7 +232,7 @@ export async function cancel(userId, taskId) {
 
   return prisma.$transaction(async (tx) => {
     await tx.task.update({
-      where: { taskId },
+      where: { taskId, userId },
       data: { status: 'CANCELLED' },
     })
 
