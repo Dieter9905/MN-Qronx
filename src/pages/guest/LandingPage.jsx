@@ -249,7 +249,7 @@ function Hero() {
       />
 
       <div className="relative mx-auto grid max-w-6xl gap-12 px-4 pb-20 pt-16 sm:px-6 lg:grid-cols-2 lg:items-center lg:pb-28 lg:pt-24">
-        <div className="reveal">
+        <div className="animate-slide-up">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-cyan-300 ring-1 ring-inset ring-white/15 backdrop-blur-sm">
             <Lightning size={14} weight="fill" className="animate-pulse" />
             {t.heroBadge}
@@ -288,7 +288,7 @@ function Hero() {
         </div>
 
         {/* Hero visual – 3D tilt card */}
-        <div className="relative mx-auto w-full max-w-md reveal" style={{ transitionDelay: '0.15s' }}>
+        <div className="relative mx-auto w-full max-w-md animate-slide-up" style={{ animationDelay: '120ms' }}>
           <HeroVisual cardRef={heroCardRef} mousePos={mousePos} />
         </div>
       </div>
@@ -485,9 +485,9 @@ function HowItWorks() {
 
         {/* Màn hình báo thức demo – 3D perspective */}
         <div ref={parallaxRef} className="mt-16 perspective-1200">
-          <div className="reveal-scale overflow-hidden rounded-3xl bg-navy-900 shadow-2xl ring-1 ring-navy-800 dark:bg-slate-800 dark:ring-slate-700" style={{ transformStyle: 'preserve-3d' }}>
+          <div className="overflow-hidden rounded-3xl bg-navy-900 shadow-2xl ring-1 ring-navy-800 dark:bg-slate-800 dark:ring-slate-700" style={{ transformStyle: 'preserve-3d' }}>
             <div className="grid items-center gap-8 p-8 sm:p-12 lg:grid-cols-2">
-              <div className="reveal-left">
+              <div>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 px-3 py-1 text-xs font-bold text-rose-300 ring-1 ring-inset ring-rose-500/30">
                   <BellRinging size={13} weight="fill" className="animate-alarm-bell" /> {t.alarmLabel}
                 </span>
@@ -508,7 +508,7 @@ function HowItWorks() {
               </div>
               {/* Mô phỏng điện thoại – 3D float */}
               <div className="relative mx-auto w-full max-w-[260px]">
-                <div className="reveal-right float-varied rounded-[2.2rem] bg-navy-950 p-2.5 shadow-2xl ring-1 ring-white/10 dark:bg-slate-950">
+                <div className="float-varied rounded-[2.2rem] bg-navy-950 p-2.5 shadow-2xl ring-1 ring-white/10 dark:bg-slate-950">
                   <div className="relative overflow-hidden rounded-[1.7rem] bg-alarm-gradient px-5 pb-6 pt-10">
                     <div className="mx-auto h-1 w-16 rounded-full bg-white/25" />
                     <div className="mt-8 flex flex-col items-center text-center">
