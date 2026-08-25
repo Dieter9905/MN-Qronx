@@ -1,0 +1,157 @@
+import prisma from '../config/prisma.js'
+
+// ─── User Queries ──────────────────────────────────────────
+
+/**
+ * Find user by email (with role included).
+ */
+async function findByEmail(email) {
+  return prisma.user.findFirst({
+    where: { email },
+    include: { role: true },
+  })
+}
+
+/**
+ * Find user by ID (without passwordHash).
+ */
+async function findById(userId) {
+  return prisma.user.findUnique({
+    where: { userId },
+    select: {
+      userId: true,
+      fullName: true,
+      email: true,
+      phoneNumber: true,
+      isActive: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  })
+}
+
+/**
+ * Create a new user with role USER.
+ */
+async function create({ fullName, email, passwordHash }) {
+  return prisma.user.create({
+    data: {
+      roleId: 1, // USER
+      fullName,
+      email,
+      passwordHash,
+      notificationSetting: {
+        create: {}, // Auto-create NotificationSetting (defaults)
+      },
+    },
+    include: { role: true },
+  })
+}
+
+/**
+ * Find user by ID with passwordHash (for password verification).
+ */
+async function findByIdWithPassword(userId) {
+  return prisma.user.findUnique({
+    where: { userId },
+    select: {
+      userId: true,
+      email: true,
+      passwordHash: true,
+    },
+  })
+}
+
+/**
+ * Update user password hash.
+ */
+async function updatePassword(userId, passwordHash) {
+  return prisma.user.update({
+    where: { userId },
+    data: { passwordHash },
+  })
+}
+
+// ─── RefreshToken Queries ──────────────────────────────────
+
+/**
+ * Save a refresh token for a user.
+ */
+async function saveRefreshToken(userId, token, expiresAt) {
+  return prisma.refreshToken.create({
+    data: { userId, token, expiresAt },
+  })
+}
+
+/**
+ * Find a refresh token record.
+ */
+async function findRefreshToken(token) {
+  return prisma.refreshToken.findUnique({
+    where: { token },
+  })
+}
+
+/**
+ * Delete ALL refresh tokens for a user (logout / change password).
+ */
+async function deleteRefreshTokensByUserId(userId) {
+  return prisma.refreshToken.deleteMany({
+    where: { userId },
+  })
+}
+
+/**
+ * Delete a specific refresh token (logout single session).
+ */
+async function deleteRefreshToken(token) {
+  return prisma.refreshToken.deleteMany({
+    where: { token },
+  })
+}
+
+// ─── Password Reset Queries ────────────────────────────────
+
+/**
+ * Create a password reset request.
+ */
+async function createPasswordResetRequest(userId, resetToken, expiresAt) {
+  return prisma.passwordResetRequest.create({
+    data: { userId, resetToken, expiresAt },
+  })
+}
+
+/**
+ * Find a password reset request by token.
+ */
+async function findPasswordResetRequest(resetToken) {
+  return prisma.passwordResetRequest.findUnique({
+    where: { resetToken },
+  })
+}
+
+/**
+ * Mark a reset request as used.
+ */
+async function markResetRequestUsed(resetRequestId) {
+  return prisma.passwordResetRequest.update({
+    where: { resetRequestId },
+    data: { usedAt: new Date() },
+  })
+}
+
+export default {
+  findByEmail,
+  findById,
+  create,
+  updatePassword,
+  saveRefreshToken,
+  findRefreshToken,
+  deleteRefreshTokensByUserId,
+  deleteRefreshToken,
+  findByIdWithPassword,
+  createPasswordResetRequest,
+  findPasswordResetRequest,
+  markResetRequestUsed,
+}

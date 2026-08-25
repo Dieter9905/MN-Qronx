@@ -1,0 +1,252 @@
+// ─────────────────────────────────────────────────────────
+// TaskAlarm – Prisma Schema
+// Based on: BA/03_TaskAlarm_ERD.md + taskalarm_postgresql_schema.sql
+// ─────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────
+
+enum RoleName {
+  USER
+  ADMIN
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum RepeatType {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum ReminderStatus {
+  SCHEDULED
+  TRIGGERED
+  SNOOZED
+  DISMISSED
+  CANCELLED
+}
+
+enum NotificationAction {
+  SENT
+  SNOOZED
+  DISMISSED
+}
+
+enum Platform {
+  WEB
+  ANDROID
+  IOS
+}
+
+// ─────────────────────────────────────────────────────────
+// Models
+// ─────────────────────────────────────────────────────────
+
+model Role {
+  roleId      Int      @id @default(autoincrement()) @map("role_id")
+  roleName    RoleName @unique @map("role_name")
+  description String?  @db.VarChar(255)
+
+  users User[]
+
+  @@map("roles")
+}
+
+model User {
+  userId       Int      @id @default(autoincrement()) @map("user_id")
+  roleId       Int      @map("role_id")
+  fullName     String   @db.VarChar(150) @map("full_name")
+  email        String   @unique @db.VarChar(254)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  phoneNumber  String?  @db.VarChar(20) @map("phone_number")
+  avatarUrl    String?  @db.VarChar(500) @map("avatar_url")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  role                   Role                   @relation(fields: [roleId], references: [roleId])
+  passwordResetRequests  PasswordResetRequest[]
+  categories             Category[]
+  tasks                  Task[]
+  devices                Device[]
+  notificationSetting    NotificationSetting?
+  refreshTokens          RefreshToken[]
+
+  @@index([roleId])
+  @@map("app_users")
+}
+
+model PasswordResetRequest {
+  resetRequestId Int      @id @default(autoincrement()) @map("reset_request_id")
+  userId         Int      @map("user_id")
+  resetToken     String   @unique @db.VarChar(255) @map("reset_token")
+  expiresAt      DateTime @map("expires_at")
+  usedAt         DateTime? @map("used_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@index([userId])
+  @@map("password_reset_requests")
+}
+
+model Category {
+  categoryId   Int      @id @default(autoincrement()) @map("category_id")
+  userId       Int      @map("user_id")
+  categoryName String   @db.VarChar(100) @map("category_name")
+  colorCode    String?  @db.VarChar(20) @map("color_code")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user  User   @relation(fields: [userId], references: [userId])
+  tasks Task[]
+
+  @@unique([userId, categoryName])
+  @@index([userId, isActive], map: "ix_categories_user_id")
+  @@map("categories")
+}
+
+model Task {
+  taskId        Int          @id @default(autoincrement()) @map("task_id")
+  userId        Int          @map("user_id")
+  categoryId    Int?         @map("category_id")
+  parentTaskId  Int?         @map("parent_task_id")
+  title         String       @db.VarChar(255)
+  description   String?      @db.Text
+  priority      TaskPriority @default(MEDIUM)
+  status        TaskStatus   @default(TODO)
+  dueAt         DateTime     @map("due_at")
+  repeatType    RepeatType   @default(NONE) @map("repeat_type")
+  completedAt   DateTime?    @map("completed_at")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  user         User        @relation(fields: [userId], references: [userId])
+  category     Category?   @relation(fields: [categoryId], references: [categoryId])
+  parentTask   Task?       @relation("TaskRepetition", fields: [parentTaskId], references: [taskId])
+  childTasks   Task[]      @relation("TaskRepetition")
+  subtasks     Subtask[]
+  reminders    Reminder[]
+
+  @@index([userId, dueAt], map: "ix_tasks_user_due")
+  @@index([userId, status], map: "ix_tasks_user_status")
+  @@index([categoryId], map: "ix_tasks_category_id")
+  @@index([parentTaskId], map: "ix_tasks_parent_task_id")
+  @@map("tasks")
+}
+
+model Subtask {
+  subtaskId    Int      @id @default(autoincrement()) @map("subtask_id")
+  taskId       Int      @map("task_id")
+  content      String   @db.VarChar(255)
+  isCompleted  Boolean  @default(false) @map("is_completed")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  task Task @relation(fields: [taskId], references: [taskId], onDelete: Cascade)
+
+  @@index([taskId, displayOrder], map: "ix_subtasks_task_order")
+  @@map("subtasks")
+}
+
+model Reminder {
+  reminderId  Int            @id @default(autoincrement()) @map("reminder_id")
+  taskId      Int            @map("task_id")
+  remindAt    DateTime       @map("remind_at")
+  status      ReminderStatus @default(SCHEDULED)
+  snoozeCount Int            @default(0) @map("snooze_count")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  task             Task              @relation(fields: [taskId], references: [taskId], onDelete: Cascade)
+  notificationLogs NotificationLog[]
+
+  @@index([status, remindAt], map: "ix_reminders_status_remind_at")
+  @@index([taskId], map: "ix_reminders_task_id")
+  @@map("reminders")
+}
+
+model Device {
+  deviceId    Int      @id @default(autoincrement()) @map("device_id")
+  userId      Int      @map("user_id")
+  deviceToken String   @unique @db.VarChar(500) @map("device_token")
+  platform    Platform
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user             User              @relation(fields: [userId], references: [userId])
+  notificationLogs NotificationLog[]
+
+  @@index([userId, isActive], map: "ix_devices_user_id")
+  @@map("devices")
+}
+
+model NotificationLog {
+  notificationLogId Int                @id @default(autoincrement()) @map("notification_log_id")
+  reminderId        Int                @map("reminder_id")
+  deviceId          Int?               @map("device_id")
+  action            NotificationAction
+  sentAt            DateTime           @default(now()) @map("sent_at")
+  createdAt         DateTime           @default(now()) @map("created_at")
+
+  reminder Reminder @relation(fields: [reminderId], references: [reminderId])
+  device   Device?  @relation(fields: [deviceId], references: [deviceId])
+
+  @@index([reminderId, sentAt], map: "ix_notification_logs_reminder_id")
+  @@index([deviceId], map: "ix_notification_logs_device_id")
+  @@map("notification_logs")
+}
+
+model NotificationSetting {
+  notificationSettingId Int      @id @default(autoincrement()) @map("notification_setting_id")
+  userId                Int      @unique @map("user_id")
+  alarmSound            String   @default("DEFAULT") @db.VarChar(50) @map("alarm_sound")
+  defaultSnoozeMinutes  Int      @default(5) @map("default_snooze_minutes")
+  vibrationEnabled      Boolean  @default(true) @map("vibration_enabled")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@map("notification_settings")
+}
+
+model RefreshToken {
+  tokenId   Int      @id @default(autoincrement()) @map("token_id")
+  userId    Int      @map("user_id")
+  token     String   @unique @db.VarChar(500)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
