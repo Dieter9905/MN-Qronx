@@ -17,8 +17,8 @@ const VIETNAMESE_PATTERNS = {
 
   // Relative days
   relativeDays: {
-    'hôm nay': 0, 'hom nay': 0, 'ngay': 0,
-    'ngày mai': 1, 'ngay mai': 1, 'mai': 1,
+    'hôm nay': 0, 'hom nay': 0, 'nay': 0, 'hn': 0,
+    'ngày mai': 1, 'ngay mai': 1, 'mai': 1, 'tmai': 1,
     'ngày kia': 2, 'ngay kia': 2, 'kia': 2,
     'hôm qua': -1, 'hom qua': -1, 'qua': -1,
     'hôm kia': -2, 'hom kia': -2,
@@ -93,27 +93,48 @@ function normalizeText(text) {
 function extractTime(text) {
   // Match patterns like "2h", "2:30", "14:00", "2 giờ", "2 tiếng"
   const timePatterns = [
-    /(\d{1,2})\s*[:h]\s*(\d{2})?\s*(sang|toi|chiều|sáng|trua|trưa|dem|đêm)?/i,
+    // "5h", "5:30", "14h", "14:00" with optional period
+    /(\d{1,2})\s*[:h]\s*(\d{2})?\s*(sang|toi|chiều|chieu|sáng|trua|trưa|dem|đêm)?/i,
+    // "2 giờ", "2 tiếng"
     /(\d{1,2})\s*(gio|giờ|tiếng|tieng|hour)/i,
-    /(sang|toi|chiều|sáng|trua|trưa|dem|đêm)\s*(\d{1,2})\s*h?/i,
+    // "chiều 5h", "sáng 7h"
+    /(sang|sáng|trưa|trua|chiều|chieu|tối|toi|đêm|dem)\s*(\d{1,2})\s*h?/i,
+    // "2am", "2pm"
     /(\d{1,2})\s*(am|pm)/i,
   ];
 
   for (const pattern of timePatterns) {
     const match = text.match(pattern);
     if (match) {
-      let hour = parseInt(match[1] || match[2]);
-      let minute = parseInt(match[2] || '0');
+      let hour, minute;
+      let periodHint = null;
       
-      if (match[3]) {
-        const period = match[3].toLowerCase();
-        if (['toi', 'tối', 'chiều', 'chieu', 'dem', 'đêm'].includes(period) && hour < 12) {
+      // Pattern 3: "chiều 5h" - period comes first
+      if (pattern.source.includes('sang|sáng') && match[0].match(/^(sang|sáng|trưa|trua|chiều|chieu|tối|toi|đêm|dem)/i)) {
+        periodHint = match[1]?.toLowerCase();
+        hour = parseInt(match[2]);
+        minute = 0;
+      } else {
+        // Other patterns: number comes first
+        hour = parseInt(match[1] || match[2]);
+        minute = parseInt(match[2] || '0');
+        if (match[3]) periodHint = match[3].toLowerCase();
+      }
+      
+      // Apply period hint (sáng, chiều, tối, etc.)
+      if (periodHint) {
+        if (['chiều', 'chieu', 'toi', 'tối', 'dem', 'đêm'].includes(periodHint) && hour < 12) {
           hour += 12;
+        }
+        if (['sang', 'sáng'].includes(periodHint) && hour === 12) {
+          hour = 0;
         }
       }
       
-      if (match[0].includes('pm') && hour < 12) hour += 12;
-      if (match[0].includes('am') && hour === 12) hour = 0;
+      // Handle am/pm
+      const fullMatch = match[0];
+      if (fullMatch.includes('pm') && hour < 12) hour += 12;
+      if (fullMatch.includes('am') && hour === 12) hour = 0;
       
       if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
         return { hour, minute: isNaN(minute) ? 0 : minute };
