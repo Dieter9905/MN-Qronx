@@ -64,13 +64,13 @@ export default function Modal({
       />
       <div
         ref={panelRef}
-        className={`relative w-full ${sizes[size]} max-h-[92dvh] overflow-y-auto rounded-t-2xl bg-white shadow-2xl animate-slide-up sm:rounded-2xl ${size === 'sm' ? 'sm:animate-scale-in' : 'sm:animate-slide-up'}`}
+        className={`relative w-full ${sizes[size]} max-h-[92dvh] overflow-y-auto rounded-t-2xl bg-white shadow-2xl animate-slide-up dark:bg-slate-800 sm:rounded-2xl ${size === 'sm' ? 'sm:animate-scale-in' : 'sm:animate-slide-up'}`}
       >
         {(title || !hideClose) && (
-          <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-navy-100 bg-white/95 px-5 py-4 backdrop-blur">
+          <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-navy-100 bg-white/95 px-5 py-4 backdrop-blur dark:border-slate-700 dark:bg-slate-800/95">
             <div>
-              {title && <h2 className="text-lg font-bold text-navy-900">{title}</h2>}
-              {description && <p className="mt-0.5 text-sm text-navy-500">{description}</p>}
+              {title && <h2 className="text-lg font-bold text-navy-900 dark:text-white">{title}</h2>}
+              {description && <p className="mt-0.5 text-sm text-navy-500 dark:text-slate-400">{description}</p>}
             </div>
             {!hideClose && onClose && (
               <button
@@ -86,7 +86,7 @@ export default function Modal({
         )}
         <div className="px-5 py-4">{children}</div>
         {footer && (
-          <div className="sticky bottom-0 flex justify-end gap-3 border-t border-navy-100 bg-white/95 px-5 py-4 backdrop-blur">
+          <div className="sticky bottom-0 flex justify-end gap-3 border-t border-navy-100 bg-white/95 px-5 py-4 backdrop-blur dark:border-slate-700 dark:bg-slate-800/95">
             {footer}
           </div>
         )}
@@ -109,7 +109,7 @@ export function ConfirmDialog({
 }) {
   return (
     <Modal open={open} onClose={onClose} size="sm" title={title}>
-      <p className="text-sm leading-relaxed text-navy-600">{message}</p>
+      <p className="text-sm leading-relaxed text-navy-600 dark:text-slate-300">{message}</p>
       <div className="mt-5 flex justify-end gap-3">
         <Button variant="secondary" onClick={onClose} disabled={loading}>
           {cancelLabel}

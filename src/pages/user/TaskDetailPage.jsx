@@ -184,10 +184,10 @@ export default function TaskDetailPage() {
               <PriorityBadge priority={task.priority} />
               {task.category && <CategoryBadge category={task.category} />}
             </div>
-            <h1 className={`mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl ${task.status === 'COMPLETED' ? 'text-navy-300 line-through' : 'text-navy-900'}`}>
+            <h1 className={`mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl ${task.status === 'COMPLETED' ? 'text-navy-300 line-through dark:text-slate-500' : 'text-navy-900 dark:text-white'}`}>
               {task.title}
             </h1>
-            <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-navy-500">
+            <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-navy-500 dark:text-slate-400">
               <span className="inline-flex items-center gap-1.5">
                 <CalendarCheck size={16} weight="bold" className="text-blue-600" />
                 {formatRelativeDay(task.dueAt)} · {formatDateTime(task.dueAt)}
@@ -211,12 +211,12 @@ export default function TaskDetailPage() {
               aria-haspopup="menu"
               aria-expanded={menuOpen}
               aria-label="Hành động công việc"
-              className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-navy-500 transition hover:bg-navy-50"
+              className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-navy-500 transition hover:bg-navy-50 dark:text-slate-400 dark:hover:bg-slate-700"
             >
               <DotsThree size={24} weight="bold" />
             </button>
             {menuOpen && (
-              <div role="menu" className="absolute right-0 top-11 z-20 w-48 overflow-hidden rounded-xl bg-white py-1.5 shadow-2xl ring-1 ring-navy-100 animate-scale-in">
+              <div role="menu" className="absolute right-0 top-11 z-20 w-48 overflow-hidden rounded-xl bg-white py-1.5 shadow-2xl ring-1 ring-navy-100 animate-scale-in dark:bg-slate-800 dark:ring-slate-700">
                 <button role="menuitem" type="button" onClick={() => { setMenuOpen(false); navigate(`/app/tasks/${task.id}/edit`) }} className="menu-item">
                   <PencilSimple size={17} weight="bold" /> Sửa công việc
                 </button>
@@ -244,8 +244,8 @@ export default function TaskDetailPage() {
         </div>
 
         {task.description && (
-          <div className="mt-5 rounded-xl bg-navy-50/70 p-4">
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-navy-700">{task.description}</p>
+          <div className="mt-5 rounded-xl bg-navy-50/70 p-4 dark:bg-slate-900/50">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-navy-700 dark:text-slate-300">{task.description}</p>
           </div>
         )}
 
@@ -265,17 +265,17 @@ export default function TaskDetailPage() {
 
       {/* Việc con */}
       <section className="card p-5 sm:p-6">
-        <h2 className="flex items-center gap-2 font-bold text-navy-900">
-          <ListChecks size={19} weight="fill" className="text-blue-600" />
+        <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
+          <ListChecks size={19} weight="fill" className="text-blue-600 dark:text-blue-400" />
           Việc con
           {task.subtasks.length > 0 && (
-            <span className="rounded-full bg-navy-100 px-2 py-0.5 text-xs font-bold text-navy-500">
+            <span className="rounded-full bg-navy-100 px-2 py-0.5 text-xs font-bold text-navy-500 dark:bg-slate-700 dark:text-slate-400">
               {completedSub}/{task.subtasks.length}
             </span>
           )}
         </h2>
         {task.subtasks.length > 0 && (
-          <div className="mb-3 mt-1 h-1.5 overflow-hidden rounded-full bg-navy-100">
+          <div className="mb-3 mt-1 h-1.5 overflow-hidden rounded-full bg-navy-100 dark:bg-slate-700">
             <div
               className="h-full rounded-full bg-brand-gradient transition-all duration-300"
               style={{ width: `${(completedSub / task.subtasks.length) * 100}%` }}
@@ -284,7 +284,7 @@ export default function TaskDetailPage() {
         )}
         <ul className="mt-3 space-y-1.5">
           {task.subtasks.map((sub) => (
-            <li key={sub.id} className="group flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-navy-50">
+            <li key={sub.id} className="group flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-navy-50 dark:hover:bg-slate-700/50">
               <button
                 type="button"
                 onClick={() => onToggleSub(sub)}
@@ -295,12 +295,12 @@ export default function TaskDetailPage() {
               >
                 <Check size={11} weight="bold" />
               </button>
-              <p className={`flex-1 text-sm ${sub.isCompleted ? 'text-navy-300 line-through' : 'text-navy-800'}`}>{sub.content}</p>
+              <p className={`flex-1 text-sm ${sub.isCompleted ? 'text-navy-300 line-through dark:text-slate-500' : 'text-navy-800 dark:text-slate-200'}`}>{sub.content}</p>
               <button
                 type="button"
                 onClick={() => onDeleteSub(sub)}
                 aria-label={`Xóa việc con: ${sub.content}`}
-                className="cursor-pointer rounded-md p-1.5 text-navy-300 opacity-0 transition hover:bg-rose-50 hover:text-rose-500 focus-visible:opacity-100 group-hover:opacity-100"
+                className="cursor-pointer rounded-md p-1.5 text-navy-300 opacity-0 transition hover:bg-rose-50 hover:text-rose-500 focus-visible:opacity-100 group-hover:opacity-100 dark:hover:bg-rose-900/30"
               >
                 <X size={15} weight="bold" />
               </button>
@@ -315,7 +315,7 @@ export default function TaskDetailPage() {
               onChange={(e) => setSubtaskInput(e.target.value)}
               placeholder="Thêm việc con, nhấn Enter…"
               aria-label="Thêm việc con"
-              className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3.5 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 transition placeholder:text-navy-300 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3.5 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 transition placeholder:text-navy-300 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600 dark:placeholder:text-slate-400 dark:focus:bg-slate-600"
             />
             <Button type="submit" variant="secondary" icon={Plus} size="icon" aria-label="Thêm việc con" />
           </form>
@@ -327,23 +327,23 @@ export default function TaskDetailPage() {
 
       {/* Nhắc nhở */}
       <section className="card p-5 sm:p-6">
-        <h2 className="flex items-center gap-2 font-bold text-navy-900">
-          <Bell size={19} weight="fill" className="text-amber-500" />
+        <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
+          <Bell size={19} weight="fill" className="text-amber-500 dark:text-amber-400" />
           Nhắc nhở
-          <span className="rounded-full bg-navy-100 px-2 py-0.5 text-xs font-bold text-navy-500">
+          <span className="rounded-full bg-navy-100 px-2 py-0.5 text-xs font-bold text-navy-500 dark:bg-slate-700 dark:text-slate-400">
             {task.reminders.filter((r) => r.status === 'SCHEDULED').length}/5
           </span>
         </h2>
         {task.reminders.length > 0 ? (
           <ul className="mt-3 space-y-2">
             {task.reminders.map((r) => (
-              <li key={r.id} className="flex items-center gap-3 rounded-xl bg-navy-50/70 px-3.5 py-2.5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+              <li key={r.id} className="flex items-center gap-3 rounded-xl bg-navy-50/70 px-3.5 py-2.5 dark:bg-slate-900/50">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
                   <Clock size={17} weight="bold" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-navy-800">{formatDateTime(r.remindAt)}</p>
-                  <p className="text-xs text-navy-400">
+                  <p className="text-sm font-semibold text-navy-800 dark:text-slate-200">{formatDateTime(r.remindAt)}</p>
+                  <p className="text-xs text-navy-400 dark:text-slate-500">
                     {r.status === 'SCHEDULED' ? 'Sẽ báo thức đúng giờ' : r.status === 'CANCELLED' ? 'Đã bị hủy' : r.status === 'DISMISSED' ? 'Đã tắt' : 'Đã kích hoạt'}
                     {r.snoozeCount > 0 && ` · Đã hoãn ${r.snoozeCount} lần`}
                   </p>
@@ -365,20 +365,19 @@ export default function TaskDetailPage() {
           <EmptyState icon={Bell} title="Chưa có nhắc nhở" description="Thêm nhắc nhở để MN-Qronx báo thức bạn đúng giờ." className="py-8" />
         )}
         {!closed && task.reminders.filter((r) => r.status === 'SCHEDULED').length < 5 && (
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <input
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">              <input
               type="datetime-local"
               value={reminderTime}
               onChange={(e) => setReminderTime(e.target.value)}
               aria-label="Chọn thời điểm nhắc nhở"
-              className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3.5 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3.5 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600 dark:focus:bg-slate-600"
             />
             <Button variant="secondary" icon={Plus} onClick={onAddReminder}>
               Thêm nhắc nhở
             </Button>
           </div>
         )}
-        {closed && <p className="mt-3 text-xs text-navy-400">Công việc đã đóng – không thể thêm nhắc nhở mới.</p>}
+        {closed && <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">Công việc đã đóng – không thể thêm nhắc nhở mới.</p>}
       </section>
 
       <ConfirmDialog

@@ -118,8 +118,8 @@ export default function CalendarPage() {
     <div className="space-y-5 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="page-title">Lịch</h1>
-          <p className="mt-1 text-sm font-medium text-navy-400">Xem công việc theo ngày, tuần hoặc tháng</p>
+          <h1 className="page-title dark:text-white">Lịch</h1>
+          <p className="mt-1 text-sm font-medium text-navy-400 dark:text-slate-500">Xem công việc theo ngày, tuần hoặc tháng</p>
         </div>
         <Link to="/app/tasks/new">
           <Button variant="gradient" icon={Plus}>Tạo công việc</Button>
@@ -130,22 +130,22 @@ export default function CalendarPage() {
         {/* Thanh điều khiển */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-1">
-            <button type="button" onClick={() => move(-1)} aria-label="Trước đó" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-navy-600 transition hover:bg-navy-50">
+            <button type="button" onClick={() => move(-1)} aria-label="Trước đó" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-navy-600 transition hover:bg-navy-50 dark:text-slate-300 dark:hover:bg-slate-700">
               <CaretLeft size={18} weight="bold" />
             </button>
-            <button type="button" onClick={() => move(1)} aria-label="Tiếp theo" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-navy-600 transition hover:bg-navy-50">
+            <button type="button" onClick={() => move(1)} aria-label="Tiếp theo" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-navy-600 transition hover:bg-navy-50 dark:text-slate-300 dark:hover:bg-slate-700">
               <CaretRight size={18} weight="bold" />
             </button>
             <button
               type="button"
               onClick={goToday}
-              className="ml-1 h-10 cursor-pointer rounded-xl bg-navy-50 px-4 text-sm font-bold text-navy-700 ring-1 ring-inset ring-navy-100 transition hover:bg-navy-100"
+              className="ml-1 h-10 cursor-pointer rounded-xl bg-navy-50 px-4 text-sm font-bold text-navy-700 ring-1 ring-inset ring-navy-100 transition hover:bg-navy-100 dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600 dark:hover:bg-slate-600"
             >
               Hôm nay
             </button>
           </div>
-          <h2 className="text-lg font-extrabold text-navy-900">{headerLabel}</h2>
-          <div className="flex rounded-xl bg-navy-100/80 p-1" role="radiogroup" aria-label="Chế độ xem lịch">
+          <h2 className="text-lg font-extrabold text-navy-900 dark:text-white">{headerLabel}</h2>
+          <div className="flex rounded-xl bg-navy-100/80 p-1 dark:bg-slate-700/80" role="radiogroup" aria-label="Chế độ xem lịch">
             {VIEWS.map((v) => (
               <button
                 key={v.value}
@@ -154,7 +154,7 @@ export default function CalendarPage() {
                 aria-checked={view === v.value}
                 onClick={() => setView(v.value)}
                 className={`cursor-pointer rounded-lg px-4 py-1.5 text-sm font-semibold transition ${
-                  view === v.value ? 'bg-white text-navy-900 shadow-sm' : 'text-navy-500 hover:text-navy-800'
+                  view === v.value ? 'bg-white text-navy-900 shadow-sm dark:bg-slate-600 dark:text-white' : 'text-navy-500 hover:text-navy-800 dark:text-slate-400 dark:hover:text-white'
                 }`}
               >
                 {v.label}
@@ -187,16 +187,16 @@ export default function CalendarPage() {
       {/* Panel chi tiết ngày */}
       <section className="card p-4 sm:p-5">
         <div className="flex items-center justify-between">
-          <h2 className="flex items-center gap-2 font-bold text-navy-900">
-            <CalendarBlank size={18} weight="fill" className="text-blue-600" />
+          <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
+            <CalendarBlank size={18} weight="fill" className="text-blue-600 dark:text-blue-400" />
             Công việc · {formatDate(selected, { weekday: true })}
           </h2>
-          <span className="rounded-full bg-navy-100 px-2.5 py-0.5 text-xs font-bold text-navy-500">{selectedTasks.length} việc</span>
+          <span className="rounded-full bg-navy-100 px-2.5 py-0.5 text-xs font-bold text-navy-500 dark:bg-slate-700 dark:text-slate-400">{selectedTasks.length} việc</span>
         </div>
         <div className="mt-4 space-y-2.5">
           {selectedTasks.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8 text-center">
-              <p className="text-sm font-medium text-navy-400">Không có công việc nào trong ngày này</p>
+              <p className="text-sm font-medium text-navy-400 dark:text-slate-500">Không có công việc nào trong ngày này</p>
               <Link to="/app/tasks/new" className="btn-link text-sm">
                 Tạo công việc cho ngày này
               </Link>
@@ -206,7 +206,7 @@ export default function CalendarPage() {
               <Link
                 key={t.id}
                 to={`/app/tasks/${t.id}`}
-                className="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-card ring-1 ring-navy-100/80 transition hover:shadow-card-hover hover:ring-blue-200"
+                className="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-card ring-1 ring-navy-100/80 transition hover:shadow-card-hover hover:ring-blue-200 dark:bg-slate-800 dark:ring-slate-700/80 dark:hover:ring-blue-500/50"
               >
                 <span
                   className="flex h-11 w-14 shrink-0 flex-col items-center justify-center rounded-xl text-[10px] font-bold"
@@ -219,7 +219,7 @@ export default function CalendarPage() {
                   {formatTime(t.dueAt)}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className={`truncate text-sm font-semibold ${t.status === 'COMPLETED' ? 'text-navy-300 line-through' : 'text-navy-900'}`}>
+                  <p className={`truncate text-sm font-semibold ${t.status === 'COMPLETED' ? 'text-navy-300 line-through dark:text-slate-500' : 'text-navy-900 dark:text-white'}`}>
                     {t.title}
                   </p>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -253,7 +253,7 @@ function MonthGrid({ year, month, tasksByDay, selected, onSelect }) {
     <div className="mt-4 overflow-x-auto">
       <div className="grid min-w-[640px] grid-cols-7 gap-1.5">
         {VI_DAYS.map((d) => (
-          <div key={d} className="pb-1 text-center text-xs font-bold uppercase tracking-wider text-navy-400">
+          <div key={d} className="pb-1 text-center text-xs font-bold uppercase tracking-wider text-navy-400 dark:text-slate-500">
             {d}
           </div>
         ))}
@@ -272,20 +272,20 @@ function MonthGrid({ year, month, tasksByDay, selected, onSelect }) {
               className={[
                 'flex min-h-[84px] cursor-pointer flex-col items-stretch rounded-xl p-1.5 text-left transition-all duration-150',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
-                inMonth ? 'bg-navy-50/70 hover:bg-navy-100/80' : 'bg-transparent opacity-40',
+                inMonth ? 'bg-navy-50/70 hover:bg-navy-100/80 dark:bg-slate-800/70 dark:hover:bg-slate-700/80' : 'bg-transparent opacity-40',
                 isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : '',
               ].join(' ')}
             >
               <span className="flex items-center justify-between px-0.5">
                 <span
                   className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${
-                    isToday ? 'bg-brand-gradient text-white' : isSelected ? 'text-blue-700' : 'text-navy-700'
+                    isToday ? 'bg-brand-gradient text-white' : isSelected ? 'text-blue-700 dark:text-blue-400' : 'text-navy-700 dark:text-slate-300'
                   }`}
                 >
                   {date.getDate()}
                 </span>
                 {dayTasks.length > 0 && (
-                  <span className="rounded-full bg-white px-1.5 text-[10px] font-bold text-navy-500 ring-1 ring-navy-100">
+                  <span className="rounded-full bg-white px-1.5 text-[10px] font-bold text-navy-500 ring-1 ring-navy-100 dark:bg-slate-700 dark:text-slate-400 dark:ring-slate-600">
                     {dayTasks.length}
                   </span>
                 )}
@@ -327,14 +327,14 @@ function WeekGrid({ tasksByDay, selected, onSelect }) {
             onClick={() => onSelect(date)}
             className={[
               'flex cursor-pointer flex-col rounded-xl p-2 text-left transition',
-              isSelected ? 'bg-blue-50 ring-2 ring-blue-500' : 'bg-navy-50/70 hover:bg-navy-100/80',
+              isSelected ? 'bg-blue-50 ring-2 ring-blue-500 dark:bg-blue-900/30' : 'bg-navy-50/70 hover:bg-navy-100/80 dark:bg-slate-800/70 dark:hover:bg-slate-700/80',
             ].join(' ')}
           >
             <span className="flex items-center justify-center gap-1">
-              <span className="text-[10px] font-bold uppercase text-navy-400">{VI_DAYS_SHORT[date.getDay()]}</span>
+              <span className="text-[10px] font-bold uppercase text-navy-400 dark:text-slate-500">{VI_DAYS_SHORT[date.getDay()]}</span>
               <span
                 className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-                  isToday ? 'bg-brand-gradient text-white' : 'text-navy-800'
+                  isToday ? 'bg-brand-gradient text-white' : 'text-navy-800 dark:text-slate-200'
                 }`}
               >
                 {date.getDate()}
@@ -371,20 +371,20 @@ function DayView({ tasks, day }) {
         <Link
           key={t.id}
           to={`/app/tasks/${t.id}`}
-          className="flex items-center gap-3 rounded-xl bg-navy-50/70 p-3 transition hover:bg-navy-100/80"
+          className="flex items-center gap-3 rounded-xl bg-navy-50/70 p-3 transition hover:bg-navy-100/80 dark:bg-slate-800/70 dark:hover:bg-slate-700/80"
         >
           <span
             className="h-3 w-3 shrink-0 rounded-full"
             style={{ backgroundColor: t.category?.color || '#94a3b8' }}
             aria-hidden="true"
           />
-          <span className="text-sm font-bold text-navy-800">{formatTime(t.dueAt)}</span>
-          <span className="flex-1 truncate text-sm font-medium text-navy-700">{t.title}</span>
+          <span className="text-sm font-bold text-navy-800 dark:text-slate-200">{formatTime(t.dueAt)}</span>
+          <span className="flex-1 truncate text-sm font-medium text-navy-700 dark:text-slate-300">{t.title}</span>
           <StatusBadge status={effectiveStatus(t)} />
         </Link>
       ))}
       {tasks.length === 0 && (
-        <p className="py-6 text-center text-sm text-navy-400">Không có công việc · {formatDate(day, { weekday: true })}</p>
+        <p className="py-6 text-center text-sm text-navy-400 dark:text-slate-500">Không có công việc · {formatDate(day, { weekday: true })}</p>
       )}
     </div>
   )

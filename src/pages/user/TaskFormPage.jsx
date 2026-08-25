@@ -219,15 +219,15 @@ export default function TaskFormPage() {
       <Link to={isEdit ? `/app/tasks/${id}` : '/app/tasks'} className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-500 transition hover:text-blue-600">
         <ArrowLeft size={16} weight="bold" /> {isEdit ? 'Quay lại chi tiết' : 'Quay lại danh sách'}
       </Link>
-      <h1 className="page-title mt-4">{isEdit ? 'Sửa công việc' : 'Tạo công việc mới'}</h1>
-      <p className="mt-1 text-sm font-medium text-navy-400">
+      <h1 className="page-title dark:text-white mt-4">{isEdit ? 'Sửa công việc' : 'Tạo công việc mới'}</h1>
+      <p className="mt-1 text-sm font-medium text-navy-400 dark:text-slate-500">
         {isEdit ? 'Cập nhật thông tin và nhắc nhở của công việc.' : 'Nhập tiêu đề, thời hạn và nhắc nhở. Chỉ vài bước là xong.'}
       </p>
 
       <form onSubmit={onSubmit} noValidate className="mt-6 space-y-5 pb-10">
         {/* Thông tin cơ bản */}
         <section className="card space-y-4 p-5 sm:p-6">
-          <h2 className="font-bold text-navy-900">Thông tin cơ bản</h2>
+          <h2 className="font-bold text-navy-900 dark:text-white">Thông tin cơ bản</h2>
           <Field label="Tiêu đề công việc" required error={errors.title}>
             {(fid) => (
               <Input
@@ -282,10 +282,10 @@ export default function TaskFormPage() {
         {/* Nhắc nhở */}
         <section className="card p-5 sm:p-6">
           <div className="flex items-center justify-between">
-            <h2 className="flex items-center gap-2 font-bold text-navy-900">
-              <Bell size={19} weight="fill" className="text-amber-500" />
+            <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
+              <Bell size={19} weight="fill" className="text-amber-500 dark:text-amber-400" />
               Nhắc nhở
-              <span className="rounded-full bg-navy-100 px-2 py-0.5 text-xs font-bold text-navy-500">
+              <span className="rounded-full bg-navy-100 px-2 py-0.5 text-xs font-bold text-navy-500 dark:bg-slate-700 dark:text-slate-400">
                 {form.reminders.length}/{MAX_REMINDERS_PER_TASK}
               </span>
             </h2>
@@ -297,7 +297,7 @@ export default function TaskFormPage() {
                 type="button"
                 onClick={() => addPresetReminder(p.offset)}
                 disabled={form.reminders.length >= MAX_REMINDERS_PER_TASK}
-                className="cursor-pointer rounded-full bg-navy-50 px-3.5 py-1.5 text-xs font-bold text-navy-700 ring-1 ring-inset ring-navy-100 transition hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-40"
+                className="cursor-pointer rounded-full bg-navy-50 px-3.5 py-1.5 text-xs font-bold text-navy-700 ring-1 ring-inset ring-navy-100 transition hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400"
               >
                 + {p.label}
               </button>
@@ -309,16 +309,15 @@ export default function TaskFormPage() {
           {form.reminders.length > 0 && (
             <ul className="mt-4 space-y-2">
               {form.reminders.map((r, i) => (
-                <li key={i} className="flex items-center gap-2">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
-                    <Clock size={16} weight="bold" />
-                  </span>
+                <li key={i} className="flex items-center gap-2">                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+                      <Clock size={16} weight="bold" />
+                    </span>
                   <input
                     type="datetime-local"
                     value={r.remindAt}
                     onChange={(e) => updateReminder(i, e.target.value)}
                     aria-label={`Thời điểm nhắc nhở ${i + 1}`}
-                    className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600 dark:focus:bg-slate-600"
                   />
                   <button
                     type="button"
@@ -333,7 +332,7 @@ export default function TaskFormPage() {
             </ul>
           )}
           {form.reminders.length === 0 && (
-            <p className="mt-3 text-xs text-navy-400">
+            <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">
               Chưa có nhắc nhở – MN-Qronx sẽ không báo thức cho công việc này.
             </p>
           )}
@@ -341,9 +340,9 @@ export default function TaskFormPage() {
 
         {/* Việc con */}
         <section className="card p-5 sm:p-6">
-          <h2 className="flex items-center gap-2 font-bold text-navy-900">
-            <ListChecks size={19} weight="fill" className="text-blue-600" />
-            Việc con <span className="text-xs font-medium text-navy-400">(tùy chọn)</span>
+          <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
+            <ListChecks size={19} weight="fill" className="text-blue-600 dark:text-blue-400" />
+            Việc con <span className="text-xs font-medium text-navy-400 dark:text-slate-500">(tùy chọn)</span>
           </h2>
           {form.subtasks.length > 0 && (
             <ul className="mt-3 space-y-2">
@@ -355,7 +354,7 @@ export default function TaskFormPage() {
                     onChange={(e) => updateSubtask(i, e.target.value)}
                     placeholder={`Việc con ${i + 1}`}
                     aria-label={`Việc con ${i + 1}`}
-                    className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3.5 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3.5 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600 dark:focus:bg-slate-600"
                   />
                   <button
                     type="button"

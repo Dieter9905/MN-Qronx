@@ -49,14 +49,14 @@ export default function ChangePasswordPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 animate-fade-in">
-      <a href="/app/settings" className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-500 transition hover:text-blue-600">
+      <a href="/app/settings" className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-500 transition hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400">
         <ArrowLeft size={16} weight="bold" /> Quay lại cài đặt
       </a>
-      <h1 className="page-title">Đổi mật khẩu</h1>
+      <h1 className="page-title dark:text-white">Đổi mật khẩu</h1>
 
       <div className="card p-6">
         {serverError && (
-          <div role="alert" className="mb-4 rounded-xl bg-rose-50 p-3.5 text-sm font-medium text-rose-700 ring-1 ring-rose-200">
+          <div role="alert" className="mb-4 rounded-xl bg-rose-50 p-3.5 text-sm font-medium text-rose-700 ring-1 ring-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:ring-rose-800/50">
             {serverError}
           </div>
         )}
@@ -106,7 +106,7 @@ export default function ChangePasswordPage() {
           <button
             type="button"
             onClick={() => setShowPw((s) => !s)}
-            className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-navy-500 hover:text-blue-600"
+            className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-navy-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
           >
             {showPw ? <EyeSlash size={15} /> : <Eye size={15} />}
             {showPw ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}

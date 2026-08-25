@@ -41,12 +41,12 @@ export default function NotificationHistoryPage() {
     <div className="space-y-5 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="page-title">Lịch sử thông báo</h1>
-          <p className="mt-1 text-sm font-medium text-navy-400">
+          <h1 className="page-title dark:text-white">Lịch sử thông báo</h1>
+          <p className="mt-1 text-sm font-medium text-navy-400 dark:text-slate-500">
             Mọi báo thức đã gửi, đã hoãn hay đã tắt đều được ghi lại
           </p>
         </div>
-        <div className="flex rounded-xl bg-white p-1 shadow-card ring-1 ring-navy-100">
+        <div className="flex rounded-xl bg-white p-1 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
           {[
             { value: '', label: 'Tất cả' },
             { value: 'today', label: 'Hôm nay' },
@@ -61,7 +61,7 @@ export default function NotificationHistoryPage() {
                 setPage(1)
               }}
               className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                range === o.value ? 'bg-navy-900 text-white' : 'text-navy-500 hover:text-navy-800'
+                range === o.value ? 'bg-navy-900 text-white dark:bg-blue-600' : 'text-navy-500 hover:text-navy-800 dark:text-slate-400 dark:hover:text-white'
               }`}
             >
               {o.label}
@@ -88,13 +88,13 @@ export default function NotificationHistoryPage() {
         <>
           <div className="space-y-2.5">
             {data?.items.map((log) => (
-              <article key={log.id} className="card flex items-center gap-4 p-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-gradient-soft ring-1 ring-blue-100">
+              <article key={log.id} className="card flex items-center gap-4 p-4 dark:bg-slate-800 dark:ring-slate-700">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-gradient-soft ring-1 ring-blue-100 dark:ring-blue-900/50">
                   <Bell size={20} weight="duotone" className="text-blue-600" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-navy-900">{log.taskTitle}</p>
-                  <p className="mt-0.5 text-xs text-navy-400">
+                  <p className="truncate text-sm font-bold text-navy-900 dark:text-white">{log.taskTitle}</p>
+                  <p className="mt-0.5 text-xs text-navy-400 dark:text-slate-500">
                     {formatDateTime(log.sentAt)} · {log.deviceName} · {relativeTime(log.sentAt)}
                   </p>
                 </div>

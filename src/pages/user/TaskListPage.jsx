@@ -113,8 +113,8 @@ export default function TaskListPage() {
     <div className="space-y-5 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="page-title">Công việc</h1>
-          <p className="mt-1 text-sm font-medium text-navy-400">
+          <h1 className="page-title dark:text-white">Công việc</h1>
+          <p className="mt-1 text-sm font-medium text-navy-400 dark:text-slate-500">
             {data ? `${data.total} công việc` : '…'} · Lên kế hoạch và hoàn thành đúng thời điểm
           </p>
         </div>
@@ -134,7 +134,7 @@ export default function TaskListPage() {
               onChange={(e) => setFilters((f) => ({ ...f, keyword: e.target.value }))}
               placeholder="Tìm công việc theo tiêu đề…"
               aria-label="Tìm kiếm công việc"
-              className="h-11 w-full rounded-xl border-0 bg-navy-50 pl-10 pr-4 text-sm text-navy-900 ring-1 ring-inset ring-transparent transition placeholder:text-navy-300 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="h-11 w-full rounded-xl border-0 bg-navy-50 pl-10 pr-4 text-sm text-navy-900 ring-1 ring-inset ring-transparent transition placeholder:text-navy-300 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:placeholder:text-slate-400 dark:focus:bg-slate-600"
             />
           </div>
           <div className="flex gap-2">
@@ -142,7 +142,7 @@ export default function TaskListPage() {
               value={filters.sort}
               onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value }))}
               aria-label="Sắp xếp"
-              className="h-11 cursor-pointer rounded-xl border-0 bg-navy-50 px-3 text-sm font-medium text-navy-700 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="h-11 cursor-pointer rounded-xl border-0 bg-navy-50 px-3 text-sm font-medium text-navy-700 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600"
             >
               {SORT_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -152,7 +152,7 @@ export default function TaskListPage() {
               type="button"
               onClick={() => setFilterOpen((o) => !o)}
               aria-expanded={filterOpen}
-              className="relative flex h-11 cursor-pointer items-center gap-2 rounded-xl bg-navy-50 px-4 text-sm font-semibold text-navy-700 ring-1 ring-inset ring-navy-100 transition hover:bg-navy-100"
+              className="relative flex h-11 cursor-pointer items-center gap-2 rounded-xl bg-navy-50 px-4 text-sm font-semibold text-navy-700 ring-1 ring-inset ring-navy-100 transition hover:bg-navy-100 dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600 dark:hover:bg-slate-600"
             >
               <Funnel size={17} weight="bold" />
               <span className="hidden sm:inline">Lọc</span>
@@ -166,13 +166,13 @@ export default function TaskListPage() {
         </div>
 
         {filterOpen && (
-          <div className="mt-3 grid gap-3 border-t border-navy-100 pt-3 sm:grid-cols-4 animate-slide-down">
+          <div className="mt-3 grid gap-3 border-t border-navy-100 pt-3 sm:grid-cols-4 animate-slide-down dark:border-slate-700">
             <label className="block">
-              <span className="mb-1 block text-xs font-bold text-navy-500">Trạng thái</span>
+              <span className="mb-1 block text-xs font-bold text-navy-500 dark:text-slate-400">Trạng thái</span>
               <select
                 value={filters.status}
                 onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
-                className="h-10 w-full cursor-pointer rounded-lg border-0 bg-navy-50 px-3 text-sm font-medium text-navy-800 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="h-10 w-full cursor-pointer rounded-lg border-0 bg-navy-50 px-3 text-sm font-medium text-navy-800 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600"
               >
                 {STATUS_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
@@ -180,11 +180,11 @@ export default function TaskListPage() {
               </select>
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-bold text-navy-500">Ưu tiên</span>
+              <span className="mb-1 block text-xs font-bold text-navy-500 dark:text-slate-400">Ưu tiên</span>
               <select
                 value={filters.priority}
                 onChange={(e) => setFilters((f) => ({ ...f, priority: e.target.value }))}
-                className="h-10 w-full cursor-pointer rounded-lg border-0 bg-navy-50 px-3 text-sm font-medium text-navy-800 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="h-10 w-full cursor-pointer rounded-lg border-0 bg-navy-50 px-3 text-sm font-medium text-navy-800 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600"
               >
                 {PRIORITY_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
@@ -192,11 +192,11 @@ export default function TaskListPage() {
               </select>
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-bold text-navy-500">Danh mục</span>
+              <span className="mb-1 block text-xs font-bold text-navy-500 dark:text-slate-400">Danh mục</span>
               <select
                 value={filters.categoryId}
                 onChange={(e) => setFilters((f) => ({ ...f, categoryId: e.target.value }))}
-                className="h-10 w-full cursor-pointer rounded-lg border-0 bg-navy-50 px-3 text-sm font-medium text-navy-800 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="h-10 w-full cursor-pointer rounded-lg border-0 bg-navy-50 px-3 text-sm font-medium text-navy-800 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600"
               >
                 <option value="">Tất cả danh mục</option>
                 {categories.map((c) => (
@@ -205,11 +205,11 @@ export default function TaskListPage() {
               </select>
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-bold text-navy-500">Khoảng thời gian</span>
+              <span className="mb-1 block text-xs font-bold text-navy-500 dark:text-slate-400">Khoảng thời gian</span>
               <select
                 value={filters.range}
                 onChange={(e) => setFilters((f) => ({ ...f, range: e.target.value }))}
-                className="h-10 w-full cursor-pointer rounded-lg border-0 bg-navy-50 px-3 text-sm font-medium text-navy-800 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="h-10 w-full cursor-pointer rounded-lg border-0 bg-navy-50 px-3 text-sm font-medium text-navy-800 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600"
               >
                 <option value="">Mọi lúc</option>
                 <option value="today">Hôm nay</option>
@@ -266,7 +266,7 @@ export default function TaskListPage() {
               <Button variant="secondary" size="sm" icon={ArrowLeft} disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
                 Trước
               </Button>
-              <span className="flex items-center gap-1 rounded-xl bg-white px-3 py-2 text-sm font-bold text-navy-700 ring-1 ring-navy-100">
+              <span className="flex items-center gap-1 rounded-xl bg-white px-3 py-2 text-sm font-bold text-navy-700 ring-1 ring-navy-100 dark:bg-slate-800 dark:text-white dark:ring-slate-700">
                 <CaretDown size={14} className="hidden" />
                 Trang {page} / {totalPages}
               </span>

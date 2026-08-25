@@ -58,7 +58,7 @@ export default function LoginPage() {
   return (
     <AuthLayout title="Đăng nhập" subtitle="Chào mừng bạn quay lại MN-Qronx. Hãy tiếp tục quản lý công việc của mình.">
       {serverError && (
-        <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-xl bg-rose-50 p-3.5 text-sm font-medium text-rose-700 ring-1 ring-rose-200">
+        <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-xl bg-rose-50 p-3.5 text-sm font-medium text-rose-700 ring-1 ring-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:ring-rose-800/50">
           <WarningCircle size={18} className="mt-0.5 shrink-0" weight="fill" />
           {serverError}
         </div>
@@ -107,7 +107,7 @@ export default function LoginPage() {
           )}
         </Field>
         <div className="flex items-center justify-between text-sm">
-          <label className="flex cursor-pointer items-center gap-2 font-medium text-navy-600">
+          <label className="flex cursor-pointer items-center gap-2 font-medium text-navy-600 dark:text-slate-300">
             <input
               type="checkbox"
               checked={form.remember}
@@ -116,7 +116,7 @@ export default function LoginPage() {
             />
             Ghi nhớ đăng nhập
           </label>
-          <Link to="/forgot-password" className="font-semibold text-blue-600 hover:underline">
+          <Link to="/forgot-password" className="font-semibold text-blue-600 hover:underline dark:text-blue-400">
             Quên mật khẩu?
           </Link>
         </div>
@@ -125,31 +125,31 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <div className="mt-6 rounded-2xl bg-brand-gradient-soft p-4 ring-1 ring-blue-100">
-        <p className="text-xs font-bold uppercase tracking-wider text-navy-500">Tài khoản dùng thử</p>
+      <div className="mt-6 rounded-2xl bg-brand-gradient-soft p-4 ring-1 ring-blue-100 dark:ring-blue-900/50">
+        <p className="text-xs font-bold uppercase tracking-wider text-navy-500 dark:text-slate-400">Tài khoản dùng thử</p>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <button
             type="button"
             onClick={() => fillDemo('minh@mn-qronx.com', '123456')}
-            className="cursor-pointer rounded-xl bg-white p-3 text-left shadow-sm ring-1 ring-navy-100 transition hover:ring-blue-300"
+            className="cursor-pointer rounded-xl bg-white p-3 text-left shadow-sm ring-1 ring-navy-100 transition hover:ring-blue-300 dark:bg-slate-800 dark:ring-slate-700 dark:hover:ring-blue-500"
           >
-            <p className="text-xs font-bold text-navy-800">Người dùng (demo)</p>
-            <p className="mt-0.5 truncate text-[11px] text-navy-400">minh@mn-qronx.com</p>
-            <p className="text-[11px] text-navy-400">Mật khẩu: 123456</p>
+            <p className="text-xs font-bold text-navy-800 dark:text-white">Người dùng (demo)</p>
+            <p className="mt-0.5 truncate text-[11px] text-navy-400 dark:text-slate-400">minh@mn-qronx.com</p>
+            <p className="text-[11px] text-navy-400 dark:text-slate-400">Mật khẩu: 123456</p>
           </button>
           <button
             type="button"
             onClick={() => fillDemo('admin@mn-qronx.com', 'Admin@123')}
-            className="cursor-pointer rounded-xl bg-white p-3 text-left shadow-sm ring-1 ring-navy-100 transition hover:ring-purple-300"
+            className="cursor-pointer rounded-xl bg-white p-3 text-left shadow-sm ring-1 ring-navy-100 transition hover:ring-purple-300 dark:bg-slate-800 dark:ring-slate-700 dark:hover:ring-purple-500"
           >
-            <p className="text-xs font-bold text-navy-800">Quản trị viên</p>
-            <p className="mt-0.5 truncate text-[11px] text-navy-400">admin@mn-qronx.com</p>
-            <p className="text-[11px] text-navy-400">Mật khẩu: Admin@123</p>
+            <p className="text-xs font-bold text-navy-800 dark:text-white">Quản trị viên</p>
+            <p className="mt-0.5 truncate text-[11px] text-navy-400 dark:text-slate-400">admin@mn-qronx.com</p>
+            <p className="text-[11px] text-navy-400 dark:text-slate-400">Mật khẩu: Admin@123</p>
           </button>
         </div>
       </div>
 
-      <p className="mt-6 text-center text-sm text-navy-500">
+      <p className="mt-6 text-center text-sm text-navy-500 dark:text-slate-400">
         Chưa có tài khoản?{' '}
         <Link to="/register" className="font-semibold text-blue-600 hover:underline">
           Đăng ký ngay

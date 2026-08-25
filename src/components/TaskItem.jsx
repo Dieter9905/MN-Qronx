@@ -19,7 +19,7 @@ export default function TaskItem({ task, onToggleComplete, compact = false, onBe
   return (
     <Link
       to={`/app/tasks/${task.id}`}
-      className={`group flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-card ring-1 ring-navy-100/80 transition-all duration-150 hover:shadow-card-hover hover:ring-blue-200 ${
+      className={`group flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-card ring-1 ring-navy-100/80 transition-all duration-150 hover:shadow-card-hover hover:ring-blue-200 dark:bg-slate-800 dark:ring-slate-700/80 dark:hover:ring-blue-500/50 ${
         cancelled ? 'opacity-60' : ''
       } ${compact ? '' : 'sm:p-4'}`}
       aria-label={`Xem chi tiết: ${task.title}`}
@@ -34,7 +34,7 @@ export default function TaskItem({ task, onToggleComplete, compact = false, onBe
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
           completed
             ? 'border-emerald-500 bg-emerald-500 text-white'
-            : 'border-navy-200 text-transparent hover:border-blue-500 hover:text-blue-200 group-hover:border-blue-400',
+            : 'border-navy-200 text-transparent hover:border-blue-500 hover:text-blue-200 group-hover:border-blue-400 dark:border-slate-600 dark:hover:border-blue-400 dark:group-hover:border-blue-400',
         ].join(' ')}
       >
         <Check size={13} weight="bold" />
@@ -44,7 +44,7 @@ export default function TaskItem({ task, onToggleComplete, compact = false, onBe
         <div className="flex items-center gap-2">
           <p
             className={`truncate text-sm font-semibold ${
-              completed ? 'text-navy-300 line-through' : 'text-navy-900'
+              completed ? 'text-navy-300 line-through dark:text-slate-500' : 'text-navy-900 dark:text-white'
             }`}
           >
             {task.title}
@@ -69,7 +69,7 @@ export default function TaskItem({ task, onToggleComplete, compact = false, onBe
           )}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-navy-400">
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-navy-400 dark:text-slate-500">
             <Clock size={12} weight="bold" />
             {formatRelativeDay(task.dueAt)} · {formatTime(task.dueAt)}
           </span>

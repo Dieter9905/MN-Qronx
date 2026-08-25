@@ -4,7 +4,7 @@ import { Logo, LogoMark } from './Logo'
 
 export default function AuthLayout({ children, title, subtitle }) {
   return (
-    <div className="flex min-h-dvh bg-navy-50">
+    <div className="flex min-h-dvh bg-navy-50 dark:bg-slate-900">
       {/* Brand panel */}
       <aside className="relative hidden w-1/2 overflow-hidden bg-navy-900 lg:block">
         <div className="absolute inset-0 bg-hero-glow" aria-hidden="true" />
@@ -47,8 +47,8 @@ export default function AuthLayout({ children, title, subtitle }) {
               <Logo size={34} />
             </Link>
           </div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-navy-900">{title}</h1>
-          {subtitle && <p className="mt-2 text-sm text-navy-500">{subtitle}</p>}
+          <h1 className="text-2xl font-extrabold tracking-tight text-navy-900 dark:text-white">{title}</h1>
+          {subtitle && <p className="mt-2 text-sm text-navy-500 dark:text-slate-400">{subtitle}</p>}
           <div className="mt-7">{children}</div>
         </div>
       </main>

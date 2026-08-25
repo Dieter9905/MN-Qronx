@@ -72,8 +72,8 @@ export default function CategoriesPage() {
     <div className="space-y-5 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="page-title">Danh mục</h1>
-          <p className="mt-1 text-sm font-medium text-navy-400">
+          <h1 className="page-title dark:text-white">Danh mục</h1>
+          <p className="mt-1 text-sm font-medium text-navy-400 dark:text-slate-500">
             Nhóm công việc theo lĩnh vực để theo dõi dễ dàng hơn
           </p>
         </div>
@@ -132,14 +132,14 @@ export default function CategoriesPage() {
                   </button>
                 </div>
               </div>
-              <h3 className="mt-4 flex items-center gap-2 font-bold text-navy-900">
+              <h3 className="mt-4 flex items-center gap-2 font-bold text-navy-900 dark:text-white">
                 {cat.name}
                 {!cat.isActive && (
                   <span className="rounded-full bg-navy-100 px-2 py-0.5 text-[10px] font-bold text-navy-500">Đã ẩn</span>
                 )}
               </h3>
-              <p className="mt-1 text-sm text-navy-400">{cat.taskCount} công việc</p>
-              <div className="mt-3 h-1.5 rounded-full bg-navy-100" style={{ width: `${Math.min(100, cat.taskCount * 14)}%` }}>
+              <p className="mt-1 text-sm text-navy-400 dark:text-slate-500">{cat.taskCount} công việc</p>
+              <div className="mt-3 h-1.5 rounded-full bg-navy-100 dark:bg-slate-700" style={{ width: `${Math.min(100, cat.taskCount * 14)}%` }}>
                 <div className="h-full rounded-full" style={{ backgroundColor: cat.color, width: '100%' }} />
               </div>
             </div>

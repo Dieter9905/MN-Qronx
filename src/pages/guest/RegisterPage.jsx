@@ -66,7 +66,7 @@ export default function RegisterPage() {
       subtitle="Bắt đầu quản lý thời gian và công việc đúng hạn với MN-Qronx – miễn phí."
     >
       {serverError && (
-        <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-xl bg-rose-50 p-3.5 text-sm font-medium text-rose-700 ring-1 ring-rose-200">
+        <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-xl bg-rose-50 p-3.5 text-sm font-medium text-rose-700 ring-1 ring-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:ring-rose-800/50">
           <WarningCircle size={18} className="mt-0.5 shrink-0" weight="fill" />
           {serverError}
         </div>
@@ -149,7 +149,7 @@ export default function RegisterPage() {
           Đăng ký
         </Button>
       </form>
-      <p className="mt-6 text-center text-sm text-navy-500">
+      <p className="mt-6 text-center text-sm text-navy-500 dark:text-slate-400">
         Đã có tài khoản?{' '}
         <Link to="/login" className="font-semibold text-blue-600 hover:underline">
           Đăng nhập

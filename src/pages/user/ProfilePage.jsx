@@ -40,18 +40,18 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 animate-fade-in">
-      <a href="/app/settings" className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-500 transition hover:text-blue-600">
+      <a href="/app/settings" className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-500 transition hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400">
         <ArrowLeft size={16} weight="bold" /> Quay lại cài đặt
       </a>
-      <h1 className="page-title">Hồ sơ cá nhân</h1>
+      <h1 className="page-title dark:text-white">Hồ sơ cá nhân</h1>
 
       <div className="card p-6">
-        <div className="flex flex-col items-center gap-4 border-b border-navy-100 pb-6 sm:flex-row sm:items-center">
+        <div className="flex flex-col items-center gap-4 border-b border-navy-100 pb-6 dark:border-slate-700 sm:flex-row sm:items-center">
           <Avatar name={form.fullName || user?.fullName} size="xl" />
           <div className="text-center sm:text-left">
-            <p className="text-lg font-extrabold text-navy-900">{user?.fullName}</p>
-            <p className="text-sm text-navy-400">{user?.email}</p>
-            <p className="mt-1 text-xs text-navy-400">
+            <p className="text-lg font-extrabold text-navy-900 dark:text-white">{user?.fullName}</p>
+            <p className="text-sm text-navy-400 dark:text-slate-400">{user?.email}</p>
+            <p className="mt-1 text-xs text-navy-400 dark:text-slate-500">
               Thành viên từ {formatDate(user?.createdAt)} · Vai trò: {user?.role === 'ADMIN' ? 'Quản trị viên' : 'Người dùng'}
             </p>
           </div>
