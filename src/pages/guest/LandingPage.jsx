@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ListChecks,
@@ -39,16 +40,97 @@ function useT() {
   return landing[lang]
 }
 
+// ---------- Scroll reveal hook ----------
+function useScrollReveal(options = {}) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add('visible')
+          observer.unobserve(el)
+        }
+      },
+      { threshold: options.threshold || 0.15, rootMargin: options.rootMargin || '0px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  return ref
+}
+
+// ---------- Mouse tilt hook ----------
+function useMouseTilt(ref, { maxTilt = 8, scale = 1.02 } = {}) {
+  const rafRef = useRef(null)
+  const handleMove = useCallback((e) => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(() => {
+      const el = ref.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const x = (e.clientX - rect.left) / rect.width
+      const y = (e.clientY - rect.top) / rect.height
+      const tiltX = (0.5 - y) * maxTilt
+      const tiltY = (x - 0.5) * maxTilt
+      el.style.transform = `perspective(800px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(${scale})`
+    })
+  }, [ref, maxTilt, scale])
+  const handleLeave = useCallback(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    const el = ref.current
+    if (el) el.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) scale(1)'
+  }, [ref])
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.addEventListener('mousemove', handleMove)
+    el.addEventListener('mouseleave', handleLeave)
+    return () => {
+      el.removeEventListener('mousemove', handleMove)
+      el.removeEventListener('mouseleave', handleLeave)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    }
+  }, [ref, handleMove, handleLeave])
+}
+
+// ---------- Parallax hook ----------
+function useParallax(speed = 0.3) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    let ticking = false
+    const handleScroll = () => {
+      if (!ticking) {
+        ticking = true
+        requestAnimationFrame(() => {
+          const rect = el.getBoundingClientRect()
+          const offset = (rect.top - window.innerHeight / 2) * speed
+          el.style.transform = `translateY(${offset}px)`
+          ticking = false
+        })
+      }
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [speed])
+  return ref
+}
+
 // ---------- ThemeToggle ----------
 function ThemeToggle() {
   const { theme, toggleTheme } = useTheme()
   return (
     <button
       onClick={toggleTheme}
-      className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy-100/70 text-navy-600 transition-all hover:scale-110 hover:bg-navy-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+      className="group relative flex h-9 w-9 items-center justify-center rounded-xl bg-navy-100/70 text-navy-600 transition-all duration-300 hover:scale-110 hover:bg-navy-200 hover:shadow-glow-blue dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
       aria-label={theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
     >
-      {theme === 'light' ? <Moon size={18} weight="bold" /> : <Sun size={18} weight="bold" />}
+      <span className="transition-transform duration-300 group-hover:rotate-180">
+        {theme === 'light' ? <Moon size={18} weight="bold" /> : <Sun size={18} weight="bold" />}
+      </span>
     </button>
   )
 }
@@ -59,7 +141,7 @@ function LangToggle() {
   return (
     <button
       onClick={toggleLang}
-      className="flex h-9 items-center gap-1 rounded-xl bg-navy-100/70 px-3 text-xs font-bold text-navy-600 transition-all hover:scale-110 hover:bg-navy-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+      className="flex h-9 items-center gap-1 rounded-xl bg-navy-100/70 px-3 text-xs font-bold text-navy-600 transition-all duration-300 hover:scale-110 hover:bg-navy-200 hover:shadow-glow-blue dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
       aria-label="Đổi ngôn ngữ"
     >
       <Translate size={14} weight="bold" />
@@ -73,16 +155,26 @@ function GuestNav() {
   const { user } = useAuth()
   const t = useT()
   return (
-    <header className="sticky top-0 z-40 border-b border-navy-100/60 bg-white/85 backdrop-blur dark:border-slate-700/60 dark:bg-slate-900/85">
+    <header className="sticky top-0 z-40 border-b border-navy-100/60 bg-white/80 backdrop-blur-xl dark:border-slate-700/60 dark:bg-slate-900/80">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link to="/" aria-label="MN-Qronx – Trang chủ">
           <Logo size={34} />
         </Link>
         <nav className="hidden items-center gap-8 text-sm font-semibold text-navy-600 dark:text-slate-300 md:flex" aria-label="Điều hướng">
-          <a href="#tinh-nang" className="transition hover:text-blue-600 dark:hover:text-blue-400">{t.navFeatures}</a>
-          <a href="#cach-hoat-dong" className="transition hover:text-blue-600 dark:hover:text-blue-400">{t.navHowItWorks}</a>
-          <a href="#gioi-thieu" className="transition hover:text-blue-600 dark:hover:text-blue-400">{t.navAbout}</a>
-          <a href="#lien-he" className="transition hover:text-blue-600 dark:hover:text-blue-400">{t.navContact}</a>
+          {[
+            { href: '#tinh-nang', label: t.navFeatures },
+            { href: '#cach-hoat-dong', label: t.navHowItWorks },
+            { href: '#gioi-thieu', label: t.navAbout },
+            { href: '#lien-he', label: t.navContact },
+          ].map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="relative py-1 transition-colors hover:text-blue-600 dark:hover:text-blue-400 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-brand-gradient after:transition-all after:duration-300 hover:after:w-full"
+            >
+              {item.label}
+            </a>
+          ))}
         </nav>
         <div className="flex items-center gap-2">
           <ThemeToggle />
@@ -114,18 +206,52 @@ function GuestNav() {
 // ---------- Hero ----------
 function Hero() {
   const t = useT()
+  const heroCardRef = useRef(null)
+  const heroSectionRef = useRef(null)
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+
+  useMouseTilt(heroCardRef, { maxTilt: 12, scale: 1.03 })
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 2
+      const y = (e.clientY / window.innerHeight - 0.5) * 2
+      setMousePos({ x, y })
+    }
+    window.addEventListener('mousemove', handleMouseMove, { passive: true })
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
+
   return (
-    <section className="relative overflow-hidden bg-navy-900 text-white dark:bg-slate-950">
-      {/* Animated orbs */}
-      <div className="orb animate-glow-pulse h-[500px] w-[500px] bg-blue-500 -top-40 -left-40" />
-      <div className="orb animate-glow-pulse h-[400px] w-[400px] bg-purple-500 -bottom-32 -right-32" style={{ animationDelay: '1.5s' }} />
+    <section ref={heroSectionRef} className="relative overflow-hidden bg-navy-900 text-white dark:bg-slate-950">
+      {/* Animated orbs with parallax */}
+      <div
+        className="orb animate-glow-pulse h-[600px] w-[600px] bg-blue-500 -top-48 -left-48"
+        style={{ transform: `translate(${mousePos.x * -20}px, ${mousePos.y * -20}px)` }}
+      />
+      <div
+        className="orb animate-glow-pulse h-[500px] w-[500px] bg-purple-500 -bottom-40 -right-40"
+        style={{ animationDelay: '1.5s', transform: `translate(${mousePos.x * 15}px, ${mousePos.y * 15}px)` }}
+      />
+      <div
+        className="orb animate-glow-pulse h-[300px] w-[300px] bg-cyan-400 top-1/3 left-1/2"
+        style={{ animationDelay: '3s', transform: `translate(${mousePos.x * -10}px, ${mousePos.y * 10}px)` }}
+      />
       <div className="absolute inset-0 bg-hero-glow dark:bg-hero-glow-dark" aria-hidden="true" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" aria-hidden="true" />
 
+      {/* Grid pattern overlay */}
+      <div className="absolute inset-0 opacity-[0.03]" aria-hidden="true"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+          backgroundSize: '60px 60px',
+        }}
+      />
+
       <div className="relative mx-auto grid max-w-6xl gap-12 px-4 pb-20 pt-16 sm:px-6 lg:grid-cols-2 lg:items-center lg:pb-28 lg:pt-24">
-        <div className="animate-slide-up">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider text-cyan-300 ring-1 ring-inset ring-white/15">
-            <Lightning size={14} weight="fill" />
+        <div className="reveal">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-cyan-300 ring-1 ring-inset ring-white/15 backdrop-blur-sm">
+            <Lightning size={14} weight="fill" className="animate-pulse" />
             {t.heroBadge}
           </span>
           <h1 className="mt-6 text-4xl font-extrabold leading-[1.12] tracking-tight sm:text-5xl lg:text-[3.4rem]">
@@ -138,7 +264,7 @@ function Hero() {
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link to="/register">
-              <Button variant="gradient" size="lg" icon={CaretRight} iconWeight="bold">
+              <Button variant="gradient" size="lg" icon={CaretRight} iconWeight="bold" className="glow-ring">
                 {t.heroCta}
               </Button>
             </Link>
@@ -149,28 +275,28 @@ function Hero() {
             </a>
           </div>
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-semibold text-navy-300">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle size={16} weight="fill" className="text-cyan-400" /> {t.heroFreeTrial}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle size={16} weight="fill" className="text-cyan-400" /> {t.heroSync}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle size={16} weight="fill" className="text-cyan-400" /> {t.heroNoCard}
-            </span>
+            {[
+              { icon: CheckCircle, text: t.heroFreeTrial },
+              { icon: CheckCircle, text: t.heroSync },
+              { icon: CheckCircle, text: t.heroNoCard },
+            ].map((item, i) => (
+              <span key={i} className="flex items-center gap-1.5 transition-colors hover:text-cyan-300">
+                <item.icon size={16} weight="fill" className="text-cyan-400" /> {item.text}
+              </span>
+            ))}
           </div>
         </div>
 
         {/* Hero visual – 3D tilt card */}
-        <div className="relative mx-auto w-full max-w-md animate-slide-up perspective-1000" style={{ animationDelay: '120ms' }}>
-          <HeroVisual />
+        <div className="relative mx-auto w-full max-w-md reveal" style={{ transitionDelay: '0.15s' }}>
+          <HeroVisual cardRef={heroCardRef} mousePos={mousePos} />
         </div>
       </div>
     </section>
   )
 }
 
-function HeroVisual() {
+function HeroVisual({ cardRef, mousePos }) {
   const t = useT()
   const tasks = [
     { time: '09:00', title: t.heroTask1, color: '#8B5CF6', tag: t.heroTag1 },
@@ -179,13 +305,18 @@ function HeroVisual() {
   ]
   return (
     <div className="relative">
-      <div className="absolute -inset-6 rounded-[2.5rem] bg-brand-gradient opacity-20 blur-3xl animate-glow-pulse" aria-hidden="true" />
-      <div className="relative hero-3d rounded-3xl bg-white/95 p-4 shadow-2xl ring-1 ring-white/40 dark:bg-slate-800/95 dark:ring-slate-600/40">
+      {/* Background glow with parallax */}
+      <div
+        className="absolute -inset-8 rounded-[2.5rem] bg-brand-gradient opacity-20 blur-3xl animate-glow-pulse"
+        aria-hidden="true"
+        style={{ transform: `translate(${mousePos.x * 10}px, ${mousePos.y * 10}px)` }}
+      />
+      <div ref={cardRef} className="relative mouse-tilt rounded-3xl bg-white/95 p-4 shadow-2xl ring-1 ring-white/40 dark:bg-slate-800/95 dark:ring-slate-600/40">
         {/* Thanh trình duyệt */}
         <div className="flex items-center gap-2 px-1 pb-3">
-          <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
-          <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+          <span className="h-2.5 w-2.5 rounded-full bg-rose-400 transition-transform hover:scale-125" />
+          <span className="h-2.5 w-2.5 rounded-full bg-amber-400 transition-transform hover:scale-125" />
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 transition-transform hover:scale-125" />
           <span className="ml-2 flex-1 rounded-md bg-navy-50 px-3 py-1 text-[11px] font-medium text-navy-400 dark:bg-slate-700 dark:text-slate-400">
             app.mn-qronx.com
           </span>
@@ -197,17 +328,17 @@ function HeroVisual() {
               <p className="text-sm font-bold text-navy-900 dark:text-white">{t.heroGreeting}</p>
               <p className="text-xs text-navy-400 dark:text-slate-500">{t.heroDate}</p>
             </div>
-            <span className="rounded-full bg-brand-gradient px-3 py-1 text-[11px] font-bold text-white">
+            <span className="rounded-full bg-brand-gradient px-3 py-1 text-[11px] font-bold text-white shadow-glow-blue">
               5 · 3 ✅
             </span>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2">
             {[
-              { n: '5', l: t.heroTasks, c: 'text-blue-600 dark:text-blue-400' },
-              { n: '3', l: t.heroDone, c: 'text-emerald-600 dark:text-emerald-400' },
-              { n: '2', l: t.heroRemaining, c: 'text-amber-600 dark:text-amber-400' },
+              { n: '5', l: t.heroTasks, c: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+              { n: '3', l: t.heroDone, c: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+              { n: '2', l: t.heroRemaining, c: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20' },
             ].map((s) => (
-              <div key={s.l} className="rounded-xl bg-white p-2.5 text-center shadow-sm dark:bg-slate-800">
+              <div key={s.l} className={`rounded-xl ${s.bg} p-2.5 text-center transition-transform hover:scale-105`}>
                 <p className={`text-lg font-extrabold ${s.c}`}>{s.n}</p>
                 <p className="text-[10px] font-semibold text-navy-400 dark:text-slate-500">{s.l}</p>
               </div>
@@ -215,24 +346,23 @@ function HeroVisual() {
           </div>
           <p className="mt-4 text-xs font-bold uppercase tracking-wider text-navy-400 dark:text-slate-500">{t.heroSchedule}</p>
           <ul className="mt-2 space-y-1.5">
-            {tasks.map((t, i) => (
+            {tasks.map((task, i) => (
               <li
-                key={t.title}
-                className="flex items-center gap-2.5 rounded-xl bg-white p-2.5 shadow-sm dark:bg-slate-800"
-                style={{ animationDelay: `${i * 120}ms` }}
+                key={task.title}
+                className="flex items-center gap-2.5 rounded-xl bg-white p-2.5 shadow-sm transition-all duration-300 hover:translate-x-1 hover:shadow-md dark:bg-slate-800"
               >
                 <span
                   className="flex h-9 w-9 shrink-0 flex-col items-center justify-center rounded-lg text-[9px] font-bold"
-                  style={{ backgroundColor: `${t.color}1a`, color: t.color }}
+                  style={{ backgroundColor: `${task.color}1a`, color: task.color }}
                 >
                   <Clock size={11} weight="bold" />
-                  {t.time}
+                  {task.time}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-xs font-bold text-navy-800 dark:text-white">{t.title}</span>
-                  <span className="block text-[10px] text-navy-400 dark:text-slate-500">{t.tag}</span>
+                  <span className="block truncate text-xs font-bold text-navy-800 dark:text-white">{task.title}</span>
+                  <span className="block text-[10px] text-navy-400 dark:text-slate-500">{task.tag}</span>
                 </span>
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: t.color }} aria-hidden="true" />
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: task.color }} aria-hidden="true" />
               </li>
             ))}
           </ul>
@@ -241,10 +371,13 @@ function HeroVisual() {
 
       {/* Card báo thức nổi – 3D float */}
       <div
-        className="absolute -right-4 -top-6 flex animate-hero-float items-center gap-3 rounded-2xl bg-navy-900 p-3 text-white shadow-glow-purple ring-1 ring-white/20 dark:bg-slate-800"
-        style={{ animationDelay: '300ms' }}
+        className="absolute -right-4 -top-6 flex items-center gap-3 rounded-2xl bg-navy-900 p-3 text-white shadow-glow-purple ring-1 ring-white/20 transition-all duration-300 hover:scale-105 dark:bg-slate-800"
+        style={{
+          animation: 'floatVaried 7s ease-in-out infinite',
+          animationDelay: '300ms',
+        }}
       >
-        <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gradient">
+        <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gradient shadow-glow-blue">
           <Bell size={18} weight="fill" />
           <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 animate-ping rounded-full bg-rose-400" />
         </span>
@@ -253,25 +386,31 @@ function HeroVisual() {
           <span className="block text-[10px] text-navy-300">{t.heroAlarmSnooze}</span>
         </span>
       </div>
+
+      {/* Floating accent dots */}
+      <div className="absolute -bottom-4 -left-6 h-3 w-3 rounded-full bg-cyan-400/60 animate-pulse" />
+      <div className="absolute -top-2 left-1/4 h-2 w-2 rounded-full bg-purple-400/60 animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className="absolute bottom-1/4 -right-8 h-4 w-4 rounded-full bg-blue-400/40 animate-pulse" style={{ animationDelay: '2s' }} />
     </div>
   )
 }
 
 // ---------- Tính năng ----------
 const FEATURES = [
-  { icon: ListChecks, color: 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30', titleKey: 'f1Title', descKey: 'f1Desc' },
-  { icon: BellRinging, color: 'text-purple-600 bg-purple-50 dark:text-purple-400 dark:bg-purple-900/30', titleKey: 'f2Title', descKey: 'f2Desc' },
-  { icon: ArrowsClockwise, color: 'text-cyan-600 bg-cyan-50 dark:text-cyan-400 dark:bg-cyan-900/30', titleKey: 'f3Title', descKey: 'f3Desc' },
-  { icon: Clock, color: 'text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/30', titleKey: 'f4Title', descKey: 'f4Desc' },
-  { icon: CheckCircle, color: 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/30', titleKey: 'f5Title', descKey: 'f5Desc' },
-  { icon: Fire, color: 'text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-900/30', titleKey: 'f6Title', descKey: 'f6Desc' },
+  { icon: ListChecks, color: 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30', titleKey: 'f1Title', descKey: 'f1Desc', gradient: 'from-blue-500 to-blue-600' },
+  { icon: BellRinging, color: 'text-purple-600 bg-purple-50 dark:text-purple-400 dark:bg-purple-900/30', titleKey: 'f2Title', descKey: 'f2Desc', gradient: 'from-purple-500 to-purple-600' },
+  { icon: ArrowsClockwise, color: 'text-cyan-600 bg-cyan-50 dark:text-cyan-400 dark:bg-cyan-900/30', titleKey: 'f3Title', descKey: 'f3Desc', gradient: 'from-cyan-500 to-cyan-600' },
+  { icon: Clock, color: 'text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/30', titleKey: 'f4Title', descKey: 'f4Desc', gradient: 'from-amber-500 to-amber-600' },
+  { icon: CheckCircle, color: 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/30', titleKey: 'f5Title', descKey: 'f5Desc', gradient: 'from-emerald-500 to-emerald-600' },
+  { icon: Fire, color: 'text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-900/30', titleKey: 'f6Title', descKey: 'f6Desc', gradient: 'from-rose-500 to-rose-600' },
 ]
 
 function Features() {
   const t = useT()
+  const sectionRef = useScrollReveal()
   return (
     <section id="tinh-nang" className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
-      <div className="mx-auto max-w-2xl text-center">
+      <div ref={sectionRef} className="reveal mx-auto max-w-2xl text-center">
         <span className="text-xs font-bold uppercase tracking-[0.2em] text-brand-purple">{t.featuresLabel}</span>
         <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-navy-900 dark:text-white sm:text-4xl">
           {t.featuresTitle1} <span className="bg-brand-gradient bg-clip-text text-transparent">{t.featuresTitle2}</span>
@@ -282,20 +421,34 @@ function Features() {
       </div>
       <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 perspective-1000">
         {FEATURES.map((f, i) => (
-          <article
-            key={f.titleKey}
-            className="card card-3d group p-6"
-            style={{ animationDelay: `${i * 60}ms` }}
-          >
-            <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${f.color}`}>
-              <f.icon size={24} weight="duotone" />
-            </div>
-            <h3 className="mt-4 text-lg font-bold text-navy-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400">{t[f.titleKey]}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-navy-500 dark:text-slate-400">{t[f.descKey]}</p>
-          </article>
+          <FeatureCard key={f.titleKey} feature={f} index={i} t={t} />
         ))}
       </div>
     </section>
+  )
+}
+
+function FeatureCard({ feature: f, index: i, t }) {
+  const cardRef = useRef(null)
+  const revealRef = useScrollReveal()
+
+  useMouseTilt(cardRef, { maxTilt: 8, scale: 1.03 })
+
+  return (
+    <article
+      ref={(el) => {
+        cardRef.current = el
+        revealRef.current = el
+      }}
+      className="reveal card card-3d depth-shadow group p-6"
+      style={{ transitionDelay: `${i * 0.08}s` }}
+    >
+      <div className={`relative flex h-12 w-12 items-center justify-center rounded-xl ${f.color} transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
+        <f.icon size={24} weight="duotone" />
+      </div>
+      <h3 className="mt-4 text-lg font-bold text-navy-900 transition-colors duration-300 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400">{t[f.titleKey]}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-navy-500 dark:text-slate-400">{t[f.descKey]}</p>
+    </article>
   )
 }
 
@@ -308,11 +461,14 @@ function HowItWorks() {
     { icon: BellRinging, titleKey: 'howStep3Title', descKey: 'howStep3Desc' },
     { icon: CheckCircle, titleKey: 'howStep4Title', descKey: 'howStep4Desc' },
   ]
+  const sectionRef = useScrollReveal()
+  const parallaxRef = useParallax(0.05)
+
   return (
     <section id="cach-hoat-dong" className="relative overflow-hidden bg-white py-20 dark:bg-slate-900 lg:py-28">
       <div className="absolute inset-0 bg-brand-gradient-soft dark:opacity-50" aria-hidden="true" />
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
+        <div ref={sectionRef} className="reveal mx-auto max-w-2xl text-center">
           <span className="text-xs font-bold uppercase tracking-[0.2em] text-brand-blue">{t.howLabel}</span>
           <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-navy-900 dark:text-white sm:text-4xl">
             {t.howTitle1} <span className="bg-brand-gradient bg-clip-text text-transparent">{t.howTitle2}</span>
@@ -323,36 +479,27 @@ function HowItWorks() {
         </div>
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4 perspective-1000">
           {steps.map((s, i) => (
-            <div key={s.titleKey} className="card card-3d relative p-6">
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-glow-blue">
-                  <s.icon size={22} weight="bold" />
-                </span>
-                <span className="text-3xl font-extrabold text-navy-100 dark:text-slate-700">{String(i + 1).padStart(2, '0')}</span>
-              </div>
-              <h3 className="mt-4 font-bold text-navy-900 dark:text-white">{t[s.titleKey]}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-navy-500 dark:text-slate-400">{t[s.descKey]}</p>
-            </div>
+            <StepCard key={s.titleKey} step={s} index={i} t={t} />
           ))}
         </div>
 
         {/* Màn hình báo thức demo – 3D perspective */}
-        <div className="mt-16 perspective-1200">
-          <div className="overflow-hidden rounded-3xl bg-navy-900 shadow-2xl ring-1 ring-navy-800 dark:bg-slate-800 dark:ring-slate-700" style={{ transformStyle: 'preserve-3d' }}>
+        <div ref={parallaxRef} className="mt-16 perspective-1200">
+          <div className="reveal-scale overflow-hidden rounded-3xl bg-navy-900 shadow-2xl ring-1 ring-navy-800 dark:bg-slate-800 dark:ring-slate-700" style={{ transformStyle: 'preserve-3d' }}>
             <div className="grid items-center gap-8 p-8 sm:p-12 lg:grid-cols-2">
-              <div>
+              <div className="reveal-left">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 px-3 py-1 text-xs font-bold text-rose-300 ring-1 ring-inset ring-rose-500/30">
-                  <BellRinging size={13} weight="fill" /> {t.alarmLabel}
+                  <BellRinging size={13} weight="fill" className="animate-alarm-bell" /> {t.alarmLabel}
                 </span>
                 <h3 className="mt-4 text-2xl font-extrabold text-white sm:text-3xl">
-                  {t.alarmTitle} <span className="text-cyan-300">{t.alarmTitle2}</span>
+                  {t.alarmTitle} <span className="bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">{t.alarmTitle2}</span>
                 </h3>
                 <p className="mt-3 leading-relaxed text-navy-200">
                   {t.alarmDesc}
                 </p>
                 <ul className="mt-5 space-y-2 text-sm text-navy-200">
                   {[t.alarmList1, t.alarmList2, t.alarmList3].map((item) => (
-                    <li key={item} className="flex items-start gap-2">
+                    <li key={item} className="flex items-start gap-2 transition-colors hover:text-cyan-300">
                       <CheckCircle size={17} weight="fill" className="mt-0.5 shrink-0 text-cyan-400" />
                       {item}
                     </li>
@@ -360,12 +507,12 @@ function HowItWorks() {
                 </ul>
               </div>
               {/* Mô phỏng điện thoại – 3D float */}
-              <div className="relative mx-auto w-full max-w-[260px] animate-hero-float">
-                <div className="rounded-[2.2rem] bg-navy-950 p-2.5 shadow-2xl ring-1 ring-white/10 dark:bg-slate-950">
+              <div className="relative mx-auto w-full max-w-[260px]">
+                <div className="reveal-right float-varied rounded-[2.2rem] bg-navy-950 p-2.5 shadow-2xl ring-1 ring-white/10 dark:bg-slate-950">
                   <div className="relative overflow-hidden rounded-[1.7rem] bg-alarm-gradient px-5 pb-6 pt-10">
                     <div className="mx-auto h-1 w-16 rounded-full bg-white/25" />
                     <div className="mt-8 flex flex-col items-center text-center">
-                      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/20">
+                      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/20 transition-transform hover:scale-110">
                         <BellRinging size={26} weight="fill" className="animate-alarm-bell text-cyan-300" />
                       </span>
                       <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.25em] text-white/50">{t.alarmTime}</p>
@@ -375,10 +522,10 @@ function HowItWorks() {
                       </span>
                     </div>
                     <div className="mt-8 grid grid-cols-2 gap-2">
-                      <span className="flex h-11 items-center justify-center rounded-xl bg-white/15 text-xs font-bold text-white ring-1 ring-white/20">
+                      <span className="flex h-11 items-center justify-center rounded-xl bg-white/15 text-xs font-bold text-white ring-1 ring-white/20 transition-all hover:bg-white/25 hover:scale-105">
                         {t.alarmSnooze}
                       </span>
-                      <span className="flex h-11 items-center justify-center rounded-xl bg-white text-xs font-extrabold text-navy-900">
+                      <span className="flex h-11 items-center justify-center rounded-xl bg-white text-xs font-extrabold text-navy-900 transition-all hover:scale-105 shadow-glow-blue">
                         {t.alarmStop}
                       </span>
                     </div>
@@ -393,41 +540,74 @@ function HowItWorks() {
   )
 }
 
+function StepCard({ step: s, index: i, t }) {
+  const cardRef = useRef(null)
+  const revealRef = useScrollReveal()
+
+  useMouseTilt(cardRef, { maxTilt: 6, scale: 1.02 })
+
+  return (
+    <div
+      ref={(el) => {
+        cardRef.current = el
+        revealRef.current = el
+      }}
+      className="reveal card card-3d depth-shadow relative p-6"
+      style={{ transitionDelay: `${i * 0.1}s` }}
+    >
+      <div className="flex items-center gap-3">
+        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-glow-blue transition-transform duration-300 group-hover:scale-110">
+          <s.icon size={22} weight="bold" />
+        </span>
+        <span className="text-3xl font-extrabold text-navy-100 dark:text-slate-700">{String(i + 1).padStart(2, '0')}</span>
+      </div>
+      <h3 className="mt-4 font-bold text-navy-900 dark:text-white">{t[s.titleKey]}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-navy-500 dark:text-slate-400">{t[s.descKey]}</p>
+    </div>
+  )
+}
+
 // ---------- Đồng bộ + Giới thiệu ----------
 function SyncSection() {
   const t = useT()
+  const leftRef = useScrollReveal()
+  const rightRef = useScrollReveal()
+  const syncCardRef = useRef(null)
+
+  useMouseTilt(syncCardRef, { maxTilt: 6, scale: 1.02 })
+
   return (
     <section id="gioi-thieu" className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
       <div className="grid items-center gap-12 lg:grid-cols-2">
-        <div className="order-2 lg:order-1">
+        <div ref={leftRef} className="reveal-left order-2 lg:order-1">
           <div className="relative mx-auto max-w-sm perspective-1000">
             <div className="absolute -inset-4 rounded-[2.5rem] bg-brand-gradient opacity-15 blur-2xl" aria-hidden="true" />
-            <div className="relative hero-3d rounded-3xl bg-white p-4 shadow-card-hover ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
+            <div ref={syncCardRef} className="relative mouse-tilt rounded-3xl bg-white p-4 depth-shadow ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
               <div className="rounded-2xl bg-navy-900 p-5 text-white dark:bg-slate-950">
                 <Logo size={30} dark tagline />
                 <div className="mt-4 space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-navy-200">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-navy-200 transition-colors hover:text-cyan-300">
                     <ArrowsClockwise size={14} className="text-cyan-300" weight="bold" /> {t.syncBullet1}
                   </div>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-navy-200">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-navy-200 transition-colors hover:text-cyan-300">
                     <ShieldCheck size={14} className="text-cyan-300" weight="bold" /> {t.syncBullet2}
                   </div>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-navy-200">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-navy-200 transition-colors hover:text-cyan-300">
                     <Lock size={14} className="text-cyan-300" weight="bold" /> {t.syncBullet3}
                   </div>
                 </div>
               </div>
               <div className="flex items-center justify-around py-4 text-navy-400 dark:text-slate-500">
-                <Monitor size={26} weight="duotone" />
+                <Monitor size={26} weight="duotone" className="transition-transform hover:scale-110 hover:text-blue-500" />
                 <ArrowsClockwise size={20} weight="bold" className="animate-spin-slow text-brand-purple" />
-                <DeviceMobile size={26} weight="duotone" />
+                <DeviceMobile size={26} weight="duotone" className="transition-transform hover:scale-110 hover:text-blue-500" />
                 <ArrowsClockwise size={20} weight="bold" className="animate-spin-slow text-brand-purple" style={{ animationDirection: 'reverse' }} />
-                <Globe size={26} weight="duotone" />
+                <Globe size={26} weight="duotone" className="transition-transform hover:scale-110 hover:text-blue-500" />
               </div>
             </div>
           </div>
         </div>
-        <div className="order-1 lg:order-2">
+        <div ref={rightRef} className="reveal-right order-1 lg:order-2">
           <span className="text-xs font-bold uppercase tracking-[0.2em] text-brand-cyan">{t.syncLabel}</span>
           <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-navy-900 dark:text-white sm:text-4xl">
             {t.syncTitle}
@@ -442,8 +622,8 @@ function SyncSection() {
               { icon: Lightning, titleKey: 'syncIcon3', descKey: 'syncIcon3Desc' },
               { icon: LogoMark, titleKey: 'syncIcon4', descKey: 'syncIcon4Desc' },
             ].map((s) => (
-              <div key={s.titleKey} className="flex items-center gap-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-gradient-soft ring-1 ring-blue-100 dark:ring-blue-900/50">
+              <div key={s.titleKey} className="group flex items-center gap-4 rounded-xl p-2 transition-all duration-300 hover:bg-navy-50/50 dark:hover:bg-slate-800/50">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-gradient-soft ring-1 ring-blue-100 transition-all duration-300 group-hover:scale-110 group-hover:shadow-glow-blue dark:ring-blue-900/50">
                   {s.icon === LogoMark ? (
                     <LogoMark size={26} />
                   ) : (
@@ -466,12 +646,38 @@ function SyncSection() {
 // ---------- CTA cuối ----------
 function FinalCta() {
   const t = useT()
+  const sectionRef = useScrollReveal()
+  const ctaCardRef = useRef(null)
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+
+  useMouseTilt(ctaCardRef, { maxTilt: 4, scale: 1.01 })
+
+  useEffect(() => {
+    const el = ctaCardRef.current
+    if (!el) return
+    const handleMouseMove = (e) => {
+      const rect = el.getBoundingClientRect()
+      const x = (e.clientX - rect.left) / rect.width
+      const y = (e.clientY - rect.top) / rect.height
+      setMousePos({ x, y })
+    }
+    el.addEventListener('mousemove', handleMouseMove, { passive: true })
+    return () => el.removeEventListener('mousemove', handleMouseMove)
+  }, [])
+
   return (
     <section className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
-      <div className="relative overflow-hidden rounded-[2rem] bg-navy-900 px-6 py-14 text-center text-white dark:bg-slate-800 sm:px-12">
+      <div ref={sectionRef} className="reveal-scale relative overflow-hidden rounded-[2rem] bg-navy-900 px-6 py-14 text-center text-white dark:bg-slate-800 sm:px-12">
         <div className="absolute inset-0 bg-hero-glow dark:bg-hero-glow-dark" aria-hidden="true" />
-        <div className="orb animate-glow-pulse h-[300px] w-[300px] bg-blue-500 -top-20 left-1/3" />
-        <div className="relative">
+        <div
+          className="orb animate-glow-pulse h-[300px] w-[300px] bg-blue-500 -top-20 left-1/3"
+          style={{ transform: `translate(${(mousePos.x - 0.5) * -30}px, ${(mousePos.y - 0.5) * -30}px)` }}
+        />
+        <div
+          className="orb animate-glow-pulse h-[200px] w-[200px] bg-purple-500 top-1/2 right-1/4"
+          style={{ animationDelay: '1.5s', transform: `translate(${(mousePos.x - 0.5) * 20}px, ${(mousePos.y - 0.5) * 20}px)` }}
+        />
+        <div ref={ctaCardRef} className="relative mouse-tilt">
           <LogoMark size={52} withRing className="mx-auto animate-bounce-subtle" />
           <h2 className="mt-6 text-3xl font-extrabold tracking-tight sm:text-4xl">
             {t.ctaTagline.split('On Time')[0]}<span className="bg-brand-gradient bg-clip-text text-transparent">On Time.</span>
@@ -481,7 +687,7 @@ function FinalCta() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link to="/register">
-              <Button variant="gradient" size="lg" icon={CaretRight} iconWeight="bold">
+              <Button variant="gradient" size="lg" icon={CaretRight} iconWeight="bold" className="glow-ring">
                 {t.ctaRegister}
               </Button>
             </Link>
@@ -500,9 +706,11 @@ function FinalCta() {
 // ---------- Footer ----------
 function Footer() {
   const t = useT()
+  const footerRef = useScrollReveal()
+
   return (
     <footer id="lien-he" className="border-t border-navy-100 bg-white dark:border-slate-700 dark:bg-slate-900">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+      <div ref={footerRef} className="reveal mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <div className="grid gap-10 md:grid-cols-4">
           <div className="md:col-span-2">
             <Logo size={34} />
@@ -516,10 +724,10 @@ function Footer() {
           <div>
             <p className="text-sm font-bold uppercase tracking-wider text-navy-400 dark:text-slate-500">{t.footerProduct}</p>
             <ul className="mt-3 space-y-2 text-sm font-medium text-navy-600 dark:text-slate-300">
-              <li><a href="#tinh-nang" className="transition hover:text-blue-600 dark:hover:text-blue-400">{t.footerFeatures}</a></li>
-              <li><a href="#cach-hoat-dong" className="transition hover:text-blue-600 dark:hover:text-blue-400">{t.footerHowItWorks}</a></li>
-              <li><Link to="/register" className="transition hover:text-blue-600 dark:hover:text-blue-400">{t.footerRegister}</Link></li>
-              <li><Link to="/login" className="transition hover:text-blue-600 dark:hover:text-blue-400">{t.footerLogin}</Link></li>
+              <li><a href="#tinh-nang" className="transition-colors hover:text-blue-600 dark:hover:text-blue-400">{t.footerFeatures}</a></li>
+              <li><a href="#cach-hoat-dong" className="transition-colors hover:text-blue-600 dark:hover:text-blue-400">{t.footerHowItWorks}</a></li>
+              <li><Link to="/register" className="transition-colors hover:text-blue-600 dark:hover:text-blue-400">{t.footerRegister}</Link></li>
+              <li><Link to="/login" className="transition-colors hover:text-blue-600 dark:hover:text-blue-400">{t.footerLogin}</Link></li>
             </ul>
           </div>
           <div>
@@ -527,7 +735,7 @@ function Footer() {
             <ul className="mt-3 space-y-2 text-sm font-medium text-navy-600 dark:text-slate-300">
               <li>Email: support@mn-qronx.com</li>
               <li>Web: www.mn-qronx.com</li>
-              <li className="flex items-center gap-1.5">
+              <li className="flex items-center gap-1.5 transition-colors hover:text-blue-600 dark:hover:text-blue-400">
                 <House size={15} weight="bold" className="text-brand-purple" /> {t.footerProject}
               </li>
             </ul>
