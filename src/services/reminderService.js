@@ -11,7 +11,7 @@ function getTaskForReminder(user, reminder) {
 }
 
 // Số ngày tối đa cho phép hiển thị alarm cho task quá hạn
-const MAX_OVERDUE_DAYS = 7
+const MAX_OVERDUE_DAYS = 1
 
 // GET /api/v1/reminders/due – polling dự phòng khi thiết bị vừa online (mô phỏng)
 export function getDueReminders(to = new Date().toISOString()) {
