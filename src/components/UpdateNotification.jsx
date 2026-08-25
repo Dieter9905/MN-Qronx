@@ -31,7 +31,7 @@ function getNewUpdates() {
 
 const changeTypeConfig = {
   feature: { icon: Sparkle, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/30' },
-  improvement: { icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
+  improvement: { icon: TrendUp, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
   fix: { icon: Wrench, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/30' },
 }
 
