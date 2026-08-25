@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext'
 import { LanguageProvider } from './context/LanguageContext'
 import { ProtectedRoute, AdminRoute, GuestOnlyRoute } from './components/ProtectedRoute'
 import AlarmOverlay from './components/AlarmOverlay'
+import UpdateNotification from './components/UpdateNotification'
 import AppShell from './components/layout/AppShell'
 import LandingPage from './pages/guest/LandingPage'
 import LoginPage from './pages/guest/LoginPage'
@@ -106,6 +107,9 @@ export default function App() {
 
       {/* Overlay báo thức toàn màn hình – độc lập với route (SCR-U-07) */}
       <AlarmOverlay />
+      
+      {/* Thông báo bản cập nhật mới */}
+      <UpdateNotification />
     </AlarmProvider>
     </LanguageProvider>
     </ThemeProvider>
