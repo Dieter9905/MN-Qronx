@@ -10,10 +10,16 @@ function getTaskForReminder(user, reminder) {
   return db.tasks.find((t) => t.id === reminder.taskId && t.userId === user.id)
 }
 
+// Số ngày tối đa cho phép hiển thị alarm cho task quá hạn
+const MAX_OVERDUE_DAYS = 7
+
 // GET /api/v1/reminders/due – polling dự phòng khi thiết bị vừa online (mô phỏng)
 export function getDueReminders(to = new Date().toISOString()) {
   return request(() => {
     const { user } = requireAuth(currentSession())
+    const now = new Date()
+    const maxOverdueDate = new Date(now.getTime() - MAX_OVERDUE_DAYS * 24 * 60 * 60 * 1000)
+    
     const due = db.reminders
       .filter(
         (r) =>
@@ -26,6 +32,21 @@ export function getDueReminders(to = new Date().toISOString()) {
         const category = db.categories.find((c) => c.id === task.categoryId)
         return { ...r, task: { ...task, category } }
       })
+      .filter((r) => {
+        // Bỏ qua alarm cho task đã quá hạn quá lâu (trên 7 ngày)
+        const taskDueAt = new Date(r.task.dueAt)
+        if (taskDueAt < maxOverdueDate) {
+          // Tự động hủy reminder quá hạn
+          db.saveReminders(
+            db.reminders.map((rem) =>
+              rem.id === r.id ? { ...rem, status: 'CANCELLED' } : rem
+            )
+          )
+          return false
+        }
+        return true
+      })
+    
     return ok('Thao tác thành công', due)
   }, { latency: 120 })
 }
