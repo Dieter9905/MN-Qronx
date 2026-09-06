@@ -68,8 +68,8 @@ export async function fetchCurrentUser() {
     return null
   }
   const user = normalizeUser(res.data)
-  const session = getSession()
-  setSession({ accessToken: session?.accessToken || token, refreshToken: getRefreshToken(), user })
+  // Luôn giữ token đang hoạt động – đọc lại sau call (api() có thể đã refresh token)
+  setSession({ accessToken: getAccessToken() || token, refreshToken: getRefreshToken(), user })
   return user
 }
 
