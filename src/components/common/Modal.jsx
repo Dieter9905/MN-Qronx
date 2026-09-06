@@ -15,12 +15,16 @@ export default function Modal({
 }) {
   const panelRef = useRef(null)
   const previousFocus = useRef(null)
+  // onClose thường được truyền inline (hàm mới mỗi lần render cha) → giữ qua ref
+  // để effect chỉ chạy khi modal mở/đóng, tránh "cướp" focus sau mỗi lần gõ phím.
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
 
   useEffect(() => {
     if (!open) return undefined
     previousFocus.current = document.activeElement
     const onKey = (e) => {
-      if (e.key === 'Escape' && onClose) onClose()
+      if (e.key === 'Escape' && onCloseRef.current) onCloseRef.current()
       if (e.key === 'Tab' && panelRef.current) {
         const focusables = panelRef.current.querySelectorAll(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -38,13 +42,19 @@ export default function Modal({
       }
     }
     document.addEventListener('keydown', onKey)
-    const t = setTimeout(() => panelRef.current?.querySelector('button, [href], input, select, textarea')?.focus(), 30)
+    const t = setTimeout(() => {
+      // Ưu tiên focus ô nhập liệu đầu tiên (không nhảy vào nút Đóng)
+      const panel = panelRef.current
+      if (!panel) return
+      const control = panel.querySelector('input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"])')
+      ;(control || panel.querySelector('button, [href]'))?.focus()
+    }, 30)
     return () => {
       document.removeEventListener('keydown', onKey)
       clearTimeout(t)
       previousFocus.current?.focus?.()
     }
-  }, [open, onClose])
+  }, [open])
 
   if (!open) return null
 
