@@ -5,6 +5,7 @@ import {
   FolderSimple,
   Bell,
   Gear,
+  Brain,
 } from '@phosphor-icons/react'
 
 export const NAV_GROUPS = [
@@ -15,6 +16,10 @@ export const NAV_GROUPS = [
       { to: '/app/tasks', label: 'Công việc', icon: ListChecks },
       { to: '/app/calendar', label: 'Lịch', icon: CalendarBlank },
     ],
+  },
+  {
+    label: 'AI',
+    items: [{ to: '/app/ai', label: 'Trợ lý AI', icon: Brain, pro: true }],
   },
   {
     label: 'Quản lý',

@@ -62,6 +62,11 @@ function MobileDrawer({ open, onClose }) {
                     >
                       <item.icon size={20} weight="regular" />
                       {item.label}
+                      {item.pro && (
+                        <span className="ml-auto rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-1.5 py-px text-[9px] font-extrabold uppercase tracking-wide text-white">
+                          Pro
+                        </span>
+                      )}
                     </NavLink>
                   </li>
                 ))}

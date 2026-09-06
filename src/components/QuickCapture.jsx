@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, X, Lightning, CalendarBlank, Brain, Clock, Tag, Repeat, CheckCircle, Sparkle, ListChecks } from '@phosphor-icons/react'
+import { Link } from 'react-router-dom'
+import { Plus, X, Lightning, CalendarBlank, Brain, Clock, Tag, Repeat, CheckCircle, Sparkle, ListChecks, Crown, Lock } from '@phosphor-icons/react'
 import { useLanguage } from '../context/LanguageContext'
 import { useToast } from './common/Toast'
+import { useAuth } from '../context/AuthContext'
 import { createTask } from '../services/taskService'
 import { getCategories } from '../services/categoryService'
 import { parseNaturalLanguage, suggestTaskBreakdown } from '../services/aiService'
@@ -10,8 +12,10 @@ export default function QuickCapture({ onClose, onCreated }) {
   const { lang } = useLanguage()
   const t = app_text[lang]
   const toast = useToast()
+  const { user } = useAuth()
+  const isPro = user?.plan === 'PRO'
 
-  const [mode, setMode] = useState('ai') // 'ai' or 'form'
+  const [mode, setMode] = useState(isPro ? 'ai' : 'form') // 'ai' (Pro only) or 'form'
   const [inputText, setInputText] = useState('')
   const [parsedData, setParsedData] = useState(null)
   const [showBreakdown, setShowBreakdown] = useState(false)
@@ -126,12 +130,14 @@ export default function QuickCapture({ onClose, onCreated }) {
               <div className="flex rounded-lg bg-white/20 p-0.5">
                 <button
                   type="button"
-                  onClick={() => setMode('ai')}
-                  className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-bold transition ${
+                  onClick={() => isPro && setMode('ai')}
+                  disabled={!isPro}
+                  title={isPro ? '' : 'Trợ lý AI chỉ dành cho gói Pro'}
+                  className={`flex cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-xs font-bold transition ${
                     mode === 'ai' ? 'bg-white text-blue-600' : 'text-white/80 hover:text-white'
-                  }`}
+                  } ${!isPro ? 'cursor-not-allowed opacity-60' : ''}`}
                 >
-                  <Brain size={14} weight="bold" />
+                  {isPro ? <Brain size={14} weight="bold" /> : <Lock size={14} weight="bold" />}
                   AI
                 </button>
                 <button
@@ -153,8 +159,31 @@ export default function QuickCapture({ onClose, onCreated }) {
             </div>
           </div>
 
+          {/* Chưa phải Pro → mời nâng cấp để mở AI */}
+          {!isPro && (
+            <div className="p-5">
+              <div className="rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 p-5 text-center text-white shadow-glow-purple">
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20">
+                  <Crown size={24} weight="fill" />
+                </span>
+                <p className="mt-3 text-base font-extrabold">Tạo công việc bằng AI – chỉ dành cho Pro</p>
+                <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-violet-100">
+                  Nhập bằng lời tự nhiên, AI tự hiểu thời hạn, ưu tiên, nhắc nhở và gợi ý các bước thực hiện.
+                </p>
+                <Link to="/app/billing" onClick={onClose} className="mt-4 inline-block">
+                  <button
+                    type="button"
+                    className="cursor-pointer rounded-xl bg-white px-5 py-2.5 text-sm font-extrabold text-violet-700 shadow-md transition hover:scale-[1.03] active:scale-95"
+                  >
+                    Nâng cấp lên Pro
+                  </button>
+                </Link>
+              </div>
+            </div>
+          )}
+
           {/* AI Input Mode */}
-          {mode === 'ai' && (
+          {mode === 'ai' && isPro && (
             <div className="p-5">
               {/* Natural language input */}
               <div className="relative">
@@ -357,7 +386,7 @@ export default function QuickCapture({ onClose, onCreated }) {
           )}
 
           {/* AI Mode Submit */}
-          {mode === 'ai' && (
+          {mode === 'ai' && isPro && (
             <div className="border-t border-navy-100 px-5 py-4 dark:border-slate-700">
               <div className="flex gap-3">
                 <button

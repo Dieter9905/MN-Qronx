@@ -434,7 +434,229 @@ export function suggestTaskBreakdown(taskTitle) {
   ];
 }
 
+// ─── Helpers ─────────────────────────────────────────────
+
+const PRIORITY_LABEL = { URGENT: 'Khẩn cấp', HIGH: 'Cao', MEDIUM: 'Trung bình', LOW: 'Thấp' }
+
+function startOfDay(d) {
+  const x = new Date(d)
+  x.setHours(0, 0, 0, 0)
+  return x
+}
+
+function addDays(d, n) {
+  const x = new Date(d)
+  x.setDate(x.getDate() + n)
+  return x
+}
+
+function sameDay(a, b) {
+  if (!a || !b) return false
+  return startOfDay(a).getTime() === startOfDay(b).getTime()
+}
+
+function fmtTime(d) {
+  return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+}
+
+function humanHours(hours) {
+  if (hours < 24) return `${Math.max(0, Math.round(hours))} giờ`
+  return `${Math.round(hours / 24)} ngày`
+}
+
+function dayLabel(d) {
+  const today = startOfDay(new Date())
+  const diff = Math.round((startOfDay(d) - today) / 86400000)
+  if (diff === 0) return 'hôm nay'
+  if (diff === 1) return 'ngày mai'
+  if (diff === -1) return 'hôm qua'
+  return d.toLocaleDateString('vi-VN', { weekday: 'short', day: 'numeric', month: 'numeric' })
+}
+
+// ─── AI: Ưu tiên thông minh ────────────────────────────────
+// Xếp hạng công việc đang mở theo mức độ khẩn cấp + lý do.
+
+export function prioritizeTasks(tasks = [], now = new Date()) {
+  const open = tasks.filter((t) => t.status === 'TODO' || t.status === 'IN_PROGRESS')
+
+  const scored = open.map((t) => {
+    const due = t.dueAt ? new Date(t.dueAt) : null
+    const isOverdue = due && due.getTime() < now.getTime()
+    const hoursLeft = due ? Math.round((due - now) / 3600000) : null
+    let score = 0
+    const reasons = []
+
+    if (isOverdue) {
+      const overdueHours = Math.abs(hoursLeft)
+      score += 6000 + Math.min(overdueHours, 24 * 30)
+      reasons.push(`Quá hạn ${humanHours(overdueHours)}`)
+    } else if (due) {
+      if (sameDay(due, now)) {
+        score += 2500
+        reasons.push(hoursLeft <= 4 ? `Đến hạn trong ${humanHours(hoursLeft)}` : `Đến hạn hôm nay lúc ${fmtTime(due)}`)
+      } else if (due < addDays(now, 3)) {
+        score += 900
+        reasons.push(`Đến hạn ${dayLabel(due)} ${due ? 'lúc ' + fmtTime(due) : ''}`)
+      } else {
+        score += 300
+        reasons.push(`Đến hạn ${dayLabel(due)}`)
+      }
+    } else {
+      score += 100
+      reasons.push('Chưa đặt thời hạn')
+    }
+
+    const pri = { URGENT: 500, HIGH: 260, MEDIUM: 120, LOW: 20 }[t.priority] || 80
+    if (t.priority === 'URGENT' || t.priority === 'HIGH') {
+      reasons.push(`Ưu tiên ${PRIORITY_LABEL[t.priority] || t.priority}`)
+    }
+    score += pri
+
+    if (t.repeatType && t.repeatType !== 'NONE') {
+      score += 60
+    }
+    if (t.subtasks?.some((s) => !s.isCompleted)) {
+      score += 40
+    }
+
+    let recommendation = 'Nên làm sớm'
+    if (isOverdue) recommendation = 'Làm ngay bây giờ'
+    else if (sameDay(due, now)) recommendation = 'Ưu tiên hôm nay'
+
+    return {
+      task: t,
+      score,
+      reasons: reasons.slice(0, 3),
+      recommendation,
+      isOverdue,
+    }
+  })
+
+  return scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score
+    const da = a.task.dueAt ? new Date(a.task.dueAt) : null
+    const db = b.task.dueAt ? new Date(b.task.dueAt) : null
+    if (!da) return 1
+    if (!db) return -1
+    return da - db
+  })
+}
+
+// ─── AI: Cảnh báo lịch (quá tải + xung đột) ────────────────
+
+export function detectScheduleWarnings(tasks = [], now = new Date()) {
+  const warnings = []
+  const open = tasks.filter((t) => t.status === 'TODO' || t.status === 'IN_PROGRESS')
+  const overdue = open.filter((t) => t.dueAt && new Date(t.dueAt) < now)
+
+  // Quá hạn nhiều
+  if (overdue.length >= 3) {
+    warnings.push({
+      level: 'danger',
+      title: `${overdue.length} công việc đang quá hạn`,
+      detail: 'Hãy ưu tiên xử lý trước, sau đó mới nhận việc mới.',
+    })
+  }
+
+  // Nhóm theo ngày → quá tải
+  const byDay = {}
+  for (const t of open) {
+    if (!t.dueAt) continue
+    const key = startOfDay(new Date(t.dueAt)).toISOString()
+    if (!byDay[key]) byDay[key] = []
+    byDay[key].push(t)
+  }
+  for (const [key, list] of Object.entries(byDay)) {
+    const day = new Date(key)
+    if (list.length >= 5 && day >= startOfDay(now)) {
+      warnings.push({
+        level: 'warn',
+        title: `Ngày ${dayLabel(day)} có tới ${list.length} công việc`,
+        detail: 'Lịch khá dày – cân nhắc dời bớt việc ít quan trọng sang ngày khác.',
+      })
+    }
+  }
+
+  // Xung đột giờ (cùng ngày, cách nhau < 60 phút)
+  const timed = open
+    .filter((t) => t.dueAt)
+    .map((t) => ({ t, d: new Date(t.dueAt) }))
+    .sort((a, b) => a.d - b.d)
+  for (let i = 0; i < timed.length; i++) {
+    for (let j = i + 1; j < timed.length; j++) {
+      const a = timed[i]
+      const b = timed[j]
+      if (sameDay(a.d, b.d)) {
+        const gap = Math.abs(b.d - a.d) / 60000
+        if (gap < 60) {
+          warnings.push({
+            level: 'warn',
+            title: 'Xung đột lịch gần nhau',
+            detail: `“${a.t.title}” lúc ${fmtTime(a.d)} và “${b.t.title}” lúc ${fmtTime(b.d)} cùng ${dayLabel(a.d)} – chỉ cách ${Math.round(gap)} phút.`,
+          })
+          break
+        }
+      } else {
+        break
+      }
+    }
+  }
+
+  if (warnings.length === 0) {
+    warnings.push({
+      level: 'ok',
+      title: 'Lịch của bạn đang ổn',
+      detail: 'Không phát hiện quá tải hoặc xung đột thời gian đáng lo.',
+    })
+  }
+
+  return warnings
+}
+
+// ─── AI: Tách việc con nâng cao ────────────────────────────
+// Tương tự suggestTaskBreakdown nhưng nhận thêm mô tả & số ngày
+// còn lại để gợi ý phù hợp hơn.
+
+export function generateSmartBreakdown(title = '', description = '', dueInDays = null) {
+  const text = `${normalizeText(title)} ${normalizeText(description || '')}`
+
+  const base = (steps) => steps.map((content) => ({ content, isCompleted: false }))
+
+  let steps = suggestTaskBreakdown(title)
+
+  // Bổ sung bước theo mô tả
+  if (steps.length <= 3) {
+    steps = base(['Phân tích yêu cầu', 'Lên kế hoạch thực hiện', 'Thực hiện chính', 'Kiểm tra & hoàn thiện'])
+  }
+
+  // Thêm bước theo nội dung mô tả
+  if (/nop|submit|hand in|gui/i.test(text)) {
+    steps = steps.concat(base(['Rà soát lần cuối trước khi nộp']))
+  }
+  if (/hop|meeting|phong van|interview/i.test(text)) {
+    steps = steps.concat(base(['Chuẩn bị câu hỏi / tài liệu', 'Ghi chú sau buổi họp']))
+  }
+  if (/bai tap lon|do an|project|report|bao cao/i.test(text)) {
+    steps = steps.concat(base(['Viết nháp', 'Chỉnh sửa theo góp ý']))
+  }
+
+  // Gợi ý nhịp độ theo thời gian còn lại
+  const hint =
+    dueInDays == null
+      ? null
+      : dueInDays <= 1
+        ? 'Chỉ còn ít thời gian – hãy làm phần quan trọng nhất trước.'
+        : dueInDays <= 3
+          ? 'Chia đều công việc trong 3 ngày tới.'
+          : 'Có dư thời gian – làm chắc từng bước, đừng dồn vào cuối.'
+
+  return { steps, hint }
+}
+
 export default {
   parseNaturalLanguage,
   suggestTaskBreakdown,
+  prioritizeTasks,
+  detectScheduleWarnings,
+  generateSmartBreakdown,
 };

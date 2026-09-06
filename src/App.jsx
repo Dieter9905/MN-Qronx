@@ -15,6 +15,7 @@ import PricingPage from './pages/guest/PricingPage'
 import OAuthCallbackPage from './pages/guest/OAuthCallbackPage'
 import DashboardPage from './pages/user/DashboardPage'
 import BillingPage from './pages/user/BillingPage'
+import AiAssistantPage from './pages/user/AiAssistantPage'
 import TaskListPage from './pages/user/TaskListPage'
 import TaskDetailPage from './pages/user/TaskDetailPage'
 import TaskFormPage from './pages/user/TaskFormPage'
@@ -91,6 +92,7 @@ export default function App() {
           <Route path="notifications" element={<NotificationHistoryPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="billing" element={<BillingPage />} />
+          <Route path="ai" element={<AiAssistantPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="change-password" element={<ChangePasswordPage />} />
         </Route>

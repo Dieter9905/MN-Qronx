@@ -39,6 +39,11 @@ export default function Sidebar() {
                           className={isActive ? 'text-blue-600 dark:text-blue-400' : 'text-navy-400 group-hover:text-navy-600 dark:group-hover:text-white'}
                         />
                         {item.label}
+                        {item.pro && !isActive && (
+                          <span className="ml-auto rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-1.5 py-px text-[9px] font-extrabold uppercase tracking-wide text-white">
+                            Pro
+                          </span>
+                        )}
                         {isActive && (
                           <span className="ml-auto h-1.5 w-1.5 rounded-full bg-brand-gradient" aria-hidden="true" />
                         )}

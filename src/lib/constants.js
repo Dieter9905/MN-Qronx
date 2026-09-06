@@ -120,7 +120,9 @@ export const PLANS = [
     price: '99.000đ',
     period: '/tháng',
     gradient: 'from-violet-500 to-fuchsia-500',
+    ai: true,
     features: [
+      'Trợ lý AI: tạo việc bằng lời, tách bước, gợi ý thứ tự làm',
       'Không giới hạn công việc đang mở',
       '5 nhắc nhở mỗi công việc',
       'Không giới hạn danh mục & việc con',
