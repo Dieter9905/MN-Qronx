@@ -22,6 +22,14 @@ const config = {
     expiresIn: '1h', // AccessToken hết hạn 1 giờ
   },
 
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID || '',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+    callbackUrl: process.env.GOOGLE_CALLBACK_URL || '',
+  },
+
+  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+
   vapid: {
     publicKey: process.env.VAPID_PUBLIC_KEY || '',
     privateKey: process.env.VAPID_PRIVATE_KEY || '',

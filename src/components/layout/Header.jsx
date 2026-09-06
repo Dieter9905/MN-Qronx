@@ -9,6 +9,7 @@ import {
   Gear,
   SignOut,
   ShieldCheck,
+  Crown,
   List,
   Moon,
   Sun,
@@ -26,6 +27,7 @@ import { useToast } from '../common/Toast'
 import { Logo } from '../Logo'
 import { getTasks } from '../../services/taskService'
 import { app } from '../../i18n/app'
+import { PLAN_NAMES, PLAN_BADGE } from '../../lib/constants'
 
 function DemoAlarmButton() {
   const { triggerDemo, demoLoading } = useAlarm()
@@ -189,8 +191,11 @@ export default function Header({ title, onOpenDrawer }) {
               <span className="block max-w-[140px] truncate text-sm font-semibold leading-tight text-navy-800 dark:text-white">
                 {user?.fullName}
               </span>
-              <span className="block text-[11px] leading-tight text-navy-400 dark:text-slate-500">
-                {isAdmin ? t.roleAdmin : t.roleUser}
+              <span className="flex items-center gap-1.5 text-[11px] leading-tight text-navy-400 dark:text-slate-500">
+                <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-extrabold ring-1 ring-inset ${PLAN_BADGE[user?.plan || 'FREE']}`}>
+                  {PLAN_NAMES[user?.plan || 'FREE']}
+                </span>
+                <span>{isAdmin ? t.roleAdmin : t.roleUser}</span>
               </span>
             </span>
             <CaretDown size={14} className="hidden text-navy-400 sm:block" weight="bold" />
@@ -212,6 +217,9 @@ export default function Header({ title, onOpenDrawer }) {
               </button>
               <button role="menuitem" type="button" onClick={() => go('/app/settings')} className="menu-item">
                 <Gear size={18} weight="bold" /> {t.settings}
+              </button>
+              <button role="menuitem" type="button" onClick={() => go('/app/billing')} className="menu-item">
+                <Crown size={18} weight="bold" /> Gói của bạn
               </button>
               {isAdmin && (
                 <button role="menuitem" type="button" onClick={() => go('/admin')} className="menu-item">

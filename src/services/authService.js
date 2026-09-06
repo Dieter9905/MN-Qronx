@@ -12,6 +12,7 @@ function normalizeUser(u) {
     phoneNumber: u.phoneNumber ?? '',
     avatarUrl: u.avatarUrl ?? null,
     role: u.role?.roleName ?? u.role ?? 'USER',
+    plan: u.plan ?? 'FREE',
     isActive: u.isActive ?? true,
     createdAt: u.createdAt,
   }

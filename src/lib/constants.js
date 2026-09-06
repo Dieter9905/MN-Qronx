@@ -68,6 +68,76 @@ export const DEFAULT_SNOOZE_OPTIONS = [5, 10, 15, 30]
 export const MAX_REMINDERS_PER_TASK = 5
 export const MAX_SNOOZE_COUNT = 3
 
+// ─── Gói dịch vụ (FREE / PLUS / PRO) ─────────────────────
+export const PLAN_NAMES = {
+  FREE: 'Miễn phí',
+  PLUS: 'Plus',
+  PRO: 'Pro',
+}
+
+// Giới hạn nhắc nhở mỗi công việc theo gói (backend ép buộc tương ứng)
+export const PLAN_REMINDER_LIMIT = { FREE: 2, PLUS: 5, PRO: 5 }
+
+// Thông tin gói dùng cho trang giá (Pricing) & trang nâng cấp (Billing)
+export const PLANS = [
+  {
+    id: 'FREE',
+    label: 'Miễn phí',
+    tagline: 'Bắt đầu quản lý công việc cơ bản',
+    price: '0đ',
+    period: 'mãi mãi',
+    gradient: 'from-slate-500 to-slate-600',
+    features: [
+      'Tối đa 10 công việc đang mở',
+      '2 nhắc nhở mỗi công việc',
+      '5 danh mục',
+      '5 việc con mỗi công việc',
+      '1 thiết bị đồng bộ',
+      'Âm thanh báo thức cơ bản',
+    ],
+  },
+  {
+    id: 'PLUS',
+    label: 'Plus',
+    tagline: 'Cho người quản lý nhiều công việc',
+    price: '49.000đ',
+    period: '/tháng',
+    gradient: 'from-blue-500 to-cyan-500',
+    popular: true,
+    features: [
+      '100 công việc đang mở',
+      '5 nhắc nhở mỗi công việc',
+      '20 danh mục',
+      'Công việc lặp lại',
+      '50 việc con mỗi công việc',
+      '3 thiết bị đồng bộ',
+    ],
+  },
+  {
+    id: 'PRO',
+    label: 'Pro',
+    tagline: 'Toàn bộ sức mạnh MN-Qronx',
+    price: '99.000đ',
+    period: '/tháng',
+    gradient: 'from-violet-500 to-fuchsia-500',
+    features: [
+      'Không giới hạn công việc đang mở',
+      '5 nhắc nhở mỗi công việc',
+      'Không giới hạn danh mục & việc con',
+      'Công việc lặp lại',
+      'Không giới hạn thiết bị đồng bộ',
+      'Toàn bộ âm thanh báo thức',
+    ],
+  },
+]
+
+// Badge màu cho gói (dùng ở Header / Hồ sơ / Admin)
+export const PLAN_BADGE = {
+  FREE: 'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600',
+  PLUS: 'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:ring-blue-700',
+  PRO: 'bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:ring-violet-700',
+}
+
 export const CATEGORY_COLORS = [
   '#2563EB',
   '#06B6D4',

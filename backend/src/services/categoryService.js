@@ -1,5 +1,6 @@
 import categoryRepo from '../repositories/categoryRepo.js'
 import ApiError from '../utils/ApiError.js'
+import { getUserPlan, planLimit, planLimitError } from '../utils/planLimits.js'
 
 // ─── Get Categories ─────────────────────────────────────
 
@@ -13,6 +14,16 @@ export async function create(userId, { categoryName, colorCode }) {
   const existing = await categoryRepo.findByName(userId, categoryName)
   if (existing) {
     throw ApiError.badRequest('Danh mục này đã tồn tại')
+  }
+
+  // Giới hạn số danh mục theo gói
+  const plan = await getUserPlan(userId)
+  const maxCategories = planLimit(plan, 'categories')
+  if (maxCategories !== Infinity) {
+    const count = await categoryRepo.countActive(userId)
+    if (count >= maxCategories) {
+      throw planLimitError({ feature: 'danh mục', limit: maxCategories, plan })
+    }
   }
 
   return categoryRepo.create(userId, { categoryName, colorCode })

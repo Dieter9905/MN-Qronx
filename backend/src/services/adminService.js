@@ -82,6 +82,7 @@ export async function createUser({ fullName, email, password, phoneNumber, role 
       email: true,
       phoneNumber: true,
       isActive: true,
+      plan: true,
       createdAt: true,
       role: { select: { roleName: true } },
       _count: { select: { tasks: true } },
@@ -89,6 +90,27 @@ export async function createUser({ fullName, email, password, phoneNumber, role 
   })
 
   return user
+}
+
+// ─── Set User Plan (Admin) ────────────────────────────
+
+export async function setUserPlan(userId, plan) {
+  const user = await prisma.user.findUnique({
+    where: { userId },
+    select: { userId: true, fullName: true, email: true },
+  })
+  if (!user) throw ApiError.notFound('Không tìm thấy người dùng')
+
+  const validPlans = ['FREE', 'PLUS', 'PRO']
+  if (!validPlans.includes(plan)) {
+    throw ApiError.badRequest('Gói chỉ có thể là FREE, PLUS hoặc PRO')
+  }
+
+  return prisma.user.update({
+    where: { userId },
+    data: { plan },
+    select: { userId: true, fullName: true, email: true, plan: true },
+  })
 }
 
 // ─── List Users ────────────────────────────────────────
@@ -111,6 +133,7 @@ export async function getUsers(query) {
       email: true,
       phoneNumber: true,
       isActive: true,
+      plan: true,
       createdAt: true,
       role: { select: { roleName: true } },
       _count: { select: { tasks: true } },

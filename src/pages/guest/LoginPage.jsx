@@ -1,24 +1,35 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { EnvelopeSimple, Lock, Eye, EyeSlash, SignIn, WarningCircle } from '@phosphor-icons/react'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { EnvelopeSimple, Lock, Eye, EyeSlash, SignIn, WarningCircle, GoogleLogo } from '@phosphor-icons/react'
 import AuthLayout from '../../components/AuthLayout'
 import { Field, Input } from '../../components/common/Inputs'
 import Button from '../../components/common/Button'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
+import { API_BASE_URL } from '../../services/apiClient'
+
+const GOOGLE_ERRORS = {
+  google_not_configured: 'Đăng nhập Google chưa được cấu hình trên máy chủ. Vui lòng thử lại sau.',
+  google_state: 'Phiên đăng nhập Google không hợp lệ. Vui lòng thử lại.',
+  google: 'Đăng nhập bằng Google thất bại. Vui lòng thử lại.',
+}
 
 export default function LoginPage() {
   const { login } = useAuth()
   const toast = useToast()
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
   const locked = Boolean(location.state?.locked)
+  const googleError = searchParams.get('error')
+    ? GOOGLE_ERRORS[searchParams.get('error')] || 'Đăng nhập bằng Google thất bại. Vui lòng thử lại.'
+    : ''
 
   const [form, setForm] = useState({ email: '', password: '', remember: true })
   const [showPw, setShowPw] = useState(false)
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
-  const [serverError, setServerError] = useState(locked ? 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.' : '')
+  const [serverError, setServerError] = useState(locked ? 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.' : googleError)
 
   const set = (k) => (e) => {
     setForm((f) => ({ ...f, [k]: e.target.value }))
@@ -119,6 +130,26 @@ export default function LoginPage() {
           Đăng nhập
         </Button>
       </form>
+
+      <div className="mt-6 flex items-center gap-3">
+        <span className="h-px flex-1 bg-navy-100 dark:bg-slate-700" />
+        <span className="text-xs font-bold uppercase tracking-wider text-navy-300 dark:text-slate-500">Hoặc</span>
+        <span className="h-px flex-1 bg-navy-100 dark:bg-slate-700" />
+      </div>
+      <div className="mt-4">
+        <Button
+          type="button"
+          variant="secondary"
+          fullWidth
+          size="lg"
+          icon={GoogleLogo}
+          onClick={() => {
+            window.location.href = `${API_BASE_URL}/auth/google`
+          }}
+        >
+          Tiếp tục với Google
+        </Button>
+      </div>
 
       <p className="mt-6 text-center text-sm text-navy-500 dark:text-slate-400">
         Chưa có tài khoản?{' '}

@@ -3,6 +3,7 @@ import taskRepo from '../repositories/taskRepo.js'
 import { calculateNextDueDate } from '../utils/dateUtils.js'
 import { parsePagination, paginationMeta } from '../utils/pagination.js'
 import ApiError from '../utils/ApiError.js'
+import { PLANS, getUserPlan, planLimit, planLimitError } from '../utils/planLimits.js'
 
 
 // ─── Find All (List + Filter + Sort + Paginate) ─────────
@@ -53,16 +54,36 @@ export async function create(userId, taskData) {
     if (!cat) throw ApiError.badRequest('Danh mục không tồn tại')
   }
 
+  // Gói FREE: không được tạo công việc lặp lại
+  const plan = await getUserPlan(userId)
+  if (repeatType && repeatType !== 'NONE' && !PLANS[plan]?.repeatTasks) {
+    throw ApiError.badRequest(
+      'Công việc lặp lại chỉ dành cho gói Plus và Pro. Nâng cấp gói để sử dụng tính năng này.'
+    )
+  }
+
+  // Gói FREE: giới hạn số nhắc nhở mỗi công việc
+  const maxReminders = planLimit(plan, 'remindersPerTask')
+  if (reminders?.length > maxReminders) {
+    throw ApiError.badRequest(
+      `Gói ${PLANS[plan]?.name || 'Miễn phí'} chỉ được tối đa ${maxReminders} nhắc nhở mỗi công việc. Nâng cấp gói để thêm nhiều hơn.`
+    )
+  }
+
+  // Gói FREE: giới hạn số công việc đang mở
+  const maxActive = planLimit(plan, 'activeTasks')
+  if (maxActive !== Infinity) {
+    const activeCount = await taskRepo.countActive(userId)
+    if (activeCount >= maxActive) {
+      throw planLimitError({ feature: 'công việc đang mở', limit: maxActive, plan })
+    }
+  }
+
   // Validate: remindAt <= dueAt cho mỗi reminder (BR-10)
   for (const r of reminders || []) {
     if (new Date(r.remindAt) > new Date(dueAt)) {
       throw ApiError.badRequest('Thời điểm nhắc nhở phải nhỏ hơn hoặc bằng thời hạn công việc')
     }
-  }
-
-  // Validate: max 5 reminders (BR-09)
-  if (reminders?.length > 5) {
-    throw ApiError.badRequest('Mỗi công việc chỉ được có tối đa 5 nhắc nhở')
   }
 
   return prisma.$transaction(async (tx) => {
@@ -119,6 +140,16 @@ export async function update(userId, taskId, data) {
   if (data.categoryId) {
     const cat = await taskRepo.findCategoryById(data.categoryId, userId)
     if (!cat) throw ApiError.badRequest('Danh mục không tồn tại')
+  }
+
+  // Gói FREE: không được chuyển sang công việc lặp lại
+  if (data.repeatType !== undefined && data.repeatType !== 'NONE') {
+    const plan = await getUserPlan(userId)
+    if (!PLANS[plan]?.repeatTasks) {
+      throw ApiError.badRequest(
+        'Công việc lặp lại chỉ dành cho gói Plus và Pro. Nâng cấp gói để sử dụng tính năng này.'
+      )
+    }
   }
 
   const updateData = {}

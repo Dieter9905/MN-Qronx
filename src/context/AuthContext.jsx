@@ -40,8 +40,10 @@ export function AuthProvider({ children }) {
     setUser(null)
   }, [])
 
-  const refresh = useCallback(() => {
-    setUser(authService.currentUser())
+  const refresh = useCallback(async () => {
+    const u = await authService.fetchCurrentUser()
+    setUser(u)
+    return u
   }, [])
 
   const value = useMemo(

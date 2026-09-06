@@ -17,3 +17,11 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
+      - key: FRONTEND_URL
+        value: https://www.mn-qronx.id.vn
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CALLBACK_URL
+        value: https://taskalarm-api.onrender.com/api/v1/auth/google/callback

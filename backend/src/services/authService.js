@@ -66,6 +66,66 @@ export async function login(email, password) {
   }
 }
 
+// ─── Google Login ────────────────────────────────────────
+// Đăng nhập/đăng ký bằng Google (xác thực qua OAuth callback)
+// - Đã có googleId → đăng nhập
+// - Chưa có googleId nhưng email trùng → liên kết tài khoản
+// - Chưa có gì → tạo tài khoản mới với mật khẩu ngẫu nhiên (không thể đăng nhập bằng password)
+
+export async function loginWithGoogle({ googleId, email, fullName, avatarUrl }) {
+  if (!config.google.clientId || !config.google.clientSecret) {
+    throw ApiError.badRequest('Đăng nhập Google chưa được cấu hình trên máy chủ')
+  }
+
+  let user = await authRepo.findByGoogleId(googleId)
+
+  if (!user && email) {
+    user = await authRepo.findByEmail(email)
+    if (user) {
+      await authRepo.attachGoogleId(user.userId, googleId)
+      user = await authRepo.findByGoogleId(googleId)
+    }
+  }
+
+  if (!user) {
+    const passwordHash = await bcrypt.hash(crypto.randomBytes(24).toString('hex'), 10)
+    user = await authRepo.create({
+      fullName: fullName || (email ? email.split('@')[0] : 'Google User'),
+      email,
+      passwordHash,
+    })
+    await authRepo.attachGoogleId(user.userId, googleId)
+    user = await authRepo.findByGoogleId(googleId)
+  }
+
+  if (!user.isActive) {
+    throw ApiError.forbidden('Tài khoản đã bị khóa')
+  }
+
+  // Cập nhật avatar từ Google nếu tài khoản chưa có
+  if (avatarUrl && !user.avatarUrl) {
+    await authRepo.updateProfileAvatar?.(user.userId, avatarUrl)
+  }
+
+  const accessToken = jwt.sign(
+    { id: user.userId, role: user.role.roleName },
+    config.jwt.secret,
+    { expiresIn: '1h' }
+  )
+
+  const refreshToken = crypto.randomBytes(40).toString('hex')
+  const expiresAt = new Date()
+  expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRY_DAYS)
+
+  await authRepo.saveRefreshToken(user.userId, refreshToken, expiresAt)
+
+  return {
+    accessToken,
+    refreshToken,
+    user: transformUser(user),
+  }
+}
+
 // ─── Refresh Access Token ──────────────────────────────────
 
 export async function refreshAccessToken(refreshToken) {

@@ -72,6 +72,13 @@ async function countTasks(categoryId) {
   return prisma.task.count({ where: { categoryId } })
 }
 
+/**
+ * Count active categories of a user – dùng cho giới hạn gói.
+ */
+async function countActive(userId) {
+  return prisma.category.count({ where: { userId, isActive: true } })
+}
+
 export default {
   findById,
   findByUser,
@@ -80,4 +87,5 @@ export default {
   update,
   toggleActive,
   countTasks,
+  countActive,
 }

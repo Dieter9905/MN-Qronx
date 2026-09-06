@@ -8,6 +8,7 @@ import reminderRoutes from './reminderRoutes.js'
 import deviceRoutes from './deviceRoutes.js'
 import dashboardRoutes from './dashboardRoutes.js'
 import adminRoutes from './adminRoutes.js'
+import planRoutes from './planRoutes.js'
 // import notificationRoutes from './notificationRoutes.js'
 // import dashboardRoutes from './dashboardRoutes.js'
 // import adminRoutes from './adminRoutes.js'
@@ -55,5 +56,6 @@ router.use('/reminders',     reminderRoutes)
 router.use('/devices',       deviceRoutes)
 router.use('/dashboard',     dashboardRoutes)
 router.use('/admin',         adminRoutes)
+router.use('/plans',         planRoutes)
 
 export default router

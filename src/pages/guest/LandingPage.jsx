@@ -175,6 +175,12 @@ function GuestNav() {
               {item.label}
             </a>
           ))}
+            <Link
+              to="/pricing"
+              className="relative py-1 transition-colors hover:text-blue-600 dark:hover:text-blue-400 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-brand-gradient after:transition-all after:duration-300 hover:after:w-full"
+            >
+              Bảng giá
+            </Link>
         </nav>
         <div className="flex items-center gap-2">
           <ThemeToggle />
@@ -728,6 +734,7 @@ function Footer() {
               <li><a href="#cach-hoat-dong" className="transition-colors hover:text-blue-600 dark:hover:text-blue-400">{t.footerHowItWorks}</a></li>
               <li><Link to="/register" className="transition-colors hover:text-blue-600 dark:hover:text-blue-400">{t.footerRegister}</Link></li>
               <li><Link to="/login" className="transition-colors hover:text-blue-600 dark:hover:text-blue-400">{t.footerLogin}</Link></li>
+              <li><Link to="/pricing" className="transition-colors hover:text-blue-600 dark:hover:text-blue-400">Bảng giá</Link></li>
             </ul>
           </div>
           <div>

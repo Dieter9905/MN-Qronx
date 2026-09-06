@@ -28,3 +28,10 @@ export const unlockUser = catchAsync(async (req, res) => {
   const user = await adminService.unlockUser(parseInt(userId))
   success(res, 200, 'Mở khóa tài khoản thành công', user)
 })
+
+export const setPlan = catchAsync(async (req, res) => {
+  const { userId } = req.params
+  const { plan } = req.body
+  const user = await adminService.setUserPlan(parseInt(userId), plan)
+  success(res, 200, `Đã chuyển gói của ${user.fullName} sang ${user.plan}`, user)
+})

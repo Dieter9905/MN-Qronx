@@ -17,7 +17,8 @@ import { getCategories, createCategory } from '../../services/categoryService'
 import Modal from '../../components/common/Modal'
 import { useToast } from '../../components/common/Toast'
 import { PageLoader } from '../../components/common/Feedback'
-import { PRIORITY, REPEAT_TYPE_LIST, MAX_REMINDERS_PER_TASK, CATEGORY_COLORS } from '../../lib/constants'
+import { useAuth } from '../../context/AuthContext'
+import { PRIORITY, REPEAT_TYPE_LIST, PLAN_REMINDER_LIMIT, CATEGORY_COLORS } from '../../lib/constants'
 import { ColorPicker } from '../../components/common/Inputs'
 import { toDate, addMinutes, setTime } from '../../lib/format'
 
@@ -40,6 +41,10 @@ export default function TaskFormPage() {
   const isEdit = Boolean(id)
   const navigate = useNavigate()
   const toast = useToast()
+  const { user } = useAuth()
+  const plan = user?.plan || 'FREE'
+  const reminderLimit = PLAN_REMINDER_LIMIT[plan] || 5
+  const canRepeat = plan === 'PLUS' || plan === 'PRO'
 
   const [loading, setLoading] = useState(isEdit)
   const [categories, setCategories] = useState([])
@@ -108,8 +113,12 @@ export default function TaskFormPage() {
       toast.error('Vui lòng chọn thời điểm đến hạn trước')
       return
     }
-    if (form.reminders.length >= MAX_REMINDERS_PER_TASK) {
-      toast.error(`Mỗi công việc chỉ được có tối đa ${MAX_REMINDERS_PER_TASK} nhắc nhở`)
+    if (form.reminders.length >= reminderLimit) {
+      toast.error(
+        reminderLimit <= 2
+          ? `Gói Miễn phí chỉ được tối đa ${reminderLimit} nhắc nhở mỗi công việc. Nâng cấp Plus/Pro để thêm nhiều hơn.`
+          : `Mỗi công việc chỉ được có tối đa ${reminderLimit} nhắc nhở`
+      )
       return
     }
     const remindAt = addMinutes(dueDate, offset)
@@ -275,7 +284,23 @@ export default function TaskFormPage() {
             <SegmentedControl options={priorityOptions} value={form.priority} onChange={set('priority')} />
           </Field>
           <Field label="Lặp lại">
-            <SegmentedControl options={REPEAT_TYPE_LIST.map((r) => ({ value: r.value, label: r.label }))} value={form.repeatType} onChange={set('repeatType')} />
+            <SegmentedControl
+              options={REPEAT_TYPE_LIST.map((r) =>
+                canRepeat || r.value === 'NONE'
+                  ? { value: r.value, label: r.label }
+                  : { value: r.value, label: r.label, disabled: true, disabledTitle: 'Chỉ dành cho gói Plus/Pro' }
+              )}
+              value={form.repeatType}
+              onChange={set('repeatType')}
+            />
+            {!canRepeat && (
+              <p className="mt-2 text-xs font-medium text-amber-600 dark:text-amber-400">
+                💡 Công việc lặp lại là tính năng của gói Plus/Pro.{' '}
+                <Link to="/app/billing" className="font-bold underline">
+                  Nâng cấp ngay
+                </Link>
+              </p>
+            )}
           </Field>
         </section>
 
@@ -286,7 +311,7 @@ export default function TaskFormPage() {
               <Bell size={19} weight="fill" className="text-amber-500 dark:text-amber-400" />
               Nhắc nhở
               <span className="rounded-full bg-navy-100 px-2 py-0.5 text-xs font-bold text-navy-500 dark:bg-slate-700 dark:text-slate-400">
-                {form.reminders.length}/{MAX_REMINDERS_PER_TASK}
+                {form.reminders.length}/{reminderLimit}
               </span>
             </h2>
           </div>
@@ -296,7 +321,7 @@ export default function TaskFormPage() {
                 key={p.offset}
                 type="button"
                 onClick={() => addPresetReminder(p.offset)}
-                disabled={form.reminders.length >= MAX_REMINDERS_PER_TASK}
+                disabled={form.reminders.length >= reminderLimit}
                 className="cursor-pointer rounded-full bg-navy-50 px-3.5 py-1.5 text-xs font-bold text-navy-700 ring-1 ring-inset ring-navy-100 transition hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400"
               >
                 + {p.label}

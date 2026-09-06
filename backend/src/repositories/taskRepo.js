@@ -81,6 +81,17 @@ async function hasNotificationLogs(taskId) {
   return count > 0
 }
 
+// ─── Plan Limit Helper ──────────────────────────────────
+
+/**
+ * Đếm số công việc đang mở (TODO / IN_PROGRESS) của user – dùng cho giới hạn gói.
+ */
+async function countActive(userId) {
+  return prisma.task.count({
+    where: { userId, status: { in: ['TODO', 'IN_PROGRESS'] } },
+  })
+}
+
 // ─── Reminder Helpers ───────────────────────────────────
 
 async function cancelRemindersByTask(taskId) {
@@ -117,4 +128,5 @@ export default {
   cancelRemindersByTask,
   findRemindersByTask,
   findCategoryById,
+  countActive,
 }

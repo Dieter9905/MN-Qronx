@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
+import cookieParser from 'cookie-parser'
 import swaggerUi from 'swagger-ui-express'
 import swaggerSpec from './config/swagger.js'
 import routes from './routes/index.js'
@@ -13,6 +14,7 @@ const app = express()
 // ── Security & parsing middleware ──────────────────────────
 app.use(helmet({ contentSecurityPolicy: false }))
 app.use(cors())
+app.use(cookieParser())
 app.use(express.json({ limit: '1mb' }))
 
 // ── Swagger UI ──────────────────────────────────────────────

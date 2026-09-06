@@ -1,6 +1,7 @@
 import deviceRepo from '../repositories/deviceRepo.js'
 import { parsePagination } from '../utils/pagination.js'
 import ApiError from '../utils/ApiError.js'
+import { PLANS, getUserPlan, planLimit, planLimitError } from '../utils/planLimits.js'
 
 // ─── Register Device ───────────────────────────────────
 
@@ -16,6 +17,16 @@ export async function registerDevice(userId, deviceToken, platform) {
     }
     // Different user → reject
     throw ApiError.badRequest('Device token đã được đăng ký bởi tài khoản khác')
+  }
+
+  // Giới hạn số thiết bị đồng bộ theo gói
+  const plan = await getUserPlan(userId)
+  const maxDevices = planLimit(plan, 'devices')
+  if (maxDevices !== Infinity) {
+    const count = await deviceRepo.countActive(userId)
+    if (count >= maxDevices) {
+      throw planLimitError({ feature: 'thiết bị đồng bộ', limit: maxDevices, plan })
+    }
   }
 
   return deviceRepo.create(userId, deviceToken, platform)
@@ -50,6 +61,17 @@ export async function getSettings(userId) {
 // ─── Update Notification Settings ──────────────────────
 
 export async function updateSettings(userId, data) {
+  // Âm thanh báo thức nâng cao chỉ dành cho gói cao hơn
+  if (data.alarmSound) {
+    const plan = await getUserPlan(userId)
+    const allowed = PLANS[plan]?.alarmSounds || PLANS.FREE.alarmSounds
+    if (!allowed.includes(data.alarmSound)) {
+      throw ApiError.badRequest(
+        `Âm thanh “${data.alarmSound}” chỉ dành cho gói Plus và Pro. Gói ${PLANS[plan]?.name || 'Miễn phí'} hỗ trợ: ${allowed.join(', ')}`
+      )
+    }
+  }
+
   const setting = await deviceRepo.findSetting(userId)
   if (!setting) {
     // Auto-create then update

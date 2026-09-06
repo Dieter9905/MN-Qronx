@@ -6,6 +6,7 @@ import {
   userIdValidation,
   userListValidation,
   createUserValidation,
+  planChangeValidation,
 } from '../dto/request/adminValidation.js'
 import * as adminController from '../controllers/adminController.js'
 
@@ -123,5 +124,34 @@ router.post('/users/:userId/lock', userIdValidation, validate, adminController.l
  *         description: Mở khóa thành công
  */
 router.post('/users/:userId/unlock', userIdValidation, validate, adminController.unlockUser)
+
+/**
+ * @swagger
+ * /admin/users/{userId}/plan:
+ *   put:
+ *     tags: [Admin]
+ *     summary: Đổi gói (FREE/PLUS/PRO) của người dùng
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [plan]
+ *             properties:
+ *               plan: { type: string, enum: [FREE, PLUS, PRO] }
+ *     responses:
+ *       200:
+ *         description: Đổi gói thành công
+ */
+router.put('/users/:userId/plan', userIdValidation, planChangeValidation, validate, adminController.setPlan)
 
 export default router

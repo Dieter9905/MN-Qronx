@@ -19,6 +19,7 @@
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -33,7 +34,7 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.14",
-    "vitest": "^4.1.11",
-    "prisma": "^6.19.3"
+    "prisma": "^6.19.3",
+    "vitest": "^4.1.11"
   }
 }

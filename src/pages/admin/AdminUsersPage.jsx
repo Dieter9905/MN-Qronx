@@ -8,13 +8,14 @@ import {
   ArrowRight,
   UserPlus,
 } from '@phosphor-icons/react'
-import { getAdminUsers, setUserActive, createAdminUser } from '../../services/adminService'
+import { getAdminUsers, setUserActive, createAdminUser, setUserPlan } from '../../services/adminService'
 import { useToast } from '../../components/common/Toast'
 import { Skeleton, EmptyState } from '../../components/common/Feedback'
 import Button from '../../components/common/Button'
 import Modal, { ConfirmDialog } from '../../components/common/Modal'
 import { Field, Input, Select } from '../../components/common/Inputs'
 import { formatDate } from '../../lib/format'
+import { PLAN_BADGE, PLAN_NAMES } from '../../lib/constants'
 
 const PAGE_SIZE = 10
 
@@ -49,6 +50,19 @@ export default function AdminUsersPage() {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyword, status, page])
+
+  const changePlan = async (u, plan) => {
+    if (!plan || plan === u.plan) return
+    setBusy(true)
+    const res = await setUserPlan(u.id, plan)
+    setBusy(false)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    toast.success(`Đã chuyển gói của ${res.data.fullName || u.fullName} sang ${PLAN_NAMES[plan]}`)
+    load()
+  }
 
   const doLock = async () => {
     if (!confirm) return
@@ -166,16 +180,16 @@ export default function AdminUsersPage() {
         <>
           <div className="overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-navy-100">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-left">
-                <thead>
-                  <tr className="border-b border-navy-100 bg-navy-50/70 text-xs font-bold uppercase tracking-wider text-navy-400">
-                    <th className="px-4 py-3">Người dùng</th>
-                    <th className="px-4 py-3">Công việc</th>
-                    <th className="px-4 py-3">Ngày tạo</th>
-                    <th className="px-4 py-3">Trạng thái</th>
-                    <th className="px-4 py-3 text-right">Hành động</th>
-                  </tr>
-                </thead>
+              <table className="w-full min-w-[720px] text-left">                  <thead>
+                    <tr className="border-b border-navy-100 bg-navy-50/70 text-xs font-bold uppercase tracking-wider text-navy-400">
+                      <th className="px-4 py-3">Người dùng</th>
+                      <th className="px-4 py-3">Công việc</th>
+                      <th className="px-4 py-3">Gói</th>
+                      <th className="px-4 py-3">Ngày tạo</th>
+                      <th className="px-4 py-3">Trạng thái</th>
+                      <th className="px-4 py-3 text-right">Hành động</th>
+                    </tr>
+                  </thead>
                 <tbody className="divide-y divide-navy-50">
                   {data?.items.map((u) => (
                     <tr key={u.id} className="transition hover:bg-navy-50/50">
@@ -191,6 +205,23 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-sm font-semibold text-navy-600">{u.taskCount}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-1">
+                          <select
+                            value={u.plan || 'FREE'}
+                            onChange={(e) => changePlan(u, e.target.value)}
+                            aria-label={`Đổi gói của ${u.fullName}`}
+                            className="h-8 cursor-pointer rounded-lg border-0 bg-navy-50 px-2 text-xs font-bold text-navy-700 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600"
+                          >
+                            <option value="FREE">Miễn phí</option>
+                            <option value="PLUS">Plus</option>
+                            <option value="PRO">Pro</option>
+                          </select>
+                          <span className={`inline-flex w-fit items-center rounded-full px-2 py-px text-[10px] font-extrabold ring-1 ring-inset ${PLAN_BADGE[u.plan || 'FREE']}`}>
+                            {PLAN_NAMES[u.plan || 'FREE']}
+                          </span>
+                        </div>
+                      </td>
                       <td className="px-4 py-3 text-sm text-navy-500">{formatDate(u.createdAt)}</td>
                       <td className="px-4 py-3">
                         {u.isActive ? (

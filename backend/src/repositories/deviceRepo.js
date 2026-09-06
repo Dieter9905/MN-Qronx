@@ -27,6 +27,13 @@ async function update(deviceId, data) {
   return prisma.device.update({ where: { deviceId }, data })
 }
 
+/**
+ * Count active devices of a user – dùng cho giới hạn gói.
+ */
+async function countActive(userId) {
+  return prisma.device.count({ where: { userId, isActive: true } })
+}
+
 // ─── NotificationSetting Queries ───────────────────────
 
 async function findSetting(userId) {
@@ -92,6 +99,7 @@ export default {
   findById,
   create,
   update,
+  countActive,
   findSetting,
   createSetting,
   updateSetting,

@@ -16,6 +16,7 @@ export async function getProfile(userId) {
     phoneNumber: user.phoneNumber,
     avatarUrl: user.avatarUrl,
     role: user.role.roleName,
+    plan: user.plan || 'FREE',
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   }

@@ -3,6 +3,7 @@ import taskRepo from '../repositories/taskRepo.js'
 import reminderRepo from '../repositories/reminderRepo.js'
 import { addMinutes } from '../utils/dateUtils.js'
 import ApiError from '../utils/ApiError.js'
+import { PLANS, getUserPlan, planLimit } from '../utils/planLimits.js'
 
 const DEFAULT_SNOOZE_MINUTES = 5
 
@@ -34,10 +35,14 @@ export async function create(userId, taskId, remindAt) {
     throw ApiError.badRequest('Thời điểm nhắc nhở phải nhỏ hơn hoặc bằng thời hạn công việc')
   }
 
-  // BR-09: Max 5 active reminders per task
+  // Giới hạn nhắc nhở đang hoạt động theo gói (BR-09 + plan)
+  const plan = await getUserPlan(userId)
+  const maxReminders = planLimit(plan, 'remindersPerTask')
   const activeCount = await reminderRepo.countActiveByTask(taskId)
-  if (activeCount >= 5) {
-    throw ApiError.badRequest('Mỗi công việc chỉ được có tối đa 5 nhắc nhở đang hoạt động')
+  if (activeCount >= maxReminders) {
+    throw ApiError.badRequest(
+      `Gói ${PLANS[plan]?.name || 'Miễn phí'} chỉ được tối đa ${maxReminders} nhắc nhở đang hoạt động mỗi công việc. Nâng cấp gói để thêm nhiều hơn.`
+    )
   }
 
   return reminderRepo.create(taskId, remindAt)

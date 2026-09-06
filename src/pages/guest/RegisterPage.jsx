@@ -8,12 +8,14 @@ import {
   EyeSlash,
   UserCirclePlus,
   WarningCircle,
+  GoogleLogo,
 } from '@phosphor-icons/react'
 import AuthLayout from '../../components/AuthLayout'
 import { Field, Input } from '../../components/common/Inputs'
 import Button from '../../components/common/Button'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
+import { API_BASE_URL } from '../../services/apiClient'
 
 export default function RegisterPage() {
   const { register } = useAuth()
@@ -149,6 +151,27 @@ export default function RegisterPage() {
           Đăng ký
         </Button>
       </form>
+
+      <div className="mt-6 flex items-center gap-3">
+        <span className="h-px flex-1 bg-navy-100 dark:bg-slate-700" />
+        <span className="text-xs font-bold uppercase tracking-wider text-navy-300 dark:text-slate-500">Hoặc</span>
+        <span className="h-px flex-1 bg-navy-100 dark:bg-slate-700" />
+      </div>
+      <div className="mt-4">
+        <Button
+          type="button"
+          variant="secondary"
+          fullWidth
+          size="lg"
+          icon={GoogleLogo}
+          onClick={() => {
+            window.location.href = `${API_BASE_URL}/auth/google`
+          }}
+        >
+          Đăng ký bằng Google
+        </Button>
+      </div>
+
       <p className="mt-6 text-center text-sm text-navy-500 dark:text-slate-400">
         Đã có tài khoản?{' '}
         <Link to="/login" className="font-semibold text-blue-600 hover:underline">

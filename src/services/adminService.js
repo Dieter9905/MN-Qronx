@@ -45,3 +45,10 @@ export async function setUserActive(userId, isActive) {
   if (res.success) res.data = toUser(res.data)
   return res
 }
+
+// PUT /api/v1/admin/users/{id}/plan – đổi gói (FREE/PLUS/PRO)
+export async function setUserPlan(userId, plan) {
+  const res = await api('PUT', `/admin/users/${userId}/plan`, { body: { plan } })
+  if (res.success) res.data = toUser(res.data)
+  return res
+}

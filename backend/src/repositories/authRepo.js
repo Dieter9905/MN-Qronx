@@ -13,6 +13,36 @@ async function findByEmail(email) {
 }
 
 /**
+ * Find user by Google ID (with role included).
+ */
+async function findByGoogleId(googleId) {
+  return prisma.user.findUnique({
+    where: { googleId },
+    include: { role: true },
+  })
+}
+
+/**
+ * Attach a Google ID to an existing user (link accounts).
+ */
+async function attachGoogleId(userId, googleId) {
+  return prisma.user.update({
+    where: { userId },
+    data: { googleId },
+  })
+}
+
+/**
+ * Set avatar URL (Google avatar khi đăng nhập lần đầu).
+ */
+async function updateProfileAvatar(userId, avatarUrl) {
+  return prisma.user.update({
+    where: { userId },
+    data: { avatarUrl },
+  })
+}
+
+/**
  * Find user by ID (without passwordHash).
  */
 async function findById(userId) {
@@ -24,6 +54,7 @@ async function findById(userId) {
       email: true,
       phoneNumber: true,
       isActive: true,
+      plan: true,
       role: true,
       createdAt: true,
       updatedAt: true,
@@ -143,6 +174,9 @@ async function markResetRequestUsed(resetRequestId) {
 
 export default {
   findByEmail,
+  findByGoogleId,
+  attachGoogleId,
+  updateProfileAvatar,
   findById,
   create,
   updatePassword,

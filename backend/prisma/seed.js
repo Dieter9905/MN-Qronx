@@ -46,7 +46,7 @@ async function main() {
   const userPasswordHash = await bcrypt.hash('User@1234', 10)
   const demoUser = await prisma.user.upsert({
     where: { email: 'demo@taskalarm.com' },
-    update: {},
+    update: { plan: 'PLUS' },
     create: {
       roleId: userRole.roleId,
       fullName: 'Nguyen Van A',
@@ -54,6 +54,7 @@ async function main() {
       passwordHash: userPasswordHash,
       phoneNumber: '0912345678',
       isActive: true,
+      plan: 'PLUS',
     },
   })
 

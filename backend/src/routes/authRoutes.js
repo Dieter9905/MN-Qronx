@@ -160,4 +160,28 @@ router.post(
   authController.logout,
 )
 
+/**
+ * @swagger
+ * /auth/google:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Đăng nhập/đăng ký bằng Google (chuyển hướng tới Google)
+ *     responses:
+ *       302:
+ *         description: Chuyển hướng tới Google
+ */
+router.get('/google', authController.googleRedirect)
+
+/**
+ * @swagger
+ * /auth/google/callback:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Callback Google OAuth – chuyển hướng về frontend kèm token
+ *     responses:
+ *       302:
+ *         description: Chuyển hướng về /oauth-callback kèm accessToken/refreshToken
+ */
+router.get('/google/callback', authController.googleCallback)
+
 export default router

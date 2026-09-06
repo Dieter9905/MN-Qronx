@@ -107,9 +107,12 @@ export function SegmentedControl({ options, value, onChange, size = 'md', classN
             type="button"
             role="radio"
             aria-checked={selected}
-            onClick={() => onChange(opt.value)}
+            disabled={opt.disabled}
+            onClick={() => !opt.disabled && onChange(opt.value)}
+            title={opt.disabled ? opt.disabledTitle || 'Cần nâng cấp gói' : undefined}
             className={[
-              'cursor-pointer rounded-lg font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+              'rounded-lg font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+              opt.disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer',
               size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3.5 py-1.5 text-sm',
               selected
                 ? 'bg-white text-navy-900 shadow-sm dark:bg-slate-600 dark:text-white'

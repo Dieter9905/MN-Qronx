@@ -11,7 +11,10 @@ import LoginPage from './pages/guest/LoginPage'
 import RegisterPage from './pages/guest/RegisterPage'
 import ForgotPasswordPage from './pages/guest/ForgotPasswordPage'
 import ResetPasswordPage from './pages/guest/ResetPasswordPage'
+import PricingPage from './pages/guest/PricingPage'
+import OAuthCallbackPage from './pages/guest/OAuthCallbackPage'
 import DashboardPage from './pages/user/DashboardPage'
+import BillingPage from './pages/user/BillingPage'
 import TaskListPage from './pages/user/TaskListPage'
 import TaskDetailPage from './pages/user/TaskDetailPage'
 import TaskFormPage from './pages/user/TaskFormPage'
@@ -66,6 +69,8 @@ export default function App() {
             </GuestOnlyRoute>
           }
         />
+        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
 
         {/* User */}
         <Route
@@ -85,6 +90,7 @@ export default function App() {
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="notifications" element={<NotificationHistoryPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="billing" element={<BillingPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="change-password" element={<ChangePasswordPage />} />
         </Route>

@@ -46,6 +46,10 @@ async function deleteSubtask(subtaskId) {
   return prisma.subtask.delete({ where: { subtaskId } })
 }
 
+async function countByTask(taskId) {
+  return prisma.subtask.count({ where: { taskId } })
+}
+
 export default {
   findByTask,
   findById,
@@ -54,4 +58,5 @@ export default {
   update,
   toggleComplete,
   deleteSubtask,
+  countByTask,
 }

@@ -17,6 +17,7 @@ export function transformUser(user) {
     phoneNumber: user.phoneNumber || '',
     avatarUrl: user.avatarUrl || null,
     role: user.role?.roleName || user.roleName || 'USER',
+    plan: user.plan || 'FREE',
     isActive: user.isActive,
     createdAt: user.createdAt,
   }

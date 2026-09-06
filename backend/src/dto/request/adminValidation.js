@@ -40,3 +40,10 @@ export const createUserValidation = [
     .optional()
     .isIn(['USER', 'ADMIN']).withMessage('Vai trò chỉ là USER hoặc ADMIN'),
 ]
+
+// ─── Change User Plan Body ─────────────────────────────
+export const planChangeValidation = [
+  body('plan')
+    .trim()
+    .isIn(['FREE', 'PLUS', 'PRO']).withMessage('Gói chỉ là FREE, PLUS hoặc PRO'),
+]
