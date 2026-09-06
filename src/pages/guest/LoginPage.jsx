@@ -50,11 +50,6 @@ export default function LoginPage() {
     navigate(res.data.user.role === 'ADMIN' ? '/admin' : from || '/app', { replace: true })
   }
 
-  const fillDemo = (email, password) => {
-    setForm({ email, password, remember: true })
-    setServerError('')
-  }
-
   return (
     <AuthLayout title="Đăng nhập" subtitle="Chào mừng bạn quay lại MN-Qronx. Hãy tiếp tục quản lý công việc của mình.">
       {serverError && (
@@ -124,30 +119,6 @@ export default function LoginPage() {
           Đăng nhập
         </Button>
       </form>
-
-      <div className="mt-6 rounded-2xl bg-brand-gradient-soft p-4 ring-1 ring-blue-100 dark:ring-blue-900/50">
-        <p className="text-xs font-bold uppercase tracking-wider text-navy-500 dark:text-slate-400">Tài khoản dùng thử</p>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => fillDemo('demo@taskalarm.com', 'User@1234')}
-            className="cursor-pointer rounded-xl bg-white p-3 text-left shadow-sm ring-1 ring-navy-100 transition hover:ring-blue-300 dark:bg-slate-800 dark:ring-slate-700 dark:hover:ring-blue-500"
-          >
-            <p className="text-xs font-bold text-navy-800 dark:text-white">Người dùng (demo)</p>
-            <p className="mt-0.5 truncate text-[11px] text-navy-400 dark:text-slate-400">demo@taskalarm.com</p>
-            <p className="text-[11px] text-navy-400 dark:text-slate-400">Mật khẩu: User@1234</p>
-          </button>
-          <button
-            type="button"
-            onClick={() => fillDemo('admin@taskalarm.com', 'Admin@123')}
-            className="cursor-pointer rounded-xl bg-white p-3 text-left shadow-sm ring-1 ring-navy-100 transition hover:ring-purple-300 dark:bg-slate-800 dark:ring-slate-700 dark:hover:ring-purple-500"
-          >
-            <p className="text-xs font-bold text-navy-800 dark:text-white">Quản trị viên</p>
-            <p className="mt-0.5 truncate text-[11px] text-navy-400 dark:text-slate-400">admin@taskalarm.com</p>
-            <p className="text-[11px] text-navy-400 dark:text-slate-400">Mật khẩu: Admin@123</p>
-          </button>
-        </div>
-      </div>
 
       <p className="mt-6 text-center text-sm text-navy-500 dark:text-slate-400">
         Chưa có tài khoản?{' '}

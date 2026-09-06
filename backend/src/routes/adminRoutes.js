@@ -5,6 +5,7 @@ import validate from '../middleware/validate.js'
 import {
   userIdValidation,
   userListValidation,
+  createUserValidation,
 } from '../dto/request/adminValidation.js'
 import * as adminController from '../controllers/adminController.js'
 
@@ -55,6 +56,33 @@ router.get('/dashboard', adminController.getDashboard)
  *         description: Danh sách users
  */
 router.get('/users', userListValidation, validate, adminController.getUsers)
+
+/**
+ * @swagger
+ * /admin/users:
+ *   post:
+ *     tags: [Admin]
+ *     summary: Tạo tài khoản mới
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [fullName, email, password]
+ *             properties:
+ *               fullName: { type: string, example: 'Nguyen Van A' }
+ *               email: { type: string, format: email }
+ *               password: { type: string, minLength: 6 }
+ *               phoneNumber: { type: string }
+ *               role: { type: string, enum: [USER, ADMIN], default: USER }
+ *     responses:
+ *       201:
+ *         description: Tạo thành công
+ */
+router.post('/users', createUserValidation, validate, adminController.createUser)
 
 /**
  * @swagger

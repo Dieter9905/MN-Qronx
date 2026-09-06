@@ -24,6 +24,20 @@ export async function getAdminUsers({ keyword, page = 1, pageSize = 10 } = {}) {
   return res
 }
 
+// POST /api/v1/admin/users – tạo tài khoản mới (Admin)
+export async function createAdminUser({ fullName, email, password, phoneNumber, role = 'USER' } = {}) {
+  const res = await api('POST', '/admin/users', {
+    body: { fullName, email, password, phoneNumber, role },
+  })
+  if (res.success) {
+    res.data = {
+      ...toUser(res.data),
+      taskCount: res.data?._count?.tasks ?? 0,
+    }
+  }
+  return res
+}
+
 // POST /api/v1/admin/users/{id}/lock | /unlock
 export async function setUserActive(userId, isActive) {
   const path = isActive ? 'unlock' : 'lock'

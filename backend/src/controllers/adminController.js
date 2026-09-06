@@ -12,6 +12,11 @@ export const getUsers = catchAsync(async (req, res) => {
   success(res, 200, 'Thao tác thành công', result)
 })
 
+export const createUser = catchAsync(async (req, res) => {
+  const user = await adminService.createUser(req.body)
+  success(res, 201, 'Tạo tài khoản thành công', user)
+})
+
 export const lockUser = catchAsync(async (req, res) => {
   const { userId } = req.params
   const user = await adminService.lockUser(parseInt(userId))

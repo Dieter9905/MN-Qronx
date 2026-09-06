@@ -6,12 +6,14 @@ import {
   UsersThree,
   ArrowLeft,
   ArrowRight,
+  UserPlus,
 } from '@phosphor-icons/react'
-import { getAdminUsers, setUserActive } from '../../services/adminService'
+import { getAdminUsers, setUserActive, createAdminUser } from '../../services/adminService'
 import { useToast } from '../../components/common/Toast'
 import { Skeleton, EmptyState } from '../../components/common/Feedback'
 import Button from '../../components/common/Button'
-import { ConfirmDialog } from '../../components/common/Modal'
+import Modal, { ConfirmDialog } from '../../components/common/Modal'
+import { Field, Input, Select } from '../../components/common/Inputs'
 import { formatDate } from '../../lib/format'
 
 const PAGE_SIZE = 10
@@ -25,6 +27,16 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [confirm, setConfirm] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [showCreate, setShowCreate] = useState(false)
+  const [createForm, setCreateForm] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    phoneNumber: '',
+    role: 'USER',
+  })
+  const [createErrors, setCreateErrors] = useState({})
+  const [creating, setCreating] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -52,17 +64,60 @@ export default function AdminUsersPage() {
     load()
   }
 
+  const openCreate = () => {
+    setCreateForm({ fullName: '', email: '', password: '', phoneNumber: '', role: 'USER' })
+    setCreateErrors({})
+    setShowCreate(true)
+  }
+
+  const submitCreate = async () => {
+    const er = {}
+    if (!createForm.fullName.trim()) er.fullName = 'Họ tên không được để trống'
+    if (!createForm.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(createForm.email.trim())) {
+      er.email = 'Email không hợp lệ'
+    }
+    if (!createForm.password || createForm.password.length < 6) {
+      er.password = 'Mật khẩu phải có ít nhất 6 ký tự'
+    }
+    setCreateErrors(er)
+    if (Object.keys(er).length > 0) return
+
+    setCreating(true)
+    const res = await createAdminUser({
+      fullName: createForm.fullName.trim(),
+      email: createForm.email.trim(),
+      password: createForm.password,
+      phoneNumber: createForm.phoneNumber.trim(),
+      role: createForm.role,
+    })
+    setCreating(false)
+    if (!res.success) {
+      if (res.errors) setCreateErrors(res.errors)
+      toast.error(res.message || 'Không thể tạo tài khoản')
+      return
+    }
+    toast.success(`Đã tạo tài khoản ${res.data.fullName}`)
+    setShowCreate(false)
+    setPage(1)
+    setKeyword('')
+    setStatus('')
+    load()
+  }
+
   const totalPages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1
 
   return (
     <div className="space-y-5 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-navy-900">Quản lý người dùng</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-navy-900">Quản lý tài khoản</h1>
           <p className="mt-1 text-sm font-medium text-navy-400">
-            {data ? `${data.total} tài khoản người dùng` : '…'} · Khóa/mở khóa tài khoản vi phạm hoặc bất thường
+            {data ? `${data.total} tài khoản` : '…'} · Tạo mới, khóa/mở khóa tài khoản
           </p>
         </div>
+        <Button variant="gradient" icon={UserPlus} onClick={openCreate}>
+          Thêm tài khoản
+        </Button>
       </div>
 
       {/* Bộ lọc */}
@@ -204,6 +259,98 @@ export default function AdminUsersPage() {
         danger={confirm?.isActive}
         loading={busy}
       />
+
+      {/* Tạo tài khoản mới */}
+      <Modal
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        title="Thêm tài khoản mới"
+        description="Tạo tài khoản cho người dùng hoặc quản trị viên."
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowCreate(false)} disabled={creating}>
+              Hủy
+            </Button>
+            <Button variant="gradient" icon={UserPlus} onClick={submitCreate} loading={creating}>
+              Tạo tài khoản
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <Field label="Họ tên" required error={createErrors.fullName}>
+            {(id) => (
+              <Input
+                id={id}
+                value={createForm.fullName}
+                onChange={(e) => {
+                  setCreateForm((f) => ({ ...f, fullName: e.target.value }))
+                  setCreateErrors((er) => ({ ...er, fullName: undefined }))
+                }}
+                invalid={!!createErrors.fullName}
+                placeholder="Nguyen Van A"
+              />
+            )}
+          </Field>
+          <Field label="Email" required error={createErrors.email}>
+            {(id) => (
+              <Input
+                id={id}
+                type="email"
+                value={createForm.email}
+                onChange={(e) => {
+                  setCreateForm((f) => ({ ...f, email: e.target.value }))
+                  setCreateErrors((er) => ({ ...er, email: undefined }))
+                }}
+                invalid={!!createErrors.email}
+                placeholder="user@example.com"
+              />
+            )}
+          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Mật khẩu" required error={createErrors.password} hint="Tối thiểu 6 ký tự">
+              {(id) => (
+                <Input
+                  id={id}
+                  type="password"
+                  value={createForm.password}
+                  onChange={(e) => {
+                    setCreateForm((f) => ({ ...f, password: e.target.value }))
+                    setCreateErrors((er) => ({ ...er, password: undefined }))
+                  }}
+                  invalid={!!createErrors.password}
+                />
+              )}
+            </Field>
+            <Field label="Số điện thoại" error={createErrors.phoneNumber}>
+              {(id) => (
+                <Input
+                  id={id}
+                  value={createForm.phoneNumber}
+                  onChange={(e) => {
+                    setCreateForm((f) => ({ ...f, phoneNumber: e.target.value }))
+                    setCreateErrors((er) => ({ ...er, phoneNumber: undefined }))
+                  }}
+                  invalid={!!createErrors.phoneNumber}
+                  placeholder="0901234567"
+                />
+              )}
+            </Field>
+          </div>
+          <Field label="Vai trò" required>
+            {(id) => (
+              <Select
+                id={id}
+                value={createForm.role}
+                onChange={(e) => setCreateForm((f) => ({ ...f, role: e.target.value }))}
+              >
+                <option value="USER">Người dùng (USER)</option>
+                <option value="ADMIN">Quản trị viên (ADMIN)</option>
+              </Select>
+            )}
+          </Field>
+        </div>
+      </Modal>
     </div>
   )
 }

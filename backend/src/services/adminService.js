@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs'
 import prisma from '../config/prisma.js'
 import { parsePagination, paginationMeta } from '../utils/pagination.js'
 import ApiError from '../utils/ApiError.js'
@@ -37,6 +38,57 @@ export async function getDashboard() {
     totalNotifications,
     tasksByStatus: statusMap,
   }
+}
+
+// ─── Create User (Admin) ──────────────────────────────
+
+export async function createUser({ fullName, email, password, phoneNumber, role }) {
+  const normalizedEmail = String(email).trim().toLowerCase()
+
+  const existing = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    select: { userId: true },
+  })
+  if (existing) {
+    throw ApiError.badRequest('Email đã được sử dụng', { email: 'Email này đã tồn tại trong hệ thống' })
+  }
+
+  const roleName = role === 'ADMIN' ? 'ADMIN' : 'USER'
+  const roleRow = await prisma.role.findUnique({
+    where: { roleName },
+    select: { roleId: true },
+  })
+  if (!roleRow) {
+    throw ApiError.internal('Không tìm thấy vai trò mặc định')
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10)
+
+  const user = await prisma.user.create({
+    data: {
+      roleId: roleRow.roleId,
+      fullName: String(fullName).trim(),
+      email: normalizedEmail,
+      passwordHash,
+      phoneNumber: phoneNumber || null,
+      isActive: true,
+      notificationSetting: {
+        create: {},
+      },
+    },
+    select: {
+      userId: true,
+      fullName: true,
+      email: true,
+      phoneNumber: true,
+      isActive: true,
+      createdAt: true,
+      role: { select: { roleName: true } },
+      _count: { select: { tasks: true } },
+    },
+  })
+
+  return user
 }
 
 // ─── List Users ────────────────────────────────────────
