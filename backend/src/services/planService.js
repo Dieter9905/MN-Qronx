@@ -1,7 +1,7 @@
 import prisma from '../config/prisma.js'
 import ApiError from '../utils/ApiError.js'
 import { computePlanDates, daysLeft } from '../utils/planDates.js'
-import { PLANS } from '../utils/planLimits.js'
+import { PLANS, isPlanExpired, downgradeUser } from '../utils/planLimits.js'
 
 // ─── Nâng cấp gói (mô phỏng thanh toán, kỳ 30 ngày) ───
 
@@ -51,6 +51,14 @@ export async function getMyPlan(userId) {
     },
   })
   if (!user) throw ApiError.notFound('Không tìm thấy người dùng')
+
+  // Gói đã quá hạn → hạ FREE ngay
+  if (isPlanExpired(user)) {
+    await downgradeUser(userId)
+    user.plan = 'FREE'
+    user.planStartedAt = null
+    user.planExpiresAt = null
+  }
 
   return {
     plan: user.plan,

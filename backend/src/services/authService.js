@@ -5,6 +5,7 @@ import config from '../config/index.js'
 import authRepo from '../repositories/authRepo.js'
 import ApiError from '../utils/ApiError.js'
 import { transformUser } from '../utils/transformers.js'
+import { isPlanExpired, downgradeUser } from '../utils/planLimits.js'
 
 const REFRESH_TOKEN_EXPIRY_DAYS = 7
 const RESET_TOKEN_EXPIRY_HOURS = 1
@@ -43,6 +44,14 @@ export async function login(email, password) {
   const isMatch = await bcrypt.compare(password, user.passwordHash)
   if (!isMatch) {
     throw ApiError.badRequest('Email hoặc mật khẩu không đúng')
+  }
+
+  // Gói trả phí đã quá hạn → hạ FREE ngay (trả về gói hiệu lực)
+  if (isPlanExpired(user)) {
+    await downgradeUser(user.userId)
+    user.plan = 'FREE'
+    user.planStartedAt = null
+    user.planExpiresAt = null
   }
 
   // Generate AccessToken (JWT, 1 giờ)
@@ -100,6 +109,14 @@ export async function loginWithGoogle({ googleId, email, fullName, avatarUrl }) 
 
   if (!user.isActive) {
     throw ApiError.forbidden('Tài khoản đã bị khóa')
+  }
+
+  // Gói trả phí đã quá hạn → hạ FREE ngay (trả về gói hiệu lực)
+  if (isPlanExpired(user)) {
+    await downgradeUser(user.userId)
+    user.plan = 'FREE'
+    user.planStartedAt = null
+    user.planExpiresAt = null
   }
 
   // Cập nhật avatar từ Google nếu tài khoản chưa có

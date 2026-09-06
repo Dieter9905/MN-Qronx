@@ -3,6 +3,17 @@ import * as authService from '../services/authService'
 
 const AuthContext = createContext(null)
 
+// Gói hiệu lực cho UI: gói trả phí đã quá hạn (planExpiresAt) tính như FREE
+// để mọi giới hạn Plus/Pro trên giao diện ngừng ngay lập tức.
+function applyEffectivePlan(u) {
+  if (!u) return u
+  const paid = u.plan === 'PLUS' || u.plan === 'PRO'
+  if (paid && u.planExpiresAt && new Date(u.planExpiresAt) <= new Date()) {
+    return { ...u, plan: 'FREE' }
+  }
+  return u
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [initializing, setInitializing] = useState(true)
@@ -13,7 +24,7 @@ export function AuthProvider({ children }) {
     ;(async () => {
       try {
         const u = await authService.fetchCurrentUser()
-        if (!cancelled) setUser(u)
+        if (!cancelled) setUser(applyEffectivePlan(u))
       } catch {
         authService.logout()
       } finally {
@@ -27,7 +38,7 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (credentials) => {
     const res = await authService.login(credentials)
-    if (res.success) setUser(res.data.user)
+    if (res.success) setUser(applyEffectivePlan(res.data.user))
     return res
   }, [])
 
@@ -42,7 +53,7 @@ export function AuthProvider({ children }) {
 
   const refresh = useCallback(async () => {
     const u = await authService.fetchCurrentUser()
-    setUser(u)
+    setUser(applyEffectivePlan(u))
     return u
   }, [])
 

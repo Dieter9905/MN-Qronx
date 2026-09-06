@@ -2,12 +2,21 @@ import bcrypt from 'bcryptjs'
 import userRepo from '../repositories/userRepo.js'
 import ApiError from '../utils/ApiError.js'
 import { startOfDay, endOfDay } from '../utils/dateUtils.js'
+import { isPlanExpired, downgradeUser } from '../utils/planLimits.js'
 
 // ─── Get Profile ────────────────────────────────────────
 
 export async function getProfile(userId) {
   const user = await userRepo.findProfile(userId)
   if (!user) throw ApiError.notFound('Không tìm thấy người dùng')
+
+  // Gói trả phí đã quá hạn → hạ FREE ngay (và trả về gói hiệu lực)
+  if (isPlanExpired(user)) {
+    await downgradeUser(userId)
+    user.plan = 'FREE'
+    user.planStartedAt = null
+    user.planExpiresAt = null
+  }
 
   return {
     userId: user.userId,

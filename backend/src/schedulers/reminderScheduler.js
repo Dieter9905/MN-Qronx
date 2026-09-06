@@ -2,6 +2,7 @@ import cron from 'node-cron'
 import prisma from '../config/prisma.js'
 import { sendPushNotification } from '../notifications/webPushSender.js'
 import { sendFcmNotification } from '../notifications/fcmSender.js'
+import { downgradeExpiredPlans } from '../utils/planLimits.js'
 
 // ─── Reminder Scheduler ────────────────────────────────
 // Chạy mỗi 1 phút: quét DB tìm reminder SCHEDULED đã đến hạn
@@ -11,6 +12,16 @@ const TASK = '*/1 * * * *' // Mỗi 1 phút
 cron.schedule(TASK, async () => {
   const now = new Date()
   console.log(`[Scheduler] Quét reminders lúc ${now.toISOString()}`)
+
+  // Tự động hạ gói trả phí đã quá hạn xuống FREE
+  try {
+    const downgraded = await downgradeExpiredPlans()
+    if (downgraded > 0) {
+      console.log(`[Scheduler] Đã hạ ${downgraded} gói trả phí hết hạn xuống FREE`)
+    }
+  } catch (err) {
+    console.error('[Scheduler] Lỗi hạ gói hết hạn:', err.message)
+  }
 
   try {
     // Tìm tất cả reminder SCHEDULED đã đến hạn

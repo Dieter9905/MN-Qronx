@@ -1,6 +1,8 @@
 import prisma from '../config/prisma.js'
 import ApiError from './ApiError.js'
 
+const PAID_PLANS = ['PLUS', 'PRO']
+
 // ─── Cấu hình giới hạn tính năng theo gói ───────────────────
 // FREE  → Miễn phí (giới hạn cơ bản)
 // PLUS  → Plus (mở rộng)
@@ -39,14 +41,79 @@ export const PLANS = {
 }
 
 /**
- * Lấy gói hiện tại của user (FREE/PLUS/PRO).
+ * Kiểm tra gói trả phí của user đã quá hạn hay chưa.
+ * @param {{ plan?: string, planExpiresAt?: Date|string|null }} user
+ * @returns {boolean}
+ */
+export function isPlanExpired(user) {
+  return (
+    !!user &&
+    PAID_PLANS.includes(user.plan) &&
+    !!user.planExpiresAt &&
+    new Date(user.planExpiresAt) <= new Date()
+  )
+}
+
+/**
+ * Hạ gói của một user xuống FREE khi đã quá hạn (kèm xoá mốc thời gian
+ * và đưa âm thanh báo thức tùy chỉnh về chuông mặc định).
+ * @param {number} userId
+ * @returns {Promise<boolean>} true nếu đã hạ gói
+ */
+export async function downgradeUser(userId) {
+  const user = await prisma.user.findUnique({
+    where: { userId },
+    select: { plan: true, planExpiresAt: true },
+  })
+  if (!user || !isPlanExpired(user)) return false
+
+  await prisma.user.update({
+    where: { userId },
+    data: { plan: 'FREE', planStartedAt: null, planExpiresAt: null },
+  })
+  // Âm thanh import chỉ dành cho gói trả phí → về chuông mặc định
+  await prisma.notificationSetting.updateMany({
+    where: { userId, alarmSound: { startsWith: 'custom:' } },
+    data: { alarmSound: 'classic' },
+  })
+  return true
+}
+
+/**
+ * Quét toàn bộ user có gói trả phí đã quá hạn → hạ xuống FREE.
+ * Dùng cho scheduler (mỗi 1 phút) để đảm bảo hạn áp dụng kể cả khi user không truy cập.
+ * @returns {Promise<number>} số user đã hạ gói
+ */
+export async function downgradeExpiredPlans() {
+  const now = new Date()
+  const res = await prisma.user.updateMany({
+    where: { plan: { in: PAID_PLANS }, planExpiresAt: { lt: now } },
+    data: { plan: 'FREE', planStartedAt: null, planExpiresAt: null },
+  })
+
+  if (res.count > 0) {
+    // Đưa âm thanh tùy chỉnh của các user vừa hạ gói về chuông mặc định
+    // (chỉ nhắm user đang FREE – user trả phí đang hoạt động không bị ảnh hưởng)
+    await prisma.notificationSetting.updateMany({
+      where: { alarmSound: { startsWith: 'custom:' }, user: { plan: 'FREE' } },
+      data: { alarmSound: 'classic' },
+    })
+  }
+  return res.count
+}
+
+/**
+ * Lấy gói hiệu lực của user (FREE/PLUS/PRO).
+ * Gói trả phí đã quá hạn được tính như FREE ngay lập tức
+ * (scheduler / endpoint /me sẽ hạ gói vĩnh viễn sau đó).
  */
 export async function getUserPlan(userId) {
   const user = await prisma.user.findUnique({
     where: { userId },
-    select: { plan: true },
+    select: { plan: true, planExpiresAt: true },
   })
-  return user?.plan || 'FREE'
+  if (!user) return 'FREE'
+  return isPlanExpired(user) ? 'FREE' : user.plan
 }
 
 /**
