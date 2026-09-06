@@ -3,6 +3,8 @@ import auth from '../middleware/auth.js'
 import validate from '../middleware/validate.js'
 import * as userValidation from '../dto/request/userValidation.js'
 import * as userController from '../controllers/userController.js'
+import * as customSoundValidation from '../dto/request/customSoundValidation.js'
+import * as customSoundController from '../controllers/customSoundController.js'
 
 const router = Router()
 
@@ -112,5 +114,29 @@ router.get('/stats', auth, userController.getStats)
  *         description: Danh sách activity
  */
 router.get('/activity', auth, userController.getRecentActivity)
+
+// ── Âm thanh báo thức tùy chỉnh (import MP3 – Plus/Pro) ──
+router.get('/sounds', auth, customSoundController.listSounds)
+router.post(
+  '/sounds',
+  auth,
+  customSoundValidation.importSoundValidation,
+  validate,
+  customSoundController.importSound,
+)
+router.get(
+  '/sounds/:soundId/data',
+  auth,
+  customSoundValidation.soundIdValidation,
+  validate,
+  customSoundController.getSoundData,
+)
+router.delete(
+  '/sounds/:soundId',
+  auth,
+  customSoundValidation.soundIdValidation,
+  validate,
+  customSoundController.removeSound,
+)
 
 export default router

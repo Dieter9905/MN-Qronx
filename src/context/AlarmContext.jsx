@@ -1,12 +1,16 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { getDueReminders, snoozeReminder, dismissReminder, triggerDemoAlarm } from '../services/reminderService'
-import { getNotificationSettings } from '../services/notificationService'
+import { getNotificationSettings, getCustomSoundUrl } from '../services/notificationService'
 import { useAuth } from './AuthContext'
 
 const AlarmContext = createContext(null)
 
-// Phát âm thanh báo thức bằng Web Audio API (không cần file asset)
+// ── Phát âm thanh báo thức ────────────────────────────────
+// - Âm thanh tùy chỉnh (custom:<id>) → phát đúng file MP3 người dùng import
+// - Các âm thanh mặc định → nhạc chuông Web Audio API (không cần file asset)
 let audioCtx = null
+let audioEl = null
+let lastSoundCode = null
 
 function ensureAudioCtx() {
   if (!audioCtx) {
@@ -14,6 +18,17 @@ function ensureAudioCtx() {
     if (AC) audioCtx = new AC()
   }
   return audioCtx
+}
+
+function stopCustomAudio() {
+  if (audioEl) {
+    try {
+      audioEl.pause()
+      audioEl.currentTime = 0
+    } catch {
+      /* noop */
+    }
+  }
 }
 
 function beep(ctx, when, freq, duration) {
@@ -31,7 +46,7 @@ function beep(ctx, when, freq, duration) {
   osc.stop(t0 + duration + 0.05)
 }
 
-export function startAlarmSound() {
+function playBeeps() {
   const ctx = ensureAudioCtx()
   if (!ctx) return
   if (ctx.state === 'suspended') ctx.resume()
@@ -44,7 +59,41 @@ export function startAlarmSound() {
   beep(ctx, 3.5, 1046, 0.9)
 }
 
+/**
+ * Bắt đầu phát âm thanh báo thức.
+ * @param {string} [code] Mã âm thanh đang chọn (custom:<id> hoặc preset).
+ *                        Không truyền → phát lại âm thanh gần nhất đã reo.
+ */
+export async function startAlarmSound(code) {
+  if (code !== undefined) lastSoundCode = code
+  stopCustomAudio()
+  const soundCode = lastSoundCode
+
+  // Âm thanh do người dùng import → phát file MP3
+  if (typeof soundCode === 'string' && soundCode.startsWith('custom:')) {
+    const id = soundCode.slice('custom:'.length)
+    try {
+      const url = await getCustomSoundUrl(id)
+      if (!audioEl) {
+        audioEl = new Audio()
+        audioEl.loop = true
+      }
+      audioEl.src = url
+      audioEl.volume = 1
+      await audioEl.play().catch(() => {
+        /* trình duyệt chặn autoplay → thử lại qua tương tác */
+      })
+      return
+    } catch {
+      // Không tải được file (xóa/đổi thiết bị) → đổ chuông mặc định
+    }
+  }
+
+  playBeeps()
+}
+
 export function stopAlarmSound() {
+  stopCustomAudio()
   if (audioCtx) {
     try {
       audioCtx.close()
@@ -82,7 +131,7 @@ export function AlarmProvider({ children }) {
   const fire = useCallback((reminder) => {
     const minutes = settings?.defaultSnoozeMinutes ?? reminder?.snoozeMinutes ?? 10
     setAlarm((current) => (current ? current : { ...reminder, snoozeMinutes: minutes }))
-    startAlarmSound()
+    startAlarmSound(settings?.alarmSound)
     // Tự dừng âm thanh nếu không ai thao tác (an toàn demo)
     if (timerRef.current) clearTimeout(timerRef.current)
     timerRef.current = setTimeout(() => {

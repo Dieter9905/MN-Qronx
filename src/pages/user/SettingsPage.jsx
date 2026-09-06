@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Bell,
@@ -12,10 +12,20 @@ import {
   Monitor,
   DeviceMobile,
   Crown,
+  UploadSimple,
+  MusicNotes,
+  Lock,
 } from '@phosphor-icons/react'
 import { useAuth } from '../../context/AuthContext'
 import { PLAN_NAMES, PLAN_BADGE } from '../../lib/constants'
-import { getNotificationSettings, updateNotificationSettings } from '../../services/notificationService'
+import {
+  getNotificationSettings,
+  updateNotificationSettings,
+  getCustomSounds,
+  importCustomSound,
+  deleteCustomSound,
+  getCustomSoundUrl,
+} from '../../services/notificationService'
 import { getDevices, registerCurrentDevice, removeDevice } from '../../services/deviceService'
 import { useToast } from '../../components/common/Toast'
 import { Skeleton, EmptyState } from '../../components/common/Feedback'
@@ -41,17 +51,109 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [confirmDevice, setConfirmDevice] = useState(null)
   const [removing, setRemoving] = useState(false)
+  const [customSounds, setCustomSounds] = useState([])
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef(null)
+  const plan = user?.plan || 'FREE'
+  const isPaid = plan === 'PLUS' || plan === 'PRO'
+
+  const loadCustomSounds = async () => {
+    const res = await getCustomSounds()
+    if (res.success) setCustomSounds(res.data || [])
+  }
 
   const load = async () => {
     const [sRes, dRes] = await Promise.all([getNotificationSettings(), getDevices()])
     if (sRes.success) setSettings(sRes.data)
     if (dRes.success) setDevices(dRes.data)
     setLoading(false)
+    loadCustomSounds()
   }
 
   useEffect(() => {
     load()
   }, [])
+
+  const fmtSize = (bytes) => {
+    if (!bytes) return ''
+    return bytes < 1024 * 1024 ? `${Math.round(bytes / 1024)} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  }
+
+  // Chọn tệp MP3 từ máy → upload lên server
+  const onPickFile = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (!isPaid) {
+      toast.error('Nhập âm thanh MP3 chỉ dành cho gói Plus/Pro')
+      return
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      toast.error('Tệp âm thanh tối đa 3 MB')
+      return
+    }
+    if (!/^audio\//.test(file.type) && !/\.(mp3|wav|ogg|m4a|aac|mp4)$/i.test(file.name)) {
+      toast.error('Vui lòng chọn tệp âm thanh (MP3, WAV, OGG…)')
+      return
+    }
+    setUploading(true)
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result))
+        reader.onerror = () => reject(new Error('Không đọc được tệp'))
+        reader.readAsDataURL(file)
+      })
+      const dataBase64 = dataUrl.split(',')[1] || ''
+      const res = await importCustomSound({
+        name: file.name,
+        mimeType: file.type || 'audio/mpeg',
+        dataBase64,
+      })
+      if (!res.success) {
+        toast.error(res.message || 'Không thể tải âm thanh lên')
+        return
+      }
+      await loadCustomSounds()
+      await saveSettings({ alarmSound: `custom:${res.data.id}` })
+      toast.success(`Đã thêm “${res.data.name}” làm âm thanh báo thức 🎵`)
+    } catch (err) {
+      toast.error(err.message || 'Lỗi khi đọc tệp')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const previewCustom = async (sound) => {
+    stopAlarmSound()
+    const url = await getCustomSoundUrl(sound.id)
+    const el = new Audio(url)
+    el.volume = 1
+    el.play().catch(() => {})
+    setTimeout(() => {
+      try {
+        el.pause()
+      } catch {
+        /* noop */
+      }
+    }, 3000)
+  }
+
+  const onDeleteCustom = async (sound) => {
+    const res = await deleteCustomSound(sound.id)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    await loadCustomSounds()
+    // Đang dùng âm thanh này → quay về chuông mặc định
+    if (settings?.alarmSound === `custom:${sound.id}`) {
+      await saveSettings({ alarmSound: 'classic' })
+      toast.success('Đã xóa âm thanh (báo thức quay về mặc định)')
+    } else {
+      toast.success('Đã xóa âm thanh')
+    }
+  }
 
   const saveSettings = async (patch, message) => {
     setSaving(true)
@@ -67,7 +169,7 @@ export default function SettingsPage() {
 
   const previewSound = () => {
     stopAlarmSound()
-    setTimeout(() => startAlarmSound(), 100)
+    setTimeout(() => startAlarmSound(settings?.alarmSound), 100)
     setTimeout(() => stopAlarmSound(), 4200)
   }
 
@@ -158,11 +260,97 @@ export default function SettingsPage() {
                 {ALARM_SOUNDS.map((s) => (
                   <option key={s.id} value={s.id}>{s.label}</option>
                 ))}
+                {customSounds.length > 0 && (
+                  <optgroup label="Âm thanh của tôi">
+                    {customSounds.map((s) => (
+                      <option key={`custom:${s.id}`} value={`custom:${s.id}`}>{s.name}</option>
+                    ))}
+                  </optgroup>
+                )}
               </Select>
               <Button variant="secondary" icon={Play} onClick={previewSound} aria-label="Nghe thử âm thanh">
                 <span className="hidden sm:inline">Nghe thử</span>
               </Button>
             </div>
+
+            {/* Nhập âm thanh MP3 từ máy – Plus/Pro */}
+            {isPaid ? (
+              <div className="mt-3 space-y-2 rounded-xl bg-navy-50/70 p-3 ring-1 ring-inset ring-navy-100 dark:bg-slate-900/50 dark:ring-slate-700">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-navy-600 dark:text-slate-300">
+                    <MusicNotes size={15} weight="bold" className="text-purple-500" />
+                    Âm thanh riêng của bạn ({customSounds.length}/10)
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac"
+                    className="hidden"
+                    onChange={onPickFile}
+                    aria-label="Chọn tệp âm thanh từ máy"
+                  />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={UploadSimple}
+                    loading={uploading}
+                    disabled={customSounds.length >= 10}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    Nhập MP3 từ máy
+                  </Button>
+                </div>
+                {customSounds.length === 0 ? (
+                  <p className="text-xs text-navy-400 dark:text-slate-500">
+                    Chưa có âm thanh nào – nhập file MP3 (tối đa 3 MB) từ máy để làm chuông báo thức riêng.
+                  </p>
+                ) : (
+                  <ul className="grid gap-1.5 sm:grid-cols-2">
+                    {customSounds.map((s) => (
+                      <li key={s.id} className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-2 ring-1 ring-inset ring-navy-100 dark:bg-slate-800 dark:ring-slate-600">
+                        <span
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+                            settings?.alarmSound === `custom:${s.id}`
+                              ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300'
+                              : 'bg-navy-100 text-navy-500 dark:bg-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          <MusicNotes size={14} weight="bold" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-bold text-navy-800 dark:text-slate-200">{s.name}</p>
+                          <p className="text-[10px] text-navy-400 dark:text-slate-500">{fmtSize(s.sizeBytes)}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => previewCustom(s)}
+                          aria-label={`Nghe thử ${s.name}`}
+                          className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-navy-400 transition hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400"
+                        >
+                          <Play size={13} weight="fill" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDeleteCustom(s)}
+                          aria-label={`Xóa ${s.name}`}
+                          className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-navy-400 transition hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-900/30 dark:hover:text-rose-400"
+                        >
+                          <Trash size={14} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ) : (
+              <div className="mt-3 flex items-center gap-2 rounded-xl bg-amber-50/70 px-3 py-2.5 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/20 dark:ring-amber-800/50">
+                <Lock size={15} weight="bold" className="shrink-0 text-amber-500 dark:text-amber-400" />
+                <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+                  Nhập âm thanh MP3 của riêng bạn là tính năng của gói Plus/Pro.{' '}
+                  <Link to="/app/billing" className="font-bold underline">Nâng cấp ngay</Link>
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="px-1 py-2">

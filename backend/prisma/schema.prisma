@@ -104,6 +104,7 @@ model User {
   categories             Category[]
   tasks                  Task[]
   devices                Device[]
+  customSounds           CustomSound[]
   notificationSetting    NotificationSetting?
   refreshTokens          RefreshToken[]
 
@@ -235,6 +236,21 @@ model NotificationLog {
   @@index([reminderId, sentAt], map: "ix_notification_logs_reminder_id")
   @@index([deviceId], map: "ix_notification_logs_device_id")
   @@map("notification_logs")
+}
+
+model CustomSound {
+  customSoundId Int      @id @default(autoincrement()) @map("custom_sound_id")
+  userId        Int      @map("user_id")
+  name          String   @db.VarChar(120)
+  mimeType      String   @default("audio/mpeg") @db.VarChar(60) @map("mime_type")
+  sizeBytes     Int      @default(0) @map("size_bytes")
+  data          Bytes
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId], map: "ix_custom_sounds_user_id")
+  @@map("custom_sounds")
 }
 
 model NotificationSetting {

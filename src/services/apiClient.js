@@ -91,6 +91,21 @@ export async function api(method, path, { body, query } = {}) {
   )
 }
 
+/**
+ * Tải dữ liệu nhị phân (vd: file âm thanh MP3) kèm token xác thực.
+ * @returns {Promise<Blob>}
+ */
+export async function apiBlob(path) {
+  const token = getAccessToken()
+  const res = await fetch(BASE_URL + path, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+  if (!res.ok) {
+    throw new Error(`Không thể tải dữ liệu từ máy chủ (${res.status})`)
+  }
+  return res.blob()
+}
+
 async function refreshAccessToken() {
   const rt = getRefreshToken()
   if (!rt) {
