@@ -15,6 +15,8 @@ async function findProfile(userId) {
       phoneNumber: true,
       avatarUrl: true,
       plan: true,
+      planStartedAt: true,
+      planExpiresAt: true,
       role: { select: { roleName: true } },
       createdAt: true,
       updatedAt: true,

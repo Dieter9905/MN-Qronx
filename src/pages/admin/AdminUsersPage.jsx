@@ -18,6 +18,41 @@ import { formatDate } from '../../lib/format'
 import { PLAN_BADGE, PLAN_NAMES } from '../../lib/constants'
 
 const PAGE_SIZE = 10
+const DAY_MS = 86400000
+
+// Trả về mốc thời gian gói trả phí + số ngày còn lại (âm = đã hết hạn)
+function planPeriod(u) {
+  if (u.plan === 'FREE' || !u.planExpiresAt) return null
+  return {
+    started: u.planStartedAt ? new Date(u.planStartedAt) : null,
+    expires: new Date(u.planExpiresAt),
+    days: Math.ceil((new Date(u.planExpiresAt) - Date.now()) / DAY_MS),
+  }
+}
+
+function PlanMeta({ u }) {
+  const meta = planPeriod(u)
+  if (!meta) {
+    return (
+      <p className="text-[11px] font-medium text-navy-400">✓ Dùng miễn phí – không giới hạn thời gian</p>
+    )
+  }
+  const expired = meta.days < 0
+  const urgent = !expired && meta.days <= 7
+  return (
+    <div className="text-[11px] leading-relaxed">
+      <p className="text-navy-500">
+        <span className="font-bold text-navy-400">Từ:</span>{' '}
+        {meta.started ? formatDate(meta.started) : '—'}
+      </p>
+      <p className={expired ? 'font-bold text-rose-600' : urgent ? 'font-bold text-amber-600' : 'text-navy-500'}>
+        <span className={expired ? 'text-rose-400' : urgent ? 'text-amber-500' : 'text-navy-400'}>Hết hạn:</span>{' '}
+        {formatDate(meta.expires)}
+        {expired ? ' · đã hết hạn' : ` · còn ${meta.days} ngày`}
+      </p>
+    </div>
+  )
+}
 
 export default function AdminUsersPage() {
   const toast = useToast()
@@ -126,7 +161,7 @@ export default function AdminUsersPage() {
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-navy-900">Quản lý tài khoản</h1>
           <p className="mt-1 text-sm font-medium text-navy-400">
-            {data ? `${data.total} tài khoản` : '…'} · Tạo mới, khóa/mở khóa tài khoản
+            {data ? `${data.total} tài khoản` : '…'} · Quản lý tài khoản, theo dõi gói đăng ký và hạn sử dụng
           </p>
         </div>
         <Button variant="gradient" icon={UserPlus} onClick={openCreate}>
@@ -180,7 +215,7 @@ export default function AdminUsersPage() {
         <>
           <div className="overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-navy-100">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-left">                  <thead>
+              <table className="w-full min-w-[860px] text-left">                  <thead>
                     <tr className="border-b border-navy-100 bg-navy-50/70 text-xs font-bold uppercase tracking-wider text-navy-400">
                       <th className="px-4 py-3">Người dùng</th>
                       <th className="px-4 py-3">Công việc</th>
@@ -205,21 +240,24 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-sm font-semibold text-navy-600">{u.taskCount}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col gap-1">
-                          <select
-                            value={u.plan || 'FREE'}
-                            onChange={(e) => changePlan(u, e.target.value)}
-                            aria-label={`Đổi gói của ${u.fullName}`}
-                            className="h-8 cursor-pointer rounded-lg border-0 bg-navy-50 px-2 text-xs font-bold text-navy-700 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600"
-                          >
-                            <option value="FREE">Miễn phí</option>
-                            <option value="PLUS">Plus</option>
-                            <option value="PRO">Pro</option>
-                          </select>
-                          <span className={`inline-flex w-fit items-center rounded-full px-2 py-px text-[10px] font-extrabold ring-1 ring-inset ${PLAN_BADGE[u.plan || 'FREE']}`}>
-                            {PLAN_NAMES[u.plan || 'FREE']}
-                          </span>
+                      <td className="px-4 py-3 align-top">
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <select
+                              value={u.plan || 'FREE'}
+                              onChange={(e) => changePlan(u, e.target.value)}
+                              aria-label={`Đổi gói của ${u.fullName}`}
+                              className="h-8 cursor-pointer rounded-lg border-0 bg-navy-50 px-2.5 text-xs font-bold text-navy-700 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600"
+                            >
+                              <option value="FREE">Miễn phí</option>
+                              <option value="PLUS">Plus</option>
+                              <option value="PRO">Pro</option>
+                            </select>
+                            <span className={`inline-flex items-center rounded-full px-2 py-px text-[10px] font-extrabold ring-1 ring-inset ${PLAN_BADGE[u.plan || 'FREE']}`}>
+                              {PLAN_NAMES[u.plan || 'FREE']}
+                            </span>
+                          </div>
+                          <PlanMeta u={u} />
                         </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-navy-500">{formatDate(u.createdAt)}</td>

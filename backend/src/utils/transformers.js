@@ -20,6 +20,8 @@ export function transformUser(user) {
     avatarUrl: user.avatarUrl || null,
     role: user.role?.roleName || user.roleName || 'USER',
     plan: user.plan || 'FREE',
+    planStartedAt: user.planStartedAt || null,
+    planExpiresAt: user.planExpiresAt || null,
     isActive: user.isActive,
     createdAt: user.createdAt,
   }

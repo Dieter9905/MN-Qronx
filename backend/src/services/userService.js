@@ -17,6 +17,8 @@ export async function getProfile(userId) {
     avatarUrl: user.avatarUrl,
     role: user.role.roleName,
     plan: user.plan || 'FREE',
+    planStartedAt: user.planStartedAt || null,
+    planExpiresAt: user.planExpiresAt || null,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   }

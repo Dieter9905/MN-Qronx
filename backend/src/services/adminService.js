@@ -3,6 +3,7 @@ import prisma from '../config/prisma.js'
 import { parsePagination, paginationMeta } from '../utils/pagination.js'
 import ApiError from '../utils/ApiError.js'
 import { startOfDay } from '../utils/dateUtils.js'
+import { computePlanDates } from '../utils/planDates.js'
 
 // ─── Admin Dashboard ───────────────────────────────────
 
@@ -83,6 +84,8 @@ export async function createUser({ fullName, email, password, phoneNumber, role 
       phoneNumber: true,
       isActive: true,
       plan: true,
+      planStartedAt: true,
+      planExpiresAt: true,
       createdAt: true,
       role: { select: { roleName: true } },
       _count: { select: { tasks: true } },
@@ -97,7 +100,14 @@ export async function createUser({ fullName, email, password, phoneNumber, role 
 export async function setUserPlan(userId, plan) {
   const user = await prisma.user.findUnique({
     where: { userId },
-    select: { userId: true, fullName: true, email: true },
+    select: {
+      userId: true,
+      fullName: true,
+      email: true,
+      plan: true,
+      planStartedAt: true,
+      planExpiresAt: true,
+    },
   })
   if (!user) throw ApiError.notFound('Không tìm thấy người dùng')
 
@@ -106,10 +116,26 @@ export async function setUserPlan(userId, plan) {
     throw ApiError.badRequest('Gói chỉ có thể là FREE, PLUS hoặc PRO')
   }
 
+  // Khi admin đổi gói: về FREE thì xoá mốc thời gian, sang gói trả phí thì
+  // mở kỳ 30 ngày mới (gia hạn cùng gói sẽ cộng thêm 30 ngày).
+  const dates = computePlanDates({
+    currentPlan: user.plan,
+    currentStartedAt: user.planStartedAt,
+    currentExpiresAt: user.planExpiresAt,
+    newPlan: plan,
+  })
+
   return prisma.user.update({
     where: { userId },
-    data: { plan },
-    select: { userId: true, fullName: true, email: true, plan: true },
+    data: { plan, ...dates },
+    select: {
+      userId: true,
+      fullName: true,
+      email: true,
+      plan: true,
+      planStartedAt: true,
+      planExpiresAt: true,
+    },
   })
 }
 
@@ -134,6 +160,8 @@ export async function getUsers(query) {
       phoneNumber: true,
       isActive: true,
       plan: true,
+      planStartedAt: true,
+      planExpiresAt: true,
       createdAt: true,
       role: { select: { roleName: true } },
       _count: { select: { tasks: true } },

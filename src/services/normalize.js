@@ -86,6 +86,8 @@ export function toUser(u) {
     avatarUrl: u.avatarUrl ?? null,
     role: u.role?.roleName ?? u.role ?? 'USER',
     plan: u.plan ?? 'FREE',
+    planStartedAt: u.planStartedAt ?? null,
+    planExpiresAt: u.planExpiresAt ?? null,
     isActive: u.isActive ?? true,
     createdAt: u.createdAt,
   }

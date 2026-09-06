@@ -44,9 +44,11 @@ async function main() {
 
   // ── Demo user ─────────────────────────────────────────
   const userPasswordHash = await bcrypt.hash('User@1234', 10)
+  const planStart = new Date()
+  const planEnd = new Date(planStart.getTime() + 30 * 86400000)
   const demoUser = await prisma.user.upsert({
     where: { email: 'demo@taskalarm.com' },
-    update: { plan: 'PLUS' },
+    update: { plan: 'PLUS', planStartedAt: planStart, planExpiresAt: planEnd },
     create: {
       roleId: userRole.roleId,
       fullName: 'Nguyen Van A',
@@ -55,6 +57,8 @@ async function main() {
       phoneNumber: '0912345678',
       isActive: true,
       plan: 'PLUS',
+      planStartedAt: planStart,
+      planExpiresAt: planEnd,
     },
   })
 
