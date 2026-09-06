@@ -2,7 +2,10 @@ services:
   - type: web
     name: taskalarm-api
     runtime: node
+    rootDir: backend
+    region: singapore
     plan: free
+    healthCheckPath: /api/v1/health
     buildCommand: npm install && npx prisma generate
     startCommand: npx prisma db push --skip-generate && npm run seed && node src/server.js
     envVars:
@@ -10,15 +13,7 @@ services:
         value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: taskalarm-db
+          name: mn-qronx
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
-      - key: PORT
-        value: 10000
-
-databases:
-  - name: taskalarm-db
-    plan: free
-    databaseName: taskalarm
-    user: taskalarm_user
