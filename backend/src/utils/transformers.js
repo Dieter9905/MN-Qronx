@@ -6,6 +6,8 @@
  * Backend uses:  { categoryId, categoryName, colorCode } etc.
  */
 
+import { parseRepeatDays } from './dateUtils.js'
+
 // ─── User ──────────────────────────────────────────────
 
 export function transformUser(user) {
@@ -87,6 +89,7 @@ export function transformTask(task) {
     status: task.status,
     dueAt: task.dueAt,
     repeatType: task.repeatType,
+    repeatDays: parseRepeatDays(task.repeatDays),
     completedAt: task.completedAt || null,
     createdAt: task.createdAt,
     overdue: task.overdue ?? false,

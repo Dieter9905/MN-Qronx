@@ -17,6 +17,14 @@ export const createTaskValidation = [
     .optional()
     .isIn(['NONE', 'DAILY', 'WEEKLY', 'MONTHLY']).withMessage('Loại lặp không hợp lệ'),
 
+  body('repeatDays')
+    .optional({ values: 'null' })
+    .isArray({ max: 7 }).withMessage('Danh sách ngày lặp phải là mảng tối đa 7 phần tử'),
+
+  body('repeatDays.*')
+    .optional({ values: 'falsy' })
+    .isInt({ min: 1, max: 7 }).withMessage('Ngày trong tuần phải từ 1 (Thứ 2) đến 7 (Chủ nhật)'),
+
   body('categoryId')
     .optional({ values: 'null' })
     .isInt({ min: 1 }).withMessage('ID danh mục không hợp lệ'),
@@ -54,6 +62,14 @@ export const updateTaskValidation = [
   body('repeatType')
     .optional()
     .isIn(['NONE', 'DAILY', 'WEEKLY', 'MONTHLY']).withMessage('Loại lặp không hợp lệ'),
+
+  body('repeatDays')
+    .optional({ values: 'null' })
+    .isArray({ max: 7 }).withMessage('Danh sách ngày lặp phải là mảng tối đa 7 phần tử'),
+
+  body('repeatDays.*')
+    .optional({ values: 'falsy' })
+    .isInt({ min: 1, max: 7 }).withMessage('Ngày trong tuần phải từ 1 (Thứ 2) đến 7 (Chủ nhật)'),
 
   body('categoryId')
     .optional({ values: 'null' })

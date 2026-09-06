@@ -57,6 +57,7 @@ export function toTask(task) {
     status: task.status ?? 'TODO',
     dueAt: task.dueAt,
     repeatType: task.repeatType ?? 'NONE',
+    repeatDays: normalizeRepeatDays(task.repeatDays),
     completedAt: task.completedAt ?? null,
     createdAt: task.createdAt,
     overdue,
@@ -64,6 +65,15 @@ export function toTask(task) {
     subtasks: Array.isArray(task.subtasks) ? task.subtasks.map(toSubtask) : [],
     reminders: Array.isArray(task.reminders) ? task.reminders.map(toReminder) : [],
   }
+}
+
+// repeatDays có thể là mảng, chuỗi "1,3,5" hoặc null → luôn trả về mảng hoặc null
+function normalizeRepeatDays(value) {
+  if (Array.isArray(value)) return value
+  if (typeof value === 'string' && value.trim()) {
+    return value.split(',').map(Number).filter((n) => Number.isInteger(n) && n >= 1 && n <= 7)
+  }
+  return null
 }
 
 export function toUser(u) {

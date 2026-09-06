@@ -18,7 +18,7 @@ import Modal from '../../components/common/Modal'
 import { useToast } from '../../components/common/Toast'
 import { PageLoader } from '../../components/common/Feedback'
 import { useAuth } from '../../context/AuthContext'
-import { PRIORITY, REPEAT_TYPE_LIST, PLAN_REMINDER_LIMIT, CATEGORY_COLORS } from '../../lib/constants'
+import { PRIORITY, REPEAT_TYPE_LIST, WEEKDAYS, PLAN_REMINDER_LIMIT, CATEGORY_COLORS } from '../../lib/constants'
 import { ColorPicker } from '../../components/common/Inputs'
 import { toDate, addMinutes, setTime } from '../../lib/format'
 
@@ -58,6 +58,7 @@ export default function TaskFormPage() {
     priority: 'MEDIUM',
     dueAt: '',
     repeatType: 'NONE',
+    repeatDays: [],
     reminders: [],
     subtasks: [],
   })
@@ -91,6 +92,7 @@ export default function TaskFormPage() {
         priority: t.priority,
         dueAt: toLocalInputValue(t.dueAt),
         repeatType: t.repeatType,
+        repeatDays: Array.isArray(t.repeatDays) ? t.repeatDays : [],
         reminders: t.reminders
           .filter((r) => r.status === 'SCHEDULED')
           .map((r) => ({ id: r.id, remindAt: toLocalInputValue(r.remindAt) })),
@@ -106,6 +108,32 @@ export default function TaskFormPage() {
   const set = (k) => (v) => {
     setForm((f) => ({ ...f, [k]: v }))
     setErrors((er) => ({ ...er, [k]: undefined }))
+  }
+
+  // Ngày ISO 8601 (1=Thứ 2 … 7=CN) của một ngày
+  const weekdayIso = (d) => (d.getDay() === 0 ? 7 : d.getDay())
+
+  // Chuyển loại lặp: sang Hằng tuần → mặc định chọn đúng thứ của ngày đến hạn
+  const changeRepeatType = (val) => {
+    setForm((f) => {
+      let repeatDays = Array.isArray(f.repeatDays) ? f.repeatDays : []
+      if (val === 'WEEKLY') {
+        const due = f.dueAt ? toDate(f.dueAt) : null
+        if (!repeatDays.length && due) repeatDays = [weekdayIso(due)]
+      } else {
+        repeatDays = []
+      }
+      return { ...f, repeatType: val, repeatDays }
+    })
+    setErrors((er) => ({ ...er, repeatType: undefined }))
+  }
+
+  const toggleWeekday = (day) => {
+    setForm((f) => {
+      const has = f.repeatDays.includes(day)
+      const repeatDays = has ? f.repeatDays.filter((x) => x !== day) : [...f.repeatDays, day]
+      return { ...f, repeatDays }
+    })
   }
 
   const addPresetReminder = (offset) => {
@@ -179,6 +207,14 @@ export default function TaskFormPage() {
       priority: form.priority,
       dueAt: new Date(form.dueAt).toISOString(),
       repeatType: form.repeatType,
+      repeatDays:
+        form.repeatType === 'WEEKLY'
+          ? form.repeatDays.length
+            ? form.repeatDays
+            : dueDate
+              ? [weekdayIso(dueDate)]
+              : []
+          : [],
       reminders: form.reminders.filter((r) => r.remindAt).map((r) => ({ id: r.id, remindAt: new Date(r.remindAt).toISOString() })),
       subtasks: form.subtasks.filter((s) => s.content.trim()).map((s) => ({ id: s.id, content: s.content.trim() })),
     }
@@ -291,8 +327,40 @@ export default function TaskFormPage() {
                   : { value: r.value, label: r.label, disabled: true, disabledTitle: 'Chỉ dành cho gói Plus/Pro' }
               )}
               value={form.repeatType}
-              onChange={set('repeatType')}
+              onChange={changeRepeatType}
             />
+            {form.repeatType === 'WEEKLY' && canRepeat && (
+              <div className="mt-3">
+                <p className="text-xs font-semibold text-navy-500 dark:text-slate-400">Lặp lại vào những ngày nào trong tuần?</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {WEEKDAYS.map((day) => {
+                    const active = form.repeatDays.includes(day.value)
+                    return (
+                      <button
+                        key={day.value}
+                        type="button"
+                        onClick={() => toggleWeekday(day.value)}
+                        aria-pressed={active}
+                        aria-label={day.long}
+                        title={day.long}
+                        className={`flex h-10 w-12 cursor-pointer items-center justify-center rounded-xl text-sm font-bold transition ${
+                          active
+                            ? 'bg-brand-gradient text-white shadow-md'
+                            : 'bg-navy-50 text-navy-600 ring-1 ring-inset ring-navy-100 hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-200 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-300'
+                        }`}
+                      >
+                        {day.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                {!form.repeatDays.length && (
+                  <p className="mt-2 text-xs font-medium text-navy-400 dark:text-slate-500">
+                    Chưa chọn ngày – sẽ lặp lại vào đúng thứ của ngày đến hạn.
+                  </p>
+                )}
+              </div>
+            )}
             {!canRepeat && (
               <p className="mt-2 text-xs font-medium text-amber-600 dark:text-amber-400">
                 💡 Công việc lặp lại là tính năng của gói Plus/Pro.{' '}

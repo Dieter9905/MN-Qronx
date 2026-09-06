@@ -33,7 +33,7 @@ import Button from '../../components/common/Button'
 import { StatusBadge, PriorityBadge, CategoryBadge } from '../../components/common/Badge'
 import { ConfirmDialog } from '../../components/common/Modal'
 import { formatDateTime, formatRelativeDay, formatTime, effectiveStatus, isOverdue } from '../../lib/format'
-import { REPEAT_TYPE } from '../../lib/constants'
+import { repeatSummary } from '../../lib/constants'
 
 export default function TaskDetailPage() {
   const { id } = useParams()
@@ -194,7 +194,7 @@ export default function TaskDetailPage() {
               </span>
               {task.repeatType !== 'NONE' && (
                 <span className="inline-flex items-center gap-1.5 text-purple-600">
-                  <Repeat size={16} weight="bold" /> Lặp lại: {REPEAT_TYPE[task.repeatType]}
+                  <Repeat size={16} weight="bold" /> Lặp lại: {repeatSummary(task.repeatType, task.repeatDays)}
                 </span>
               )}
             </p>

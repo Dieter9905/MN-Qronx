@@ -34,6 +34,35 @@ export const REPEAT_TYPE_LIST = [
   { value: 'MONTHLY', label: 'Hằng tháng' },
 ]
 
+// Ngày trong tuần cho lặp Hằng tuần – value theo ISO 8601 (1 = Thứ 2 … 7 = Chủ nhật)
+export const WEEKDAYS = [
+  { value: 1, label: 'T2', long: 'Thứ Hai' },
+  { value: 2, label: 'T3', long: 'Thứ Ba' },
+  { value: 3, label: 'T4', long: 'Thứ Tư' },
+  { value: 4, label: 'T5', long: 'Thứ Năm' },
+  { value: 5, label: 'T6', long: 'Thứ Sáu' },
+  { value: 6, label: 'T7', long: 'Thứ Bảy' },
+  { value: 7, label: 'CN', long: 'Chủ nhật' },
+]
+
+const WEEKDAY_LABEL = { 1: 'T2', 2: 'T3', 3: 'T4', 4: 'T5', 5: 'T6', 6: 'T7', 7: 'CN' }
+
+/**
+ * Tóm tắt lịch lặp để hiển thị, vd: "Hằng tuần (T2, T4, T6)".
+ * @param {string} repeatType NONE | DAILY | WEEKLY | MONTHLY
+ * @param {number[]} [repeatDays] Danh sách ngày ISO 1..7
+ * @returns {string}
+ */
+export function repeatSummary(repeatType, repeatDays) {
+  const days = Array.isArray(repeatDays)
+    ? repeatDays.map((d) => WEEKDAY_LABEL[Number(d)]).filter(Boolean)
+    : []
+  if (repeatType === 'WEEKLY' && days.length) {
+    return `Hằng tuần (${days.join(', ')})`
+  }
+  return REPEAT_TYPE[repeatType] || 'Không lặp'
+}
+
 export const REMINDER_STATUS = {
   SCHEDULED: 'SCHEDULED',
   TRIGGERED: 'TRIGGERED',

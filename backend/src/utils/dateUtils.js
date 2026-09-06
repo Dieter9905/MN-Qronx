@@ -23,18 +23,68 @@ export function addMinutes(date, minutes) {
 }
 
 /**
+ * Ngày trong tuần theo ISO 8601 của một Date (1 = Thứ 2 … 7 = Chủ nhật).
+ * @param {Date} date
+ * @returns {number}
+ */
+export function isoWeekday(date) {
+  const day = date.getDay()
+  return day === 0 ? 7 : day
+}
+
+/**
+ * Chuyển giá trị repeatDays (mảng hoặc chuỗi "1,3,5") thành mảng số nguyên 1..7.
+ * @param {string|number[]|null} value
+ * @returns {number[]}
+ */
+export function parseRepeatDays(value) {
+  let items = []
+  if (Array.isArray(value)) items = value
+  else if (typeof value === 'string' && value.trim()) items = value.split(',')
+  return items
+    .map((n) => Number(n))
+    .filter((n) => Number.isInteger(n) && n >= 1 && n <= 7)
+}
+
+/**
+ * Chuẩn hoá repeatDays để lưu DB: chuỗi "1,3,5" (đã sắp xếp, loại trùng).
+ * Trả về null khi không có ngày nào hợp lệ.
+ * @param {string|number[]|null} value
+ * @returns {string|null}
+ */
+export function serializeRepeatDays(value) {
+  const days = [...new Set(parseRepeatDays(value))].sort((a, b) => a - b)
+  return days.length ? days.join(',') : null
+}
+
+/**
  * Calculate the next dueAt date for a repeating task.
+ *
+ * Với repeatType = 'WEEKLY' và có danh sách repeatDays (ISO 8601, 1=Thứ 2 … 7=CN),
+ * lần lặp kế tiếp rơi vào ngày gần nhất trong danh sách sau dueAt.
+ * Khi WEEKLY không có repeatDays → lặp đúng thứ trong tuần hiện tại (7 ngày/lần).
  *
  * @param {Date}   dueAt      Current dueAt
  * @param {string} repeatType One of 'DAILY', 'WEEKLY', 'MONTHLY'
+ * @param {string|number[]} [repeatDays] Danh sách ngày trong tuần (chỉ áp dụng WEEKLY)
  * @returns {Date}
  */
-export function calculateNextDueDate(dueAt, repeatType) {
+export function calculateNextDueDate(dueAt, repeatType, repeatDays) {
   switch (repeatType) {
     case 'DAILY':
       return addDays(dueAt, 1)
-    case 'WEEKLY':
+    case 'WEEKLY': {
+      const days = parseRepeatDays(repeatDays)
+      // Có chọn ngày cụ thể → tìm ngày gần nhất trong danh sách sau dueAt
+      if (days.length) {
+        for (let offset = 1; offset <= 7; offset += 1) {
+          const next = addDays(dueAt, offset)
+          if (days.includes(isoWeekday(next))) return next
+        }
+      }
+      // Không chọn ngày → giữ hành vi cũ: lặp 7 ngày/lần (đúng thứ trong tuần)
       return addDays(dueAt, 7)
+    }
     case 'MONTHLY': {
       const next = new Date(dueAt)
       next.setMonth(next.getMonth() + 1)

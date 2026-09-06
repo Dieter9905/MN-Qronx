@@ -10,6 +10,7 @@ import {
   Repeat,
 } from '@phosphor-icons/react'
 import { getTasks } from '../../services/taskService'
+import { repeatSummary } from '../../lib/constants'
 import { Skeleton } from '../../components/common/Feedback'
 import Button from '../../components/common/Button'
 import { StatusBadge, PriorityBadge } from '../../components/common/Badge'
@@ -231,7 +232,10 @@ export default function CalendarPage() {
                       </span>
                     )}
                     {t.repeatType !== 'NONE' && (
-                      <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-purple-400">
+                      <span
+                        title={`Lặp lại: ${repeatSummary(t.repeatType, t.repeatDays)}`}
+                        className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-purple-400"
+                      >
                         <Repeat size={12} weight="bold" />
                       </span>
                     )}

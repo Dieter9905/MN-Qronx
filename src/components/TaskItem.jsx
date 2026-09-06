@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { Check, Bell, Repeat, Clock } from '@phosphor-icons/react'
 import { StatusBadge, PriorityBadge, CategoryBadge } from './common/Badge'
 import { formatTime, formatRelativeDay, effectiveStatus } from '../lib/format'
-import { REPEAT_TYPE } from '../lib/constants'
+import { repeatSummary } from '../lib/constants'
 
 export default function TaskItem({ task, onToggleComplete, compact = false, onBellClick }) {
   const status = effectiveStatus(task)
@@ -60,9 +60,9 @@ export default function TaskItem({ task, onToggleComplete, compact = false, onBe
           )}
           {task.repeatType && task.repeatType !== 'NONE' && !cancelled && (
             <span
-              title={`Lặp lại: ${REPEAT_TYPE[task.repeatType]}`}
+              title={`Lặp lại: ${repeatSummary(task.repeatType, task.repeatDays)}`}
               className="shrink-0 text-purple-400"
-              aria-label={`Lặp lại: ${REPEAT_TYPE[task.repeatType]}`}
+              aria-label={`Lặp lại: ${repeatSummary(task.repeatType, task.repeatDays)}`}
             >
               <Repeat size={14} weight="bold" />
             </span>

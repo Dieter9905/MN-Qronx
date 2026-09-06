@@ -77,14 +77,15 @@ function transformData(data, urlpath) {
 
   // ── Single task ──
   if (matchPath(urlpath, TASK_PATHS) && data.taskId) {
-    // Complete/cancel response
-    if (data.completedTask) {
-      return {
-        completedTask: transformTask(data.completedTask),
-        nextTask: data.nextTask ? transformTask(data.nextTask) : null,
-      }
-    }
     return transformTask(data)
+  }
+
+  // ── Complete response ({ completedTask, nextTask }) ──
+  if (matchPath(urlpath, TASK_PATHS) && data.completedTask) {
+    return {
+      completedTask: transformTask(data.completedTask),
+      nextTask: data.nextTask ? transformTask(data.nextTask) : null,
+    }
   }
 
   // ── Reminder list ──

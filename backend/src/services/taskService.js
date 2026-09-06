@@ -1,6 +1,6 @@
 import prisma from '../config/prisma.js'
 import taskRepo from '../repositories/taskRepo.js'
-import { calculateNextDueDate } from '../utils/dateUtils.js'
+import { calculateNextDueDate, serializeRepeatDays } from '../utils/dateUtils.js'
 import { parsePagination, paginationMeta } from '../utils/pagination.js'
 import ApiError from '../utils/ApiError.js'
 import { PLANS, getUserPlan, planLimit, planLimitError } from '../utils/planLimits.js'
@@ -46,7 +46,7 @@ export async function findAll(userId, query) {
 // ─── Create Task + Reminders (TRANSACTION) ──────────────
 
 export async function create(userId, taskData) {
-  const { title, description, categoryId, priority, dueAt, repeatType, reminders } = taskData
+  const { title, description, categoryId, priority, dueAt, repeatType, repeatDays, reminders } = taskData
 
   // Validate categoryId belongs to user
   if (categoryId) {
@@ -96,6 +96,7 @@ export async function create(userId, taskData) {
         priority: priority || 'MEDIUM',
         dueAt: new Date(dueAt),
         repeatType: repeatType || 'NONE',
+        repeatDays: repeatType === 'WEEKLY' ? serializeRepeatDays(repeatDays) : null,
       },
     })
 
@@ -157,7 +158,14 @@ export async function update(userId, taskId, data) {
   if (data.description !== undefined) updateData.description = data.description
   if (data.dueAt !== undefined) updateData.dueAt = new Date(data.dueAt)
   if (data.priority !== undefined) updateData.priority = data.priority
-  if (data.repeatType !== undefined) updateData.repeatType = data.repeatType
+  if (data.repeatType !== undefined) {
+    updateData.repeatType = data.repeatType
+    // Không lặp → xoá luôn danh sách ngày cũ
+    if (data.repeatType === 'NONE') updateData.repeatDays = null
+  }
+  if (data.repeatDays !== undefined && updateData.repeatType === 'WEEKLY') {
+    updateData.repeatDays = serializeRepeatDays(data.repeatDays)
+  }
   if (data.categoryId !== undefined) updateData.categoryId = data.categoryId || null
 
   return taskRepo.update(taskId, updateData)
@@ -205,7 +213,7 @@ export async function complete(userId, taskId) {
     // 3. Sinh task repeat kế tiếp (BR-15, ERD-R-14)
     let nextTask = null
     if (task.repeatType !== 'NONE') {
-      const nextDueAt = calculateNextDueDate(task.dueAt, task.repeatType)
+      const nextDueAt = calculateNextDueDate(task.dueAt, task.repeatType, task.repeatDays)
 
       nextTask = await tx.task.create({
         data: {
@@ -215,6 +223,7 @@ export async function complete(userId, taskId) {
           description: task.description,
           priority: task.priority,
           repeatType: task.repeatType,
+          repeatDays: task.repeatDays,
           dueAt: nextDueAt,
           parentTaskId: taskId,
         },

@@ -56,6 +56,7 @@ export async function createTask(payload = {}) {
     priority: payload.priority || 'MEDIUM',
     dueAt: payload.dueAt,
     repeatType: payload.repeatType || 'NONE',
+    repeatDays: payload.repeatType === 'WEEKLY' && Array.isArray(payload.repeatDays) ? payload.repeatDays : undefined,
     reminders: (payload.reminders || []).map((r) => ({ remindAt: r.remindAt })),
   }
   const res = await api('POST', '/tasks', { body })
@@ -81,6 +82,7 @@ export async function updateTask(id, payload = {}) {
       priority: payload.priority,
       dueAt: payload.dueAt,
       repeatType: payload.repeatType,
+      repeatDays: payload.repeatType === 'WEEKLY' && Array.isArray(payload.repeatDays) ? payload.repeatDays : undefined,
     },
   })
   if (!res.success) return res
