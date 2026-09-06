@@ -130,20 +130,20 @@ export default function LoginPage() {
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <button
             type="button"
-            onClick={() => fillDemo('minh@mn-qronx.com', '123456')}
+            onClick={() => fillDemo('demo@taskalarm.com', 'User@1234')}
             className="cursor-pointer rounded-xl bg-white p-3 text-left shadow-sm ring-1 ring-navy-100 transition hover:ring-blue-300 dark:bg-slate-800 dark:ring-slate-700 dark:hover:ring-blue-500"
           >
             <p className="text-xs font-bold text-navy-800 dark:text-white">Người dùng (demo)</p>
-            <p className="mt-0.5 truncate text-[11px] text-navy-400 dark:text-slate-400">minh@mn-qronx.com</p>
-            <p className="text-[11px] text-navy-400 dark:text-slate-400">Mật khẩu: 123456</p>
+            <p className="mt-0.5 truncate text-[11px] text-navy-400 dark:text-slate-400">demo@taskalarm.com</p>
+            <p className="text-[11px] text-navy-400 dark:text-slate-400">Mật khẩu: User@1234</p>
           </button>
           <button
             type="button"
-            onClick={() => fillDemo('admin@mn-qronx.com', 'Admin@123')}
+            onClick={() => fillDemo('admin@taskalarm.com', 'Admin@123')}
             className="cursor-pointer rounded-xl bg-white p-3 text-left shadow-sm ring-1 ring-navy-100 transition hover:ring-purple-300 dark:bg-slate-800 dark:ring-slate-700 dark:hover:ring-purple-500"
           >
             <p className="text-xs font-bold text-navy-800 dark:text-white">Quản trị viên</p>
-            <p className="mt-0.5 truncate text-[11px] text-navy-400 dark:text-slate-400">admin@mn-qronx.com</p>
+            <p className="mt-0.5 truncate text-[11px] text-navy-400 dark:text-slate-400">admin@taskalarm.com</p>
             <p className="text-[11px] text-navy-400 dark:text-slate-400">Mật khẩu: Admin@123</p>
           </button>
         </div>

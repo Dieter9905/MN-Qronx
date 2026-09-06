@@ -1,118 +1,126 @@
-import { db, getSession, setSession } from '../lib/db'
-import { ok, fail, request, fakeToken, ApiError } from './api'
+import api, { getAccessToken, getRefreshToken, API_BASE_URL } from './apiClient'
+import { getSession, setSession, clearSession } from './session'
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-function publicUser(user) {
-  const { password, ...pub } = user
-  return pub
+// Chuẩn hoá user trả về từ backend (có thể là {userId,...} hoặc {id,...})
+// về shape frontend quen dùng: { id, fullName, email, phoneNumber, avatarUrl, role, isActive, createdAt }
+function normalizeUser(u) {
+  if (!u) return null
+  return {
+    id: u.id ?? u.userId,
+    fullName: u.fullName,
+    email: u.email,
+    phoneNumber: u.phoneNumber ?? '',
+    avatarUrl: u.avatarUrl ?? null,
+    role: u.role?.roleName ?? u.role ?? 'USER',
+    isActive: u.isActive ?? true,
+    createdAt: u.createdAt,
+  }
 }
 
 // POST /api/v1/auth/register
-export function register({ fullName, email, password }) {
-  return request(() => {
-    if (!fullName?.trim()) return fail('Vui lòng nhập họ tên', { fullName: 'Họ tên không được để trống' })
-    if (!email?.trim()) return fail('Vui lòng nhập email', { email: 'Email không được để trống' })
-    if (!EMAIL_RE.test(email.trim())) return fail('Email không hợp lệ', { email: 'Email không đúng định dạng' })
-    if (!password || password.length < 6) {
-      return fail('Mật khẩu phải có ít nhất 6 ký tự', { password: 'Mật khẩu phải có ít nhất 6 ký tự' })
-    }
-    if (db.users.some((u) => u.email.toLowerCase() === email.trim().toLowerCase())) {
-      return fail('Email đã được sử dụng', { email: 'Email này đã tồn tại trong hệ thống' })
-    }
-    const user = {
-      id: db.nextId(db.users),
-      fullName: fullName.trim(),
-      email: email.trim().toLowerCase(),
-      password,
-      phoneNumber: '',
-      role: 'USER',
-      isActive: true,
-      createdAt: db.nowIso(),
-    }
-    db.saveUsers([...db.users, user])
-    // Tạo cài đặt thông báo mặc định cho User mới
-    db.saveSettings([
-      ...db.notificationSettings,
-      { userId: user.id, alarmSound: 'classic', defaultSnoozeMinutes: 10, vibrationEnabled: true, updatedAt: db.nowIso() },
-    ])
-    return ok('Đăng ký thành công', publicUser(user))
-  }, { latency: 400 })
+export async function register({ fullName, email, password, phoneNumber } = {}) {
+  const res = await api('POST', '/auth/register', {
+    body: { fullName, email, password, phoneNumber },
+  })
+  if (res.success) res.data = normalizeUser(res.data)
+  return res
 }
 
 // POST /api/v1/auth/login
-export function login({ email, password }) {
-  return request(() => {
-    const user = db.users.find((u) => u.email.toLowerCase() === (email || '').trim().toLowerCase())
-    if (!user || user.password !== password) {
-      return fail('Email hoặc mật khẩu không đúng')
+export async function login({ email, password } = {}) {
+  const res = await api('POST', '/auth/login', { body: { email, password } })
+  if (!res.success) return res
+  const user = normalizeUser(res.data?.user)
+  const session = {
+    accessToken: res.data.accessToken,
+    refreshToken: res.data.refreshToken,
+    user,
+  }
+  setSession(session)
+  // Giữ shape cũ mà UI đang dùng: data.user = thông tin người dùng
+  return { success: true, message: res.message, data: session }
+}
+
+// POST /api/v1/auth/logout – xoá phiên local ngay, revoke refresh token trên server (best-effort)
+export async function logout() {
+  const token = getAccessToken()
+  clearSession()
+  if (token) {
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      })
+    } catch {
+      /* best effort */
     }
-    if (!user.isActive) return fail('Tài khoản của bạn đã bị khóa')
-    const token = fakeToken(user)
-    const session = { accessToken: token, user: publicUser(user) }
-    setSession(session)
-    return ok('Đăng nhập thành công', session)
-  }, { latency: 350 })
+  }
+}
+
+// GET /api/v1/me – user hiện tại (để khôi phục phiên khi mở app)
+export async function fetchCurrentUser() {
+  const token = getAccessToken()
+  if (!token) return null
+  const res = await api('GET', '/me')
+  if (!res.success) {
+    // Token không hợp lệ/hết hạn (đã thử refresh) → xoá phiên
+    clearSession()
+    return null
+  }
+  const user = normalizeUser(res.data)
+  const session = getSession()
+  setSession({ accessToken: session?.accessToken || token, refreshToken: getRefreshToken(), user })
+  return user
+}
+
+// Đồng bộ – trả user từ phiên đã lưu (không gọi mạng)
+export function currentUser() {
+  return getSession()?.user || null
+}
+
+// PUT /api/v1/me – cập nhật hồ sơ
+export async function updateProfile(payload = {}) {
+  const res = await api('PUT', '/me', { body: payload })
+  if (res.success) {
+    res.data = normalizeUser(res.data)
+    // Cập nhật user trong phiên hiện tại
+    const session = getSession()
+    if (session) setSession({ ...session, user: res.data })
+  }
+  return res
+}
+
+// PUT /api/v1/me/password – đổi mật khẩu
+export async function changePassword({ currentPassword, newPassword } = {}) {
+  return api('PUT', '/me/password', {
+    body: { currentPassword, newPassword },
+  })
 }
 
 // POST /api/v1/auth/forgot-password
-export function forgotPassword({ email }) {
-  return request(() => {
-    if (!email?.trim()) return fail('Vui lòng nhập email', { email: 'Email không được để trống' })
-    if (!EMAIL_RE.test(email.trim())) return fail('Email không hợp lệ', { email: 'Email không đúng định dạng' })
-    // Không tiết lộ email có tồn tại hay không (tránh dò email – theo wireframe)
-    const user = db.users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase())
-    if (user) {
-      // Mô phỏng gửi email – token demo ghi vào session để mô phỏng link trong email
-      const resetToken = `reset-${user.id}-${Date.now().toString(36)}`
-      localStorage.setItem('mnq:resetToken', resetToken)
-    }
-    return ok('Nếu email tồn tại, chúng tôi đã gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư của bạn.')
-  }, { latency: 500 })
+// Khi backend chạy ở môi trường dev, response trả kèm resetToken để test
+// (production phải gửi qua email) – ta lưu tạm để mô phỏng link trong email.
+export async function forgotPassword({ email } = {}) {
+  const res = await api('POST', '/auth/forgot-password', { body: { email } })
+  if (res.success && res.data?.resetToken) {
+    localStorage.setItem('mnq:resetToken', res.data.resetToken)
+  }
+  return res
 }
 
 // POST /api/v1/auth/reset-password
-export function resetPassword({ resetToken, password, confirmPassword }) {
-  return request(() => {
-    const stored = localStorage.getItem('mnq:resetToken')
-    if (!resetToken || resetToken !== stored) {
-      return fail('Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn')
-    }
-    if (!password || password.length < 6) {
-      return fail('Mật khẩu phải có ít nhất 6 ký tự', { password: 'Mật khẩu phải có ít nhất 6 ký tự' })
-    }
-    if (password !== confirmPassword) {
-      return fail('Mật khẩu xác nhận không khớp', { confirmPassword: 'Xác nhận mật khẩu không khớp' })
-    }
-    const id = Number(resetToken.split('-')[1])
-    const users = db.users.map((u) => (u.id === id ? { ...u, password } : u))
-    db.saveUsers(users)
-    localStorage.removeItem('mnq:resetToken')
-    return ok('Đặt lại mật khẩu thành công. Bạn có thể đăng nhập với mật khẩu mới.')
-  }, { latency: 400 })
+export async function resetPassword({ resetToken, newPassword } = {}) {
+  return api('POST', '/auth/reset-password', {
+    body: { resetToken, newPassword },
+  })
 }
 
-export function logout() {
-  setSession(null)
-}
-
-export function currentUser() {
-  const session = getSession()
-  if (!session?.user) return null
-  const user = db.users.find((u) => u.id === session.user.id)
-  return user ? publicUser(user) : null
-}
-
+// Reset token demo cho giao diện (backend log khi dev; UI mô phỏng)
 export function getResetToken() {
   return localStorage.getItem('mnq:resetToken')
 }
 
-export function throwIfLocked() {
-  const session = getSession()
-  if (!session?.user) return
-  const user = db.users.find((u) => u.id === session.user.id)
-  if (user && !user.isActive) {
-    setSession(null)
-    throw new ApiError('Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.')
-  }
+export function setDemoResetToken(token) {
+  if (token) localStorage.setItem('mnq:resetToken', token)
+  else localStorage.removeItem('mnq:resetToken')
 }

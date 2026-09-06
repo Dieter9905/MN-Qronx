@@ -7,15 +7,21 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [initializing, setInitializing] = useState(true)
 
+  // Khôi phục phiên từ accessToken (localStorage) → xác thực lại qua GET /me
   useEffect(() => {
-    // Kiểm tra phiên đã lưu (localStorage) khi app khởi động
-    try {
-      const u = authService.currentUser()
-      if (u) setUser(u)
-    } catch {
-      authService.logout()
-    } finally {
-      setInitializing(false)
+    let cancelled = false
+    ;(async () => {
+      try {
+        const u = await authService.fetchCurrentUser()
+        if (!cancelled) setUser(u)
+      } catch {
+        authService.logout()
+      } finally {
+        if (!cancelled) setInitializing(false)
+      }
+    })()
+    return () => {
+      cancelled = true
     }
   }, [])
 
@@ -29,8 +35,8 @@ export function AuthProvider({ children }) {
     return authService.register(payload)
   }, [])
 
-  const logout = useCallback(() => {
-    authService.logout()
+  const logout = useCallback(async () => {
+    await authService.logout()
     setUser(null)
   }, [])
 

@@ -6,7 +6,7 @@ import Avatar from '../../components/common/Avatar'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
 import { formatDate } from '../../lib/format'
-import { db } from '../../lib/db'
+import { updateProfile } from '../../services/authService'
 
 export default function ProfilePage() {
   const { user, refresh } = useAuth()
@@ -28,13 +28,16 @@ export default function ProfilePage() {
     if (Object.keys(er).length > 0) return
 
     setSaving(true)
-    // Mô phỏng PUT /api/v1/me
-    const users = db.users.map((u) =>
-      u.id === user.id ? { ...u, fullName: form.fullName.trim(), phoneNumber: form.phoneNumber.trim() } : u
-    )
-    db.saveUsers(users)
-    refresh()
+    const res = await updateProfile({
+      fullName: form.fullName.trim(),
+      phoneNumber: form.phoneNumber.trim(),
+    })
     setSaving(false)
+    if (!res.success) {
+      toast.error(res.message || 'Không thể cập nhật hồ sơ')
+      return
+    }
+    refresh()
     toast.success('Đã cập nhật hồ sơ')
   }
 

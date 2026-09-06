@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { getDueReminders, snoozeReminder, dismissReminder, triggerDemoAlarm } from '../services/reminderService'
-import { db } from '../lib/db'
+import { getNotificationSettings } from '../services/notificationService'
 import { useAuth } from './AuthContext'
 
 const AlarmContext = createContext(null)
@@ -59,11 +59,29 @@ export function AlarmProvider({ children }) {
   const { user } = useAuth()
   const [alarm, setAlarm] = useState(null)
   const [demoLoading, setDemoLoading] = useState(false)
+  const [settings, setSettings] = useState(null)
   const timerRef = useRef(null)
 
+  // Tải cài đặt thông báo (defaultSnoozeMinutes) khi có user
+  useEffect(() => {
+    if (!user) {
+      setSettings(null)
+      return undefined
+    }
+    let cancelled = false
+    getNotificationSettings()
+      .then((res) => {
+        if (!cancelled && res.success) setSettings(res.data)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [user])
+
   const fire = useCallback((reminder) => {
-    const settings = user ? db.getSettingsForUser(user.id) : null
-    setAlarm((current) => (current ? current : { ...reminder, snoozeMinutes: settings?.defaultSnoozeMinutes ?? 10 }))
+    const minutes = settings?.defaultSnoozeMinutes ?? reminder?.snoozeMinutes ?? 10
+    setAlarm((current) => (current ? current : { ...reminder, snoozeMinutes: minutes }))
     startAlarmSound()
     // Tự dừng âm thanh nếu không ai thao tác (an toàn demo)
     if (timerRef.current) clearTimeout(timerRef.current)
@@ -73,7 +91,7 @@ export function AlarmProvider({ children }) {
         return cur
       })
     }, 5 * 60 * 1000)
-  }, [])
+  }, [settings])
 
   // Polling dự phòng: kiểm tra reminder đến hạn mỗi 20s + khi mở app
   useEffect(() => {
@@ -100,22 +118,27 @@ export function AlarmProvider({ children }) {
     }
   }, [user, fire])
 
-  const snooze = useCallback(
-    async (minutes) => {
-      if (!alarm) return
-      const res = await snoozeReminder(alarm.id, { snoozeMinutes: minutes, log: !alarm.demo })
-      stopAlarmSound()
-      setAlarm(null)
-      return res
-    },
-    [alarm]
-  )
-
-  const dismiss = useCallback(async () => {
-    if (!alarm) return
-    const res = await dismissReminder(alarm.id, { log: !alarm.demo })
+  const snooze = useCallback(async () => {
+    if (!alarm) return null
+    const minutes = alarm.snoozeMinutes ?? settings?.defaultSnoozeMinutes ?? 10
     stopAlarmSound()
     setAlarm(null)
+    // Alarm demo chỉ là mô phỏng local → không gọi API
+    if (alarm.demo) {
+      return { success: true, message: `Đã hoãn nhắc nhở ${minutes} phút`, data: null }
+    }
+    const res = await snoozeReminder(alarm.id, { snoozeMinutes: minutes })
+    return res
+  }, [alarm, settings])
+
+  const dismiss = useCallback(async () => {
+    if (!alarm) return null
+    stopAlarmSound()
+    setAlarm(null)
+    if (alarm.demo) {
+      return { success: true, message: 'Đã tắt nhắc nhở', data: null }
+    }
+    const res = await dismissReminder(alarm.id)
     return res
   }, [alarm])
 

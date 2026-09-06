@@ -5,7 +5,7 @@ import { Field, Input } from '../../components/common/Inputs'
 import Button from '../../components/common/Button'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
-import { db } from '../../lib/db'
+import { changePassword } from '../../services/authService'
 
 export default function ChangePasswordPage() {
   const { user, logout } = useAuth()
@@ -34,16 +34,14 @@ export default function ChangePasswordPage() {
     if (Object.keys(er).length > 0) return
 
     setSaving(true)
-    const u = db.users.find((x) => x.id === user.id)
-    if (!u || u.password !== form.currentPassword) {
-      setSaving(false)
-      setServerError('Mật khẩu hiện tại không đúng')
+    const res = await changePassword({ currentPassword: form.currentPassword, newPassword: form.newPassword })
+    setSaving(false)
+    if (!res.success) {
+      setServerError(res.message || 'Không thể đổi mật khẩu')
       return
     }
-    db.saveUsers(db.users.map((x) => (x.id === user.id ? { ...x, password: form.newPassword } : x)))
-    setSaving(false)
     toast.success('Đổi mật khẩu thành công. Vui lòng đăng nhập lại với mật khẩu mới.')
-    logout()
+    await logout()
     navigate('/login', { replace: true })
   }
 
