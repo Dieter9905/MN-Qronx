@@ -11,7 +11,6 @@ import {
   GoogleLogo,
   Gift,
   ShieldCheck,
-  ArrowLeft,
 } from '@phosphor-icons/react'
 import AuthLayout from '../../components/AuthLayout'
 import { Field, Input } from '../../components/common/Inputs'
@@ -30,7 +29,6 @@ export default function RegisterPage() {
   const [searchParams] = useSearchParams()
   const invitedCode = searchParams.get('invite') || ''
 
-  const [step, setStep] = useState('email') // 'email' | 'form'
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -83,7 +81,6 @@ export default function RegisterPage() {
     setDevCode(res.data?.devCode || '')
     setResendIn(RESEND_SECONDS)
     toast.success(res.message || 'Đã gửi mã xác nhận!')
-    setStep('form')
   }
 
   const validate = () => {
@@ -115,31 +112,21 @@ export default function RegisterPage() {
     navigate('/login', { replace: true })
   }
 
-  const alertBox = (msg) =>
-    msg && (
-      <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-xl bg-rose-50 p-3.5 text-sm font-medium text-rose-700 ring-1 ring-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:ring-rose-800/50">
-        <WarningCircle size={18} className="mt-0.5 shrink-0" weight="fill" />
-        {msg}
-      </div>
-    )
-
   return (
     <AuthLayout
       title="Tạo tài khoản"
       subtitle="Bắt đầu quản lý thời gian và công việc đúng hạn với MN-Qronx – miễn phí."
     >
-      {alertBox(serverError)}
+      {serverError && (
+        <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-xl bg-rose-50 p-3.5 text-sm font-medium text-rose-700 ring-1 ring-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:ring-rose-800/50">
+          <WarningCircle size={18} className="mt-0.5 shrink-0" weight="fill" />
+          {serverError}
+        </div>
+      )}
 
-      {/* ── Bước 1: email → gửi mã ─────────────────────── */}
-      {step === 'email' && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2.5 rounded-xl bg-blue-50 p-3.5 text-sm font-medium text-blue-700 ring-1 ring-inset ring-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:ring-blue-800/50">
-            <ShieldCheck size={18} weight="fill" className="shrink-0" />
-            <span>
-              Nhập email của bạn, chúng tôi sẽ gửi <b>mã xác nhận</b> để hoàn tất đăng ký (1 email = 1 tài khoản).
-            </span>
-          </div>
-
+      <form onSubmit={onSubmit} noValidate className="space-y-4">
+        {/* Email + nút gửi mã */}
+        <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
           <Field label="Email" required error={errors.email}>
             {(id) => (
               <div className="relative">
@@ -157,31 +144,29 @@ export default function RegisterPage() {
               </div>
             )}
           </Field>
-
-          <Button type="button" variant="gradient" fullWidth size="lg" loading={sendingCode} icon={EnvelopeSimple} onClick={onSendCode}>
-            Gửi mã xác nhận
-          </Button>
-        </div>
-      )}
-
-      {/* ── Bước 2: mã xác nhận + thông tin tài khoản ──── */}
-      {step === 'form' && (
-        <form onSubmit={onSubmit} noValidate className="space-y-4">
-          <div className="flex items-center gap-2 rounded-xl bg-emerald-50 p-3.5 text-sm font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:ring-emerald-800/50">
-            <ShieldCheck size={18} weight="fill" className="shrink-0" />
-            <span className="min-w-0">
-              Đã gửi mã đến <b className="break-all">{form.email.trim()}</b>. Nhập mã để hoàn tất đăng ký.
-            </span>
+          <div className="sm:pt-6">
+            {resendIn > 0 ? (
+              <Button type="button" variant="secondary" size="md" fullWidth disabled>
+                Gửi lại sau {resendIn}s
+              </Button>
+            ) : (
+              <Button type="button" variant="secondary" size="md" fullWidth loading={sendingCode} icon={EnvelopeSimple} onClick={onSendCode}>
+                Gửi mã xác nhận
+              </Button>
+            )}
           </div>
+        </div>
 
-          {devCode && (
-            <div className="rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:ring-amber-800/50">
-              💡 Môi trường test (chưa cấu hình SMTP): mã của bạn là <b className="tracking-widest">{devCode}</b>
-            </div>
-          )}
+        {devCode && (
+          <div className="rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:ring-amber-800/50">
+            💡 Môi trường test (chưa cấu hình SMTP): mã của bạn là <b className="tracking-widest">{devCode}</b>
+          </div>
+        )}
 
-          <Field label="Mã xác nhận" required error={errors.verificationCode}>
-            {(id) => (
+        <Field label="Mã xác nhận" required error={errors.verificationCode} hint="Nhập mã 6 chữ số đã gửi đến email của bạn">
+          {(id) => (
+            <div className="relative">
+              <ShieldCheck size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
               <Input
                 id={id}
                 inputMode="numeric"
@@ -191,113 +176,91 @@ export default function RegisterPage() {
                 value={form.verificationCode}
                 onChange={set('verificationCode')}
                 invalid={!!errors.verificationCode}
-                className="text-center font-mono text-lg tracking-[0.5em]"
+                className="pl-10 font-mono text-lg tracking-[0.5em]"
               />
-            )}
-          </Field>
+            </div>
+          )}
+        </Field>
 
-          <Field label="Họ tên" required error={errors.fullName}>
+        <Field label="Họ tên" required error={errors.fullName}>
+          {(id) => (
+            <div className="relative">
+              <User size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
+              <Input
+                id={id}
+                autoComplete="name"
+                placeholder="Nguyễn Văn A"
+                value={form.fullName}
+                onChange={set('fullName')}
+                invalid={!!errors.fullName}
+                className="pl-10"
+              />
+            </div>
+          )}
+        </Field>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Mật khẩu" required error={errors.password} hint="Tối thiểu 6 ký tự">
             {(id) => (
               <div className="relative">
-                <User size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
-                <Input
-                  id={id}
-                  autoComplete="name"
-                  placeholder="Nguyễn Văn A"
-                  value={form.fullName}
-                  onChange={set('fullName')}
-                  invalid={!!errors.fullName}
-                  className="pl-10"
-                />
-              </div>
-            )}
-          </Field>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Mật khẩu" required error={errors.password} hint="Tối thiểu 6 ký tự">
-              {(id) => (
-                <div className="relative">
-                  <Lock size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
-                  <Input
-                    id={id}
-                    type={showPw ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    placeholder="••••••••"
-                    value={form.password}
-                    onChange={set('password')}
-                    invalid={!!errors.password}
-                    className="pl-10 pr-11"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPw((s) => !s)}
-                    aria-label={showPw ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-1 text-navy-400 hover:text-navy-700"
-                  >
-                    {showPw ? <EyeSlash size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              )}
-            </Field>
-            <Field label="Xác nhận mật khẩu" required error={errors.confirmPassword}>
-              {(id) => (
+                <Lock size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
                 <Input
                   id={id}
                   type={showPw ? 'text' : 'password'}
                   autoComplete="new-password"
-                  placeholder="Nhập lại mật khẩu"
-                  value={form.confirmPassword}
-                  onChange={set('confirmPassword')}
-                  invalid={!!errors.confirmPassword}
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={set('password')}
+                  invalid={!!errors.password}
+                  className="pl-10 pr-11"
                 />
-              )}
-            </Field>
-          </div>
-
-          <Field label="Mã giới thiệu (tùy chọn)" error={errors.inviteCode} hint="Nhập mã bạn bè gửi để cả hai nhận thưởng">
-            {(id) => (
-              <div className="relative">
-                <Gift size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
-                <Input
-                  id={id}
-                  autoComplete="off"
-                  placeholder="VD: ABC123"
-                  value={form.inviteCode}
-                  onChange={set('inviteCode')}
-                  invalid={!!errors.inviteCode}
-                  className="pl-10 uppercase"
-                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw((s) => !s)}
+                  aria-label={showPw ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-1 text-navy-400 hover:text-navy-700"
+                >
+                  {showPw ? <EyeSlash size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             )}
           </Field>
-
-          <Button type="submit" variant="gradient" fullWidth size="lg" loading={loading} icon={UserCirclePlus}>
-            Đăng ký
-          </Button>
-
-          <div className="flex items-center justify-between text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setStep('email')}
-              className="flex cursor-pointer items-center gap-1 text-navy-400 transition hover:text-navy-700 dark:text-slate-500 dark:hover:text-slate-300"
-            >
-              <ArrowLeft size={14} weight="bold" /> Đổi email
-            </button>
-            {resendIn > 0 ? (
-              <span className="text-navy-400 dark:text-slate-500">Gửi lại mã sau {resendIn}s</span>
-            ) : (
-              <button
-                type="button"
-                onClick={onSendCode}
-                disabled={sendingCode}
-                className="cursor-pointer text-blue-600 transition hover:underline disabled:cursor-not-allowed disabled:text-navy-300"
-              >
-                Gửi lại mã
-              </button>
+          <Field label="Xác nhận mật khẩu" required error={errors.confirmPassword}>
+            {(id) => (
+              <Input
+                id={id}
+                type={showPw ? 'text' : 'password'}
+                autoComplete="new-password"
+                placeholder="Nhập lại mật khẩu"
+                value={form.confirmPassword}
+                onChange={set('confirmPassword')}
+                invalid={!!errors.confirmPassword}
+              />
             )}
-          </div>
-        </form>
-      )}
+          </Field>
+        </div>
+
+        <Field label="Mã giới thiệu (tùy chọn)" error={errors.inviteCode} hint="Nhập mã bạn bè gửi để cả hai nhận thưởng">
+          {(id) => (
+            <div className="relative">
+              <Gift size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
+              <Input
+                id={id}
+                autoComplete="off"
+                placeholder="VD: ABC123"
+                value={form.inviteCode}
+                onChange={set('inviteCode')}
+                invalid={!!errors.inviteCode}
+                className="pl-10 uppercase"
+              />
+            </div>
+          )}
+        </Field>
+
+        <Button type="submit" variant="gradient" fullWidth size="lg" loading={loading} icon={UserCirclePlus}>
+          Đăng ký
+        </Button>
+      </form>
 
       <div className="mt-6 flex items-center gap-3">
         <span className="h-px flex-1 bg-navy-100 dark:bg-slate-700" />
