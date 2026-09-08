@@ -2,35 +2,77 @@ import crypto from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import config from '../config/index.js'
+import prisma from '../config/prisma.js'
 import authRepo from '../repositories/authRepo.js'
 import ApiError from '../utils/ApiError.js'
 import { transformUser } from '../utils/transformers.js'
 import { isPlanExpired, downgradeUser } from '../utils/planLimits.js'
+import { ensureInviteCode, creditDailyLogin, activateInvitation } from './rewardService.js'
 
 const REFRESH_TOKEN_EXPIRY_DAYS = 7
 const RESET_TOKEN_EXPIRY_HOURS = 1
 
 // ─── Register ──────────────────────────────────────────────
 
-export async function register({ fullName, email, password }) {
+export async function register({ fullName, email, password, inviteCode, ipAddress, deviceId }) {
   // Check email unique
   const existing = await authRepo.findByEmail(email)
   if (existing) {
     throw ApiError.badRequest('Email đã được sử dụng')
   }
 
+  // Mã giới thiệu (tùy chọn) → lưu referrer để thưởng khi bạn bè kích hoạt
+  let referrerId = null
+  const cleanCode = inviteCode ? String(inviteCode).trim().toUpperCase() : ''
+  if (cleanCode) {
+    const inviter = await authRepo.findByInviteCode(cleanCode)
+    if (!inviter) {
+      throw ApiError.badRequest('Mã giới thiệu không hợp lệ')
+    }
+    referrerId = inviter.userId
+  }
+
   // Hash password
   const passwordHash = await bcrypt.hash(password, 10)
 
-  // Create user + notificationSetting
-  const user = await authRepo.create({ fullName, email, passwordHash })
+  // Create user + notificationSetting (kèm mã mời riêng của user)
+  const user = await authRepo.create({
+    fullName,
+    email,
+    passwordHash,
+    inviteCode: generateNewInviteCode(),
+    referrerId,
+  })
+
+  // Ghi nhận lời mời (PENDING – chỉ thưởng khi bạn bè đăng nhập lần đầu)
+  if (referrerId) {
+    await prisma.invitation.create({
+      data: {
+        inviterId: referrerId,
+        inviteeId: user.userId,
+        inviteCode: cleanCode,
+        ipAddress: ipAddress || null,
+        deviceId: deviceId || null,
+      },
+    })
+  }
 
   return transformUser(user)
 }
 
+// Tạo mã mời 6 ký tự duy nhất cho user mới
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+function generateNewInviteCode() {
+  const bytes = crypto.randomBytes(6)
+  let code = ''
+  for (let i = 0; i < 6; i += 1) code += CODE_ALPHABET[bytes[i] % CODE_ALPHABET.length]
+  return code
+}
+
 // ─── Login ─────────────────────────────────────────────────
 
-export async function login(email, password) {
+export async function login(email, password, { ipAddress, deviceId } = {}) {
   const user = await authRepo.findByEmail(email)
 
   if (!user) {
@@ -53,6 +95,14 @@ export async function login(email, password) {
     user.planStartedAt = null
     user.planExpiresAt = null
   }
+
+  // Phần thưởng: điểm đăng nhập hằng ngày + kích hoạt lời mời nếu có
+  const daily = await creditDailyLogin(user)
+  user.points = daily.points
+  user.loginStreak = daily.loginStreak
+  if (daily.lastLoginDate) user.lastLoginDate = daily.lastLoginDate
+  if (!user.inviteCode) user.inviteCode = await ensureInviteCode(user.userId)
+  await activateInvitation(user, ipAddress, deviceId)
 
   // Generate AccessToken (JWT, 1 giờ)
   const accessToken = jwt.sign(
@@ -118,6 +168,13 @@ export async function loginWithGoogle({ googleId, email, fullName, avatarUrl }) 
     user.planStartedAt = null
     user.planExpiresAt = null
   }
+
+  // Phần thưởng: đăng nhập Google cũng được điểm hằng ngày
+  const daily = await creditDailyLogin(user)
+  user.points = daily.points
+  user.loginStreak = daily.loginStreak
+  if (daily.lastLoginDate) user.lastLoginDate = daily.lastLoginDate
+  if (!user.inviteCode) user.inviteCode = await ensureInviteCode(user.userId)
 
   // Cập nhật avatar từ Google nếu tài khoản chưa có
   if (avatarUrl && !user.avatarUrl) {

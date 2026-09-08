@@ -3,10 +3,11 @@ import userRepo from '../repositories/userRepo.js'
 import ApiError from '../utils/ApiError.js'
 import { startOfDay, endOfDay } from '../utils/dateUtils.js'
 import { isPlanExpired, downgradeUser } from '../utils/planLimits.js'
+import { ensureInviteCode, creditDailyLogin, activateInvitation } from './rewardService.js'
 
 // ─── Get Profile ────────────────────────────────────────
 
-export async function getProfile(userId) {
+export async function getProfile(userId, { ipAddress, deviceId } = {}) {
   const user = await userRepo.findProfile(userId)
   if (!user) throw ApiError.notFound('Không tìm thấy người dùng')
 
@@ -18,6 +19,14 @@ export async function getProfile(userId) {
     user.planExpiresAt = null
   }
 
+  // Phần thưởng: đăng nhập (mở app) mỗi ngày được điểm; kích hoạt lời mời nếu có
+  const daily = await creditDailyLogin(user)
+  user.points = daily.points
+  user.loginStreak = daily.loginStreak
+  if (daily.lastLoginDate) user.lastLoginDate = daily.lastLoginDate
+  if (!user.inviteCode) user.inviteCode = await ensureInviteCode(userId)
+  await activateInvitation(user, ipAddress, deviceId)
+
   return {
     userId: user.userId,
     fullName: user.fullName,
@@ -28,6 +37,10 @@ export async function getProfile(userId) {
     plan: user.plan || 'FREE',
     planStartedAt: user.planStartedAt || null,
     planExpiresAt: user.planExpiresAt || null,
+    points: user.points || 0,
+    loginStreak: user.loginStreak || 0,
+    lastLoginDate: user.lastLoginDate || null,
+    inviteCode: user.inviteCode || null,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   }

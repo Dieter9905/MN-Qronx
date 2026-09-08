@@ -22,6 +22,10 @@ export function transformUser(user) {
     plan: user.plan || 'FREE',
     planStartedAt: user.planStartedAt || null,
     planExpiresAt: user.planExpiresAt || null,
+    points: user.points || 0,
+    loginStreak: user.loginStreak || 0,
+    lastLoginDate: user.lastLoginDate || null,
+    inviteCode: user.inviteCode || null,
     isActive: user.isActive,
     createdAt: user.createdAt,
   }

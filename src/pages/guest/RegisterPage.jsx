@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   User,
   EnvelopeSimple,
@@ -9,6 +9,7 @@ import {
   UserCirclePlus,
   WarningCircle,
   GoogleLogo,
+  Gift,
 } from '@phosphor-icons/react'
 import AuthLayout from '../../components/AuthLayout'
 import { Field, Input } from '../../components/common/Inputs'
@@ -21,8 +22,16 @@ export default function RegisterPage() {
   const { register } = useAuth()
   const toast = useToast()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const invitedCode = searchParams.get('invite') || ''
 
-  const [form, setForm] = useState({ fullName: '', email: '', password: '', confirmPassword: '' })
+  const [form, setForm] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    inviteCode: invitedCode,
+  })
   const [showPw, setShowPw] = useState(false)
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState('')
@@ -42,6 +51,7 @@ export default function RegisterPage() {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) er.email = 'Email không đúng định dạng'
     if (!form.password) er.password = 'Mật khẩu không được để trống'
     else if (form.password.length < 6) er.password = 'Mật khẩu phải có ít nhất 6 ký tự'
+    if (form.inviteCode && !/^[A-Za-z0-9]{4,16}$/.test(form.inviteCode.trim())) er.inviteCode = 'Mã giới thiệu không hợp lệ'
     if (form.confirmPassword !== form.password) er.confirmPassword = 'Xác nhận mật khẩu không khớp'
     setErrors(er)
     return Object.keys(er).length === 0
@@ -147,6 +157,22 @@ export default function RegisterPage() {
             )}
           </Field>
         </div>
+        <Field label="Mã giới thiệu (tùy chọn)" error={errors.inviteCode} hint="Nhập mã bạn bè gửi để cả hai nhận thưởng">
+          {(id) => (
+            <div className="relative">
+              <Gift size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
+              <Input
+                id={id}
+                autoComplete="off"
+                placeholder="VD: ABC123"
+                value={form.inviteCode}
+                onChange={set('inviteCode')}
+                invalid={!!errors.inviteCode}
+                className="pl-10 uppercase"
+              />
+            </div>
+          )}
+        </Field>
         <Button type="submit" variant="gradient" fullWidth size="lg" loading={loading} icon={UserCirclePlus}>
           Đăng ký
         </Button>

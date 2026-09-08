@@ -6,7 +6,10 @@ import * as userService from '../services/userService.js'
  * GET /api/v1/me
  */
 export const getProfile = catchAsync(async (req, res) => {
-  const profile = await userService.getProfile(req.user.id)
+  const profile = await userService.getProfile(req.user.id, {
+    ipAddress: req.ip,
+    deviceId: req.headers['x-device-id'] || null,
+  })
   success(res, 200, 'Lấy hồ sơ thành công', profile)
 })
 

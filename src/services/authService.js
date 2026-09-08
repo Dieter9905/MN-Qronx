@@ -15,15 +15,18 @@ function normalizeUser(u) {
     plan: u.plan ?? 'FREE',
     planStartedAt: u.planStartedAt ?? null,
     planExpiresAt: u.planExpiresAt ?? null,
+    points: u.points ?? 0,
+    loginStreak: u.loginStreak ?? 0,
+    inviteCode: u.inviteCode ?? null,
     isActive: u.isActive ?? true,
     createdAt: u.createdAt,
   }
 }
 
 // POST /api/v1/auth/register
-export async function register({ fullName, email, password, phoneNumber } = {}) {
+export async function register({ fullName, email, password, phoneNumber, inviteCode } = {}) {
   const res = await api('POST', '/auth/register', {
-    body: { fullName, email, password, phoneNumber },
+    body: { fullName, email, password, phoneNumber, inviteCode: inviteCode || undefined },
   })
   if (res.success) res.data = normalizeUser(res.data)
   return res

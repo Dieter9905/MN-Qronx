@@ -16,6 +16,7 @@ import OAuthCallbackPage from './pages/guest/OAuthCallbackPage'
 import DashboardPage from './pages/user/DashboardPage'
 import BillingPage from './pages/user/BillingPage'
 import AiAssistantPage from './pages/user/AiAssistantPage'
+import RewardsPage from './pages/user/RewardsPage'
 import TaskListPage from './pages/user/TaskListPage'
 import TaskDetailPage from './pages/user/TaskDetailPage'
 import TaskFormPage from './pages/user/TaskFormPage'
@@ -93,6 +94,7 @@ export default function App() {
           <Route path="settings" element={<SettingsPage />} />
           <Route path="billing" element={<BillingPage />} />
           <Route path="ai" element={<AiAssistantPage />} />
+          <Route path="rewards" element={<RewardsPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="change-password" element={<ChangePasswordPage />} />
         </Route>

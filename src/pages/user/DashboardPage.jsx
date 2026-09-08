@@ -8,6 +8,8 @@ import {
   Plus,
   Sparkle,
   BellRinging,
+  Flame,
+  Gift,
 } from '@phosphor-icons/react'
 import { getDashboard, completeTask } from '../../services/taskService'
 import { useToast } from '../../components/common/Toast'
@@ -94,6 +96,28 @@ export default function DashboardPage() {
         <StatCard icon={CheckCircle} label="Đã hoàn thành" value={data.completedCount} tone="emerald" sub="Tổng cộng" delay={120} />
         <StatCard icon={Sparkle} label="Sắp tới" value={data.upcomingCount} tone="purple" sub="Từ ngày mai" delay={180} />
       </div>
+
+      {/* Phần thưởng: chuỗi đăng nhập + điểm */}
+      <Link
+        to="/app/rewards"
+        className="group flex items-center justify-between gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-navy-900 via-navy-800 to-navy-900 p-5 text-white transition-all hover:shadow-lg hover:shadow-navy-900/20 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800"
+      >
+        <div className="flex items-center gap-4">
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 shadow-lg">
+            <Flame size={28} weight="fill" />
+          </span>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-navy-300">Phần thưởng đăng nhập</p>
+            <p className="mt-0.5 text-lg font-extrabold">
+              🔥 {user?.loginStreak ?? 0} ngày liên tiếp · {user?.points ?? 0} điểm
+            </p>
+            <p className="text-xs text-navy-300">Đăng nhập mỗi ngày để tích điểm đổi gói Plus/Pro miễn phí</p>
+          </div>
+        </div>
+        <span className="flex items-center gap-1.5 rounded-xl bg-white/10 px-3.5 py-2 text-sm font-bold text-white transition group-hover:bg-white/20">
+          <Gift size={16} weight="duotone" className="text-amber-300" /> Nhận thưởng
+        </span>
+      </Link>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Công việc hôm nay */}

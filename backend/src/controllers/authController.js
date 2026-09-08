@@ -8,7 +8,11 @@ import * as googleAuthService from '../services/googleAuthService.js'
  * POST /api/v1/auth/register
  */
 export const register = catchAsync(async (req, res) => {
-  const result = await authService.register(req.body)
+  const result = await authService.register({
+    ...req.body,
+    ipAddress: req.ip,
+    deviceId: req.headers['x-device-id'] || null,
+  })
   success(res, 201, 'Đăng ký thành công', result)
 })
 
@@ -17,7 +21,10 @@ export const register = catchAsync(async (req, res) => {
  */
 export const login = catchAsync(async (req, res) => {
   const { email, password } = req.body
-  const result = await authService.login(email, password)
+  const result = await authService.login(email, password, {
+    ipAddress: req.ip,
+    deviceId: req.headers['x-device-id'] || null,
+  })
   success(res, 200, 'Đăng nhập thành công', result)
 })
 

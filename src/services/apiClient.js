@@ -27,6 +27,22 @@ export function clearTokens() {
   localStorage.removeItem('mnq:refreshToken')
 }
 
+// ID thiết bị ổn định (dùng cho chống lạm dụng mời bạn bè: 1 IP + 1 thiết bị = 1 tài khoản)
+export function getDeviceId() {
+  let id = localStorage.getItem('mnq:deviceId')
+  if (!id) {
+    id =
+      'dev-' +
+      Date.now().toString(36) +
+      '-' +
+      Math.random().toString(36).slice(2, 10) +
+      '-' +
+      Math.random().toString(36).slice(2, 10)
+    localStorage.setItem('mnq:deviceId', id)
+  }
+  return id
+}
+
 /**
  * Gọi endpoint thật.
  * @returns {Promise<{success:boolean, message:string, data?:any, errors?:object}>}
@@ -46,6 +62,7 @@ export async function api(method, path, { body, query } = {}) {
   const doFetch = (token) => {
     const headers = { 'Content-Type': 'application/json' }
     if (token) headers['Authorization'] = `Bearer ${token}`
+    headers['X-Device-Id'] = getDeviceId()
     const opts = { method, headers }
     if (body !== undefined) opts.body = JSON.stringify(body)
     return fetch(url, opts)

@@ -12,6 +12,12 @@ export const registerValidation = [
   body('password')
     .notEmpty().withMessage('Mật khẩu không được để trống')
     .isLength({ min: 6, max: 50 }).withMessage('Mật khẩu phải từ 6-50 ký tự'),
+
+  body('inviteCode')
+    .optional({ values: 'falsy' })
+    .isString().withMessage('Mã giới thiệu không hợp lệ')
+    .isLength({ min: 4, max: 16 }).withMessage('Mã giới thiệu không hợp lệ')
+    .matches(/^[A-Za-z0-9]+$/).withMessage('Mã giới thiệu không hợp lệ'),
 ]
 
 export const loginValidation = [

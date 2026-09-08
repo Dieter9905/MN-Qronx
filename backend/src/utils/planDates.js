@@ -13,10 +13,11 @@
  * @param {Date|null} params.currentStartedAt
  * @param {Date|null} params.currentExpiresAt
  * @param {'FREE'|'PLUS'|'PRO'} params.newPlan Gói mới muốn áp dụng
+ * @param {number} [params.days=30] Số ngày của kỳ (đổi thưởng có thể dùng 7 ngày)
  * @param {Date} [params.now]
  * @returns {{ planStartedAt: Date|null, planExpiresAt: Date|null }}
  */
-export function computePlanDates({ currentPlan, currentStartedAt, currentExpiresAt, newPlan, now = new Date() }) {
+export function computePlanDates({ currentPlan, currentStartedAt, currentExpiresAt, newPlan, days = 30, now = new Date() }) {
   if (newPlan === 'FREE') {
     return { planStartedAt: null, planExpiresAt: null }
   }
@@ -31,19 +32,19 @@ export function computePlanDates({ currentPlan, currentStartedAt, currentExpires
     currentExpiresAt &&
     new Date(currentExpiresAt) > now
 
-  // Gia hạn cùng gói còn hạn: cộng 30 ngày từ ngày hết hạn hiện tại
+  // Gia hạn cùng gói còn hạn: cộng thêm days ngày từ ngày hết hạn hiện tại
   if (stillActive) {
     const expiresAt = new Date(currentExpiresAt)
-    expiresAt.setDate(expiresAt.getDate() + 30)
+    expiresAt.setDate(expiresAt.getDate() + days)
     return {
       planStartedAt: currentStartedAt || now,
       planExpiresAt: expiresAt,
     }
   }
 
-  // Gói mới / đã hết hạn: kỳ mới 30 ngày từ hôm nay
+  // Gói mới / đã hết hạn: kỳ mới days ngày từ hôm nay
   const expiresAt = new Date(now)
-  expiresAt.setDate(expiresAt.getDate() + 30)
+  expiresAt.setDate(expiresAt.getDate() + days)
   return { planStartedAt: now, planExpiresAt: expiresAt }
 }
 

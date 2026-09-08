@@ -68,6 +68,12 @@ enum Plan {
   PRO
 }
 
+enum InvitationStatus {
+  PENDING
+  CREDITED
+  REJECTED
+}
+
 // ─────────────────────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────────────────────
@@ -95,6 +101,12 @@ model User {
   // Lịch sử gói trả phí: ngày bắt đầu & ngày hết hạn (30 ngày / kỳ đăng ký)
   planStartedAt DateTime? @map("plan_started_at")
   planExpiresAt DateTime? @map("plan_expires_at")
+  // ── Hệ thống phần thưởng: điểm, chuỗi đăng nhập, mã mời ──
+  points         Int       @default(0)
+  loginStreak    Int       @default(0) @map("login_streak")
+  lastLoginDate  DateTime? @map("last_login_date")
+  inviteCode     String?   @unique @map("invite_code") @db.VarChar(16)
+  referrerId     Int?      @map("referrer_id")
   isActive     Boolean  @default(true) @map("is_active")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -107,9 +119,48 @@ model User {
   customSounds           CustomSound[]
   notificationSetting    NotificationSetting?
   refreshTokens          RefreshToken[]
+  pointTransactions      PointTransaction[]
+  invitesSent            Invitation[]            @relation("InviterInvitations")
+  invitesReceived        Invitation[]            @relation("InviteeInvitation")
 
   @@index([roleId])
+  @@index([referrerId])
   @@map("app_users")
+}
+
+// ─── Điểm phần thưởng (lịch sử cộng/trừ điểm) ────────────────
+model PointTransaction {
+  pointTransactionId Int      @id @default(autoincrement()) @map("point_transaction_id")
+  userId             Int      @map("user_id")
+  amount             Int      // dương: cộng; âm: trừ (đổi thưởng)
+  reason             String   @db.VarChar(30) // DAILY_LOGIN | STREAK_BONUS | INVITE | REDEEM_REWARD
+  note               String?  @db.VarChar(255)
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@index([userId])
+  @@map("point_transactions")
+}
+
+// ─── Lời mời bạn bè (chống lạm dụng: 1 IP + 1 thiết bị = 1 tài khoản) ──
+model Invitation {
+  invitationId Int              @id @default(autoincrement()) @map("invitation_id")
+  inviterId    Int              @map("inviter_id")
+  inviteeId    Int              @map("invitee_id")
+  inviteCode   String           @db.VarChar(16) @map("invite_code")
+  ipAddress    String?          @map("ip_address") @db.VarChar(64)
+  deviceId     String?          @map("device_id") @db.VarChar(128)
+  status       InvitationStatus @default(PENDING)
+  creditedAt   DateTime?        @map("credited_at")
+  createdAt    DateTime         @default(now()) @map("created_at")
+
+  inviter User @relation("InviterInvitations", fields: [inviterId], references: [userId])
+  invitee User @relation("InviteeInvitation", fields: [inviteeId], references: [userId])
+
+  @@index([inviterId])
+  @@index([inviteeId])
+  @@map("invitations")
 }
 
 model PasswordResetRequest {

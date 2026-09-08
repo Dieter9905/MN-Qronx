@@ -6,6 +6,7 @@ import {
   Bell,
   Gear,
   Brain,
+  Gift,
 } from '@phosphor-icons/react'
 
 export const NAV_GROUPS = [
@@ -26,6 +27,7 @@ export const NAV_GROUPS = [
     items: [
       { to: '/app/categories', label: 'Danh mục', icon: FolderSimple },
       { to: '/app/notifications', label: 'Lịch sử thông báo', icon: Bell },
+      { to: '/app/rewards', label: 'Phần thưởng', icon: Gift },
     ],
   },
   {

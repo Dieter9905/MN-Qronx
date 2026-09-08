@@ -63,15 +63,27 @@ async function findById(userId) {
 }
 
 /**
+ * Find a user by invite code (for referral).
+ */
+async function findByInviteCode(inviteCode) {
+  return prisma.user.findUnique({
+    where: { inviteCode },
+    select: { userId: true, fullName: true, email: true },
+  })
+}
+
+/**
  * Create a new user with role USER.
  */
-async function create({ fullName, email, passwordHash }) {
+async function create({ fullName, email, passwordHash, inviteCode, referrerId }) {
   return prisma.user.create({
     data: {
       roleId: 1, // USER
       fullName,
       email,
       passwordHash,
+      inviteCode,
+      referrerId,
       notificationSetting: {
         create: {}, // Auto-create NotificationSetting (defaults)
       },
@@ -174,6 +186,7 @@ async function markResetRequestUsed(resetRequestId) {
 
 export default {
   findByEmail,
+  findByInviteCode,
   findByGoogleId,
   attachGoogleId,
   updateProfileAvatar,
