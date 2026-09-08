@@ -1,5 +1,12 @@
 import { body } from 'express-validator'
 
+export const emailOnlyValidation = [
+  body('email')
+    .notEmpty().withMessage('Email không được để trống')
+    .isEmail().withMessage('Email không hợp lệ')
+    .isLength({ max: 254 }).withMessage('Email quá dài'),
+]
+
 export const registerValidation = [
   body('fullName')
     .notEmpty().withMessage('Họ tên không được để trống')
@@ -12,6 +19,11 @@ export const registerValidation = [
   body('password')
     .notEmpty().withMessage('Mật khẩu không được để trống')
     .isLength({ min: 6, max: 50 }).withMessage('Mật khẩu phải từ 6-50 ký tự'),
+
+  body('verificationCode')
+    .notEmpty().withMessage('Thiếu mã xác nhận email')
+    .isLength({ min: 6, max: 6 }).withMessage('Mã xác nhận gồm 6 chữ số')
+    .matches(/^\d{6}$/).withMessage('Mã xác nhận gồm 6 chữ số'),
 
   body('inviteCode')
     .optional({ values: 'falsy' })

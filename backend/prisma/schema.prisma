@@ -163,6 +163,21 @@ model Invitation {
   @@map("invitations")
 }
 
+// ─── Mã xác minh email khi đăng ký ─────────────────────────
+// 1 email = 1 tài khoản: bảng lưu mã OTP gửi qua email,
+// register chỉ tạo tài khoản khi mã hợp lệ (chưa hết hạn, chưa dùng).
+model EmailVerificationCode {
+  emailVerificationId Int       @id @default(autoincrement()) @map("email_verification_id")
+  email               String    @db.VarChar(254)
+  code                String    @db.VarChar(6)
+  expiresAt           DateTime  @map("expires_at")
+  usedAt              DateTime? @map("used_at")
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  @@index([email])
+  @@map("email_verification_codes")
+}
+
 model PasswordResetRequest {
   resetRequestId Int      @id @default(autoincrement()) @map("reset_request_id")
   userId         Int      @map("user_id")

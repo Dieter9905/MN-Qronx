@@ -8,10 +8,40 @@ const router = Router()
 
 /**
  * @swagger
+ * /auth/send-verification-code:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Gửi mã xác nhận email để đăng ký (1 email = 1 tài khoản)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Đã gửi mã
+ *       400:
+ *         description: Email đã được sử dụng
+ */
+router.post(
+  '/send-verification-code',
+  authValidation.emailOnlyValidation,
+  validate,
+  authController.sendVerificationCode,
+)
+
+/**
+ * @swagger
  * /auth/register:
  *   post:
  *     tags: [Auth]
- *     summary: Đăng ký tài khoản mới
+ *     summary: Đăng ký tài khoản mới (yêu cầu mã xác nhận email)
  *     requestBody:
  *       required: true
  *       content:
@@ -22,7 +52,7 @@ const router = Router()
  *       201:
  *         description: Đăng ký thành công
  *       400:
- *         description: Email đã tồn tại hoặc dữ liệu không hợp lệ
+ *         description: Email đã tồn tại, mã xác nhận sai/hết hạn hoặc dữ liệu không hợp lệ
  */
 router.post(
   '/register',

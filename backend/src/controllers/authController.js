@@ -5,6 +5,14 @@ import * as authService from '../services/authService.js'
 import * as googleAuthService from '../services/googleAuthService.js'
 
 /**
+ * POST /api/v1/auth/send-verification-code
+ */
+export const sendVerificationCode = catchAsync(async (req, res) => {
+  const result = await authService.sendVerificationCode(req.body.email)
+  success(res, 200, result.message, result)
+})
+
+/**
  * POST /api/v1/auth/register
  */
 export const register = catchAsync(async (req, res) => {

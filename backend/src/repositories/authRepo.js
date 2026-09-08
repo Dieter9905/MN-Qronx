@@ -154,6 +154,38 @@ async function deleteRefreshToken(token) {
   })
 }
 
+// ─── Email Verification Queries ────────────────────────────
+
+/**
+ * Lưu (hoặc thay mới) mã xác minh email – 1 email chỉ có 1 mã hiệu lực.
+ */
+async function saveVerificationCode(email, code, expiresAt) {
+  await prisma.emailVerificationCode.deleteMany({ where: { email } })
+  return prisma.emailVerificationCode.create({
+    data: { email, code, expiresAt },
+  })
+}
+
+/**
+ * Tìm mã xác minh mới nhất của email.
+ */
+async function findVerificationCode(email) {
+  return prisma.emailVerificationCode.findFirst({
+    where: { email },
+    orderBy: { createdAt: 'desc' },
+  })
+}
+
+/**
+ * Đánh dấu mã đã dùng (chỉ dùng 1 lần).
+ */
+async function markVerificationCodeUsed(emailVerificationId) {
+  return prisma.emailVerificationCode.update({
+    where: { emailVerificationId },
+    data: { usedAt: new Date() },
+  })
+}
+
 // ─── Password Reset Queries ────────────────────────────────
 
 /**
@@ -187,6 +219,9 @@ async function markResetRequestUsed(resetRequestId) {
 export default {
   findByEmail,
   findByInviteCode,
+  saveVerificationCode,
+  findVerificationCode,
+  markVerificationCodeUsed,
   findByGoogleId,
   attachGoogleId,
   updateProfileAvatar,

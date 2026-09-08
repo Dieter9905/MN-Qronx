@@ -36,6 +36,17 @@ const config = {
     email: process.env.VAPID_EMAIL || 'mailto:admin@taskalarm.com',
   },
 
+  // SMTP gửi email (mã xác nhận đăng ký, quên mật khẩu…)
+  // Chưa cấu hình → dev log mã ra console để test, production trả lỗi gửi thư
+  smtp: {
+    host: process.env.SMTP_HOST || '',
+    port: parseInt(process.env.SMTP_PORT, 10) || 587,
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+    from: process.env.EMAIL_FROM || process.env.SMTP_USER || 'MN-Qronx <no-reply@mn-qronx.id.vn>',
+    secure: process.env.SMTP_SECURE === 'true',
+  },
+
   fcm: {
     projectId: process.env.FCM_PROJECT_ID || '',
     privateKey: process.env.FCM_PRIVATE_KEY || '',

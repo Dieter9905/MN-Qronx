@@ -8,18 +8,81 @@ import ApiError from '../utils/ApiError.js'
 import { transformUser } from '../utils/transformers.js'
 import { isPlanExpired, downgradeUser } from '../utils/planLimits.js'
 import { ensureInviteCode, creditDailyLogin, activateInvitation } from './rewardService.js'
+import { sendEmail, isEmailConfigured } from './emailService.js'
 
 const REFRESH_TOKEN_EXPIRY_DAYS = 7
 const RESET_TOKEN_EXPIRY_HOURS = 1
+const VERIFY_CODE_EXPIRY_MINUTES = 10
+
+// ─── Gửi mã xác minh email (đăng ký) ──────────────────────
+// 1 email = 1 tài khoản: gửi mã OTP → register chỉ chạy khi mã hợp lệ.
+
+export async function sendVerificationCode(email) {
+  const cleanEmail = String(email).trim().toLowerCase()
+
+  // Email đã có tài khoản → chặn (1 gmail = 1 tài khoản)
+  const existing = await authRepo.findByEmail(cleanEmail)
+  if (existing) {
+    throw ApiError.badRequest('Email này đã được sử dụng. Vui lòng đăng nhập hoặc dùng email khác.')
+  }
+
+  // Tạo mã 6 chữ số
+  const code = String(Math.floor(100000 + Math.random() * 900000))
+  const expiresAt = new Date(Date.now() + VERIFY_CODE_EXPIRY_MINUTES * 60 * 1000)
+  await authRepo.saveVerificationCode(cleanEmail, code, expiresAt)
+
+  // Gửi email (SMTP) – chưa cấu hình thì dev log mã ra console
+  const result = await sendEmail({
+    to: cleanEmail,
+    subject: 'MN-Qronx – Mã xác nhận đăng ký',
+    text: `Mã xác nhận đăng ký tài khoản MN-Qronx của bạn là: ${code}\nMã có hiệu lực trong ${VERIFY_CODE_EXPIRY_MINUTES} phút. Nếu không phải bạn thực hiện, hãy bỏ qua email này.`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:24px;background:#f6f7fb;border-radius:12px">
+        <h2 style="margin:0 0 8px;color:#0b172a">MN-Qronx – Xác nhận email</h2>
+        <p style="color:#475569;font-size:14px;line-height:1.6">Dùng mã bên dưới để hoàn tất đăng ký tài khoản. Mã có hiệu lực trong <b>${VERIFY_CODE_EXPIRY_MINUTES} phút</b>.</p>
+        <div style="margin:20px 0;padding:16px;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;text-align:center">
+          <span style="font-size:28px;font-weight:bold;letter-spacing:8px;color:#2563eb">${code}</span>
+        </div>
+        <p style="color:#94a3b8;font-size:12px">Nếu không phải bạn thực hiện, hãy bỏ qua email này.</p>
+      </div>`,
+  })
+
+  return {
+    message: `Mã xác nhận đã được gửi đến ${cleanEmail}`,
+    // Chỉ trả về mã ở dev để test luồng (production gửi email thật)
+    ...(config.nodeEnv !== 'production' && { devCode: code }),
+    ...(result.sent === false && !isEmailConfigured() && config.nodeEnv !== 'production' && { note: 'SMTP chưa cấu hình – mã hiển thị bên dưới để test' }),
+  }
+}
 
 // ─── Register ──────────────────────────────────────────────
 
-export async function register({ fullName, email, password, inviteCode, ipAddress, deviceId }) {
-  // Check email unique
-  const existing = await authRepo.findByEmail(email)
+export async function register({ fullName, email, password, verificationCode, inviteCode, ipAddress, deviceId }) {
+  const cleanEmail = String(email).trim().toLowerCase()
+
+  // Check email unique (1 gmail = 1 tài khoản)
+  const existing = await authRepo.findByEmail(cleanEmail)
   if (existing) {
-    throw ApiError.badRequest('Email đã được sử dụng')
+    throw ApiError.badRequest('Email này đã được sử dụng. Vui lòng đăng nhập hoặc dùng email khác.')
   }
+
+  // Bắt buộc xác minh email bằng mã OTP
+  const record = await authRepo.findVerificationCode(cleanEmail)
+  if (!record) {
+    throw ApiError.badRequest('Vui lòng gửi mã xác nhận đến email trước khi đăng ký')
+  }
+  if (record.usedAt) {
+    throw ApiError.badRequest('Mã xác nhận đã được sử dụng. Vui lòng gửi mã mới.')
+  }
+  if (record.expiresAt < new Date()) {
+    throw ApiError.badRequest('Mã xác nhận đã hết hạn. Vui lòng gửi mã mới.')
+  }
+  if (String(record.code) !== String(verificationCode || '').trim()) {
+    throw ApiError.badRequest('Mã xác nhận không đúng')
+  }
+
+  // Đánh dấu mã đã dùng (chỉ dùng 1 lần)
+  await authRepo.markVerificationCodeUsed(record.emailVerificationId)
 
   // Mã giới thiệu (tùy chọn) → lưu referrer để thưởng khi bạn bè kích hoạt
   let referrerId = null
@@ -38,7 +101,7 @@ export async function register({ fullName, email, password, inviteCode, ipAddres
   // Create user + notificationSetting (kèm mã mời riêng của user)
   const user = await authRepo.create({
     fullName,
-    email,
+    email: cleanEmail,
     passwordHash,
     inviteCode: generateNewInviteCode(),
     referrerId,

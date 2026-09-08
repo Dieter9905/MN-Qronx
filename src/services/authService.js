@@ -23,10 +23,23 @@ function normalizeUser(u) {
   }
 }
 
-// POST /api/v1/auth/register
-export async function register({ fullName, email, password, phoneNumber, inviteCode } = {}) {
+// POST /api/v1/auth/send-verification-code
+// Gửi mã xác nhận email (1 email = 1 tài khoản) → register yêu cầu mã này
+export async function sendVerificationCode(email) {
+  return api('POST', '/auth/send-verification-code', { body: { email } })
+}
+
+// POST /api/v1/auth/register (yêu cầu verificationCode đã gửi qua email)
+export async function register({ fullName, email, password, phoneNumber, inviteCode, verificationCode } = {}) {
   const res = await api('POST', '/auth/register', {
-    body: { fullName, email, password, phoneNumber, inviteCode: inviteCode || undefined },
+    body: {
+      fullName,
+      email,
+      password,
+      phoneNumber,
+      inviteCode: inviteCode || undefined,
+      verificationCode,
+    },
   })
   if (res.success) res.data = normalizeUser(res.data)
   return res
