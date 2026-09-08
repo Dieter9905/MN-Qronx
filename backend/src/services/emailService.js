@@ -21,6 +21,10 @@ function getTransporter() {
       user: config.smtp.user,
       pass: config.smtp.pass,
     },
+    // Tránh treo request khi SMTP chậm/không kết nối được
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
   })
   return transporter
 }
