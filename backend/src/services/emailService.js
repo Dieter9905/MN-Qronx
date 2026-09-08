@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import config from '../config/index.js'
+import ApiError from '../utils/ApiError.js'
 
 let transporter = null
 
@@ -35,9 +36,7 @@ function getTransporter() {
 export async function sendEmail({ to, subject, text, html }) {
   if (!isEmailConfigured()) {
     if (config.nodeEnv === 'production') {
-      const err = new Error('SMTP chưa được cấu hình trên máy chủ')
-      err.code = 'SMTP_NOT_CONFIGURED'
-      throw err
+      throw ApiError.internal('Chưa cấu hình gửi email (SMTP). Vui lòng liên hệ quản trị viên.')
     }
     console.log(`\n[Email DEV] → ${to}\n  Chủ đề: ${subject}\n  ${text}\n`)
     return { sent: false, devLog: text }
