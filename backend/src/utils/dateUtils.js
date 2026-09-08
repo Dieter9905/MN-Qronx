@@ -95,24 +95,39 @@ export function calculateNextDueDate(dueAt, repeatType, repeatDays) {
   }
 }
 
+// ─── Múi giờ mặc định của ứng dụng: Việt Nam (UTC+7) ──────
+// Server production (Render) chạy theo giờ UTC: setHours(0,0,0,0)
+// sẽ lấy mốc ngày sai lệch 7 giờ so với người dùng VN
+// (VD: 00:02 ngày 9/9 giờ VN = 8/9 17:02 UTC → vẫn bị tính là 8/9).
+// Vì vậy startOfDay/endOfDay luôn quy về mốc 00:00/23:59 theo giờ VN.
+const APP_TIMEZONE_OFFSET_MINUTES = Number(process.env.APP_TZ_OFFSET_MINUTES ?? 7 * 60)
+
+function toAppTime(date) {
+  return new Date(date.getTime() + APP_TIMEZONE_OFFSET_MINUTES * 60000)
+}
+
+function fromAppTime(date) {
+  return new Date(date.getTime() - APP_TIMEZONE_OFFSET_MINUTES * 60000)
+}
+
 /**
- * Get the start of day (00:00:00) for a Date.
+ * Get the start of day (00:00:00) of a Date, tính theo giờ Việt Nam (UTC+7).
  * @param {Date} date
  * @returns {Date}
  */
 export function startOfDay(date) {
-  const result = new Date(date)
-  result.setHours(0, 0, 0, 0)
-  return result
+  const shifted = toAppTime(new Date(date))
+  shifted.setUTCHours(0, 0, 0, 0)
+  return fromAppTime(shifted)
 }
 
 /**
- * Get the end of day (23:59:59.999) for a Date.
+ * Get the end of day (23:59:59.999) of a Date, tính theo giờ Việt Nam (UTC+7).
  * @param {Date} date
  * @returns {Date}
  */
 export function endOfDay(date) {
-  const result = new Date(date)
-  result.setHours(23, 59, 59, 999)
-  return result
+  const shifted = toAppTime(new Date(date))
+  shifted.setUTCHours(23, 59, 59, 999)
+  return fromAppTime(shifted)
 }
