@@ -8,7 +8,7 @@ import ApiError from '../utils/ApiError.js'
 import { transformUser } from '../utils/transformers.js'
 import { isPlanExpired, downgradeUser } from '../utils/planLimits.js'
 import { ensureInviteCode, creditDailyLogin, activateInvitation } from './rewardService.js'
-import { sendEmail, isEmailConfigured } from './emailService.js'
+import { sendEmail } from './emailService.js'
 
 const REFRESH_TOKEN_EXPIRY_DAYS = 7
 const RESET_TOKEN_EXPIRY_HOURS = 1
@@ -31,12 +31,15 @@ export async function sendVerificationCode(email) {
   const expiresAt = new Date(Date.now() + VERIFY_CODE_EXPIRY_MINUTES * 60 * 1000)
   await authRepo.saveVerificationCode(cleanEmail, code, expiresAt)
 
-  // Gửi email (SMTP) – chưa cấu hình thì dev log mã ra console
-  const result = await sendEmail({
-    to: cleanEmail,
-    subject: 'MN-Qronx – Mã xác nhận đăng ký',
-    text: `Mã xác nhận đăng ký tài khoản MN-Qronx của bạn là: ${code}\nMã có hiệu lực trong ${VERIFY_CODE_EXPIRY_MINUTES} phút. Nếu không phải bạn thực hiện, hãy bỏ qua email này.`,
-    html: `
+  // Gửi email (SMTP). Nếu chưa cấu hình SMTP hoặc gửi lỗi → fallback:
+  // trả mã trong response để app hiển thị, đăng ký vẫn dùng được.
+  let result = { sent: false }
+  try {
+    result = await sendEmail({
+      to: cleanEmail,
+      subject: 'MN-Qronx – Mã xác nhận đăng ký',
+      text: `Mã xác nhận đăng ký tài khoản MN-Qronx của bạn là: ${code}\nMã có hiệu lực trong ${VERIFY_CODE_EXPIRY_MINUTES} phút. Nếu không phải bạn thực hiện, hãy bỏ qua email này.`,
+      html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:24px;background:#f6f7fb;border-radius:12px">
         <h2 style="margin:0 0 8px;color:#0b172a">MN-Qronx – Xác nhận email</h2>
         <p style="color:#475569;font-size:14px;line-height:1.6">Dùng mã bên dưới để hoàn tất đăng ký tài khoản. Mã có hiệu lực trong <b>${VERIFY_CODE_EXPIRY_MINUTES} phút</b>.</p>
@@ -45,13 +48,20 @@ export async function sendVerificationCode(email) {
         </div>
         <p style="color:#94a3b8;font-size:12px">Nếu không phải bạn thực hiện, hãy bỏ qua email này.</p>
       </div>`,
-  })
+    })
+  } catch (err) {
+    console.error('[Email] Gửi email lỗi – fallback hiển thị mã:', err.message)
+    result = { sent: false }
+  }
 
+  const smtpMissing = result.sent === false
   return {
-    message: `Mã xác nhận đã được gửi đến ${cleanEmail}`,
-    // Chỉ trả về mã ở dev để test luồng (production gửi email thật)
-    ...(config.nodeEnv !== 'production' && { devCode: code }),
-    ...(result.sent === false && !isEmailConfigured() && config.nodeEnv !== 'production' && { note: 'SMTP chưa cấu hình – mã hiển thị bên dưới để test' }),
+    message: smtpMissing
+      ? 'Chưa gửi được email – mã xác nhận hiển thị bên dưới để hoàn tất đăng ký'
+      : `Mã xác nhận đã được gửi đến ${cleanEmail}`,
+    // Khi không gửi được email (chưa cấu hình SMTP / SMTP lỗi) → trả mã để app hiển thị
+    ...(smtpMissing && { devCode: code }),
+    ...(smtpMissing && { note: 'Không gửi được email – dùng mã bên dưới để hoàn tất đăng ký' }),
   }
 }
 

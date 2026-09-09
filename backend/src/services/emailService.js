@@ -1,6 +1,5 @@
 import nodemailer from 'nodemailer'
 import config from '../config/index.js'
-import ApiError from '../utils/ApiError.js'
 
 let transporter = null
 
@@ -30,20 +29,17 @@ function getTransporter() {
 }
 
 /**
- * Gửi email. Khi SMTP chưa cấu hình:
- * - dev: log nội dung ra console (để test luồng)
- * - production: ném lỗi để API báo rõ ràng
+ * Gửi email. Khi SMTP chưa cấu hình: log nội dung ra console và trả
+ * sent:false để API fallback hiển thị mã xác nhận trên màn hình
+ * (app vẫn dùng được dù chưa có SMTP).
  *
  * @param {object} opts { to, subject, text, html }
- * @returns {Promise<{sent: boolean, devLog?: string}>}
+ * @returns {Promise<{sent: boolean, smtpMissing?: boolean, devLog?: string}>}
  */
 export async function sendEmail({ to, subject, text, html }) {
   if (!isEmailConfigured()) {
-    if (config.nodeEnv === 'production') {
-      throw ApiError.internal('Chưa cấu hình gửi email (SMTP). Vui lòng liên hệ quản trị viên.')
-    }
     console.log(`\n[Email DEV] → ${to}\n  Chủ đề: ${subject}\n  ${text}\n`)
-    return { sent: false, devLog: text }
+    return { sent: false, smtpMissing: true, devLog: text }
   }
 
   const info = await getTransporter().sendMail({

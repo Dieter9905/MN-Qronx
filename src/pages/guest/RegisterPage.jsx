@@ -159,7 +159,7 @@ export default function RegisterPage() {
 
         {devCode && (
           <div className="rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:ring-amber-800/50">
-            💡 Môi trường test (chưa cấu hình SMTP): mã của bạn là <b className="tracking-widest">{devCode}</b>
+            💡 Chưa gửi được email (SMTP chưa cấu hình) – mã xác nhận của bạn là <b className="tracking-widest">{devCode}</b>
           </div>
         )}
 
