@@ -16,10 +16,10 @@ ví dụ: "Trưa nay ăn trưa lúc 11h. Chiều có cuộc họp lúc 2h. Tối
 Đi ngủ lúc 12h. Hãy nhắc tôi trước 5 phút mỗi cái."
 → 4 công việc riêng biệt, mỗi cái kèm nhắc nhở trước 5 phút.
 
-QUY TẮC THỜI GIAN (múi giờ Việt Nam, UTC+7 — ngày hôm nay: ${vnNow()}):
+QUY TẮC THỜI GIAN (múi giờ Việt Nam, UTC+7 — NGÀY HÔM NAY LÀ ${vnNow()}):
 - "lúc 2h" kèm "chiều/tối" → 14h/20h. "chiều 5h" → 17h. "sáng 7h" → 7h.
 - "Đi ngủ lúc 12h" → 00:00 ngày hôm sau. "ngủ lúc 11h" → 23h.
-- "ngày mai" → ngày hôm sau. "thứ 6" → thứ 6 tuần tới. "hôm nay/trưa nay" → hôm nay.
+- "ngày mai" → ngày hôm sau. "thứ 6" → thứ 6 TUẦN TỚI (dựa vào hôm nay là ngày gì). "hôm nay/trưa nay" → hôm nay.
 - Không có giờ → để null; có ngày không có giờ → 18:00.
 - Trả dueAt/remindAt dạng ISO 8601 KÈM MÚI GIỜ +07:00 (vd "2026-09-12T14:00:00+07:00").
 - Nhắc nhở: phải TRƯỚC thời hạn; cụm "nhắc trước X phút/tiếng mỗi cái" áp cho mọi việc.
@@ -27,11 +27,21 @@ QUY TẮC THỜI GIAN (múi giờ Việt Nam, UTC+7 — ngày hôm nay: ${vnNow(
 PRIORITY: chỉ dùng LOW | MEDIUM | HIGH | URGENT (mặc định MEDIUM).
 REPEAT: NONE | DAILY | WEEKLY | MONTHLY ("hàng ngày"→DAILY, "hàng tuần"→WEEKLY…).
 WEEKLY thì kèm repeatDays mảng 1..7 (1=Thứ 2 … 7=Chủ nhật), ngược lại để [].
+Nếu WEEKLY có thứ cụ thể (monday/thứ 2/...) → VẪN phải trả dueAt = ngày tới gần nhất của thứ đó (giờ như đã cho), KHÔNG được để null.
 CATEGORY: trả categoryName (vd "Học tập", "Công việc") nếu đoán được, không thì null.
 
 TRẢ VỀ ĐÚNG JSON (không markdown, không giải thích):
 {"tasks":[{"title":"...","description":"...","dueAt":"...hoặc null","priority":"MEDIUM","repeatType":"NONE","repeatDays":[],"reminders":[{"remindAt":"..."}],"categoryName":"..."}]}
-Tiêu đề công việc ngắn gọn, bỏ chủ ngữ ("tôi đi ăn trưa" → "Đi ăn trưa") nhưng giữ nghĩa ("ăn trưa/ăn tối").`
+Tiêu đề: ngắn gọn, bỏ chủ ngữ ("tôi đi ăn trưa" → "Đi ăn trưa"), bỏ HOÀN TOÀN giờ/buổi/thứ/ngày
+khỏi title ("Sáng 7h tập gym" → "Tập gym"; "Weekly meeting every Monday at 9am" → "Weekly meeting"),
+nhưng giữ nghĩa bữa ăn ("ăn trưa/ăn tối").`
+
+// Danh sách model dự phòng khi model chính bị lỗi provider (403/429/timeout…)
+const FALLBACK_MODELS = [
+  'kr/claude-sonnet-4.5',
+  'openrouter/cohere/north-mini-code:free',
+  'openrouter/google/gemma-4-31b-it:free',
+]
 
 /**
  * Gọi 9Router (OpenAI-compatible) để phân tích văn bản → danh sách công việc (JSON chuẩn hoá).
@@ -45,6 +55,26 @@ export async function parseTasks(text) {
     throw err
   }
 
+  // Model chính + các model dự phòng (bỏ trùng)
+  const models = [...new Set([config.ai.model, ...FALLBACK_MODELS])]
+  let lastErr = null
+
+  for (const model of models) {
+    try {
+      return await callModel(model, text)
+    } catch (err) {
+      lastErr = err
+      // Lỗi cấu hình (thiếu key…) thì không thử nữa
+      if (err.code === 'AI_NOT_CONFIGURED') throw err
+    }
+  }
+  throw lastErr
+}
+
+/**
+ * Gọi một model qua 9Router (OpenAI-compatible) và trả về tasks đã sanitize.
+ */
+async function callModel(model, text) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 25000)
 
@@ -55,9 +85,12 @@ export async function parseTasks(text) {
       headers: {
         Authorization: `Bearer ${config.ai.apiKey}`,
         'Content-Type': 'application/json',
+        // Tắt token-saver của 9Router (RTK/Ponytail/Caveman) — prompt hệ thống
+        // của app phải được giữ nguyên, nếu không model có thể bị bơm prompt lạ
+        'X-9Router-Token-Saver': 'off',
       },
       body: JSON.stringify({
-        model: config.ai.model,
+        model,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: String(text).slice(0, 2000) },
