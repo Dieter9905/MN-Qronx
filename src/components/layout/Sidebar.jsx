@@ -4,7 +4,7 @@ import { NAV_GROUPS } from './NavItems'
 
 export default function Sidebar() {
   return (
-    <aside className="hidden w-64 shrink-0 flex-col border-r border-navy-100 bg-white dark:border-slate-700 dark:bg-slate-900 lg:flex">
+    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-navy-100 bg-white dark:border-slate-700 dark:bg-slate-900 lg:flex">
       <div className="flex h-16 items-center border-b border-navy-100 dark:border-slate-700 px-5">
         <NavLink to="/app" className="cursor-pointer" aria-label="Về trang chủ MN-Qronx">
           <Logo size={34} />

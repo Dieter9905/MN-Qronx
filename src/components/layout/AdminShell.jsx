@@ -14,7 +14,7 @@ export default function AdminShell() {
 
   return (
     <div className="flex min-h-dvh bg-navy-50/60">
-      <aside className="flex w-64 shrink-0 flex-col bg-navy-900 text-white">
+      <aside className="sticky top-0 flex h-dvh w-64 shrink-0 flex-col bg-navy-900 text-white">
         <div className="flex h-16 items-center border-b border-white/10 px-5">
           <LogoText dark />
         </div>
