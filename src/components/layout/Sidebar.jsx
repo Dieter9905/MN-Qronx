@@ -62,12 +62,12 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
-      <div className="m-3 rounded-2xl bg-navy-900 p-4 text-white">
+      <div className="m-3 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 p-4 text-white dark:bg-slate-800">
         <p className="text-sm font-bold">Plan. Do. On Time.</p>
-        <p className="mt-1 text-xs leading-relaxed text-slate-300">
+        <p className="mt-1 text-xs leading-relaxed text-indigo-100 dark:text-slate-300">
           “{t.sidebarTagline}”
         </p>
-        <div className="mt-3 flex items-center gap-2 text-[11px] font-semibold text-cyan-300">
+        <div className="mt-3 flex items-center gap-2 text-[11px] font-semibold text-cyan-300 dark:text-cyan-400">
           <span className="h-1.5 w-1.5 animate-pulse-soft rounded-full bg-cyan-400" aria-hidden="true" />
           {t.sidebarAlarm}
         </div>

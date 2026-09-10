@@ -104,18 +104,18 @@ export default function DashboardPage() {
       {/* Phần thưởng: chuỗi đăng nhập + điểm */}
       <Link
         to="/app/rewards"
-        className="group flex items-center justify-between gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-navy-900 via-navy-800 to-navy-900 p-5 text-white transition-all hover:shadow-lg hover:shadow-navy-900/20 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800"
+        className="group flex items-center justify-between gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-5 text-white transition-all hover:shadow-lg hover:shadow-indigo-500/25 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800"
       >
         <div className="flex items-center gap-4">
           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 shadow-lg">
             <Flame size={28} weight="fill" />
           </span>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{t.loginReward}</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-blue-100">{t.loginReward}</p>
             <p className="mt-0.5 text-lg font-extrabold">
               🔥 {user?.loginStreak ?? 0} {t.streakDays} · {user?.points ?? 0} {t.pointsUnit}
             </p>
-            <p className="text-xs text-slate-400">{t.loginRewardDesc}</p>
+            <p className="text-xs text-blue-100">{t.loginRewardDesc}</p>
           </div>
         </div>
         <span className="flex items-center gap-1.5 rounded-xl bg-white/10 px-3.5 py-2 text-sm font-bold text-white transition group-hover:bg-white/20">
@@ -186,14 +186,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Nhắc nhở gợi ý */}
-      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl bg-navy-900 p-5 text-white dark:bg-slate-800 sm:flex-row sm:items-center">
+      <div className="flex flex-col items-start justify-between gap-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 p-5 text-white dark:bg-slate-800 sm:flex-row sm:items-center">
         <div className="flex items-start gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-gradient">
             <BellRinging size={22} weight="bold" className="animate-alarm-bell" />
           </span>
           <div>
             <p className="font-bold">{t.tryAlarm}</p>
-            <p className="mt-0.5 text-sm text-slate-400">
+            <p className="mt-0.5 text-sm text-blue-100">
               {t.tryAlarmDesc}
             </p>
           </div>
