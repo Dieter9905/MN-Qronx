@@ -69,12 +69,17 @@ export default function QuickCapture({ onClose, onCreated }) {
     if (!taskTitle?.trim()) return
     
     setSaving(true)
+    // dueAt từ input datetime-local là giờ địa phương KHÔNG kèm múi giờ
+    // (vd "2026-09-10T14:30") → phải chuyển sang ISO (UTC) trước khi gửi,
+    // nếu không server (chạy theo UTC) sẽ hiểu lệch 7 giờ so với giờ VN.
+    const dueValue = dueAt || parsedData?.dueAt || undefined
+    const dueAtIso = dueValue ? new Date(dueValue).toISOString() : undefined
     const res = await createTask({
       title: taskTitle.trim(),
       description: parsedData?.description || '',
       categoryId: categoryId || parsedData?.categoryId || undefined,
       priority: parsedData?.priority || priority,
-      dueAt: dueAt || parsedData?.dueAt || undefined,
+      dueAt: dueAtIso,
       repeatType: parsedData?.repeatType || 'NONE',
       reminders: parsedData?.reminders || [],
       subtasks: suggestedSubtasks,
