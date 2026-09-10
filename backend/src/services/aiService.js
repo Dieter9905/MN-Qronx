@@ -37,10 +37,12 @@ khỏi title ("Sáng 7h tập gym" → "Tập gym"; "Weekly meeting every Monday
 nhưng giữ nghĩa bữa ăn ("ăn trưa/ăn tối").`
 
 // Danh sách model dự phòng khi model chính bị lỗi provider (403/429/timeout…)
+// — nên dùng model có sẵn trên 9Router server (OpenCode Free không cần tài khoản)
 const FALLBACK_MODELS = [
   'kr/claude-sonnet-4.5',
-  'openrouter/cohere/north-mini-code:free',
-  'openrouter/google/gemma-4-31b-it:free',
+  'oc/nemotron-3-ultra-free',
+  'oc/mimo-v2.5-free',
+  'oc/ling-3.0-flash-fin-free',
 ]
 
 /**
