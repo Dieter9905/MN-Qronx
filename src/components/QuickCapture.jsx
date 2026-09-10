@@ -6,7 +6,10 @@ import { useToast } from './common/Toast'
 import { useAuth } from '../context/AuthContext'
 import { createTask } from '../services/taskService'
 import { getCategories } from '../services/categoryService'
-import { parseNaturalLanguage, suggestTaskBreakdown } from '../services/aiService'
+import { parseNaturalLanguageTasks, suggestTaskBreakdown } from '../services/aiService'
+
+const PRIORITY_DOT = { LOW: 'bg-slate-400', MEDIUM: 'bg-blue-500', HIGH: 'bg-amber-500', URGENT: 'bg-rose-500' }
+const PRIORITY_LABEL = { LOW: 'Thấp', MEDIUM: 'Trung bình', HIGH: 'Cao', URGENT: 'Khẩn cấp' }
 
 export default function QuickCapture({ onClose, onCreated }) {
   const { lang } = useLanguage()
@@ -17,7 +20,7 @@ export default function QuickCapture({ onClose, onCreated }) {
 
   const [mode, setMode] = useState(isPro ? 'ai' : 'form') // 'ai' (Pro only) or 'form'
   const [inputText, setInputText] = useState('')
-  const [parsedData, setParsedData] = useState(null)
+  const [parsedTasks, setParsedTasks] = useState([])
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [suggestedSubtasks, setSuggestedSubtasks] = useState([])
 
@@ -25,6 +28,7 @@ export default function QuickCapture({ onClose, onCreated }) {
   const [categoryId, setCategoryId] = useState('')
   const [priority, setPriority] = useState('MEDIUM')
   const [dueAt, setDueAt] = useState('')
+  const [repeatType, setRepeatType] = useState('NONE')
   const [categories, setCategories] = useState([])
   const [saving, setSaving] = useState(false)
 
@@ -34,23 +38,29 @@ export default function QuickCapture({ onClose, onCreated }) {
     })
   }, [])
 
-  // Parse input text when it changes
+  // Parse input text when it changes — hỗ trợ NHIỀU công việc trong một đoạn văn
   useEffect(() => {
     if (mode === 'ai' && inputText.trim()) {
       const timer = setTimeout(() => {
-        const result = parseNaturalLanguage(inputText, categories)
+        const result = parseNaturalLanguageTasks(inputText, categories)
         if (result.success) {
-          setParsedData(result.data)
-          // Sync with form fields
-          setTitle(result.data.title)
-          setPriority(result.data.priority)
-          setDueAt(result.data.dueAt || '')
-          if (result.data.categoryId) setCategoryId(String(result.data.categoryId))
+          setParsedTasks(result.tasks)
+          // Đồng bộ form khi chỉ có 1 công việc
+          if (result.tasks.length === 1) {
+            const first = result.tasks[0]
+            setTitle(first.title)
+            setPriority(first.priority || 'MEDIUM')
+            setDueAt(first.dueAt || '')
+            setRepeatType(first.repeatType || 'NONE')
+            if (first.categoryId) setCategoryId(String(first.categoryId))
+          }
+        } else {
+          setParsedTasks([])
         }
       }, 300)
       return () => clearTimeout(timer)
     } else {
-      setParsedData(null)
+      setParsedTasks([])
     }
   }, [inputText, mode, categories])
 
@@ -64,30 +74,62 @@ export default function QuickCapture({ onClose, onCreated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
-    const taskTitle = mode === 'ai' ? (parsedData?.title || title) : title
-    if (!taskTitle?.trim()) return
-    
+
+    // ── AI mode: tạo NHIỀU công việc cùng lúc ──
+    if (mode === 'ai') {
+      if (!parsedTasks.length) {
+        toast.error('AI chưa nhận diện được công việc nào – thử lại với cách viết khác')
+        return
+      }
+      setSaving(true)
+      let created = 0
+      let firstErr = ''
+      for (const tk of parsedTasks) {
+        const res = await createTask({
+          title: tk.title,
+          description: tk.description || '',
+          categoryId: tk.categoryId || undefined,
+          priority: tk.priority || 'MEDIUM',
+          dueAt: tk.dueAt || undefined,
+          repeatType: tk.repeatType || 'NONE',
+          reminders: tk.reminders || [],
+          subtasks: parsedTasks.length === 1 ? suggestedSubtasks : [],
+        })
+        if (res.success) created += 1
+        else if (!firstErr) firstErr = res.message
+      }
+      setSaving(false)
+      if (!created) {
+        toast.error(firstErr || t.quickCaptureError)
+        return
+      }
+      toast.success(created > 1 ? `Đã tạo ${created} công việc` : t.quickCaptureSuccess)
+      onCreated?.()
+      onClose()
+      return
+    }
+
+    // ── Form mode: tạo 1 công việc ──
+    if (!title.trim()) return
     setSaving(true)
     // dueAt từ input datetime-local là giờ địa phương KHÔNG kèm múi giờ
     // (vd "2026-09-10T14:30") → phải chuyển sang ISO (UTC) trước khi gửi,
     // nếu không server (chạy theo UTC) sẽ hiểu lệch 7 giờ so với giờ VN.
-    const dueValue = dueAt || parsedData?.dueAt || undefined
-    const dueAtIso = dueValue ? new Date(dueValue).toISOString() : undefined
+    const dueAtIso = dueAt ? new Date(dueAt).toISOString() : undefined
     if (dueAtIso && new Date(dueAtIso) <= new Date()) {
       setSaving(false)
       toast.error('Thời điểm đến hạn phải lớn hơn thời điểm hiện tại')
       return
     }
     const res = await createTask({
-      title: taskTitle.trim(),
-      description: parsedData?.description || '',
-      categoryId: categoryId || parsedData?.categoryId || undefined,
-      priority: parsedData?.priority || priority,
+      title: title.trim(),
+      description: '',
+      categoryId: categoryId || undefined,
+      priority,
       dueAt: dueAtIso,
-      repeatType: parsedData?.repeatType || 'NONE',
-      reminders: parsedData?.reminders || [],
-      subtasks: suggestedSubtasks,
+      repeatType,
+      reminders: [],
+      subtasks: [],
     })
     setSaving(false)
     if (!res.success) {
@@ -206,71 +248,63 @@ export default function QuickCapture({ onClose, onCreated }) {
                   placeholder={t.aiPlaceholder}
                   rows={3}
                   autoFocus
+                  onKeyDown={(e) => {
+                    // Ctrl/Cmd + Enter → tạo ngay
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleSubmit(e)
+                  }}
                   className="w-full rounded-xl border border-navy-200 bg-navy-50/50 pl-10 pr-4 py-3 text-sm font-semibold text-navy-900 placeholder-navy-300 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500 dark:focus:border-blue-400"
                 />
               </div>
 
-              {/* Parsed preview */}
-              {parsedData && (
+              {/* Parsed preview — hỗ trợ nhiều công việc */}
+              {parsedTasks.length > 0 && (
                 <div className="mt-4 rounded-xl bg-blue-50/50 p-4 ring-1 ring-blue-100 dark:bg-blue-900/20 dark:ring-blue-800/50">
                   <div className="flex items-center gap-2 text-sm font-bold text-blue-700 dark:text-blue-400">
                     <Sparkle size={16} weight="fill" />
                     {t.aiParsed}
-                  </div>
-                  
-                  <div className="mt-3 space-y-2">
-                    {/* Title */}
-                    <div className="flex items-start gap-2">
-                      <span className="text-xs font-bold text-navy-500 dark:text-slate-400">📌 {t.quickCaptureTitle}:</span>
-                      <span className="text-sm font-semibold text-navy-900 dark:text-white">{parsedData.title}</span>
-                    </div>
-                    
-                    {/* Due date */}
-                    {parsedData.dueAt && (
-                      <div className="flex items-start gap-2">
-                        <span className="text-xs font-bold text-navy-500 dark:text-slate-400">📅 {t.quickCaptureDue}:</span>
-                        <span className="text-sm text-navy-700 dark:text-slate-300">{formatDateTime(parsedData.dueAt)}</span>
-                      </div>
-                    )}
-                    
-                    {/* Priority */}
-                    <div className="flex items-start gap-2">
-                      <span className="text-xs font-bold text-navy-500 dark:text-slate-400">⚡ Ưu tiên:</span>
-                      <span className={`text-sm font-semibold ${priorityOptions.find(p => p.value === parsedData.priority)?.color}`}>
-                        {priorityOptions.find(p => p.value === parsedData.priority)?.label}
+                    {parsedTasks.length > 1 && (
+                      <span className="rounded-full bg-blue-600/10 px-2 py-0.5 text-[11px] font-extrabold text-blue-700 dark:bg-blue-400/10 dark:text-blue-300">
+                        {parsedTasks.length} công việc
                       </span>
-                    </div>
-                    
-                    {/* Repeat */}
-                    {parsedData.repeatType !== 'NONE' && (
-                      <div className="flex items-start gap-2">
-                        <span className="text-xs font-bold text-navy-500 dark:text-slate-400">🔄 Lặp lại:</span>
-                        <span className="text-sm text-navy-700 dark:text-slate-300">
-                          {repeatOptions.find(r => r.value === parsedData.repeatType)?.label}
-                        </span>
-                      </div>
-                    )}
-                    
-                    {/* Reminders */}
-                    {parsedData.reminders?.length > 0 && (
-                      <div className="flex items-start gap-2">
-                        <span className="text-xs font-bold text-navy-500 dark:text-slate-400">🔔 Nhắc nhở:</span>
-                        <span className="text-sm text-navy-700 dark:text-slate-300">
-                          {parsedData.reminders.length} nhắc nhở
-                        </span>
-                      </div>
                     )}
                   </div>
 
-                  {/* Suggest breakdown button */}
-                  <button
-                    type="button"
-                    onClick={handleSuggestBreakdown}
-                    className="mt-3 flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-blue-600 shadow-sm ring-1 ring-blue-200 transition hover:bg-blue-50 dark:bg-slate-800 dark:text-blue-400 dark:ring-blue-700"
-                  >
-                    <ListChecks size={14} weight="bold" />
-                    {t.aiSuggestBreakdown}
-                  </button>
+                  <ul className="mt-3 space-y-2">
+                    {parsedTasks.map((tk, i) => (
+                      <li key={i} className="rounded-xl bg-white p-3 ring-1 ring-blue-100 dark:bg-slate-800 dark:ring-slate-700">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm font-semibold text-navy-900 dark:text-white">📌 {tk.title}</p>
+                          {tk.dueAt && (
+                            <span className="shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400">
+                              📅 {formatDateTime(tk.dueAt)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-navy-500 dark:text-slate-400">
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className={`h-1.5 w-1.5 rounded-full ${PRIORITY_DOT[tk.priority] || 'bg-blue-500'}`} aria-hidden="true" />
+                            {PRIORITY_LABEL[tk.priority] || tk.priority}
+                          </span>
+                          {tk.reminders?.length > 0 && <span>🔔 {tk.reminders.length} nhắc nhở</span>}
+                          {tk.repeatType !== 'NONE' && (
+                            <span>🔄 {repeatOptions.find((r) => r.value === tk.repeatType)?.label}</span>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Suggest breakdown button — chỉ khi 1 công việc */}
+                  {parsedTasks.length === 1 && (
+                    <button
+                      type="button"
+                      onClick={handleSuggestBreakdown}
+                      className="mt-3 flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-blue-600 shadow-sm ring-1 ring-blue-200 transition hover:bg-blue-50 dark:bg-slate-800 dark:text-blue-400 dark:ring-blue-700"
+                    >
+                      <ListChecks size={14} weight="bold" />
+                      {t.aiSuggestBreakdown}
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -355,12 +389,8 @@ export default function QuickCapture({ onClose, onCreated }) {
                 <div>
                   <label className="mb-1 block text-xs font-bold text-navy-500 dark:text-slate-400">Lặp lại</label>
                   <select
-                    value={parsedData?.repeatType || 'NONE'}
-                    onChange={(e) => {
-                      if (parsedData) {
-                        setParsedData({ ...parsedData, repeatType: e.target.value })
-                      }
-                    }}
+                    value={repeatType}
+                    onChange={(e) => setRepeatType(e.target.value)}
                     className="w-full rounded-xl border border-navy-200 bg-navy-50/50 px-3 py-2.5 text-sm font-semibold text-navy-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-blue-400"
                   >
                     {repeatOptions.map((opt) => (
@@ -441,7 +471,7 @@ const app_text = {
     quickCaptureCancel: 'Hủy',
     quickCaptureSuccess: 'Đã tạo công việc!',
     quickCaptureError: 'Lỗi khi tạo công việc',
-    aiPlaceholder: 'Ví dụ: "Ôn tập Toán chương 3 ngày mai lúc 19h, nhắc trước 30 phút, khẩn cấp"',
+    aiPlaceholder: 'VD: "Sáng 7h tập gym. Chiều 2h họp team. Tối 8h đọc sách. Nhắc trước 10 phút mỗi cái" – AI tạo nhiều công việc cùng lúc',
     aiParsed: 'AI đã phân tích:',
     aiSuggestBreakdown: 'Gợi ý các bước thực hiện',
     aiSuggestedSteps: 'Các bước gợi ý:',
@@ -458,7 +488,7 @@ const app_text = {
     quickCaptureCancel: 'Cancel',
     quickCaptureSuccess: 'Task created!',
     quickCaptureError: 'Error creating task',
-    aiPlaceholder: 'e.g. "Review Math chapter 3 tomorrow at 7pm, remind 30 min before, urgent"',
+    aiPlaceholder: 'e.g. "Gym at 7am. Team meeting at 2pm. Read at 8pm. Remind 10 min before each" – AI creates multiple tasks',
     aiParsed: 'AI parsed:',
     aiSuggestBreakdown: 'Suggest steps',
     aiSuggestedSteps: 'Suggested steps:',

@@ -4,6 +4,11 @@
  * - "Gọi điện cho sếp thứ 6 lúc 2h, nhắc trước 30 phút"
  * - "Ôn tập Toán chương 3 ngày mai lúc 19h"
  * - "Weekly meeting with team every Monday at 9am"
+ *
+ * Hỗ trợ NHIỀU CÔNG VIỆC trong cùng một đoạn văn:
+ *   "Trưa nay ăn trưa lúc 11h. Chiều có cuộc họp lúc 2h. Tối ăn tối lúc 6h.
+ *    Đi ngủ lúc 12h. Hãy nhắc tôi trước 5 phút mỗi cái."
+ * → 4 công việc riêng biệt, mỗi cái kèm nhắc nhở trước 5 phút.
  */
 
 const VIETNAMESE_PATTERNS = {
@@ -90,6 +95,65 @@ function normalizeText(text) {
     .trim();
 }
 
+// ─── Tách câu: mỗi câu là một công việc tiềm năng ──────────
+const SENTENCE_SPLIT = /[.;!?]+|\n+/
+
+function splitSentences(text) {
+  return text
+    .split(SENTENCE_SPLIT)
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
+/**
+ * Dấu hiệu buổi/ngữ cảnh đứng TRƯỚC con số trong câu.
+ * VD: "Chiều có cuộc họp lúc 2h" → chiều + 2h = 14:00
+ *     "Đi ngủ lúc 12h" → ngủ + 12h = 00:00 hôm sau
+ */
+function periodHintBefore(text, index) {
+  const before = text.slice(0, index)
+  if (/(đêm|dem|khuya)/i.test(before)) return 'đêm'
+  if (/(tối|toi)/i.test(before)) return 'tối'
+  if (/(chiều|chieu)/i.test(before)) return 'chiều'
+  if (/(trưa|trua)/i.test(before)) return 'trưa'
+  if (/(sáng|sang)/i.test(before)) return 'sáng'
+  if (/(ngủ|ngu|sleep)/i.test(before)) return 'ngủ'
+  return null
+}
+
+/**
+ * Áp dụng dấu hiệu buổi vào giờ. Trả về { hour, nextDay }.
+ * - đêm/khuya/ngủ: 12h → 00:00 hôm sau; <12h → +12 (22h, 23h…)
+ * - chiều/tối: <12h → +12
+ * - sáng: 12h → 00:00
+ * - trưa: <=10h → +12 ("ăn trưa lúc 1h" = 13:00)
+ */
+function applyPeriodHint(hint, hour) {
+  if (!hint) return { hour, nextDay: false }
+  const h = hint.toLowerCase()
+  if (h === 'đêm' || h === 'dem' || h === 'khuya' || h === 'ngủ' || h === 'ngu' || h === 'sleep') {
+    if (hour === 12) return { hour: 0, nextDay: true }
+    if (hour > 0 && hour < 12) return { hour: hour + 12, nextDay: false }
+    return { hour, nextDay: false }
+  }
+  if (h === 'chiều' || h === 'chieu' || h === 'tối' || h === 'toi') {
+    if (hour < 12) return { hour: hour + 12, nextDay: false }
+    return { hour, nextDay: false }
+  }
+  if (h === 'sáng' || h === 'sang') {
+    if (hour === 12) return { hour: 0, nextDay: false }
+    return { hour, nextDay: false }
+  }
+  if (h === 'trưa' || h === 'trua') {
+    if (hour <= 10) return { hour: hour + 12, nextDay: false }
+    return { hour, nextDay: false }
+  }
+  return { hour, nextDay: false }
+}
+
+/**
+ * Trích giờ từ một câu. Trả { hour, minute, nextDay, matched } hoặc null.
+ */
 function extractTime(text) {
   // Thứ tự quan trọng: pattern "buổi + giờ" (chiều 5h, tối 8h, sáng 7h30)
   // phải được kiểm tra TRƯỚC pattern "giờ + buổi" (5h chiều, 8h tối),
@@ -123,15 +187,11 @@ function extractTime(text) {
       if (match[3]) periodHint = match[3].toLowerCase();
     }
 
-    // Áp dụng period hint (sáng, chiều, tối…)
-    if (periodHint) {
-      if (['chiều', 'chieu', 'toi', 'tối', 'dem', 'đêm'].includes(periodHint) && hour < 12) {
-        hour += 12;
-      }
-      if (['sang', 'sáng'].includes(periodHint) && hour === 12) {
-        hour = 0;
-      }
-    }
+    // Buổi đứng TRƯỚC con số trong câu (vd "Chiều có cuộc họp lúc 2h")
+    if (!periodHint) periodHint = periodHintBefore(text, match.index);
+
+    let res = applyPeriodHint(periodHint, hour);
+    hour = res.hour;
 
     // Xử lý am/pm
     const fullMatch = match[0];
@@ -139,36 +199,39 @@ function extractTime(text) {
     if (fullMatch.includes('am') && hour === 12) hour = 0;
 
     if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
-      return { hour, minute };
+      return { hour, minute, nextDay: res.nextDay, matched: match[0] };
     }
   }
   return null;
 }
 
+/**
+ * Trích ngày từ một câu. Trả { date, matched } hoặc null.
+ */
 function extractDate(text) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const normalized = normalizeText(text);
-  
-  // Check relative days
+
+  // Relative days
   for (const [keyword, offset] of Object.entries(VIETNAMESE_PATTERNS.relativeDays)) {
     if (normalized.includes(normalizeText(keyword))) {
       const date = new Date(today);
       date.setDate(date.getDate() + offset);
-      return date;
+      return { date, matched: keyword };
     }
   }
-  
+
   for (const [keyword, offset] of Object.entries(ENGLISH_PATTERNS.relativeDays)) {
     if (normalized.includes(keyword)) {
       const date = new Date(today);
       date.setDate(date.getDate() + offset);
-      return date;
+      return { date, matched: keyword };
     }
   }
-  
-  // Check day of week
+
+  // Day of week
   for (const [keyword, dayNum] of Object.entries(VIETNAMESE_PATTERNS.days)) {
     if (normalized.includes(normalizeText(keyword))) {
       const date = new Date(today);
@@ -176,10 +239,10 @@ function extractDate(text) {
       let daysUntil = dayNum - currentDay;
       if (daysUntil <= 0) daysUntil += 7;
       date.setDate(date.getDate() + daysUntil);
-      return date;
+      return { date, matched: keyword };
     }
   }
-  
+
   for (const [keyword, dayNum] of Object.entries(ENGLISH_PATTERNS.days)) {
     if (normalized.includes(keyword)) {
       const date = new Date(today);
@@ -187,62 +250,80 @@ function extractDate(text) {
       let daysUntil = dayNum - currentDay;
       if (daysUntil <= 0) daysUntil += 7;
       date.setDate(date.getDate() + daysUntil);
-      return date;
+      return { date, matched: keyword };
     }
   }
-  
-  // Check "ngày X" pattern
+
+  // "ngày X"
   const dayMatch = normalized.match(/ngay\s*(\d{1,2})/);
   if (dayMatch) {
     const day = parseInt(dayMatch[1]);
     const date = new Date(today);
     date.setDate(day);
     if (date < today) date.setMonth(date.getMonth() + 1);
-    return date;
+    return { date, matched: text.slice(dayMatch.index, dayMatch.index + dayMatch[0].length) };
   }
-  
+
   return null;
 }
 
+/**
+ * Trích nhắc nhở ("nhắc tôi trước 30 phút", "remind me 1 hour before").
+ * Trả { offset (phút, âm = trước giờ đến hạn), matched } hoặc null.
+ */
 function extractReminder(text) {
   const normalized = normalizeText(text);
-  
-  // Vietnamese: "nhắc trước 30 phút", "nhac truoc 1 tieng"
-  const viMatch = normalized.match(/nh(?:ă|a)c\s*(?:truoc|trước)?\s*(\d+)\s*(phút|phut|tiếng|tieng|gio|giờ)/i);
+
+  // Vietnamese: "nhắc tôi trước 30 phút", "nhac truoc 1 tieng"
+  const sliceOrig = (m) => (m ? text.slice(m.index, m.index + m[0].length) : null)
+
+  const viMatch = normalized.match(/nh(?:ă|a)c\s*(?:tôi|toi|bạn|ban|em|mình|minh|me|us)?\s*(?:truoc|trước)?\s*(\d+)\s*(phút|phut|tiếng|tieng|gio|giờ|hour|minute)/i);
   if (viMatch) {
     const amount = parseInt(viMatch[1]);
     const unit = viMatch[2];
     if (['phút', 'phut', 'minute', 'min'].includes(unit)) {
-      return -amount;
+      return { offset: -amount, matched: sliceOrig(viMatch) };
     } else if (['tiếng', 'tieng', 'hour', 'gio', 'giờ'].includes(unit)) {
-      return -amount * 60;
+      return { offset: -amount * 60, matched: sliceOrig(viMatch) };
     }
   }
-  
-  // English: "remind 30 minutes before", "remind 1 hour before"
+
+  // "báo thức trước 5 phút"
+  const baoMatch = normalized.match(/bao thuc\s*(?:truoc|trước)?\s*(\d+)\s*(phút|phut|tiếng|tieng|gio|giờ)/i);
+  if (baoMatch) {
+    const amount = parseInt(baoMatch[1]);
+    const unit = baoMatch[2];
+    if (['phút', 'phut'].includes(unit)) {
+      return { offset: -amount, matched: sliceOrig(baoMatch) };
+    } else if (['tiếng', 'tieng', 'gio', 'giờ'].includes(unit)) {
+      return { offset: -amount * 60, matched: sliceOrig(baoMatch) };
+    }
+  }
+
+  // English: "remind me 30 minutes before", "remind 1 hour before"
   const enMatch = normalized.match(/remind\s*(?:me\s*)?(\d+)\s*(min|minute|hour|hr)/i);
   if (enMatch) {
     const amount = parseInt(enMatch[1]);
     const unit = enMatch[2];
     if (['min', 'minute'].includes(unit)) {
-      return -amount;
+      return { offset: -amount, matched: sliceOrig(enMatch) };
     } else if (['hour', 'hr'].includes(unit)) {
-      return -amount * 60;
+      return { offset: -amount * 60, matched: sliceOrig(enMatch) };
     }
   }
-  
+
   return null;
 }
 
 function extractRepeat(text) {
   const normalized = normalizeText(text);
-  
+
   for (const [keyword, value] of Object.entries(VIETNAMESE_PATTERNS.repeatPatterns)) {
     if (normalized.includes(normalizeText(keyword))) {
       return value;
     }
   }
-  
+
   for (const [keyword, value] of Object.entries({
     'daily': 'DAILY', 'weekly': 'WEEKLY', 'monthly': 'MONTHLY',
     'every day': 'DAILY', 'every week': 'WEEKLY', 'every month': 'MONTHLY',
@@ -251,123 +332,207 @@ function extractRepeat(text) {
       return value;
     }
   }
-  
+
   return 'NONE';
 }
 
 function extractPriority(text) {
   const normalized = normalizeText(text);
-  
+
   for (const [keyword, priority] of Object.entries(VIETNAMESE_PATTERNS.priorities)) {
     if (normalized.includes(normalizeText(keyword))) {
       return priority;
     }
   }
-  
+
   return 'MEDIUM';
 }
 
 function extractCategory(text) {
   const normalized = normalizeText(text);
-  
+
   for (const [keyword, category] of Object.entries(VIETNAMESE_PATTERNS.categories)) {
     if (normalized.includes(normalizeText(keyword))) {
       return category;
     }
   }
-  
+
   return null;
 }
 
-function extractTitle(text) {
-  // Remove common patterns to get the main title
-  let title = text
-    .replace(/(?:nhắc|nhac|remind)\s*(?:trước|truoc|me)?\s*\d+\s*(?:phút|phut|tiếng|tieng|gio|giờ|hour|minute|min).*/gi, '')
-    .replace(/(?:thứ|thu)\s*\d/gi, '')
-    .replace(/(?:hôm nay|hom nay|ngày mai|ngay mai|mai|today|tomorrow)/gi, '')
-    .replace(/(?:lúc|luc|at)\s*\d{1,2}\s*[:h]?\s*\d{0,2}/gi, '')
-    .replace(/(?:sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem|morning|afternoon|evening|night)/gi, '')
-    .replace(/(?:hàng ngày|hàng tuần|hàng tháng|daily|weekly|monthly)/gi, '')
-    .replace(/(?:khẩn cấp|quan trọng|trung bình|thấp|urgent|important|high|medium|low)/gi, '')
-    .replace(/(?:học tập|công việc|cá nhân|sức khỏe|study|work|personal|health)/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  
-  // Capitalize first letter
-  if (title) {
-    title = title.charAt(0).toUpperCase() + title.slice(1);
+/**
+ * Làm sạch tiêu đề công việc từ câu gốc: bỏ giờ/ngày/nhắc nhở đã trích,
+ * bỏ chủ ngữ, từ nối, từ chỉ buổi ở ĐẦU câu (không phá "ăn trưa/ăn tối").
+ */
+function cleanTitle(clause, spans) {
+  const collapse = (x) => x.replace(/\s+/g, ' ').trim()
+  const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  let s = clause
+  // Bỏ các cụm đã trích xuất (giờ, ngày, nhắc nhở) — không phân biệt hoa/thường
+  for (const span of spans) {
+    if (span && span.length > 1) {
+      s = s.replace(new RegExp(escapeRegExp(span), 'gi'), ' ')
+    }
   }
-  
-  return title || text.trim();
+  s = collapse(s)
+  // Bỏ "vào lúc / lúc / tại / at" còn sót
+  s = s.replace(/\b(vào lúc|vào|tại|lúc|at)\b/gi, ' ')
+  s = collapse(s)
+  // Bỏ từ chỉ buổi ở ĐẦU câu ("Trưa nay...", "Chiều có...", "Tối ăn...")
+  s = s.replace(/^(sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem|buổi sáng|buổi trưa|buổi chiều|buổi tối)\b/gi, ' ')
+  s = collapse(s)
+  // Bỏ chủ ngữ ở đầu câu ("tôi đi ăn trưa" → "đi ăn trưa")
+  s = s.replace(/^(tôi|toi|em|mình|minh|bạn|ban|chúng ta|chung ta|anh|chị|chi)\b(?:\s+(sẽ|se|cần|can|phải|phai|muốn|muon|đi|di))?/gi, ' ')
+  s = collapse(s)
+  // Bỏ từ nối đầu câu
+  s = s.replace(/^(và|va|rồi|roi|sau đó|sau do|kế tiếp|ke tiep|tiếp theo|tiep theo|xong|hãy|hay|cần|can|phải|phai|sẽ|se|every)\b/gi, ' ')
+  s = collapse(s)
+  // Bỏ "có" đầu câu ("Có cuộc họp" → "Cuộc họp")
+  s = s.replace(/^có\s+/i, ' ')
+  // Bỏ từ chỉ mức ưu tiên / lặp lại / dấu phẩy thừa còn sót trong tiêu đề
+  s = s.replace(/\b(khẩn cấp|khan cap|quan trọng|important|trung bình|thấp|thap|urgent|high|medium|low|nghiêm trọng|hàng ngày|hang ngay|hàng tuần|hang tuan|hàng tháng|hang thang|daily|weekly|monthly|every day|every week|every month)\b/gi, ' ')
+  s = s.replace(/,/g, ' ')
+  s = collapse(s)
+  s = s.replace(/[.,;!?]\s*$/g, '').trim()
+
+  if (!s) return null
+  return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
 /**
- * Parse natural language text into task data
+ * Dấu hiệu cho biết câu là cụm CHỈ THỊ TOÀN CỤC
+ * ("Hãy nhắc tôi trước 5 phút mỗi cái") — không phải một công việc.
+ */
+const GLOBAL_MARKERS = /(mỗi|moi|từng|tung|tất cả|tat ca|mọi|each|every|all)/i
+
+function isModifierClause(clause, remInfo, timeInfo) {
+  if (!remInfo || timeInfo) return false
+  if (GLOBAL_MARKERS.test(clause)) return true
+  // Cụm gần như chỉ gồm lời nhắc nhở → coi là chỉ thị toàn cục
+  const leftover = clause.replace(remInfo.matched, '').trim()
+  return leftover.length < 6
+}
+
+/**
+ * Parse MỘT câu thành một công việc đầy đủ trường.
+ */
+function parseClause(clause, categories, globalReminderOffset) {
+  const timeInfo = extractTime(clause)
+  const dateInfo = extractDate(clause)
+  const remInfo = extractReminder(clause)
+
+  // Ngày đến hạn: ngày trích được (hoặc hôm nay) + giờ trích được
+  let day = dateInfo?.date ? new Date(dateInfo.date) : new Date()
+  day.setHours(0, 0, 0, 0)
+
+  let hour = 18, minute = 0
+  if (timeInfo) {
+    hour = timeInfo.hour
+    minute = timeInfo.minute
+    if (timeInfo.nextDay) day.setDate(day.getDate() + 1)
+  } else if (!dateInfo) {
+    // Không có ngày lẫn giờ → công việc chưa đặt thời hạn
+    day = null
+  }
+  let dueAt = null
+  if (day) {
+    day.setHours(hour, minute, 0, 0)
+    dueAt = day.toISOString()
+  }
+
+  // Nhắc nhở: ưu tiên nhắc nhở riêng của câu, nếu không dùng chỉ thị toàn cục
+  const reminders = []
+  const offset = remInfo ? remInfo.offset : globalReminderOffset
+  if (offset && dueAt) {
+    const remindAt = new Date(new Date(dueAt).getTime() + offset * 60 * 1000)
+    if (remindAt < new Date(dueAt)) {
+      reminders.push({ remindAt: remindAt.toISOString() })
+    }
+  }
+
+  const repeatType = extractRepeat(clause)
+  const priority = extractPriority(clause)
+  const categoryName = extractCategory(clause)
+
+  let categoryId = null
+  if (categoryName && categories.length > 0) {
+    const found = categories.find((c) => c.name.toLowerCase().includes(categoryName.toLowerCase()))
+    if (found) categoryId = found.id
+  }
+
+  const title = cleanTitle(clause, [timeInfo?.matched, dateInfo?.matched, remInfo?.matched])
+  if (!title) return null
+
+  return {
+    title,
+    description: '',
+    categoryId,
+    priority,
+    dueAt,
+    repeatType,
+    reminders,
+    confidence: dueAt ? 0.9 : 0.6,
+  }
+}
+
+/**
+ * Parse một đoạn văn thành NHIỀU công việc.
+ * @param {string} text - Natural language input (có thể gồm nhiều câu)
+ * @param {Array} categories - Available categories
+ * @returns {{success: boolean, tasks: Array, message?: string}}
+ */
+export function parseNaturalLanguageTasks(text, categories = []) {
+  if (!text?.trim()) {
+    return { success: false, message: 'Vui lòng nhập nội dung' }
+  }
+
+  const clauses = splitSentences(text)
+
+  // Pass 1: tìm cụm chỉ thị toàn cục ("nhắc trước 5 phút mỗi cái")
+  let globalReminderOffset = null
+  for (const clause of clauses) {
+    const remInfo = extractReminder(clause)
+    const timeInfo = extractTime(clause)
+    if (isModifierClause(clause, remInfo, timeInfo) && globalReminderOffset == null) {
+      globalReminderOffset = remInfo.offset
+    }
+  }
+
+  // Pass 2: parse từng câu thành công việc
+  const tasks = []
+  for (const clause of clauses) {
+    const remInfo = extractReminder(clause)
+    const timeInfo = extractTime(clause)
+    if (isModifierClause(clause, remInfo, timeInfo)) continue
+    const task = parseClause(clause, categories, globalReminderOffset)
+    if (task) tasks.push(task)
+  }
+
+  // Không tách được câu nào → thử parse cả chuỗi như một công việc
+  if (!tasks.length) {
+    const task = parseClause(text, categories, globalReminderOffset)
+    if (task) tasks.push(task)
+  }
+
+  return { success: tasks.length > 0, tasks, confidence: tasks.length ? (tasks[0].confidence ?? 0.8) : 0 }
+}
+
+/**
+ * Parse một đoạn văn thành MỘT công việc (tương thích ngược — lấy việc đầu tiên).
  * @param {string} text - Natural language input
  * @param {Array} categories - Available categories
  * @returns {Object} Parsed task data
  */
 export function parseNaturalLanguage(text, categories = []) {
-  if (!text?.trim()) {
-    return { success: false, message: 'Vui lòng nhập nội dung' };
-  }
-  
-  const extractedDate = extractDate(text);
-  const extractedTime = extractTime(text);
-  const reminderMinutes = extractReminder(text);
-  const repeat = extractRepeat(text);
-  const priority = extractPriority(text);
-  const categoryName = extractCategory(text);
-  const title = extractTitle(text);
-  
-  // Build due date
-  let dueAt = null;
-  if (extractedDate && extractedTime) {
-    extractedDate.setHours(extractedTime.hour, extractedTime.minute, 0, 0);
-    dueAt = extractedDate.toISOString();
-  } else if (extractedDate) {
-    extractedDate.setHours(18, 0, 0, 0);
-    dueAt = extractedDate.toISOString();
-  } else if (extractedTime) {
-    const today = new Date();
-    today.setHours(extractedTime.hour, extractedTime.minute, 0, 0);
-    if (today < new Date()) {
-      today.setDate(today.getDate() + 1);
-    }
-    dueAt = today.toISOString();
-  }
-  
-  // Build reminders
-  const reminders = [];
-  if (reminderMinutes && dueAt) {
-    const remindAt = new Date(new Date(dueAt).getTime() + reminderMinutes * 60 * 1000);
-    if (remindAt < new Date(dueAt)) {
-      reminders.push({ remindAt: remindAt.toISOString() });
-    }
-  }
-  
-  // Find category
-  let categoryId = null;
-  if (categoryName && categories.length > 0) {
-    const found = categories.find(c => 
-      c.name.toLowerCase().includes(categoryName.toLowerCase())
-    );
-    if (found) categoryId = found.id;
-  }
-  
+  const res = parseNaturalLanguageTasks(text, categories)
+  if (!res.success) return res
+  const first = res.tasks[0]
   return {
     success: true,
-    data: {
-      title,
-      dueAt,
-      priority,
-      categoryId,
-      repeatType: repeat,
-      reminders,
-      description: '',
-    },
-    confidence: dueAt ? 0.9 : 0.6,
-  };
+    data: first,
+    confidence: first.confidence,
+    taskCount: res.tasks.length,
+  }
 }
 
 /**
@@ -377,7 +542,7 @@ export function parseNaturalLanguage(text, categories = []) {
  */
 export function suggestTaskBreakdown(taskTitle) {
   const normalized = normalizeText(taskTitle);
-  
+
   // Common task breakdown patterns
   const patterns = {
     'on tap|review|hoc': [
@@ -417,7 +582,7 @@ export function suggestTaskBreakdown(taskTitle) {
       'Tập thuyết trình',
     ],
   };
-  
+
   for (const [pattern, subtasks] of Object.entries(patterns)) {
     if (new RegExp(pattern, 'i').test(normalized)) {
       return subtasks.map(content => ({
@@ -426,7 +591,7 @@ export function suggestTaskBreakdown(taskTitle) {
       }));
     }
   }
-  
+
   // Default breakdown
   return [
     { content: 'Phân tích yêu cầu', isCompleted: false },
@@ -656,6 +821,7 @@ export function generateSmartBreakdown(title = '', description = '', dueInDays =
 
 export default {
   parseNaturalLanguage,
+  parseNaturalLanguageTasks,
   suggestTaskBreakdown,
   prioritizeTasks,
   detectScheduleWarnings,
