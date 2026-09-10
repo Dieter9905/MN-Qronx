@@ -25,3 +25,12 @@ services:
         sync: false
       - key: GOOGLE_CALLBACK_URL
         value: https://taskalarm-api.onrender.com/api/v1/auth/google/callback
+      # AI thật (9Router) – để dùng trên production, trỏ AI_BASE_URL tới 9Router
+      # deploy công khai (VD VPS/Cloudflare tunnel). Thiếu URL/key → app tự fallback
+      # về parser cục bộ, không ảnh hưởng người dùng.
+      - key: AI_BASE_URL
+        sync: false
+      - key: AI_API_KEY
+        sync: false
+      - key: AI_MODEL
+        value: kr/claude-sonnet-4.5

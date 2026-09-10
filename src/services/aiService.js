@@ -1,3 +1,21 @@
+import api from './apiClient'
+
+/**
+ * Gọi AI THẬT (9Router) qua backend để phân tích văn bản thành NHIỀU công việc.
+ * Backend giữ key, gói PRO, và trả về danh sách đã sanitize.
+ * @param {string} text
+ * @returns {Promise<Array>} tasks
+ */
+export async function fetchAIParseTasks(text) {
+  const res = await api('POST', '/ai/parse-tasks', { body: { text } })
+  if (!res.success) {
+    const err = new Error(res.message || 'Dịch vụ AI lỗi')
+    err.code = 'AI_ERROR'
+    throw err
+  }
+  return Array.isArray(res.data?.tasks) ? res.data.tasks : []
+}
+
 /**
  * AI Natural Language Parser for Task Creation
  * Parses natural language input like:

@@ -10,6 +10,7 @@ import dashboardRoutes from './dashboardRoutes.js'
 import adminRoutes from './adminRoutes.js'
 import planRoutes from './planRoutes.js'
 import rewardRoutes from './rewardRoutes.js'
+import aiRoutes from './aiRoutes.js'
 // import notificationRoutes from './notificationRoutes.js'
 // import dashboardRoutes from './dashboardRoutes.js'
 // import adminRoutes from './adminRoutes.js'
@@ -59,5 +60,6 @@ router.use('/dashboard',     dashboardRoutes)
 router.use('/admin',         adminRoutes)
 router.use('/plans',         planRoutes)
 router.use('/rewards',        rewardRoutes)
+router.use('/ai',             aiRoutes)
 
 export default router

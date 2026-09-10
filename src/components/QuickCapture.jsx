@@ -6,7 +6,7 @@ import { useToast } from './common/Toast'
 import { useAuth } from '../context/AuthContext'
 import { createTask } from '../services/taskService'
 import { getCategories } from '../services/categoryService'
-import { parseNaturalLanguageTasks, suggestTaskBreakdown } from '../services/aiService'
+import { parseNaturalLanguageTasks, suggestTaskBreakdown, fetchAIParseTasks } from '../services/aiService'
 
 const PRIORITY_DOT = { LOW: 'bg-slate-400', MEDIUM: 'bg-blue-500', HIGH: 'bg-amber-500', URGENT: 'bg-rose-500' }
 const PRIORITY_LABEL = { LOW: 'Thấp', MEDIUM: 'Trung bình', HIGH: 'Cao', URGENT: 'Khẩn cấp' }
@@ -21,6 +21,7 @@ export default function QuickCapture({ onClose, onCreated }) {
   const [mode, setMode] = useState(isPro ? 'ai' : 'form') // 'ai' (Pro only) or 'form'
   const [inputText, setInputText] = useState('')
   const [parsedTasks, setParsedTasks] = useState([])
+  const [parsing, setParsing] = useState(false)
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [suggestedSubtasks, setSuggestedSubtasks] = useState([])
 
@@ -38,31 +39,56 @@ export default function QuickCapture({ onClose, onCreated }) {
     })
   }, [])
 
-  // Parse input text when it changes — hỗ trợ NHIỀU công việc trong một đoạn văn
+  // Nhận danh sách công việc từ AI → map categoryName sang categoryId + đồng bộ form khi 1 việc
+  const applyParsedTasks = useCallback(
+    (tasks) => {
+      const normalized = tasks.map((tk) => {
+        let categoryId = tk.categoryId ? String(tk.categoryId) : null
+        if (!categoryId && tk.categoryName) {
+          const found = categories.find((c) => c.name.toLowerCase().includes(String(tk.categoryName).toLowerCase()))
+          if (found) categoryId = String(found.id)
+        }
+        return { ...tk, categoryId }
+      })
+      setParsedTasks(normalized)
+      if (normalized.length === 1) {
+        const first = normalized[0]
+        setTitle(first.title)
+        setPriority(first.priority || 'MEDIUM')
+        setDueAt(first.dueAt || '')
+        setRepeatType(first.repeatType || 'NONE')
+        if (first.categoryId) setCategoryId(first.categoryId)
+      }
+    },
+    [categories]
+  )
+
+  // Parse input text when it changes — AI THẬT (9Router) qua backend, fallback parser cục bộ
   useEffect(() => {
     if (mode === 'ai' && inputText.trim()) {
-      const timer = setTimeout(() => {
-        const result = parseNaturalLanguageTasks(inputText, categories)
-        if (result.success) {
-          setParsedTasks(result.tasks)
-          // Đồng bộ form khi chỉ có 1 công việc
-          if (result.tasks.length === 1) {
-            const first = result.tasks[0]
-            setTitle(first.title)
-            setPriority(first.priority || 'MEDIUM')
-            setDueAt(first.dueAt || '')
-            setRepeatType(first.repeatType || 'NONE')
-            if (first.categoryId) setCategoryId(String(first.categoryId))
+      const timer = setTimeout(async () => {
+        setParsing(true)
+        try {
+          const aiTasks = await fetchAIParseTasks(inputText)
+          if (aiTasks.length) {
+            applyParsedTasks(aiTasks)
+            setParsing(false)
+            return
           }
-        } else {
-          setParsedTasks([])
+        } catch {
+          // Lỗi mạng / chưa cấu hình AI / hết thời gian → dùng parser cục bộ
         }
-      }, 300)
+        const result = parseNaturalLanguageTasks(inputText, categories)
+        if (result.success) applyParsedTasks(result.tasks)
+        else setParsedTasks([])
+        setParsing(false)
+      }, 600)
       return () => clearTimeout(timer)
     } else {
       setParsedTasks([])
+      setParsing(false)
     }
-  }, [inputText, mode, categories])
+  }, [inputText, mode, categories, applyParsedTasks])
 
   const handleSuggestBreakdown = useCallback(() => {
     if (title) {
@@ -92,6 +118,7 @@ export default function QuickCapture({ onClose, onCreated }) {
           priority: tk.priority || 'MEDIUM',
           dueAt: tk.dueAt || undefined,
           repeatType: tk.repeatType || 'NONE',
+          repeatDays: tk.repeatDays || [],
           reminders: tk.reminders || [],
           subtasks: parsedTasks.length === 1 ? suggestedSubtasks : [],
         })
@@ -255,6 +282,14 @@ export default function QuickCapture({ onClose, onCreated }) {
                   className="w-full rounded-xl border border-navy-200 bg-navy-50/50 pl-10 pr-4 py-3 text-sm font-semibold text-navy-900 placeholder-navy-300 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500 dark:focus:border-blue-400"
                 />
               </div>
+
+              {/* Đang phân tích */}
+              {parsing && parsedTasks.length === 0 && (
+                <div className="mt-3 flex items-center gap-2 rounded-xl bg-blue-50/50 p-3 text-sm font-semibold text-blue-600 ring-1 ring-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:ring-blue-800/50">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-400/30 border-t-blue-500" />
+                  AI đang phân tích…
+                </div>
+              )}
 
               {/* Parsed preview — hỗ trợ nhiều công việc */}
               {parsedTasks.length > 0 && (

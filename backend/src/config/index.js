@@ -52,6 +52,13 @@ const config = {
     privateKey: process.env.FCM_PRIVATE_KEY || '',
     clientEmail: process.env.FCM_CLIENT_EMAIL || '',
   },
+
+  // AI thật qua 9Router (OpenAI-compatible gateway, key chỉ nằm ở server)
+  ai: {
+    baseUrl: process.env.AI_BASE_URL || 'http://localhost:20128/v1',
+    apiKey: process.env.AI_API_KEY || '',
+    model: process.env.AI_MODEL || 'kr/claude-sonnet-4.5',
+  },
 }
 
 export default config
