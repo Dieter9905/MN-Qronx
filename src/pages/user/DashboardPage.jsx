@@ -17,6 +17,8 @@ import { Skeleton, EmptyState } from '../../components/common/Feedback'
 import Button from '../../components/common/Button'
 import TaskItem from '../../components/TaskItem'
 import { useAuth } from '../../context/AuthContext'
+import { useLanguage } from '../../context/LanguageContext'
+import { app } from '../../i18n/app'
 import { formatDate } from '../../lib/format'
 
 function StatCard({ icon: Icon, label, value, tone, sub, delay }) {
@@ -42,6 +44,8 @@ function StatCard({ icon: Icon, label, value, tone, sub, delay }) {
 
 export default function DashboardPage() {
   const { user } = useAuth()
+  const { lang } = useLanguage()
+  const t = app[lang]
   const toast = useToast()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -63,7 +67,7 @@ export default function DashboardPage() {
       toast.error(res.message)
       return
     }
-    toast.success(res.data.nextTask ? 'Đã hoàn thành – đã tạo lần lặp kế tiếp' : 'Đã hoàn thành công việc')
+    toast.success(res.data.nextTask ? t.completedRepeat : t.completedTask)
     load()
   }
 
@@ -86,15 +90,15 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="page-title dark:text-white">Xin chào, {user?.fullName?.split(' ').slice(-1)[0]}! 👋</h1>
+        <h1 className="page-title dark:text-white">{t.welcome}, {user?.fullName?.split(' ').slice(-1)[0]}! 👋</h1>
         <p className="mt-1 text-sm font-medium text-navy-400 dark:text-slate-500">{today}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon={CalendarDots} label="Công việc hôm nay" value={data.todayCount} tone="blue" sub="Chưa hoàn thành hôm nay" delay={0} />
-        <StatCard icon={WarningCircle} label="Quá hạn" value={data.overdueCount} tone="amber" sub="Cần xử lý sớm" delay={60} />
-        <StatCard icon={CheckCircle} label="Đã hoàn thành" value={data.completedCount} tone="emerald" sub="Tổng cộng" delay={120} />
-        <StatCard icon={Sparkle} label="Sắp tới" value={data.upcomingCount} tone="purple" sub="Từ ngày mai" delay={180} />
+        <StatCard icon={CalendarDots} label={t.todayCount} value={data.todayCount} tone="blue" sub={t.todayCountSub} delay={0} />
+        <StatCard icon={WarningCircle} label={t.overdue} value={data.overdueCount} tone="amber" sub={t.overdueSub} delay={60} />
+        <StatCard icon={CheckCircle} label={t.completed} value={data.completedCount} tone="emerald" sub={t.completedSub} delay={120} />
+        <StatCard icon={Sparkle} label={t.upcoming} value={data.upcomingCount} tone="purple" sub={t.upcomingSub} delay={180} />
       </div>
 
       {/* Phần thưởng: chuỗi đăng nhập + điểm */}
@@ -107,15 +111,15 @@ export default function DashboardPage() {
             <Flame size={28} weight="fill" />
           </span>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-navy-300">Phần thưởng đăng nhập</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{t.loginReward}</p>
             <p className="mt-0.5 text-lg font-extrabold">
-              🔥 {user?.loginStreak ?? 0} ngày liên tiếp · {user?.points ?? 0} điểm
+              🔥 {user?.loginStreak ?? 0} {t.streakDays} · {user?.points ?? 0} {t.pointsUnit}
             </p>
-            <p className="text-xs text-navy-300">Đăng nhập mỗi ngày để tích điểm đổi gói Plus/Pro miễn phí</p>
+            <p className="text-xs text-slate-400">{t.loginRewardDesc}</p>
           </div>
         </div>
         <span className="flex items-center gap-1.5 rounded-xl bg-white/10 px-3.5 py-2 text-sm font-bold text-white transition group-hover:bg-white/20">
-          <Gift size={16} weight="duotone" className="text-amber-300" /> Nhận thưởng
+          <Gift size={16} weight="duotone" className="text-amber-300" /> {t.claimReward}
         </span>
       </Link>
 
@@ -125,22 +129,22 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
               <CalendarDots size={18} weight="fill" className="text-blue-600 dark:text-blue-400" />
-              Lịch trình hôm nay
+              {t.todaySchedule}
             </h2>
             <Link to="/app/tasks" className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline">
-              Xem tất cả <ArrowRight size={13} weight="bold" />
+              {t.viewAll} <ArrowRight size={13} weight="bold" />
             </Link>
           </div>
           <div className="mt-4 space-y-2.5">
             {data.todayTasks.length === 0 ? (
               <EmptyState
                 icon={Sparkle}
-                title="Hôm nay bạn rảnh rỗi 🎉"
-                description="Không có công việc nào cần làm hôm nay. Hãy tận hưởng hoặc lên kế hoạch cho ngày mai."
+                title={t.emptyToday}
+                description={t.emptyTodayDesc}
                 action={
                   <Link to="/app/tasks/new">
                     <Button variant="gradient" size="sm" icon={Plus}>
-                      Tạo công việc mới
+                      {t.createNew}
                     </Button>
                   </Link>
                 }
@@ -158,18 +162,18 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
               <WarningCircle size={18} weight="fill" className="text-amber-500 dark:text-amber-400" />
-              Công việc quá hạn
+              {t.overdueTasks}
             </h2>
             <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-200">
-              {data.overdueCount} việc
+              {data.overdueCount} {t.overdueTasksCount}
             </span>
           </div>
           <div className="mt-4 space-y-2.5">
             {data.overdueTasks.length === 0 ? (
               <EmptyState
                 icon={CheckCircle}
-                title="Không có việc quá hạn"
-                description="Bạn đang bám sát kế hoạch. Tiếp tục nhé!"
+                title={t.noOverdue}
+                description={t.noOverdueDesc}
                 className="py-10"
               />
             ) : (
@@ -188,15 +192,15 @@ export default function DashboardPage() {
             <BellRinging size={22} weight="bold" className="animate-alarm-bell" />
           </span>
           <div>
-            <p className="font-bold">Đừng quên thử tính năng cốt lõi</p>
-            <p className="mt-0.5 text-sm text-navy-300">
-              Bấm chuông ở góc trên bên phải để mô phỏng báo thức toàn màn hình – hoàn toàn miễn phí.
+            <p className="font-bold">{t.tryAlarm}</p>
+            <p className="mt-0.5 text-sm text-slate-400">
+              {t.tryAlarmDesc}
             </p>
           </div>
         </div>
         <Link to="/app/tasks">
           <Button variant="gradient" size="sm" icon={BellRinging}>
-            Thử báo thức
+            {t.tryAlarmBtn}
           </Button>
         </Link>
       </div>

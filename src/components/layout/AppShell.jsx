@@ -8,11 +8,14 @@ import { Logo } from '../Logo'
 import { X, Lightning, Plus, Keyboard } from '@phosphor-icons/react'
 import { useTheme } from '../../context/ThemeContext'
 import { useLanguage } from '../../context/LanguageContext'
+import { app } from '../../i18n/app'
 import FocusMode from '../FocusMode'
 import QuickCapture from '../QuickCapture'
 import ShortcutsModal from '../ShortcutsModal'
 
 function MobileDrawer({ open, onClose }) {
+  const { lang } = useLanguage()
+  const t = app[lang]
   return (
     <div className={`fixed inset-0 z-50 lg:hidden ${open ? '' : 'pointer-events-none'}`} aria-hidden={!open}>
       <div
@@ -42,8 +45,8 @@ function MobileDrawer({ open, onClose }) {
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           {NAV_GROUPS.map((group) => (
-            <div key={group.label} className="mb-5">
-              <p className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-wider text-navy-300 dark:text-slate-600">{group.label}</p>
+            <div key={group.labelKey} className="mb-5">
+              <p className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-wider text-navy-500 dark:text-slate-500">{t[group.labelKey]}</p>
               <ul className="space-y-0.5">
                 {group.items.map((item) => (
                   <li key={item.to}>
@@ -61,7 +64,7 @@ function MobileDrawer({ open, onClose }) {
                       }
                     >
                       <item.icon size={20} weight="regular" />
-                      {item.label}
+                      {t[item.labelKey]}
                       {item.pro && (
                         <span className="ml-auto rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-1.5 py-px text-[9px] font-extrabold uppercase tracking-wide text-white">
                           Pro

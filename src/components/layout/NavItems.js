@@ -9,36 +9,37 @@ import {
   Gift,
 } from '@phosphor-icons/react'
 
+// labelKey → tra trong i18n/app.js (app[lang][labelKey]) để đa ngôn ngữ
 export const NAV_GROUPS = [
   {
-    label: 'Chính',
+    labelKey: 'mainGroup',
     items: [
-      { to: '/app', label: 'Dashboard', icon: House, end: true },
-      { to: '/app/tasks', label: 'Công việc', icon: ListChecks },
-      { to: '/app/calendar', label: 'Lịch', icon: CalendarBlank },
+      { to: '/app', labelKey: 'dashboard', icon: House, end: true },
+      { to: '/app/tasks', labelKey: 'tasks', icon: ListChecks },
+      { to: '/app/calendar', labelKey: 'calendar', icon: CalendarBlank },
     ],
   },
   {
-    label: 'AI',
-    items: [{ to: '/app/ai', label: 'Trợ lý AI', icon: Brain, pro: true }],
+    labelKey: 'aiGroup',
+    items: [{ to: '/app/ai', labelKey: 'aiAssistant', icon: Brain, pro: true }],
   },
   {
-    label: 'Quản lý',
+    labelKey: 'manageGroup',
     items: [
-      { to: '/app/categories', label: 'Danh mục', icon: FolderSimple },
-      { to: '/app/notifications', label: 'Lịch sử thông báo', icon: Bell },
-      { to: '/app/rewards', label: 'Phần thưởng', icon: Gift },
+      { to: '/app/categories', labelKey: 'categories', icon: FolderSimple },
+      { to: '/app/notifications', labelKey: 'notifHistory', icon: Bell },
+      { to: '/app/rewards', labelKey: 'rewards', icon: Gift },
     ],
   },
   {
-    label: 'Khác',
-    items: [{ to: '/app/settings', label: 'Cài đặt', icon: Gear }],
+    labelKey: 'otherGroup',
+    items: [{ to: '/app/settings', labelKey: 'settings', icon: Gear }],
   },
 ]
 
 export const BOTTOM_NAV = [
-  { to: '/app', label: 'Dashboard', icon: House, end: true },
-  { to: '/app/tasks', label: 'Công việc', icon: ListChecks },
-  { to: '/app/calendar', label: 'Lịch', icon: CalendarBlank },
-  { to: '/app/settings', label: 'Cài đặt', icon: Gear },
+  { to: '/app', labelKey: 'dashboard', icon: House, end: true },
+  { to: '/app/tasks', labelKey: 'tasks', icon: ListChecks },
+  { to: '/app/calendar', labelKey: 'calendar', icon: CalendarBlank },
+  { to: '/app/settings', labelKey: 'settings', icon: Gear },
 ]

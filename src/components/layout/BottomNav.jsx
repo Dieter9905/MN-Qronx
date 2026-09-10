@@ -1,8 +1,13 @@
 import { NavLink, Link } from 'react-router-dom'
 import { Plus } from '@phosphor-icons/react'
 import { BOTTOM_NAV } from './NavItems'
+import { useLanguage } from '../../context/LanguageContext'
+import { app } from '../../i18n/app'
 
 export default function BottomNav() {
+  const { lang } = useLanguage()
+  const t = app[lang]
+
   return (
     <nav
       aria-label="Điều hướng dưới cùng"
@@ -10,7 +15,7 @@ export default function BottomNav() {
     >
       <div className="grid h-16 grid-cols-5 items-center px-2">
         {BOTTOM_NAV.slice(0, 2).map((item) => (
-          <BottomNavItem key={item.to} {...item} />
+          <BottomNavItem key={item.to} {...item} label={t[item.labelKey]} />
         ))}
         <div className="relative flex justify-center">
           <Link
@@ -22,7 +27,7 @@ export default function BottomNav() {
           </Link>
         </div>
         {BOTTOM_NAV.slice(2).map((item) => (
-          <BottomNavItem key={item.to} {...item} />
+          <BottomNavItem key={item.to} {...item} label={t[item.labelKey]} />
         ))}
       </div>
     </nav>
