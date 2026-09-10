@@ -87,6 +87,8 @@ export default function AppShell({ title = '' }) {
   const [focusOpen, setFocusOpen] = useState(false)
   const [captureOpen, setCaptureOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  // Tăng mỗi khi tạo công việc xong → remount Outlet → trang đang mở tự refetch
+  const [refreshKey, setRefreshKey] = useState(0)
   const { toggleTheme } = useTheme()
   const { toggleLang } = useLanguage()
   const navigate = useNavigate()
@@ -136,7 +138,7 @@ export default function AppShell({ title = '' }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <Header title={title} onOpenDrawer={() => setDrawerOpen(true)} />
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-6 sm:px-6 lg:pb-10">
-          <Outlet />
+          <Outlet key={refreshKey} />
         </main>
       </div>
       <BottomNav />
@@ -172,7 +174,12 @@ export default function AppShell({ title = '' }) {
 
       {/* Modals */}
       {focusOpen && <FocusMode onClose={() => setFocusOpen(false)} />}
-      {captureOpen && <QuickCapture onClose={() => setCaptureOpen(false)} onCreated={() => {}} />}
+      {captureOpen && (
+        <QuickCapture
+          onClose={() => setCaptureOpen(false)}
+          onCreated={() => setRefreshKey((k) => k + 1)}
+        />
+      )}
       {shortcutsOpen && <ShortcutsModal onClose={() => setShortcutsOpen(false)} />}
     </div>
   )
