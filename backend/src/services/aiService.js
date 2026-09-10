@@ -124,17 +124,15 @@ async function callModel(model, text) {
     throw e
   }
 
-  // 9Router đôi khi trả kèm đuôi SSE (`data: [DONE]`) sau body JSON → đọc text
-  // rồi quét cân bằng ngoặc thay vì res.json() (vốn fail khi có chữ thừa)
+  // 9Router trả body dạng JSON, JSON + đuôi SSE, hoặc full SSE stream (`data: {...}`)
+  // → đọc text rồi quét cân bằng ngoặc thay vì res.json() (vốn fail khi có chữ thừa)
   const bodyText = await res.text()
   const data = tryParseBalanced(bodyText)
-  if (!data) {
-    const e = new Error('Phản hồi AI không hợp lệ')
-    e.code = 'AI_BAD_RESPONSE'
-    e.detail = bodyText.slice(0, 300)
-    throw e
+  let raw = data?.choices?.[0]?.message?.content || ''
+  if (!raw) {
+    // Full SSE: gộp delta.content từ các chunk `data: {...}`
+    raw = extractStreamedContent(bodyText)
   }
-  const raw = data?.choices?.[0]?.message?.content || ''
   const tasks = extractTasks(raw)
   if (!tasks.length) {
     const e = new Error('AI không nhận diện được công việc nào')
@@ -142,6 +140,26 @@ async function callModel(model, text) {
     throw e
   }
   return tasks
+}
+
+/**
+ * Gộp nội dung từ body SSE stream (`data: {json}` từng dòng).
+ * Chịu được cả `message.content` (non-stream) lẫn `delta.content` (stream).
+ */
+function extractStreamedContent(text) {
+  if (!text) return ''
+  let out = ''
+  for (const line of String(text).split(/\r?\n/)) {
+    const m = line.match(/^data:\s*(.*)$/)
+    if (!m) continue
+    const payload = m[1].trim()
+    if (!payload || payload === '[DONE]') continue
+    const obj = tryParseBalanced(payload)
+    if (!obj) continue
+    const choice = obj?.choices?.[0]
+    out += choice?.message?.content || choice?.delta?.content || ''
+  }
+  return out
 }
 
 /**
