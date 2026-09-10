@@ -62,6 +62,7 @@ export default function TaskFormPage() {
     reminders: [],
     subtasks: [],
   })
+  const [origDueAt, setOrigDueAt] = useState(null)
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
 
@@ -98,6 +99,7 @@ export default function TaskFormPage() {
           .map((r) => ({ id: r.id, remindAt: toLocalInputValue(r.remindAt) })),
         subtasks: t.subtasks.map((s) => ({ id: s.id, content: s.content })),
       })
+      setOrigDueAt(t.dueAt)
       setLoading(false)
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -188,10 +190,20 @@ export default function TaskFormPage() {
 
   const validate = () => {
     const er = {}
+    const now = new Date()
     if (!form.title.trim()) er.title = 'Tiêu đề công việc không được để trống'
     if (!form.dueAt) er.dueAt = 'Vui lòng chọn thời điểm đến hạn'
+    if (form.dueAt && toDate(form.dueAt) <= now) {
+      // Tạo mới: luôn chặn thời hạn ở quá khứ.
+      // Sửa: chỉ chặn khi người dùng thực sự đổi sang thời điểm quá khứ
+      // (vẫn cho lưu công việc quá hạn mà không đụng thời hạn cũ).
+      const changed = origDueAt && toDate(form.dueAt).getTime() !== toDate(origDueAt).getTime()
+      if (!isEdit || changed) er.dueAt = 'Thời điểm đến hạn phải lớn hơn thời điểm hiện tại'
+    }
     const invalidReminder = form.reminders.find((r) => r.remindAt && dueDate && toDate(r.remindAt) > dueDate)
     if (invalidReminder) er.reminders = 'Thời điểm nhắc nhở phải nhỏ hơn hoặc bằng thời hạn công việc'
+    const pastReminder = form.reminders.find((r) => r.remindAt && toDate(r.remindAt) <= now)
+    if (pastReminder) er.reminders = 'Thời điểm nhắc nhở phải lớn hơn thời điểm hiện tại'
     setErrors(er)
     return Object.keys(er).length === 0
   }

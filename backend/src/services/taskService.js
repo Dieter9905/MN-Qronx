@@ -54,6 +54,11 @@ export async function create(userId, taskData) {
     if (!cat) throw ApiError.badRequest('Danh mục không tồn tại')
   }
 
+  // BR: dueAt phải ở tương lai — không được nhỏ hơn thời điểm hiện tại
+  if (!(new Date(dueAt) > new Date())) {
+    throw ApiError.badRequest('Thời điểm đến hạn phải lớn hơn thời điểm hiện tại')
+  }
+
   // Gói FREE: không được tạo công việc lặp lại
   const plan = await getUserPlan(userId)
   if (repeatType && repeatType !== 'NONE' && !PLANS[plan]?.repeatTasks) {
@@ -79,10 +84,13 @@ export async function create(userId, taskData) {
     }
   }
 
-  // Validate: remindAt <= dueAt cho mỗi reminder (BR-10)
+  // Validate: remindAt <= dueAt (BR-10) và remindAt phải ở tương lai
   for (const r of reminders || []) {
     if (new Date(r.remindAt) > new Date(dueAt)) {
       throw ApiError.badRequest('Thời điểm nhắc nhở phải nhỏ hơn hoặc bằng thời hạn công việc')
+    }
+    if (!(new Date(r.remindAt) > new Date())) {
+      throw ApiError.badRequest('Thời điểm nhắc nhở phải lớn hơn thời điểm hiện tại')
     }
   }
 
@@ -156,7 +164,15 @@ export async function update(userId, taskId, data) {
   const updateData = {}
   if (data.title !== undefined) updateData.title = data.title
   if (data.description !== undefined) updateData.description = data.description
-  if (data.dueAt !== undefined) updateData.dueAt = new Date(data.dueAt)
+  if (data.dueAt !== undefined) {
+    const newDue = new Date(data.dueAt)
+    // Chỉ chặn khi người dùng thực sự đổi sang thời điểm quá khứ
+    // (cho phép lưu công việc quá hạn mà không đụng tới thời hạn cũ)
+    if (!(newDue > new Date()) && newDue.getTime() !== new Date(task.dueAt).getTime()) {
+      throw ApiError.badRequest('Thời điểm đến hạn phải lớn hơn thời điểm hiện tại')
+    }
+    updateData.dueAt = newDue
+  }
   if (data.priority !== undefined) updateData.priority = data.priority
   if (data.repeatType !== undefined) {
     updateData.repeatType = data.repeatType

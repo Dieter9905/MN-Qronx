@@ -74,6 +74,11 @@ export default function QuickCapture({ onClose, onCreated }) {
     // nếu không server (chạy theo UTC) sẽ hiểu lệch 7 giờ so với giờ VN.
     const dueValue = dueAt || parsedData?.dueAt || undefined
     const dueAtIso = dueValue ? new Date(dueValue).toISOString() : undefined
+    if (dueAtIso && new Date(dueAtIso) <= new Date()) {
+      setSaving(false)
+      toast.error('Thời điểm đến hạn phải lớn hơn thời điểm hiện tại')
+      return
+    }
     const res = await createTask({
       title: taskTitle.trim(),
       description: parsedData?.description || '',

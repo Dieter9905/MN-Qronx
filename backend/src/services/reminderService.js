@@ -35,6 +35,11 @@ export async function create(userId, taskId, remindAt) {
     throw ApiError.badRequest('Thời điểm nhắc nhở phải nhỏ hơn hoặc bằng thời hạn công việc')
   }
 
+  // BR: remindAt phải ở tương lai — không được nhỏ hơn thời điểm hiện tại
+  if (!(new Date(remindAt) > new Date())) {
+    throw ApiError.badRequest('Thời điểm nhắc nhở phải lớn hơn thời điểm hiện tại')
+  }
+
   // Giới hạn nhắc nhở đang hoạt động theo gói (BR-09 + plan)
   const plan = await getUserPlan(userId)
   const maxReminders = planLimit(plan, 'remindersPerTask')
@@ -64,6 +69,11 @@ export async function update(userId, taskId, reminderId, remindAt) {
   // BR-10: remindAt <= dueAt
   if (new Date(remindAt) > new Date(task.dueAt)) {
     throw ApiError.badRequest('Thời điểm nhắc nhở phải nhỏ hơn hoặc bằng thời hạn công việc')
+  }
+
+  // BR: remindAt phải ở tương lai
+  if (!(new Date(remindAt) > new Date())) {
+    throw ApiError.badRequest('Thời điểm nhắc nhở phải lớn hơn thời điểm hiện tại')
   }
 
   return reminderRepo.update(reminderId, { remindAt: new Date(remindAt) })
