@@ -9,7 +9,9 @@
     "start": "node src/server.js",
     "seed": "node prisma/seed.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "mail:check": "node scripts/check-mail-dns.mjs",
+    "mail:test": "node scripts/send-test-email.mjs"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
