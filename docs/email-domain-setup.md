@@ -30,7 +30,26 @@ Bạn **đã sở hữu `mn-qronx.id.vn`** → chỉ cần xác thực tên mi�
 
 ---
 
-## Bước 2 — Thêm bản ghi DNS tại PA Vietnam
+## Bước 2 — Xác nhận quyền sở hữu tên miền
+
+Ngay sau khi thêm tên miền, Mailjet mở trang **Validate your domain** với 2 lựa chọn.
+**Chọn Option 2 — Create a DNS record** (không cần upload file lên hosting):
+
+| Loại | Host / Tên | Giá trị |
+|---|---|---|
+| TXT | `mailjet_93f3b17d` | `93f3b17d242007cf108f86340854ad1` |
+
+> ⚠️ Giá trị này **riêng cho tài khoản bạn** — luôn copy đúng từ trang Mailjet
+> (Option 2). Nếu Mailjet hiện số khác thì dùng số của Mailjet, không dùng số trong tài liệu này.
+
+Chờ 5–30 phút cho DNS lan truyền rồi quay lại bấm **Validate my domain**.
+Chỉ sau khi xác thực xong Mailjet mới cho bạn sang bước thêm SPF/DKIM.
+
+*(Nếu host yêu cầu nhập tên đầy đủ, dùng `mailjet_93f3b17d.mn-qronx.id.vn`.)*
+
+---
+
+## Bước 3 — Thêm bản ghi DNS tại PA Vietnam
 
 1. Đăng nhập trang quản lý tên miền/DNS của **PA Vietnam** (nơi bạn mua `.id.vn`)
 2. Chọn tên miền `mn-qronx.id.vn` → **Quản lý DNS / DNS Records**
@@ -51,7 +70,7 @@ Bạn **đã sở hữu `mn-qronx.id.vn`** → chỉ cần xác thực tên mi�
 
 ---
 
-## Bước 3 — Kiểm tra DNS đã đúng chưa
+## Bước 4 — Kiểm tra DNS đã đúng chưa
 
 Trong thư mục `backend`:
 
@@ -63,6 +82,7 @@ node scripts/check-mail-dns.mjs
 Kết quả mong đợi:
 
 ```
+✅ Xác nhận sở hữu (mailjet_93f3b17d): 93f3b17d242007cf108f86340854ad1
 ✅ SPF: v=spf1 include:spf.mailjet.com ?all
 ✅ DKIM (mailjet._domainkey): k=rsa; p=MIGfMA0GCS…
 ✅ DMARC (_dmarc): v=DMARC1; p=none;
@@ -73,18 +93,19 @@ DNS có thể mất **5 phút – vài giờ** để lan truyền. Chưa thấy 
 
 ---
 
-## Bước 4 — Bấm Validate trong Mailjet
+## Bước 5 — Xác thực SPF/DKIM trong Mailjet
 
-Quay lại Mailjet → **Sender domains & addresses** → bấm **Check / Validate** trên domain
-`mn-qronx.id.vn`. Khi cả SPF và DKIM hiện ✅ là xong.
+Sau khi đã xác nhận sở hữu, Mailjet hiện bảng bản ghi **SPF + DKIM** cho domain
+`mn-qronx.id.vn` → thêm vào DNS như Bước 3, chờ lan truyền rồi bấm **Check / Validate**.
+Khi cả SPF và DKIM hiện ✅ là xong.
 
 Sau đó bấm **Add a sender address** → thêm `no-reply@mn-qronx.id.vn`.
 
 ---
 
-## Bước 5 — Đổi địa chỉ gửi sang tên miền riêng
+## Bước 6 — Đổi địa chỉ gửi sang tên miền riêng
 
-### 5a. Máy local — `backend/.env`
+### 6a. Máy local — `backend/.env`
 
 ```env
 EMAIL_FROM=MN-Qronx <no-reply@mn-qronx.id.vn>
@@ -92,7 +113,7 @@ EMAIL_FROM=MN-Qronx <no-reply@mn-qronx.id.vn>
 
 Giữ nguyên `SMTP_HOST=in-v3.mailjet.com`, `SMTP_USER` (API key), `SMTP_PASS` (secret key).
 
-### 5b. Production — Render → **taskalarm-api** → Environment
+### 6b. Production — Render → **taskalarm-api** → Environment
 
 Thêm/sửa:
 
@@ -104,7 +125,7 @@ Render tự redeploy (~2 phút).
 
 ---
 
-## Bước 6 — Gửi thử
+## Bước 7 — Gửi thử
 
 ```bash
 cd backend
@@ -117,7 +138,7 @@ Kiểm tra cả **hộp thư đến và Spam**. Nếu vào Spam, thêm bản ghi
 
 ---
 
-## Bước 7 — Trả lời Mailjet
+## Bước 8 — Trả lời Mailjet
 
 Mailjet đã hỏi: *"Could you tell us if you have a custom domain…?"* — trả lời vào ticket
 [#4264560](https://app.mailjet.com/support/ticket/4264560) bằng đoạn sau:
@@ -127,9 +148,9 @@ Hello Sunidhi,
 
 Thank you for your reply. We do have a custom domain: mn-qronx.id.vn
 
-We have added and validated the required SPF and DKIM records for this domain
-in our account, and will send all transactional emails (signup verification
-codes, password resets) from no-reply@mn-qronx.id.vn.
+We have completed the domain validation and added the required SPF and DKIM
+records for this domain in our account. All transactional emails (signup
+verification codes, password resets) are sent from no-reply@mn-qronx.id.vn.
 
 Our website is live at https://mn-qronx.id.vn — please let us know if any
 further changes are required to lift the sending restriction.
