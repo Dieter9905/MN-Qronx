@@ -12,6 +12,7 @@ import { getAdminUsers, setUserActive, createAdminUser, setUserPlan } from '../.
 import { useToast } from '../../components/common/Toast'
 import { Skeleton, EmptyState } from '../../components/common/Feedback'
 import Button from '../../components/common/Button'
+import Avatar from '../../components/common/Avatar'
 import Modal, { ConfirmDialog } from '../../components/common/Modal'
 import { Field, Input, Select } from '../../components/common/Inputs'
 import { formatDate } from '../../lib/format'
@@ -230,9 +231,7 @@ export default function AdminUsersPage() {
                     <tr key={u.id} className="transition hover:bg-navy-50/50">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-gradient text-xs font-bold text-white">
-                            {u.fullName.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase()}
-                          </span>
+                          <Avatar name={u.fullName} src={u.avatarUrl} size="sm" />
                           <div className="min-w-0">
                             <p className="truncate text-sm font-bold text-navy-900">{u.fullName}</p>
                             <p className="truncate text-xs text-navy-400">{u.email}</p>

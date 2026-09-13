@@ -77,8 +77,19 @@ export async function handleGoogleCallback(code) {
     googleId: profile.sub,
     email: profile.email,
     fullName: profile.name,
-    avatarUrl: profile.picture || null,
+    avatarUrl: toGoogleAvatarUrl(profile.picture),
   })
+}
+
+/**
+ * Google trả ảnh đại diện mặc định ở 96px (hậu tố "=s96-c"), dùng làm avatar
+ * trên web sẽ bị mờ. Đổi sang kích thước lớn hơn; giữ nguyên nếu là URL khác.
+ */
+export function toGoogleAvatarUrl(picture, size = 256) {
+  const raw = String(picture || '').trim()
+  if (!raw) return null
+  if (!/googleusercontent\.com/.test(raw)) return raw
+  return raw.replace(/=s\d+(-c)?$/, `=s${size}-c`)
 }
 
 /**

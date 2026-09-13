@@ -50,7 +50,7 @@ export default function ProfilePage() {
 
       <div className="card p-6">
         <div className="flex flex-col items-center gap-4 border-b border-navy-100 pb-6 dark:border-slate-700 sm:flex-row sm:items-center">
-          <Avatar name={form.fullName || user?.fullName} size="xl" />
+          <Avatar name={form.fullName || user?.fullName} src={user?.avatarUrl} size="xl" />
           <div className="text-center sm:text-left">
             <p className="text-lg font-extrabold text-navy-900 dark:text-white">{user?.fullName}</p>
             <p className="text-sm text-navy-400 dark:text-slate-400">{user?.email}</p>

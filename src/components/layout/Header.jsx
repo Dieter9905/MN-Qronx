@@ -187,7 +187,8 @@ export default function Header({ title, onOpenDrawer }) {
             aria-expanded={menuOpen}
             className="flex cursor-pointer items-center gap-2 rounded-full p-1 pr-2 transition hover:bg-navy-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            <Avatar name={user?.fullName} size="sm" />              <span className="hidden text-left sm:block">
+            <Avatar name={user?.fullName} src={user?.avatarUrl} size="sm" />{' '}
+            <span className="hidden text-left sm:block">
               <span className="block max-w-[140px] truncate text-sm font-semibold leading-tight text-navy-800 dark:text-white">
                 {user?.fullName}
               </span>

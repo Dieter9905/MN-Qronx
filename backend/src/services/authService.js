@@ -249,9 +249,17 @@ export async function loginWithGoogle({ googleId, email, fullName, avatarUrl }) 
   if (daily.lastLoginDate) user.lastLoginDate = daily.lastLoginDate
   if (!user.inviteCode) user.inviteCode = await ensureInviteCode(user.userId)
 
-  // Cập nhật avatar từ Google nếu tài khoản chưa có
-  if (avatarUrl && !user.avatarUrl) {
-    await authRepo.updateProfileAvatar?.(user.userId, avatarUrl)
+  // Avatar: lấy ảnh đại diện Google làm avatar tài khoản.
+  // - Tài khoản chưa có avatar → dùng ảnh Google
+  // - Avatar hiện tại cũng là ảnh Google → cập nhật lại (người dùng đổi ảnh bên Gmail)
+  // - Avatar do người dùng tự đặt (không phải Google) → giữ nguyên, không ghi đè
+  const isGoogleAvatar = (url) => Boolean(url) && /googleusercontent\.com/.test(url)
+  if (avatarUrl && (!user.avatarUrl || isGoogleAvatar(user.avatarUrl))) {
+    if (user.avatarUrl !== avatarUrl) {
+      await authRepo.updateProfileAvatar(user.userId, avatarUrl)
+    }
+    // Gán vào object đang dùng để response đăng nhập trả về avatar ngay lập tức
+    user.avatarUrl = avatarUrl
   }
 
   const accessToken = jwt.sign(
