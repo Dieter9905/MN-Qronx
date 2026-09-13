@@ -229,7 +229,7 @@ function Hero() {
   }, [])
 
   return (
-    <section ref={heroSectionRef} className="relative overflow-hidden bg-navy-900 text-white dark:bg-slate-950">
+    <section ref={heroSectionRef} className="relative overflow-hidden bg-gradient-to-b from-navy-50 via-white to-blue-50 text-navy-900 dark:from-slate-950 dark:via-slate-950 dark:to-slate-950 dark:text-white">
       {/* Animated orbs with parallax */}
       <div
         className="orb animate-glow-pulse h-[600px] w-[600px] bg-blue-500 -top-48 -left-48"
@@ -256,7 +256,7 @@ function Hero() {
 
       <div className="relative mx-auto grid max-w-6xl gap-12 px-4 pb-20 pt-16 sm:px-6 lg:grid-cols-2 lg:items-center lg:pb-28 lg:pt-24">
         <div className="animate-slide-up">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-cyan-300 ring-1 ring-inset ring-white/15 backdrop-blur-sm">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-blue-600 shadow-sm ring-1 ring-inset ring-navy-200 backdrop-blur-sm dark:bg-white/10 dark:text-cyan-300 dark:shadow-none dark:ring-white/15">
             <Lightning size={14} weight="fill" className="animate-pulse" />
             {t.heroBadge}
           </span>
@@ -265,7 +265,7 @@ function Hero() {
             <br />
             <span className="bg-brand-gradient bg-clip-text text-transparent text-shimmer">{t.heroTitle2}</span>
           </h1>
-          <p className="mt-5 max-w-lg text-lg leading-relaxed text-navy-200">
+          <p className="mt-5 max-w-lg text-lg leading-relaxed text-navy-600 dark:text-navy-200">
             {t.heroDesc}
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -280,14 +280,14 @@ function Hero() {
               </Button>
             </a>
           </div>
-          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-semibold text-navy-300">
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-semibold text-navy-600 dark:text-navy-300">
             {[
               { icon: CheckCircle, text: t.heroFreeTrial },
               { icon: CheckCircle, text: t.heroSync },
               { icon: CheckCircle, text: t.heroNoCard },
             ].map((item, i) => (
-              <span key={i} className="flex items-center gap-1.5 transition-colors hover:text-cyan-300">
-                <item.icon size={16} weight="fill" className="text-cyan-400" /> {item.text}
+              <span key={i} className="flex items-center gap-1.5 transition-colors hover:text-blue-600 dark:hover:text-cyan-300">
+                <item.icon size={16} weight="fill" className="text-cyan-500 dark:text-cyan-400" /> {item.text}
               </span>
             ))}
           </div>
@@ -377,7 +377,7 @@ function HeroVisual({ cardRef, mousePos }) {
 
       {/* Card báo thức nổi – 3D float */}
       <div
-        className="absolute -right-4 -top-6 flex items-center gap-3 rounded-2xl bg-navy-900 p-3 text-white shadow-glow-purple ring-1 ring-white/20 transition-all duration-300 hover:scale-105 dark:bg-slate-800"
+        className="absolute -right-4 -top-6 flex items-center gap-3 rounded-2xl bg-white p-3 text-navy-900 shadow-xl ring-1 ring-navy-200 transition-all duration-300 hover:scale-105 dark:bg-slate-800 dark:text-white dark:shadow-glow-purple dark:ring-white/20"
         style={{
           animation: 'floatVaried 7s ease-in-out infinite',
           animationDelay: '300ms',
@@ -389,7 +389,7 @@ function HeroVisual({ cardRef, mousePos }) {
         </span>
         <span>
           <span className="block text-xs font-bold">{t.heroAlarmTitle}</span>
-          <span className="block text-[10px] text-navy-300">{t.heroAlarmSnooze}</span>
+          <span className="block text-[10px] text-navy-500 dark:text-navy-300">{t.heroAlarmSnooze}</span>
         </span>
       </div>
 
@@ -491,22 +491,22 @@ function HowItWorks() {
 
         {/* Màn hình báo thức demo – 3D perspective */}
         <div ref={parallaxRef} className="mt-16 perspective-1200">
-          <div className="overflow-hidden rounded-3xl bg-navy-900 shadow-2xl ring-1 ring-navy-800 dark:bg-slate-800 dark:ring-slate-700" style={{ transformStyle: 'preserve-3d' }}>
+          <div className="overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700" style={{ transformStyle: 'preserve-3d' }}>
             <div className="grid items-center gap-8 p-8 sm:p-12 lg:grid-cols-2">
               <div>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 px-3 py-1 text-xs font-bold text-rose-300 ring-1 ring-inset ring-rose-500/30">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-500 ring-1 ring-inset ring-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-500/30">
                   <BellRinging size={13} weight="fill" className="animate-alarm-bell" /> {t.alarmLabel}
                 </span>
-                <h3 className="mt-4 text-2xl font-extrabold text-white sm:text-3xl">
-                  {t.alarmTitle} <span className="bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">{t.alarmTitle2}</span>
+                <h3 className="mt-4 text-2xl font-extrabold text-navy-900 dark:text-white sm:text-3xl">
+                  {t.alarmTitle} <span className="bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent dark:from-cyan-300 dark:to-blue-300">{t.alarmTitle2}</span>
                 </h3>
-                <p className="mt-3 leading-relaxed text-navy-200">
+                <p className="mt-3 leading-relaxed text-navy-600 dark:text-navy-200">
                   {t.alarmDesc}
                 </p>
-                <ul className="mt-5 space-y-2 text-sm text-navy-200">
+                <ul className="mt-5 space-y-2 text-sm text-navy-600 dark:text-navy-200">
                   {[t.alarmList1, t.alarmList2, t.alarmList3].map((item) => (
-                    <li key={item} className="flex items-start gap-2 transition-colors hover:text-cyan-300">
-                      <CheckCircle size={17} weight="fill" className="mt-0.5 shrink-0 text-cyan-400" />
+                    <li key={item} className="flex items-start gap-2 transition-colors hover:text-blue-600 dark:hover:text-cyan-300">
+                      <CheckCircle size={17} weight="fill" className="mt-0.5 shrink-0 text-cyan-500 dark:text-cyan-400" />
                       {item}
                     </li>
                   ))}
@@ -565,7 +565,7 @@ function StepCard({ step: s, index: i, t }) {
         <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-glow-blue transition-transform duration-300 group-hover:scale-110">
           <s.icon size={22} weight="bold" />
         </span>
-        <span className="text-3xl font-extrabold text-navy-100 dark:text-slate-700">{String(i + 1).padStart(2, '0')}</span>
+        <span className="text-3xl font-extrabold text-navy-300 dark:text-slate-700">{String(i + 1).padStart(2, '0')}</span>
       </div>
       <h3 className="mt-4 font-bold text-navy-900 dark:text-white">{t[s.titleKey]}</h3>
       <p className="mt-2 text-sm leading-relaxed text-navy-500 dark:text-slate-400">{t[s.descKey]}</p>
@@ -589,17 +589,17 @@ function SyncSection() {
           <div className="relative mx-auto max-w-sm perspective-1000">
             <div className="absolute -inset-4 rounded-[2.5rem] bg-brand-gradient opacity-15 blur-2xl" aria-hidden="true" />
             <div ref={syncCardRef} className="relative mouse-tilt rounded-3xl bg-white p-4 depth-shadow ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
-              <div className="rounded-2xl bg-navy-900 p-5 text-white dark:bg-slate-950">
-                <Logo size={30} dark tagline />
+              <div className="rounded-2xl bg-white p-5 text-navy-900 shadow-lg ring-1 ring-navy-100 dark:bg-slate-950 dark:text-white dark:shadow-none dark:ring-0">
+                <Logo size={30} tagline />
                 <div className="mt-4 space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-navy-200 transition-colors hover:text-cyan-300">
-                    <ArrowsClockwise size={14} className="text-cyan-300" weight="bold" /> {t.syncBullet1}
+                  <div className="flex items-center gap-2 text-xs font-semibold text-navy-600 transition-colors hover:text-blue-600 dark:text-navy-200 dark:hover:text-cyan-300">
+                    <ArrowsClockwise size={14} className="text-cyan-600 dark:text-cyan-300" weight="bold" /> {t.syncBullet1}
                   </div>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-navy-200 transition-colors hover:text-cyan-300">
-                    <ShieldCheck size={14} className="text-cyan-300" weight="bold" /> {t.syncBullet2}
+                  <div className="flex items-center gap-2 text-xs font-semibold text-navy-600 transition-colors hover:text-blue-600 dark:text-navy-200 dark:hover:text-cyan-300">
+                    <ShieldCheck size={14} className="text-cyan-600 dark:text-cyan-300" weight="bold" /> {t.syncBullet2}
                   </div>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-navy-200 transition-colors hover:text-cyan-300">
-                    <Lock size={14} className="text-cyan-300" weight="bold" /> {t.syncBullet3}
+                  <div className="flex items-center gap-2 text-xs font-semibold text-navy-600 transition-colors hover:text-blue-600 dark:text-navy-200 dark:hover:text-cyan-300">
+                    <Lock size={14} className="text-cyan-600 dark:text-cyan-300" weight="bold" /> {t.syncBullet3}
                   </div>
                 </div>
               </div>
@@ -673,7 +673,7 @@ function FinalCta() {
 
   return (
     <section className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
-      <div ref={sectionRef} className="reveal-scale relative overflow-hidden rounded-[2rem] bg-navy-900 px-6 py-14 text-center text-white dark:bg-slate-800 sm:px-12">
+      <div ref={sectionRef} className="reveal-scale relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-blue-50 via-white to-violet-50 px-6 py-14 text-center text-navy-900 ring-1 ring-navy-100 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800 dark:text-white dark:ring-slate-700 sm:px-12">
         <div className="absolute inset-0 bg-hero-glow dark:bg-hero-glow-dark" aria-hidden="true" />
         <div
           className="orb animate-glow-pulse h-[300px] w-[300px] bg-blue-500 -top-20 left-1/3"
@@ -688,7 +688,7 @@ function FinalCta() {
           <h2 className="mt-6 text-3xl font-extrabold tracking-tight sm:text-4xl">
             {t.ctaTagline.split('On Time')[0]}<span className="bg-brand-gradient bg-clip-text text-transparent">On Time.</span>
           </h2>
-          <p className="mx-auto mt-3 max-w-xl text-lg text-navy-200">
+          <p className="mx-auto mt-3 max-w-xl text-lg text-navy-600 dark:text-navy-200">
             {t.ctaDesc}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

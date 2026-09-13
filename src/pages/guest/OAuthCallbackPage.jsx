@@ -32,10 +32,10 @@ export default function OAuthCallbackPage() {
   }, [navigate, refresh])
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-navy-950 px-6">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-navy-50 px-6 dark:bg-navy-950">
       <Logo size={48} />
       <div className="mt-8 h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
-      <p className="mt-5 text-sm font-semibold text-slate-400">Đang đăng nhập bằng Google…</p>
+      <p className="mt-5 text-sm font-semibold text-navy-500 dark:text-slate-400">Đang đăng nhập bằng Google…</p>
     </div>
   )
 }

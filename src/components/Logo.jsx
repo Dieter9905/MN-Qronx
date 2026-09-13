@@ -43,14 +43,14 @@ export function Logo({ size = 36, tagline = false, dark = false, className = '' 
           style={{ fontSize: size * 0.52 }}
           aria-label="MN-Qronx"
         >
-          <span className={dark ? 'text-white' : 'text-navy-900'}>MN-</span>
+          <span className={dark ? 'text-white' : 'text-navy-900 dark:text-white'}>MN-</span>
           <span className="text-brand-blue">Q</span>
           <span className="bg-brand-gradient bg-clip-text text-transparent">ronx</span>
         </span>
         {tagline && (
           <span
             className={`mt-1 font-semibold tracking-[0.18em] uppercase ${
-              dark ? 'text-navy-100/80' : 'text-navy-400'
+              dark ? 'text-navy-100/80' : 'text-navy-400 dark:text-slate-400'
             }`}
             style={{ fontSize: Math.max(8, size * 0.18) }}
           >

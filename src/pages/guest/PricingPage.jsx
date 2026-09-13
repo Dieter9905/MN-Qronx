@@ -39,9 +39,9 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-navy-950 text-white">
+    <div className="min-h-dvh bg-white text-navy-900 dark:bg-navy-950 dark:text-white">
       {/* Thanh trên */}
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-navy-950/90 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-navy-100 bg-white/90 backdrop-blur dark:border-white/10 dark:bg-navy-950/90">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link to="/" aria-label="MN-Qronx – Trang chủ">
             <Logo size={34} />
@@ -58,7 +58,7 @@ export default function PricingPage() {
               </>
             ) : (
               <>
-                <Button variant="ghost" size="sm" className="text-slate-200" onClick={() => navigate('/login')}>
+                <Button variant="ghost" size="sm" className="text-navy-700 dark:text-slate-200" onClick={() => navigate('/login')}>
                   Đăng nhập
                 </Button>
                 <Button variant="gradient" size="sm" onClick={() => navigate('/register')}>
@@ -73,17 +73,17 @@ export default function PricingPage() {
       <main className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
         {/* Hero */}
         <div className="pt-16 pb-12 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-cyan-300 ring-1 ring-white/10">
+          <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-blue-600 ring-1 ring-blue-100 dark:bg-white/5 dark:text-cyan-300 dark:ring-white/10">
             <Crown size={14} weight="fill" />
             Bảng giá MN-Qronx
           </span>
           <h1 className="mt-5 text-4xl font-extrabold tracking-tight sm:text-5xl">
             Chọn gói phù hợp{' '}
-            <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-600 via-cyan-500 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:via-cyan-400 dark:to-violet-400">
               với cách bạn làm việc
             </span>
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-slate-400">
+          <p className="mx-auto mt-4 max-w-2xl text-base text-slate-500 dark:text-slate-400">
             Bắt đầu miễn phí, nâng cấp khi cần thêm công việc, nhắc nhở và tính năng nâng cao.
             Hủy bất kỳ lúc nào – không ràng buộc.
           </p>
@@ -97,12 +97,12 @@ export default function PricingPage() {
             return (
               <div
                 key={p.id}
-                className={`relative flex flex-col rounded-3xl bg-white/[0.04] p-7 ring-1 backdrop-blur transition ${
+                className={`relative flex flex-col rounded-3xl bg-white p-7 shadow-card ring-1 transition dark:bg-white/[0.04] dark:shadow-none dark:backdrop-blur ${
                   isCurrent
-                    ? 'ring-2 ring-blue-400'
+                    ? 'ring-2 ring-blue-500 dark:ring-blue-400'
                     : p.popular
-                      ? 'bg-gradient-to-b from-blue-500/[0.12] to-violet-500/[0.06] ring-cyan-400/60'
-                      : 'ring-white/10 hover:ring-white/25'
+                      ? 'bg-gradient-to-b from-blue-50 to-violet-50 ring-cyan-500/50 dark:from-blue-500/[0.12] dark:to-violet-500/[0.06] dark:ring-cyan-400/60'
+                      : 'ring-navy-100 hover:ring-navy-200 dark:ring-white/10 dark:hover:ring-white/25'
                 }`}
               >
                 {p.popular && (
@@ -114,15 +114,15 @@ export default function PricingPage() {
                   <Icon size={24} weight="fill" />
                 </span>
                 <h2 className="mt-4 text-2xl font-extrabold">{p.label}</h2>
-                <p className="mt-1 text-sm text-slate-400">{p.tagline}</p>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{p.tagline}</p>
                 <p className="mt-5 flex items-baseline gap-1.5">
                   <span className="text-4xl font-extrabold tracking-tight">{p.price}</span>
-                  <span className="text-sm font-semibold text-slate-500">{p.period}</span>
+                  <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">{p.period}</span>
                 </p>
                 <ul className="mt-6 flex-1 space-y-3">
                   {p.features.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm text-slate-300">
-                      <span className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+                    <li key={f} className="flex items-start gap-3 text-sm text-navy-600 dark:text-slate-300">
+                      <span className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
                         <Check size={11} weight="bold" />
                       </span>
                       {f}
@@ -136,7 +136,7 @@ export default function PricingPage() {
                     </Button>
                   ) : p.id === 'FREE' ? (
                     <Button
-                      variant="light"
+                      variant="secondary"
                       fullWidth
                       onClick={() => navigate(user ? '/app' : '/register')}
                       icon={user ? undefined : Sparkle}
@@ -166,7 +166,7 @@ export default function PricingPage() {
           })}
         </div>
 
-        <p className="mt-10 text-center text-sm text-slate-500">
+        <p className="mt-10 text-center text-sm text-slate-500 dark:text-slate-400">
           💡 Bản nâng cấp mô phỏng phục vụ demo – gói được kích hoạt ngay sau khi bấm nút. Thanh toán thật sẽ được kết nối sau.
         </p>
       </main>

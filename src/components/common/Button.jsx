@@ -11,7 +11,8 @@ const VARIANTS = {
   danger: 'bg-rose-600 text-white hover:bg-rose-700 active:bg-rose-800 shadow-glow-blue focus-visible:ring-rose-400',
   'danger-ghost': 'bg-rose-50 text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100 focus-visible:ring-rose-300',
   'navy': 'bg-navy-900 text-white hover:bg-navy-800 active:bg-navy-700 focus-visible:ring-navy-500',
-  'light': 'bg-white/10 text-white ring-1 ring-white/25 backdrop-blur hover:bg-white/20 focus-visible:ring-white/50',
+  'light':
+    'bg-white text-navy-800 ring-1 ring-navy-200 backdrop-blur hover:bg-navy-50 focus-visible:ring-navy-400 dark:bg-white/10 dark:text-white dark:ring-white/25 dark:hover:bg-white/20 dark:focus-visible:ring-white/50',
 }
 
 const SIZES = {
