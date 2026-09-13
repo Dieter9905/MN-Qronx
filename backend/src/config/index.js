@@ -47,6 +47,17 @@ const config = {
     secure: process.env.SMTP_SECURE === 'true',
   },
 
+  // Mailjet Send API v3.1 (HTTPS 443) — xem docs/email-domain-setup.md
+  // transport: 'auto' (API trước, SMTP dự phòng) | 'api' | 'smtp'
+  mail: {
+    transport: (process.env.MAIL_TRANSPORT || 'auto').toLowerCase(),
+    apiUrl: process.env.MAILJET_API_URL || 'https://api.mailjet.com/v3.1/send',
+    apiKey: process.env.MAILJET_API_KEY || process.env.SMTP_USER || '',
+    secretKey: process.env.MAILJET_SECRET_KEY || process.env.SMTP_PASS || '',
+    sandbox: process.env.MAILJET_SANDBOX === 'true',
+    timeoutMs: parseInt(process.env.MAILJET_TIMEOUT_MS, 10) || 15000,
+  },
+
   fcm: {
     projectId: process.env.FCM_PROJECT_ID || '',
     privateKey: process.env.FCM_PRIVATE_KEY || '',

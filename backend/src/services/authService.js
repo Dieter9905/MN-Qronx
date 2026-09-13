@@ -31,8 +31,8 @@ export async function sendVerificationCode(email) {
   const expiresAt = new Date(Date.now() + VERIFY_CODE_EXPIRY_MINUTES * 60 * 1000)
   await authRepo.saveVerificationCode(cleanEmail, code, expiresAt)
 
-  // Gửi email (SMTP). Nếu chưa cấu hình SMTP hoặc gửi lỗi → fallback:
-  // trả mã trong response để app hiển thị, đăng ký vẫn dùng được.
+  // Gửi email (Mailjet Send API v3.1 → dự phòng SMTP). Nếu chưa cấu hình hoặc
+  // gửi lỗi → fallback: trả mã trong response để app hiển thị, đăng ký vẫn dùng được.
   let result = { sent: false }
   try {
     result = await sendEmail({
