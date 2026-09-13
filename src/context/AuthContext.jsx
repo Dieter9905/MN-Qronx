@@ -15,10 +15,15 @@ function applyEffectivePlan(u) {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [initializing, setInitializing] = useState(true)
+  // Khởi tạo ngay từ phiên đã lưu trong localStorage để app mở tức thì.
+  // Nếu để `initializing = true` rồi chờ GET /me, khi backend đang khởi động
+  // (web service gói free ngủ sau 15 phút) người dùng sẽ nhìn màn hình
+  // "đang khôi phục phiên" hàng chục giây — đúng lỗi "đăng nhập load lâu".
+  const [user, setUser] = useState(() => applyEffectivePlan(authService.currentUser()))
+  const [initializing, setInitializing] = useState(() => !authService.currentUser())
 
-  // Khôi phục phiên từ accessToken (localStorage) → xác thực lại qua GET /me
+  // Xác thực lại phiên ở chế độ ngầm (không chặn giao diện).
+  // Nếu token đã hết hạn, /me trả về null → tự đăng xuất và chuyển về /login.
   useEffect(() => {
     let cancelled = false
     ;(async () => {

@@ -7,6 +7,7 @@ import Button from '../../components/common/Button'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
 import { API_BASE_URL } from '../../services/apiClient'
+import { useSlowHint, SERVER_WAKE_HINT } from '../../lib/useSlowHint'
 
 const GOOGLE_ERRORS = {
   google_not_configured: 'Đăng nhập Google chưa được cấu hình trên máy chủ. Vui lòng thử lại sau.',
@@ -30,6 +31,7 @@ export default function LoginPage() {
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [serverError, setServerError] = useState(locked ? 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.' : googleError)
+  const slowLogin = useSlowHint(loading)
 
   const set = (k) => (e) => {
     setForm((f) => ({ ...f, [k]: e.target.value }))
@@ -129,6 +131,11 @@ export default function LoginPage() {
         <Button type="submit" variant="gradient" fullWidth size="lg" loading={loading} icon={SignIn}>
           Đăng nhập
         </Button>
+        {slowLogin ? (
+          <p className="text-center text-xs leading-relaxed font-medium text-navy-500 dark:text-slate-400">
+            {SERVER_WAKE_HINT}
+          </p>
+        ) : null}
       </form>
 
       <div className="mt-6 flex items-center gap-3">

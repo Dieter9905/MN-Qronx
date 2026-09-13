@@ -1,15 +1,20 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { PageLoader } from './common/Feedback'
+import { useSlowHint, SERVER_WAKE_HINT } from '../lib/useSlowHint'
 
 export function ProtectedRoute({ children }) {
   const { user, initializing } = useAuth()
   const location = useLocation()
+  const slow = useSlowHint(initializing)
 
   if (initializing) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-navy-50">
-        <PageLoader label="Đang khôi phục phiên đăng nhập…" />
+      <div className="flex min-h-dvh items-center justify-center bg-navy-50 dark:bg-slate-900">
+        <PageLoader
+          label="Đang khôi phục phiên đăng nhập…"
+          hint={slow ? SERVER_WAKE_HINT : ''}
+        />
       </div>
     )
   }
@@ -25,11 +30,15 @@ export function ProtectedRoute({ children }) {
 export function AdminRoute({ children }) {
   const { user, initializing } = useAuth()
   const location = useLocation()
+  const slow = useSlowHint(initializing)
 
   if (initializing) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-navy-50">
-        <PageLoader label="Đang khôi phục phiên đăng nhập…" />
+      <div className="flex min-h-dvh items-center justify-center bg-navy-50 dark:bg-slate-900">
+        <PageLoader
+          label="Đang khôi phục phiên đăng nhập…"
+          hint={slow ? SERVER_WAKE_HINT : ''}
+        />
       </div>
     )
   }
@@ -40,10 +49,11 @@ export function AdminRoute({ children }) {
 
 export function GuestOnlyRoute({ children }) {
   const { user, initializing } = useAuth()
+  const slow = useSlowHint(initializing)
   if (initializing) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-navy-50">
-        <PageLoader label="Đang tải…" />
+      <div className="flex min-h-dvh items-center justify-center bg-navy-50 dark:bg-slate-900">
+        <PageLoader label="Đang tải…" hint={slow ? SERVER_WAKE_HINT : ''} />
       </div>
     )
   }

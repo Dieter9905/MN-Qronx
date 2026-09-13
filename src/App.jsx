@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { warmUpServer } from './services/apiClient'
 import { AlarmProvider } from './context/AlarmContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { LanguageProvider } from './context/LanguageContext'
@@ -32,6 +34,11 @@ import AdminUsersPage from './pages/admin/AdminUsersPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 export default function App() {
+  // Đánh thức backend ngay khi mở app (Render free ngủ sau 15 phút không dùng)
+  useEffect(() => {
+    warmUpServer()
+  }, [])
+
   return (
     <ThemeProvider>
     <LanguageProvider>

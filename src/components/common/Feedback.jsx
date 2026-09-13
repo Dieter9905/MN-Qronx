@@ -13,11 +13,16 @@ export function Spinner({ size = 'md', light = false, className = '' }) {
   )
 }
 
-export function PageLoader({ label = 'Đang tải dữ liệu…' }) {
+export function PageLoader({ label = 'Đang tải dữ liệu…', hint = '' }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-24 text-navy-400">
       <Spinner size="lg" />
       <p className="text-sm font-medium">{label}</p>
+      {hint ? (
+        <p className="max-w-xs text-center text-xs leading-relaxed text-navy-400 dark:text-slate-500">
+          {hint}
+        </p>
+      ) : null}
     </div>
   )
 }

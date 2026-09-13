@@ -9,6 +9,20 @@ export const API_BASE_URL =
 
 const BASE_URL = API_BASE_URL
 
+/**
+ * Đánh thức máy chủ (fire-and-forget) trước khi người dùng thật sự cần.
+ * Web service gói free của Render "ngủ" sau 15 phút không có request, lần truy
+ * cập sau phải chờ khởi động ~30-60 giây. Gọi sớm ngay khi mở app để máy chủ
+ * boot trong lúc người dùng còn đang đọc trang hoặc gõ mật khẩu.
+ */
+export function warmUpServer() {
+  try {
+    return fetch(`${BASE_URL}/health`, { cache: 'no-store' }).catch(() => {})
+  } catch {
+    return Promise.resolve()
+  }
+}
+
 export function getAccessToken() {
   return localStorage.getItem('mnq:accessToken')
 }
