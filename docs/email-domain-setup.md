@@ -41,6 +41,9 @@ Ngay sau khi thêm tên miền, Mailjet mở trang **Validate your domain** vớ
 
 > ⚠️ Giá trị này **riêng cho tài khoản bạn** — luôn copy đúng từ trang Mailjet
 > (Option 2). Nếu Mailjet hiện số khác thì dùng số của Mailjet, không dùng số trong tài liệu này.
+>
+> Bản ghi này được thêm tại **cùng chỗ với bước 3** (PA Vietnam → access.pavietnam.vn),
+> xem chi tiết đường đi bên dưới.
 
 Chờ 5–30 phút cho DNS lan truyền rồi quay lại bấm **Validate my domain**.
 Chỉ sau khi xác thực xong Mailjet mới cho bạn sang bước thêm SPF/DKIM.
@@ -51,12 +54,27 @@ Chỉ sau khi xác thực xong Mailjet mới cho bạn sang bước thêm SPF/DK
 
 ## Bước 3 — Thêm bản ghi DNS tại PA Vietnam
 
-1. Đăng nhập trang quản lý tên miền/DNS của **PA Vietnam** (nơi bạn mua `.id.vn`)
-2. Chọn tên miền `mn-qronx.id.vn` → **Quản lý DNS / DNS Records**
-3. Thêm **từng bản ghi** đúng như Mailjet hiển thị:
+### 3a. Đường đi chính xác trong trang quản trị PA Vietnam
+
+1. Đăng nhập <https://support.pavietnam.vn> (mã khách hàng `PA-905971`)
+2. Menu trái → **Quản lý dịch vụ** (bấm để mở dropdown) → **Danh sách dịch vụ**
+3. Lọc/chọn tên miền **`mn-qronx.id.vn`** trong danh sách
+4. Ở trang tổng quan tên miền → bấm icon **Bảng điều khiển**
+   → hệ thống chuyển sang <https://access.pavietnam.vn> (bảng quản trị DNS thật)
+5. Tại đó: **Tổng quan → DNS → Cấu hình bản ghi tên miền → Thêm bản ghi**
+6. Nhập bản ghi → bấm **Lưu cấu hình** (nhớ bấm lưu, nếu không sẽ mất)
+
+> 💡 Nếu bước 4 yêu cầu đăng nhập lại (không auto-login), tài khoản cần **bật 2FA**
+> trên support.pavietnam.vn. Không bật thì hệ thống sẽ hỏi thông tin quản trị —
+> hoặc vào thẳng <https://access.pavietnam.vn/login.php> bằng thông tin domain.
+
+### 3b. Thêm các bản ghi
+
+Thêm **từng bản ghi** đúng như Mailjet hiển thị:
 
 | Loại | Host / Tên | Giá trị | TTL |
 |---|---|---|---|
+| TXT | `mailjet_93f3b17d` | `93f3b17d242007cf108f86340854ad1` *(Bước 2 — xác nhận sở hữu)* | 3600 |
 | TXT | `@` (hoặc để trống) | `v=spf1 include:spf.mailjet.com ?all` | 3600 |
 | TXT | `mailjet._domainkey` | `k=rsa; p=…` (dán từ Mailjet) | 3600 |
 | TXT | `_dmarc` | `v=DMARC1; p=none;` | 3600 |
