@@ -13,6 +13,7 @@
     "mail:check": "node scripts/check-mail-dns.mjs",
     "mail:test": "node scripts/send-test-email.mjs",
     "mail:send": "node scripts/send-test-email.mjs",
+    "mail:status": "node scripts/mailjet-status.mjs",
     "mail:verify": "node scripts/verify-mailjet-domain.mjs"
   },
   "prisma": {

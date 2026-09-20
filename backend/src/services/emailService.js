@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import config from '../config/index.js'
+import { assertQuotaAvailable, recordSend, MailjetQuotaError } from './mailQuota.js'
 
 let transporter = null
 
@@ -44,6 +45,10 @@ export function getMailStatus() {
     smtpConfigured: isSmtpConfigured(),
     from: config.smtp.from,
     sandbox: config.mail.sandbox,
+    // Hạn mức gửi của Mailjet khi còn duyệt tạm (0 = tắt kiểm tra cửa sổ đó)
+    hourlyLimit: config.mail.hourlyLimit,
+    dailyLimit: config.mail.dailyLimit,
+    quotaTimezone: config.mail.quotaTimezone,
   }
 }
 
@@ -161,12 +166,18 @@ async function sendViaMailjetApi(message) {
 
   if (!res.ok) {
     const code = data?.ErrorCode || ''
+    // 429 = vượt hạn mức/rate limit (giai đoạn duyệt tạm: 10 thư/ngày)
+    const hint =
+      ERROR_HINTS[code] ||
+      (res.status === 429
+        ? 'Có thể đã chạm hạn mức gửi trong ngày của Mailjet (tài khoản đang duyệt tạm: 10 thư/ngày). Chạy `npm run mail:status` để xem quota còn lại.'
+        : undefined)
     throw new MailjetSendError({
       status: res.status,
       code,
       identifier: data?.ErrorIdentifier,
       message: data?.ErrorMessage || `Mailjet API trả HTTP ${res.status}`,
-      hint: ERROR_HINTS[code],
+      hint,
     })
   }
 
@@ -248,10 +259,18 @@ export async function sendEmail(opts) {
     return { sent: false, smtpMissing: true, devLog: text }
   }
 
+  // Hạn mức gửi là giới hạn ở tầng tài khoản Mailjet (áp cho cả API và SMTP), nên kiểm
+  // tra trước khi gửi để không đốt quota bằng những lần gửi chắc chắn thất bại.
+  // SandboxMode không gửi thật → bỏ qua kiểm tra.
+  if (!config.mail.sandbox) {
+    await assertQuotaAvailable()
+  }
+
   if (transport === 'api') {
     const message = buildApiMessage(opts)
     try {
       const result = await sendViaMailjetApi(message)
+      recordSend(result.accepted || 1)
       return { sent: true, via: 'api', messageId: result.messageId, messageUuid: result.messageUuid, accepted: result.accepted }
     } catch (err) {
       console.error(`[Email] Mailjet API lỗi${err.code ? ` (${err.code})` : ''}: ${err.message}`)
@@ -259,7 +278,20 @@ export async function sendEmail(opts) {
     }
   }
 
-  return sendViaSmtp(opts)
+  const info = await sendViaSmtp(opts)
+  recordSend(normalizeRecipients(opts.to).length || 1)
+  return info
 }
 
-export default { isEmailConfigured, isApiConfigured, isSmtpConfigured, resolveTransport, getMailStatus, sendEmail }
+export { MailjetQuotaError }
+
+export default {
+  isEmailConfigured,
+  isApiConfigured,
+  isSmtpConfigured,
+  resolveTransport,
+  getMailStatus,
+  sendEmail,
+  MailjetSendError,
+  MailjetQuotaError,
+}

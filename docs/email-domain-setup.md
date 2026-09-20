@@ -14,6 +14,134 @@ Bạn **đã sở hữu `mn-qronx.id.vn`** → chỉ cần xác thực tên mi�
 
 ---
 
+## Trạng thái tài khoản — ĐÃ GỠ CHẶN, nhưng bị giới hạn (18/09/2026)
+
+Mailjet đã **gỡ chặn tài khoản** (hết lỗi `401 mj-0001`) và **kích hoạt gửi tạm thời**,
+kèm điều kiện:
+
+| | |
+|---|---|
+| Hạn mức hiện tại | Dashboard: *"A temporary global sending limit of **10 emails per hour**"*. Mail hỗ trợ 18/09/2026 lại ghi **10 thư/ngày**. Hai nguồn lệch nhau → app kiểm tra **cả hai** và áp dụng cái chặt hơn |
+| Điều kiện để gỡ hẳn | Gửi đều đặn trong hạn mức, không bounce/complaint bất thường, rồi **tự liên hệ lại** (Mailjet không tự nâng cấp) |
+| Địa chỉ gửi | `no-reply@mn-qronx.id.vn` (đã Active) |
+| Việc cần bổ sung | Không — chỉ cần chứng minh reputation bằng hoạt động gửi thật |
+
+### Sự cố 20/09/2026 — xoay API key làm production chết im lặng
+
+Khi bấm **Reset** API key trên Mailjet, **cả API Key và Secret Key đều đổi** (không chỉ secret).
+Hậu quả: mọi nơi còn giữ key cũ đều bị `401 API key authentication/authorization failure`,
+nhưng `authService` nuốt lỗi và trả `devCode` trong response nên nhìn từ ngoài **không thấy gì bất thường** —
+đăng ký vẫn “thành công”, chỉ là email không bao giờ tới.
+
+Cách lần ra: Render → **Logs**, lọc chữ `Email`:
+
+| Dòng log | Nghĩa |
+|---|---|
+| `[Email] Mailjet API lỗi: ... authentication/authorization failure` | Key/secret không khớp (đổi key chưa cập nhật hết) |
+| `[Email] Mailjet API lỗi (mj-0001): ... temporarily blocked` | Tài khoản bị Mailjet khoá |
+| Chỉ có `[Email DEV] → ...`, không có dòng lỗi nào | Chưa cấu hình key → app coi như chưa gửi thư |
+
+Sau khi dán lại cả `MAILJET_API_KEY` **và** `MAILJET_SECRET_KEY` bằng nút copy trong Mailjet
+(không gõ tay, không để lẫn dấu cách) → Save → chờ deploy xong → đăng ký thử: response phải là
+`Mã xác nhận đã được gửi đến …` và **không** có `devCode`.
+
+> Nhớ: sau mỗi lần xoay key, cập nhật **hết** mọi nơi giữ key (Render, máy local, CI, công cụ khác).
+
+### Kiểm tra nhanh trước khi gửi
+
+```bash
+cd backend
+npm run mail:status      # cấu hình + tên miền/sender + số thư đã gửi (giờ/ngày) + quota còn lại
+npm run mail:check       # đối chiếu SPF/DKIM/ownership trong DNS với yêu cầu Mailjet
+```
+
+`mail:status` chỉ đọc, riêng phần "GỬI THỬ SANDBOX" có gọi Send API ở chế độ
+`SandboxMode` — Mailjet kiểm tra key + sender + payload nhưng **không gửi thật và không
+trừ hạn mức**, nên chạy được bất cứ lúc nào.
+
+### App tự chặn khi hết hạn mức
+
+`emailService` đếm số thư đã gửi trong **giờ hiện tại** và **ngày hiện tại** từ chính
+Mailjet (`statcounters`, dự phòng `/message`) rồi **chặn trước khi gửi** khi chạm ngưỡng,
+thay vì để Mailjet từ chối — mỗi lần gửi thất bại đều là tín hiệu xấu khi họ xét duyệt lại.
+
+| Biến | Ý nghĩa |
+|---|---|
+| `MAIL_HOURLY_LIMIT` | Số thư tối đa mỗi giờ (mặc định 10, theo banner dashboard). **0 = tắt** |
+| `MAIL_DAILY_LIMIT` | Số thư tối đa mỗi ngày (mặc định 10, theo mail hỗ trợ). **0 = tắt** |
+| `MAIL_QUOTA_TZ` | Múi giờ chia "một giờ"/"một ngày", mặc định `Asia/Ho_Chi_Minh` |
+
+Không đọc được thống kê (lỗi mạng/quyền) thì app **cho gửi tiếp** — thà để Mailjet tự
+chặn còn hơn tự khoá oan. App còn có **sàn đếm cục bộ** cho thư vừa gửi, bù cho việc
+thống kê của Mailjet cập nhật trễ vài giây.
+
+Hết hạn mức trong app thì lỗi là `MailjetQuotaError` (`code: quota-exceeded`, HTTP 429),
+`authService` sẽ trả mã xác nhận trong response như khi không gửi được thư.
+
+### Khi nào xin Mailjet gỡ giới hạn
+
+Sau vài ngày gửi đều trong hạn mức (thư vào Inbox, không bounce), trả lời lại ticket
+[#4264560](https://app.mailjet.com/support/ticket/4264560) để xin đánh giá lại —
+dùng lại mẫu ở Bước 8, thay phần mô tả lỗi bằng dữ liệu gửi thực tế.
+
+---
+
+## Để thư xác thực vào được Inbox Gmail — checklist
+
+### 1. Xác thực tên miền: ĐÃ XONG
+
+Kiểm tra DNS trực tiếp cho `mn-qronx.id.vn` ngày 20/09/2026:
+
+| Bản ghi | Giá trị hiện tại | |
+|---|---|---|
+| SPF (`@`) | `v=spf1 include:spf.mailjet.com ?all` | ✅ |
+| DKIM (`mailjet._domainkey`) | `k=rsa; p=MIIBIjANBgkqh…` | ✅ |
+| DMARC (`_dmarc`) | `v=DMARC1; p=none; rua=mailto:minhnhat13246@gmail.com` | ✅ |
+| MX | `mx92112.maychuemail.net` | ✅ domain nhận được thư |
+| TXT xác nhận sở hữu | `mailjet._93f3b17d` → `93f3b17d…` | ✅ |
+
+➡️ Gmail đã có đủ căn cứ để xác thực thư (SPF + DKIM khớp domain ở `From`).
+Nút thắt hiện tại **không nằm ở DNS** mà ở **trạng thái tài khoản Mailjet** và **reputation của domain mới**.
+
+### 2. Việc chỉ bạn làm được (theo thứ tự)
+
+1. **Nạp key** vào `backend/.env` (local) và Render → **taskalarm-api → Environment**
+   (`MAILJET_API_KEY`, `MAILJET_SECRET_KEY`, `EMAIL_FROM`, `MAIL_TRANSPORT=auto`,
+   `MAIL_HOURLY_LIMIT=10`, `MAIL_DAILY_LIMIT=10`).
+   Xác nhận: `cd backend && npm run mail:status` — mục “GỬI THỬ SANDBOX” phải ✅.
+2. **Giữ ≤ 10 thư/ngày.** Vượt là Mailjet chặn ở tầng tài khoản, thư không đi và
+   Mailjet ghi nhận thêm tín hiệu xấu. App đã tự chặn giúp bạn (`MAIL_DAILY_LIMIT`).
+3. **Gửi 1 thư thật để “dạy” Gmail:** `npm run mail:send -- minhnhat13246@gmail.com`
+   - Vào đúng **Hộp thư đến** → xong.
+   - Vào **Spam** → mở thư → bấm **“Không phải thư rác”** (Not spam) → kéo vào Hộp thư đến,
+     rồi thêm `no-reply@mn-qronx.id.vn` vào **danh bạ liên hệ**.
+4. **Gửi đều 3–7 ngày** (mỗi ngày vài thư, luôn ≤ 10, nội dung OTP thật). Mỗi lần thư rơi
+   vào Spam thì bấm “Không phải thư rác” — đây chính là cách tích reputation.
+5. **Xin gỡ giới hạn** — quan trọng nhất: trả lời ticket
+   [#4264560](https://app.mailjet.com/support/ticket/4264560) kèm dữ liệu gửi thực tế.
+   Khi tài khoản còn ở trạng thái duyệt tạm, Mailjet có thể chặn/giới hạn thư **trước khi**
+   nó tới Gmail, nên mọi tối ưu DNS đều không thay thế được bước này.
+6. *(Nên làm)* Đăng ký **Google Postmaster Tools** cho `mn-qronx.id.vn` (thêm TXT xác minh
+   tại PA Vietnam) để theo dõi spam rate/reputation thay vì đoán.
+
+### 3. Nên chỉnh thêm trong DNS (không bắt buộc, nhưng giúp độ tin cậy)
+
+- SPF: đổi `?all` → `~all` — khai báo chặt hơn, đỡ bị coi là domain “chưa cấu hình nghiêm túc”.
+- DMARC: `rua` nên trỏ vào hộp thư trên chính domain (`dmarc@mn-qronx.id.vn`) thay vì Gmail cá nhân;
+  sau 2–4 tuần theo dõi báo cáo thì nâng `p=none` → `p=quarantine`.
+- ⚠️ Tuyệt đối không thêm bản ghi SPF thứ hai — Gmail chỉ đọc một bản ghi `v=spf1`.
+- ⚠️ Không đổi `From` về `@gmail.com`: mất DKIM/SPF alignment, thư gần như chắc chắn vào Spam.
+
+### 4. Phía code đã hỗ trợ sẵn
+
+- Thư OTP có **cả bản text và HTML**, không ảnh, không link rút gọn — đúng kiểu Gmail ưa.
+- Gửi lại trong **60 giây** sẽ **dùng lại mã cũ và không gửi thêm thư** (cả client đếm ngược
+  lẫn `authService`) → tránh thư trùng lặp liên tiếp và tiết kiệm hạn mức 10 thư/ngày.
+- Lỗi gửi được phân loại rõ (`mj-0001` tài khoản bị khoá, `mj-0002` sender chưa xác thực,
+  hết hạn mức → `MailjetQuotaError`) thay vì “gửi thành công” giả như SMTP.
+
+---
+
 ## Bước 1 — Thêm tên miền vào Mailjet
 
 1. Đăng nhập [app.mailjet.com](https://app.mailjet.com)

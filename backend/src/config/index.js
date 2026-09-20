@@ -8,6 +8,19 @@ const required = (key) => {
   return val
 }
 
+/**
+ * Hạn mức gửi thư (theo giờ / theo ngày).
+ * Mặc định 10 vì tài khoản Mailjet đang ở giai đoạn duyệt tạm (probation):
+ * dashboard ghi "10 emails per hour", mail hỗ trợ lại ghi 10 thư/ngày.
+ * Đặt biến tương ứng = 0 để TẮT kiểm tra cửa sổ đó (sau khi Mailjet gỡ giới hạn).
+ */
+const parseLimit = (value) => {
+  if (value === undefined || String(value).trim() === '') return 10
+  const n = Number(value)
+  if (!Number.isInteger(n) || n < 0) return 10
+  return n
+}
+
 const config = {
   port: parseInt(process.env.PORT, 10) || 8080,
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -56,6 +69,12 @@ const config = {
     secretKey: process.env.MAILJET_SECRET_KEY || process.env.SMTP_PASS || '',
     sandbox: process.env.MAILJET_SANDBOX === 'true',
     timeoutMs: parseInt(process.env.MAILJET_TIMEOUT_MS, 10) || 15000,
+    // Endpoint REST v3 (đọc thống kê: statcounters, sender, domain…)
+    restUrl: process.env.MAILJET_REST_URL || 'https://api.mailjet.com/v3/REST',
+    // Hạn mức gửi + múi giờ dùng để xác định "một giờ"/"một ngày" (Mailjet reset theo giờ)
+    hourlyLimit: parseLimit(process.env.MAIL_HOURLY_LIMIT),
+    dailyLimit: parseLimit(process.env.MAIL_DAILY_LIMIT),
+    quotaTimezone: process.env.MAIL_QUOTA_TZ || 'Asia/Ho_Chi_Minh',
   },
 
   fcm: {

@@ -32,6 +32,7 @@ console.log(`  Mailjet API key: ${status.apiConfigured ? 'đã có' : 'CHƯA CÓ
 console.log(`  SMTP           : ${status.smtpConfigured ? `${config.smtp.host}:${config.smtp.port}` : 'CHƯA CÓ'}`)
 console.log(`  From           : ${status.from}`)
 console.log(`  Sandbox        : ${status.sandbox ? 'BẬT (không gửi thật)' : 'tắt'}`)
+console.log(`  Hạn mức gửi    : ${status.hourlyLimit > 0 ? `${status.hourlyLimit} thư/giờ` : 'giờ: không kiểm soát'} · ${status.dailyLimit > 0 ? `${status.dailyLimit} thư/ngày` : 'ngày: không kiểm soát'}`)
 console.log(`  Gửi tới        : ${to}${ccArg ? ` (cc: ${ccArg.split('=')[1]})` : ''}\n`)
 
 try {
@@ -42,13 +43,20 @@ try {
     text: 'Nếu bạn nhận được thư này, cấu hình email đã hoạt động.',
     html: '<p>Nếu bạn nhận được thư này, cấu hình email đã <strong>hoạt động</strong>.</p>',
   })
+  if (r.sent === false) {
+    console.error('\u26a0\ufe0f  KHÔNG gửi thật được — chưa cấu hình gửi thư (thiếu API key/secret).')
+    console.error('   Điền MAILJET_API_KEY + MAILJET_SECRET_KEY trong backend/.env rồi chạy lại.')
+    console.error('   Chạy `npm run mail:status` để xem đang thiếu gì.')
+    process.exit(1)
+  }
   console.log(`\u2705 Đã gửi qua ${r.via} — messageId: ${r.messageId || '(không có)'}`)
   if (r.messageUuid) console.log(`   MessageUUID: ${r.messageUuid}`)
   if (r.accepted) console.log(`   Số người nhận Mailjet đã nhận: ${r.accepted}`)
 } catch (err) {
-  if (err instanceof MailjetSendError) {
+  if (err instanceof MailjetSendError || err.name === 'MailjetQuotaError') {
     console.error(`\u274c Gửi thất bại — HTTP ${err.status}${err.code ? ` · ${err.code}` : ''}`)
     console.error(`   ${err.message}`)
+    if (err.hint) console.error(`   \u2192 ${err.hint}`)
   } else {
     console.error(`\u274c Gửi thất bại: ${err.message}`)
   }

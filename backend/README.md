@@ -45,7 +45,21 @@ npm run seed
 npm run dev
 ```
 
-### 3. Test
+### 3. Kiểm tra gửi thư (Mailjet)
+
+```bash
+npm run mail:status           # cấu hình + tên miền/sender + số thư đã gửi hôm nay
+npm run mail:check            # đối chiếu SPF/DKIM trong DNS
+npm run mail:send -- ban@example.com            # gửi thật
+npm run mail:send -- ban@example.com --sandbox  # chỉ kiểm tra payload
+```
+
+> Tài khoản Mailjet đang ở giai đoạn duyệt tạm: dashboard ghi **10 thư/giờ**, mail hỗ trợ
+> ghi **10 thư/ngày**. App tự chặn khi chạm một trong hai ngưỡng
+> (`MAIL_HOURLY_LIMIT` / `MAIL_DAILY_LIMIT`, đặt 0 để tắt) — chi tiết trong
+> [docs/email-domain-setup.md](../docs/email-domain-setup.md).
+
+### 4. Test
 
 ```bash
 npm test                      # Chạy 35 tests

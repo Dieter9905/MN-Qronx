@@ -8,11 +8,16 @@ import ApiError from '../utils/ApiError.js'
 import { transformUser } from '../utils/transformers.js'
 import { isPlanExpired, downgradeUser } from '../utils/planLimits.js'
 import { ensureInviteCode, creditDailyLogin, activateInvitation } from './rewardService.js'
-import { sendEmail } from './emailService.js'
+import { sendEmail, isEmailConfigured } from './emailService.js'
 
 const REFRESH_TOKEN_EXPIRY_DAYS = 7
 const RESET_TOKEN_EXPIRY_HOURS = 1
 const VERIFY_CODE_EXPIRY_MINUTES = 10
+// Gửi lại trong khoảng này thì dùng LẠI mã vừa gửi: không tốn thêm 1 thư trong hạn
+// mức ngày của Mailjet (đang là 10) và không gửi thư trùng nhau liên tiếp — thư trùng
+// lặp là dấu hiệu spam, ảnh hưởng trực tiếp tới việc vào Inbox Gmail.
+// Khớp với đếm ngược 60s ở RegisterPage (RESEND_SECONDS).
+const VERIFY_CODE_RESEND_COOLDOWN_SECONDS = 60
 
 // ─── Gửi mã xác minh email (đăng ký) ──────────────────────
 // 1 email = 1 tài khoản: gửi mã OTP → register chỉ chạy khi mã hợp lệ.
@@ -24,6 +29,21 @@ export async function sendVerificationCode(email) {
   const existing = await authRepo.findByEmail(cleanEmail)
   if (existing) {
     throw ApiError.badRequest('Email này đã được sử dụng. Vui lòng đăng nhập hoặc dùng email khác.')
+  }
+
+  // Gửi lại quá sớm → dùng lại mã đang hiệu lực, không gửi thêm thư
+  if (isEmailConfigured()) {
+    const ongoing = await authRepo.findVerificationCode(cleanEmail)
+    if (ongoing && !ongoing.usedAt && ongoing.expiresAt > new Date()) {
+      const ageSeconds = Math.floor((Date.now() - new Date(ongoing.createdAt).getTime()) / 1000)
+      if (ageSeconds < VERIFY_CODE_RESEND_COOLDOWN_SECONDS) {
+        return {
+          message: `Mã xác nhận vừa được gửi đến ${cleanEmail}. Kiểm tra cả mục Spam/Quảng cáo.`,
+          resent: false,
+          retryAfterSeconds: VERIFY_CODE_RESEND_COOLDOWN_SECONDS - ageSeconds,
+        }
+      }
+    }
   }
 
   // Tạo mã 6 chữ số
