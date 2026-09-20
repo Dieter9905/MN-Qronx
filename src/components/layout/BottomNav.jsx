@@ -11,7 +11,7 @@ export default function BottomNav() {
   return (
     <nav
       aria-label="Điều hướng dưới cùng"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-navy-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-navy-100 bg-white pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-slate-700 dark:bg-slate-900 lg:hidden"
     >
       <div className="grid h-16 grid-cols-5 items-center px-2">
         {BOTTOM_NAV.slice(0, 2).map((item) => (

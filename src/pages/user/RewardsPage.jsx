@@ -115,7 +115,7 @@ export default function RewardsPage() {
       </div>
 
       {/* Hero: streak + points */}
-      <div className="relative overflow-hidden rounded-3xl bg-navy-900 p-6 text-white dark:bg-slate-800">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-800 to-navy-900 p-6 text-white dark:from-slate-700 dark:to-slate-800">
         <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-orange-500/20 blur-3xl" aria-hidden="true" />
         <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl" aria-hidden="true" />
         <div className="relative flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:justify-between">

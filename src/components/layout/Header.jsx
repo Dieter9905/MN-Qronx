@@ -140,7 +140,7 @@ export default function Header({ title, onOpenDrawer }) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-navy-100 bg-white/90 px-4 backdrop-blur dark:border-slate-700 dark:bg-slate-900/90 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-navy-100 bg-white px-4 backdrop-blur dark:border-slate-700 dark:bg-slate-900 sm:px-6">
       <button
         type="button"
         onClick={onOpenDrawer}
