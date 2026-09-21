@@ -29,6 +29,12 @@ export const unlockUser = catchAsync(async (req, res) => {
   success(res, 200, 'Mở khóa tài khoản thành công', user)
 })
 
+export const deleteUser = catchAsync(async (req, res) => {
+  const { userId } = req.params
+  const result = await adminService.deleteUser(parseInt(userId), req.user.id)
+  success(res, 200, `Đã xoá tài khoản ${result.fullName}`, result)
+})
+
 export const setPlan = catchAsync(async (req, res) => {
   const { userId } = req.params
   const { plan } = req.body

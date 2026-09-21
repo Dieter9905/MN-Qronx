@@ -7,8 +7,11 @@ import {
   ArrowLeft,
   ArrowRight,
   UserPlus,
+  Trash,
+  Warning,
 } from '@phosphor-icons/react'
-import { getAdminUsers, setUserActive, createAdminUser, setUserPlan } from '../../services/adminService'
+import { getAdminUsers, setUserActive, createAdminUser, setUserPlan, deleteAdminUser } from '../../services/adminService'
+import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
 import { Skeleton, EmptyState } from '../../components/common/Feedback'
 import Button from '../../components/common/Button'
@@ -57,6 +60,7 @@ function PlanMeta({ u }) {
 
 export default function AdminUsersPage() {
   const toast = useToast()
+  const { user: currentUser } = useAuth()
   const [keyword, setKeyword] = useState('')
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
@@ -64,6 +68,9 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [confirm, setConfirm] = useState(null)
   const [busy, setBusy] = useState(false)
+  // Xoá tài khoản: tách riêng khỏi khóa/mở khóa vì đây là thao tác không thể hoàn tác
+  const [confirmDelete, setConfirmDelete] = useState(null)
+  const [deleting, setDeleting] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [createForm, setCreateForm] = useState({
     fullName: '',
@@ -111,6 +118,25 @@ export default function AdminUsersPage() {
     }
     toast.success(res.message)
     setConfirm(null)
+    load()
+  }
+
+  const doDelete = async () => {
+    if (!confirmDelete) return
+    setDeleting(true)
+    const res = await deleteAdminUser(confirmDelete.id)
+    setDeleting(false)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    toast.success(res.message || `Đã xoá tài khoản ${confirmDelete.name}`)
+    setConfirmDelete(null)
+    // Xoá bản ghi cuối của trang cuối → lùi một trang cho khỏi trống bảng
+    if (data && data.items.length === 1 && page > 1) {
+      setPage((p) => p - 1)
+      return
+    }
     load()
   }
 
@@ -272,26 +298,53 @@ export default function AdminUsersPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        {u.isActive ? (
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-2">
+                          {u.isActive ? (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              icon={Lock}
+                              disabled={u.role === 'ADMIN'}
+                              title={u.role === 'ADMIN' ? 'Không thể khóa tài khoản Admin' : 'Khóa tài khoản'}
+                              onClick={() => setConfirm({ id: u.id, name: u.fullName, isActive: true })}
+                            >
+                              Khóa
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              icon={LockOpen}
+                              onClick={() => setConfirm({ id: u.id, name: u.fullName, isActive: false })}
+                            >
+                              Mở khóa
+                            </Button>
+                          )}
                           <Button
                             variant="danger-ghost"
                             size="sm"
-                            icon={Lock}
-                            onClick={() => setConfirm({ id: u.id, name: u.fullName, isActive: true })}
+                            icon={Trash}
+                            disabled={u.role === 'ADMIN' || u.id === currentUser?.id}
+                            title={
+                              u.role === 'ADMIN'
+                                ? 'Không thể xóa tài khoản Admin'
+                                : u.id === currentUser?.id
+                                  ? 'Đây là tài khoản bạn đang đăng nhập'
+                                  : `Xóa vĩnh viễn tài khoản ${u.fullName}`
+                            }
+                            onClick={() =>
+                              setConfirmDelete({
+                                id: u.id,
+                                name: u.fullName,
+                                email: u.email,
+                                taskCount: u.taskCount,
+                              })
+                            }
                           >
-                            Khóa
+                            Xóa
                           </Button>
-                        ) : (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            icon={LockOpen}
-                            onClick={() => setConfirm({ id: u.id, name: u.fullName, isActive: false })}
-                          >
-                            Mở khóa
-                          </Button>
-                        )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -327,6 +380,45 @@ export default function AdminUsersPage() {
         danger={confirm?.isActive}
         loading={busy}
       />
+
+      {/* Xóa vĩnh viễn tài khoản – thao tác không thể hoàn tác nên tách riêng khỏi khóa */}
+      <Modal
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        size="sm"
+        title="Xóa vĩnh viễn tài khoản?"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setConfirmDelete(null)} disabled={deleting}>
+              Hủy
+            </Button>
+            <Button variant="danger" icon={Trash} onClick={doDelete} loading={deleting}>
+              Xóa vĩnh viễn
+            </Button>
+          </>
+        }
+      >
+        <div className="flex items-start gap-3 rounded-xl bg-rose-50 p-3 ring-1 ring-inset ring-rose-200 dark:bg-rose-900/20 dark:ring-rose-800/50">
+          <Warning size={20} weight="fill" className="mt-0.5 shrink-0 text-rose-600 dark:text-rose-400" />
+          <div className="min-w-0 text-sm text-rose-800 dark:text-rose-200">
+            <p className="truncate font-bold">{confirmDelete?.name}</p>
+            <p className="truncate">{confirmDelete?.email}</p>
+          </div>
+        </div>
+        <p className="mt-3 text-sm leading-relaxed text-navy-600 dark:text-slate-300">
+          Tài khoản sẽ bị xóa khỏi hệ thống kèm toàn bộ dữ liệu của nó:{' '}
+          {typeof confirmDelete?.taskCount === 'number' && (
+            <>
+              <b>{confirmDelete.taskCount} công việc</b>,{' '}
+            </>
+          )}
+          danh mục, nhắc nhở, thiết bị nhận thông báo, điểm thưởng và phiên đăng nhập. Email này có thể được đăng ký lại từ đầu.
+        </p>
+        <p className="mt-3 flex items-center gap-1.5 rounded-xl bg-navy-50 p-3 text-xs font-bold text-navy-600 dark:bg-slate-700/60 dark:text-slate-200">
+          <Warning size={14} weight="bold" />
+          Hành động này không thể hoàn tác — nên khóa tài khoản nếu chỉ muốn tạm dừng.
+        </p>
+      </Modal>
 
       {/* Tạo tài khoản mới */}
       <Modal

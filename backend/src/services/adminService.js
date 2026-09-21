@@ -209,6 +209,100 @@ export async function lockUser(userId) {
   })
 }
 
+// ─── Delete User (Admin) ───────────────────────────────
+// Xoá vĩnh viễn tài khoản và toàn bộ dữ liệu thuộc về nó.
+// Lưu ý: các quan hệ trỏ tới User trong schema không khai báo onDelete: Cascade
+// (trừ CustomSound), nên phải xoá con trước, cha sau, trong cùng một transaction
+// để không vi phạm khoá ngoại và không để lại dữ liệu mồ côi.
+export async function deleteUser(userId, currentUserId) {
+  if (userId === currentUserId) {
+    throw ApiError.badRequest('Không thể xoá tài khoản đang đăng nhập')
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { userId },
+    select: {
+      userId: true,
+      fullName: true,
+      email: true,
+      role: { select: { roleName: true } },
+    },
+  })
+  if (!user) throw ApiError.notFound('Không tìm thấy người dùng')
+  if (user.role.roleName === 'ADMIN') {
+    throw ApiError.badRequest('Không thể xoá tài khoản Admin')
+  }
+
+  const deleted = await prisma.$transaction(async (tx) => {
+    // 1. Nhật ký thông báo gắn với nhắc nhở / thiết bị của người dùng này
+    const taskIds = (await tx.task.findMany({ where: { userId }, select: { taskId: true } })).map(
+      (t) => t.taskId
+    )
+    const reminderIds = taskIds.length
+      ? (await tx.reminder.findMany({ where: { taskId: { in: taskIds } }, select: { reminderId: true } })).map(
+          (r) => r.reminderId
+        )
+      : []
+    const deviceIds = (await tx.device.findMany({ where: { userId }, select: { deviceId: true } })).map(
+      (d) => d.deviceId
+    )
+
+    const logFilters = []
+    if (reminderIds.length) logFilters.push({ reminderId: { in: reminderIds } })
+    if (deviceIds.length) logFilters.push({ deviceId: { in: deviceIds } })
+    const notificationLogs = logFilters.length
+      ? await tx.notificationLog.deleteMany({ where: { OR: logFilters } })
+      : { count: 0 }
+
+    // 2. Lời mời (cả hai phía: người mời và người được mời)
+    const invitations = await tx.invitation.deleteMany({
+      where: { OR: [{ inviterId: userId }, { inviteeId: userId }] },
+    })
+
+    // 3. Dữ liệu con còn lại của tài khoản
+    const pointTransactions = await tx.pointTransaction.deleteMany({ where: { userId } })
+    const passwordResets = await tx.passwordResetRequest.deleteMany({ where: { userId } })
+    const refreshTokens = await tx.refreshToken.deleteMany({ where: { userId } })
+    const customSounds = await tx.customSound.deleteMany({ where: { userId } })
+    const settings = await tx.notificationSetting.deleteMany({ where: { userId } })
+
+    // 4. Công việc: xoá subtask + nhắc nhở trước, rồi tới task và danh mục
+    const subtasks = taskIds.length
+      ? await tx.subtask.deleteMany({ where: { taskId: { in: taskIds } } })
+      : { count: 0 }
+    const reminders = taskIds.length
+      ? await tx.reminder.deleteMany({ where: { taskId: { in: taskIds } } })
+      : { count: 0 }
+    const tasks = await tx.task.deleteMany({ where: { userId } })
+    const categories = await tx.category.deleteMany({ where: { userId } })
+    const devices = await tx.device.deleteMany({ where: { userId } })
+
+    // 5. Mã xác minh email còn sót lại của địa chỉ email này
+    const verificationCodes = await tx.emailVerificationCode.deleteMany({ where: { email: user.email } })
+
+    // 6. Cuối cùng mới xoá tài khoản
+    await tx.user.delete({ where: { userId } })
+
+    return {
+      tasks: tasks.count,
+      categories: categories.count,
+      reminders: reminders.count,
+      subtasks: subtasks.count,
+      devices: devices.count,
+      notificationLogs: notificationLogs.count,
+      invitations: invitations.count,
+      pointTransactions: pointTransactions.count,
+      customSounds: customSounds.count,
+      notificationSettings: settings.count,
+      passwordResetRequests: passwordResets.count,
+      refreshTokens: refreshTokens.count,
+      verificationCodes: verificationCodes.count,
+    }
+  })
+
+  return { userId: user.userId, fullName: user.fullName, email: user.email, deleted }
+}
+
 // ─── Unlock User ───────────────────────────────────────
 
 export async function unlockUser(userId) {

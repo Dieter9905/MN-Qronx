@@ -154,4 +154,28 @@ router.post('/users/:userId/unlock', userIdValidation, validate, adminController
  */
 router.put('/users/:userId/plan', userIdValidation, planChangeValidation, validate, adminController.setPlan)
 
+/**
+ * @swagger
+ * /admin/users/{userId}:
+ *   delete:
+ *     tags: [Admin]
+ *     summary: Xoá vĩnh viễn tài khoản và toàn bộ dữ liệu của người dùng
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Xoá thành công
+ *       400:
+ *         description: Không thể xoá tài khoản Admin hoặc chính mình
+ *       404:
+ *         description: Không tìm thấy người dùng
+ */
+router.delete('/users/:userId', userIdValidation, validate, adminController.deleteUser)
+
 export default router

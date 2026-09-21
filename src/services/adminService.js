@@ -52,3 +52,8 @@ export async function setUserPlan(userId, plan) {
   if (res.success) res.data = toUser(res.data)
   return res
 }
+
+// DELETE /api/v1/admin/users/{id} – xoá vĩnh viễn tài khoản + dữ liệu của họ
+export async function deleteAdminUser(userId) {
+  return api('DELETE', `/admin/users/${userId}`)
+}
