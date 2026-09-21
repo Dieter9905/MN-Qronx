@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { warmUpServer } from './services/apiClient'
+import usePointerEffects from './hooks/usePointerEffects'
 import { AlarmProvider } from './context/AlarmContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { LanguageProvider } from './context/LanguageContext'
@@ -38,6 +39,9 @@ export default function App() {
   useEffect(() => {
     warmUpServer()
   }, [])
+
+  // Đèn rọi / quầng sáng chạy theo con trỏ cho toàn app (1 listener duy nhất)
+  usePointerEffects()
 
   return (
     <ThemeProvider>

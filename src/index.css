@@ -33,10 +33,39 @@
 
 @layer components {
   .menu-item {
-    @apply flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm font-semibold text-navy-700 transition hover:bg-navy-50 focus-visible:outline-none focus-visible:bg-navy-50;
+    @apply relative flex w-full cursor-pointer items-center gap-3 overflow-hidden px-4 py-2.5 text-left text-sm font-semibold text-navy-700 transition-all duration-200 focus-visible:outline-none;
+  }
+  /* Vệt sáng quét ngang khi hover */
+  .menu-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, rgba(37, 99, 235, 0.14), rgba(6, 182, 212, 0.12) 55%, rgba(139, 92, 246, 0.14));
+    transform: translateX(-102%);
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+  .menu-item:hover::before,
+  .menu-item:focus-visible::before {
+    transform: translateX(0);
+  }
+  .menu-item > svg {
+    @apply relative shrink-0 transition-transform duration-300;
+  }
+  .menu-item:hover > svg {
+    transform: scale(1.16) rotate(-8deg);
+  }
+  .menu-item > * {
+    @apply relative;
+  }
+  .menu-item:hover {
+    @apply text-blue-700;
   }
   .dark .menu-item {
-    @apply text-slate-300 hover:bg-slate-800;
+    @apply text-slate-300;
+  }
+  .dark .menu-item:hover {
+    @apply text-white;
   }
 
   .page-title {
@@ -47,10 +76,51 @@
   }
 
   .card {
-    @apply rounded-2xl bg-white shadow-card ring-1 ring-navy-100/80;
+    @apply relative rounded-2xl bg-white shadow-card ring-1 ring-navy-100/80;
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.45s ease;
+  }
+  /* Đèn rọi theo con trỏ (biến --mx/--my do usePointerEffects đặt) */
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+      240px circle at var(--mx, 50%) var(--my, 50%),
+      rgba(37, 99, 235, 0.1),
+      rgba(6, 182, 212, 0.06) 45%,
+      transparent 72%
+    );
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+  }
+  .card:hover::before {
+    opacity: 1;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 2px 4px rgba(13, 27, 42, 0.05),
+      0 18px 42px rgba(37, 99, 235, 0.14),
+      0 0 0 1px rgba(37, 99, 235, 0.16);
   }
   .dark .card {
     @apply bg-slate-800 shadow-card-dark ring-slate-700/80;
+  }
+  .dark .card::before {
+    background: radial-gradient(
+      260px circle at var(--mx, 50%) var(--my, 50%),
+      rgba(99, 102, 241, 0.2),
+      rgba(6, 182, 212, 0.1) 45%,
+      transparent 74%
+    );
+  }
+  .dark .card:hover {
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.35),
+      0 18px 46px rgba(37, 99, 235, 0.26),
+      0 0 0 1px rgba(96, 165, 250, 0.32);
   }
 
   .btn-link {
@@ -282,6 +352,205 @@
 .section-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent 0%, rgba(37, 99, 235, 0.3) 50%, transparent 100%);
+}
+
+/* ==================================================================== */
+/*  MOTION LAYER – hover, chuyển trang, đổi sáng/tối                        */
+/* ==================================================================== */
+
+/* ---- Chuyển trang: trượt lên + mờ dần (AppShell) ---- */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.page-enter {
+  animation: pageEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ---- Đèn rọi theo con trỏ (dùng cùng biến --mx/--my với .card) ---- */
+[data-spotlight] {
+  position: relative;
+}
+[data-spotlight]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    220px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(37, 99, 235, 0.12),
+    rgba(139, 92, 246, 0.08) 45%,
+    transparent 72%
+  );
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+[data-spotlight]:hover::before {
+  opacity: 1;
+}
+.dark [data-spotlight]::before {
+  background: radial-gradient(
+    240px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(99, 102, 241, 0.22),
+    rgba(6, 182, 212, 0.11) 45%,
+    transparent 74%
+  );
+}
+
+/* ---- Quầng aurora chạy theo con trỏ trong một khối (sidebar) ----
+   Phủ đầy khối bằng gradient tròn tại vị trí con trỏ → không tạo thanh cuộn ngang */
+.aurora-track {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background: radial-gradient(
+    170px circle at var(--gx, 50%) var(--gy, 0%),
+    rgba(37, 99, 235, 0.28),
+    rgba(6, 182, 212, 0.16) 45%,
+    transparent 72%
+  );
+}
+[data-glow-track]:hover .aurora-track {
+  opacity: 1;
+}
+.dark .aurora-track {
+  background: radial-gradient(
+    190px circle at var(--gx, 50%) var(--gy, 0%),
+    rgba(99, 102, 241, 0.42),
+    rgba(6, 182, 212, 0.22) 45%,
+    transparent 74%
+  );
+}
+
+/* ---- Icon nảy nhẹ khi hover ---- */
+.icon-pop {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+button:hover .icon-pop,
+a:hover .icon-pop,
+.group:hover .icon-pop {
+  transform: scale(1.12) rotate(-8deg);
+}
+
+/* ---- Vệt sáng quét qua nút (sheen) ---- */
+.sheen {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.sheen::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+  transform: skewX(-18deg);
+  opacity: 0;
+  pointer-events: none;
+  transition: none;
+}
+.sheen:hover::after {
+  animation: sheenSweep 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes sheenSweep {
+  0% {
+    left: -60%;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    left: 115%;
+    opacity: 0;
+  }
+}
+
+/* ---- Đổi sáng/tối: màn che tròn lan ra từ con trỏ (View Transitions API) ---- */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 2;
+}
+
+/* ---- Vệt sáng chạy ngang mỗi lần đổi trang ---- */
+.route-beam {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  z-index: 40;
+  height: 2px;
+  transform-origin: left center;
+  background: linear-gradient(90deg, #2563eb, #06b6d4 55%, #8b5cf6);
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.7), 0 0 26px rgba(139, 92, 246, 0.4);
+  animation: routeBeam 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes routeBeam {
+  0% {
+    transform: scaleX(0);
+    opacity: 1;
+  }
+  65% {
+    transform: scaleX(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+
+/* ---- Thanh chỉ mục trượt (sidebar/bottom nav) ---- */
+.nav-pill {
+  transition: top 0.5s cubic-bezier(0.16, 1, 0.3, 1), height 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    left 0.5s cubic-bezier(0.16, 1, 0.3, 1), width 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+.nav-pill-beam {
+  background: linear-gradient(90deg, #2563eb, #06b6d4 55%, #8b5cf6);
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.7), 0 0 22px rgba(139, 92, 246, 0.45);
+}
+@keyframes navIconBounce {
+  0% {
+    transform: scale(0.82) translateY(3px);
+  }
+  55% {
+    transform: scale(1.16) translateY(-2px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+.nav-icon-active {
+  animation: navIconBounce 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ---- Thẻ nghiêng nổi khi hover (dùng cho tile tính năng) ---- */
+.hover-lift {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.3s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-5px) scale(1.015);
+  box-shadow: 0 16px 40px -12px rgba(37, 99, 235, 0.32), 0 0 0 1px rgba(37, 99, 235, 0.2);
+}
+.dark .hover-lift:hover {
+  box-shadow: 0 20px 48px -12px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(96, 165, 250, 0.32);
 }
 
 /* ---- Reduce motion ---- */

@@ -14,8 +14,6 @@ import {
   Moon,
   Sun,
   Translate,
-  Keyboard,
-  Lightning,
 } from '@phosphor-icons/react'
 import Button from '../common/Button'
 import Avatar from '../common/Avatar'
@@ -72,7 +70,7 @@ function DemoAlarmButton() {
         {!demoLoading && <BellRinging size={19} weight="bold" className="text-brand-purple" />}
       </Button>
       {open && (
-        <div className="absolute right-0 top-12 z-50 w-80 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-navy-100 animate-scale-in">
+        <div className="absolute right-0 top-12 z-50 w-80 origin-top-right overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-navy-100 animate-scale-in dark:bg-slate-800 dark:ring-slate-700">
           <div className="border-b border-navy-100 bg-brand-gradient-soft px-4 py-3">
             <p className="text-sm font-bold text-navy-900">Thử báo thức ⏰</p>
             <p className="mt-0.5 text-xs text-navy-500">
@@ -145,32 +143,75 @@ export default function Header({ title, onOpenDrawer }) {
         type="button"
         onClick={onOpenDrawer}
         aria-label="Mở menu điều hướng"
-        className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-navy-600 transition hover:bg-navy-100 lg:hidden"
+        className="group flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-navy-600 transition-all duration-300 hover:bg-navy-100 hover:shadow-card active:scale-95 dark:text-slate-300 dark:hover:bg-slate-800 lg:hidden"
       >
-        <List size={22} weight="bold" />
+        <List size={22} weight="bold" className="icon-pop" />
       </button>
       <div className="lg:hidden">
         <Logo size={30} />
       </div>
       <h1 className="hidden text-lg font-bold text-navy-900 dark:text-white lg:block">{title}</h1>
       <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+        {/* Công tắc sáng/tối: núm trượt + mặt trời/mặt trăng xoay, đổi màu lan toả từ vị trí bấm */}
         <button
           type="button"
-          onClick={toggleTheme}
-          className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy-100/70 text-navy-600 transition-all hover:scale-110 hover:bg-navy-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
-          aria-label={theme === 'light' ? 'Dark mode' : 'Light mode'}
+          onClick={(event) => toggleTheme(event)}
+          role="switch"
+          aria-checked={theme === 'dark'}
+          aria-label={theme === 'light' ? 'Bật chế độ tối' : 'Bật chế độ sáng'}
           title={theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
+          className="group relative flex h-9 w-[62px] shrink-0 cursor-pointer items-center rounded-full bg-navy-100/80 p-1 ring-1 ring-inset ring-navy-200/70 transition-all duration-300 hover:ring-blue-300/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-95 dark:bg-slate-700 dark:ring-slate-600 dark:hover:ring-blue-500/60"
         >
-          {theme === 'light' ? <Moon size={18} weight="bold" /> : <Sun size={18} weight="bold" />}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            style={{ boxShadow: '0 0 0 4px rgba(37,99,235,0.14)' }}
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute left-[9px] text-amber-500 transition-all duration-500 group-hover:rotate-90 dark:opacity-40"
+          >
+            <Sun size={13} weight="fill" />
+          </span>
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute right-[9px] text-indigo-500 transition-all duration-500 group-hover:-rotate-12 dark:text-indigo-300"
+          >
+            <Moon size={13} weight="fill" />
+          </span>
+          <span
+            aria-hidden="true"
+            className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white text-navy-700 shadow-md ring-1 ring-navy-200/70 transition-all duration-500 group-hover:scale-110 group-active:scale-90 dark:bg-slate-900 dark:text-amber-300 dark:ring-slate-600 ${
+              theme === 'dark' ? 'translate-x-[26px]' : 'translate-x-0'
+            }`}
+            style={{ transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)' }}
+          >
+            <span className="relative h-4 w-4">
+              <Sun
+                size={16}
+                weight="fill"
+                className={`absolute inset-0 m-auto transition-all duration-500 ${
+                  theme === 'dark' ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'
+                }`}
+              />
+              <Moon
+                size={16}
+                weight="fill"
+                className={`absolute inset-0 m-auto transition-all duration-500 ${
+                  theme === 'dark' ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'
+                }`}
+              />
+            </span>
+          </span>
         </button>
         <button
           type="button"
           onClick={toggleLang}
-          className="flex h-9 items-center gap-1 rounded-xl bg-navy-100/70 px-2.5 text-[11px] font-bold text-navy-600 transition-all hover:scale-110 hover:bg-navy-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+          className="group flex h-9 items-center gap-1 rounded-xl bg-navy-100/70 px-2.5 text-[11px] font-bold text-navy-600 transition-all duration-300 hover:scale-105 hover:bg-navy-200 hover:shadow-card active:scale-95 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
           aria-label="Đổi ngôn ngữ"
           title="Đổi ngôn ngữ"
         >
-          <Translate size={14} weight="bold" />
+          <Translate size={14} weight="bold" className="icon-pop" />
           {lang.toUpperCase()}
         </button>
         <DemoAlarmButton />
@@ -185,9 +226,11 @@ export default function Header({ title, onOpenDrawer }) {
             onClick={() => setMenuOpen((o) => !o)}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
-            className="flex cursor-pointer items-center gap-2 rounded-full p-1 pr-2 transition hover:bg-navy-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="group flex cursor-pointer items-center gap-2 rounded-full p-1 pr-2 transition-all duration-300 hover:bg-navy-50 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-slate-800"
           >
-            <Avatar name={user?.fullName} src={user?.avatarUrl} size="sm" />{' '}
+            <span className="transition-transform duration-300 group-hover:scale-105 group-active:scale-95">
+              <Avatar name={user?.fullName} src={user?.avatarUrl} size="sm" />
+            </span>{' '}
             <span className="hidden text-left sm:block">
               <span className="block max-w-[140px] truncate text-sm font-semibold leading-tight text-navy-800 dark:text-white">
                 {user?.fullName}
@@ -199,12 +242,16 @@ export default function Header({ title, onOpenDrawer }) {
                 <span>{isAdmin ? t.roleAdmin : t.roleUser}</span>
               </span>
             </span>
-            <CaretDown size={14} className="hidden text-navy-400 sm:block" weight="bold" />
+            <CaretDown
+              size={14}
+              weight="bold"
+              className={`hidden text-navy-400 transition-transform duration-300 sm:block ${menuOpen ? 'rotate-180' : ''}`}
+            />
           </button>
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-12 w-56 overflow-hidden rounded-2xl bg-white py-1.5 shadow-2xl ring-1 ring-navy-100 animate-scale-in dark:bg-slate-800 dark:ring-slate-700"
+              className="absolute right-0 top-12 w-56 origin-top-right overflow-hidden rounded-2xl bg-white py-1.5 shadow-2xl ring-1 ring-navy-100 animate-scale-in dark:bg-slate-800 dark:ring-slate-700"
             >
               <div className="border-b border-navy-100 dark:border-slate-700 px-4 py-2.5">
                 <p className="truncate text-sm font-bold text-navy-900 dark:text-white">{user?.fullName}</p>

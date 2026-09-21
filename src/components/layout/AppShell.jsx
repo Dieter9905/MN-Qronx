@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import BottomNav from './BottomNav'
@@ -92,6 +92,7 @@ export default function AppShell({ title = '' }) {
   const { toggleTheme } = useTheme()
   const { toggleLang } = useLanguage()
   const navigate = useNavigate()
+  const location = useLocation()
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -137,8 +138,15 @@ export default function AppShell({ title = '' }) {
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <Header title={title} onOpenDrawer={() => setDrawerOpen(true)} />
+        {/* Vệt sáng chạy ngang mỗi lần chuyển mục */}
+        <div className="pointer-events-none relative h-0">
+          <span key={location.pathname} className="route-beam" aria-hidden="true" />
+        </div>
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-6 sm:px-6 lg:pb-10">
-          <Outlet key={refreshKey} />
+          {/* key theo đường dẫn → mỗi lần chuyển mục, trang trượt lên + mờ dần */}
+          <div key={location.pathname} className="page-enter">
+            <Outlet key={refreshKey} />
+          </div>
         </main>
       </div>
       <BottomNav />

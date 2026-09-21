@@ -19,18 +19,24 @@ export default function TaskItem({ task, onToggleComplete, compact = false, onBe
   return (
     <Link
       to={`/app/tasks/${task.id}`}
-      className={`group flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-card ring-1 ring-navy-100/80 transition-all duration-150 hover:shadow-card-hover hover:ring-blue-200 dark:bg-slate-800 dark:ring-slate-700/80 dark:hover:ring-blue-500/50 ${
+      data-spotlight
+      className={`group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-white p-3.5 shadow-card ring-1 ring-navy-100/80 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-card-hover hover:ring-blue-200 dark:bg-slate-800 dark:ring-slate-700/80 dark:hover:ring-blue-500/50 ${
         cancelled ? 'opacity-60' : ''
       } ${compact ? '' : 'sm:p-4'}`}
       aria-label={`Xem chi tiết: ${task.title}`}
     >
+      {/* Vạch màu bung ra khi hover */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute left-0 top-1/2 h-0 w-1 -translate-y-1/2 rounded-r-full bg-brand-gradient transition-all duration-300 group-hover:h-9"
+      />
       <button
         type="button"
         onClick={toggle}
         aria-label={completed ? `Mở lại công việc: ${task.title}` : `Đánh dấu hoàn thành: ${task.title}`}
         aria-pressed={completed}
         className={[
-          'flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-150',
+          'flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-200 hover:scale-110 active:scale-95',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
           completed
             ? 'border-emerald-500 bg-emerald-500 text-white'

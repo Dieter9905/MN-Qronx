@@ -27,7 +27,9 @@ export function Field({ label, required, error, hint, children, className = '' }
 const inputBase =
   'w-full rounded-xl border-0 bg-white text-navy-900 shadow-sm ring-1 ring-inset ring-navy-200 placeholder:text-navy-300 ' +
   'dark:bg-slate-800 dark:text-white dark:ring-slate-600 dark:placeholder:text-slate-500 ' +
-  'transition focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:outline-none ' +
+  'transition-all duration-200 hover:ring-navy-300 dark:hover:ring-slate-500 ' +
+  'focus:-translate-y-px focus:ring-2 focus:ring-inset focus:ring-blue-500 focus:outline-none ' +
+  'focus:shadow-[0_0_0_4px_rgba(37,99,235,0.14)] ' +
   'disabled:cursor-not-allowed disabled:bg-navy-50 disabled:text-navy-400 dark:disabled:bg-slate-700 dark:disabled:text-slate-500'
 
 export function Input({ invalid, className = '', ...props }) {
@@ -70,20 +72,20 @@ export function Toggle({ checked, onChange, label, description, disabled, classN
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`group flex w-full cursor-pointer items-center justify-between gap-4 rounded-xl p-3 text-left transition hover:bg-navy-50 dark:hover:bg-slate-700/50 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`group flex w-full cursor-pointer items-center justify-between gap-4 rounded-xl p-3 text-left transition-all duration-200 hover:bg-navy-50 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-slate-700/50 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
       <span>
         <span className="block text-sm font-semibold text-navy-800 dark:text-slate-200">{label}</span>
         {description && <span className="mt-0.5 block text-xs text-navy-400 dark:text-slate-500">{description}</span>}
       </span>
       <span
-        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ${
-          checked ? 'bg-blue-600' : 'bg-navy-200'
+        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all duration-300 group-hover:scale-105 ${
+          checked ? 'bg-brand-gradient shadow-glow-blue' : 'bg-navy-200 dark:bg-slate-600'
         }`}
         aria-hidden="true"
       >
         <span
-          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${
+          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
             checked ? 'translate-x-[22px]' : 'translate-x-0.5'
           }`}
         />
@@ -111,12 +113,12 @@ export function SegmentedControl({ options, value, onChange, size = 'md', classN
             onClick={() => !opt.disabled && onChange(opt.value)}
             title={opt.disabled ? opt.disabledTitle || 'Cần nâng cấp gói' : undefined}
             className={[
-              'rounded-lg font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
-              opt.disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer',
+              'rounded-lg font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+              opt.disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:-translate-y-px active:scale-95',
               size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3.5 py-1.5 text-sm',
               selected
                 ? 'bg-white text-navy-900 shadow-sm dark:bg-slate-600 dark:text-white'
-                : 'text-navy-500 hover:text-navy-800 dark:text-slate-400 dark:hover:text-white',
+                : 'text-navy-500 hover:bg-white/70 hover:text-navy-800 dark:text-slate-400 dark:hover:bg-slate-600/50 dark:hover:text-white',
             ].join(' ')}
           >
             {opt.label}
@@ -141,7 +143,7 @@ export function ColorPicker({ colors, value, onChange, label }) {
             aria-checked={selected}
             aria-label={`Màu ${color}`}
             onClick={() => onChange(color)}
-            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-full transition-all duration-200 hover:-translate-y-0.5 hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${selected ? 'scale-110 ring-2 ring-navy-900/30 ring-offset-2 dark:ring-white/50 dark:ring-offset-slate-800' : ''}`}
             style={{ backgroundColor: color }}
           >
             {selected && (

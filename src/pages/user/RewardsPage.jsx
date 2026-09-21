@@ -115,12 +115,12 @@ export default function RewardsPage() {
       </div>
 
       {/* Hero: streak + points */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-800 to-navy-900 p-6 text-white dark:from-slate-700 dark:to-slate-800">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-orange-500/20 blur-3xl" aria-hidden="true" />
-        <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl" aria-hidden="true" />
+      <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-800 to-navy-900 p-6 text-white transition-all duration-500 hover:-translate-y-1 hover:shadow-glow-purple dark:from-slate-700 dark:to-slate-800">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-orange-500/20 blur-3xl transition-transform duration-700 group-hover:scale-125" aria-hidden="true" />
+        <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl transition-transform duration-700 group-hover:scale-125" aria-hidden="true" />
         <div className="relative flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-5">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 via-red-500 to-amber-400 shadow-glow-purple">
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 via-red-500 to-amber-400 shadow-glow-purple transition-transform duration-500 group-hover:rotate-6 group-hover:scale-105">
               <Flame size={42} weight="fill" className="text-white" />
             </div>
             <div>
@@ -134,8 +134,7 @@ export default function RewardsPage() {
                   : 'Đăng nhập hôm nay để nhận +10 điểm!'}
               </p>
             </div>
-          </div>
-          <div className="flex items-center gap-5 rounded-2xl bg-white/10 px-6 py-4 ring-1 ring-white/15 backdrop-blur">
+          </div>            <div className="flex items-center gap-5 rounded-2xl bg-white/10 px-6 py-4 ring-1 ring-white/15 backdrop-blur transition-all duration-500 hover:bg-white/20 hover:ring-white/30">
             <Gift size={28} weight="duotone" className="text-amber-300" />
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-navy-300">Điểm của bạn</p>
@@ -154,9 +153,7 @@ export default function RewardsPage() {
         <div className="relative mt-6 flex items-center justify-between gap-1 sm:justify-start sm:gap-2">
           {days.map((d) => (
             <div
-              key={d.date.toISOString()}
-              className={`flex w-10 flex-col items-center rounded-xl py-2 sm:w-12 ${
-                d.filled
+              key={d.date.toISOString()}              className={`flex w-10 cursor-default flex-col items-center rounded-xl py-2 transition-all duration-300 hover:-translate-y-1 hover:scale-105 sm:w-12 ${d.filled
                   ? 'bg-gradient-to-b from-orange-500/80 to-red-500/60 text-white'
                   : d.isToday
                     ? 'bg-white/10 text-white ring-1 ring-white/25'
@@ -178,8 +175,8 @@ export default function RewardsPage() {
           { icon: Flame, title: `+${data.rules?.streakBonus ?? 50} điểm / 7 ngày`, desc: 'Chuỗi 7, 14, 21… ngày được thưởng' },
           { icon: UsersThree, title: `+${data.rules?.invite ?? 100} điểm / bạn`, desc: 'Bạn đăng ký mã mời + đăng nhập lần đầu' },
         ].map((r) => (
-          <div key={r.title} className="card flex items-center gap-3 p-4">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 ring-1 ring-inset ring-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-800/50">
+          <div key={r.title} className="card group flex items-center gap-3 p-4">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 ring-1 ring-inset ring-amber-100 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-800/50">
               <r.icon size={20} weight="duotone" />
             </span>
             <div>
@@ -253,7 +250,7 @@ export default function RewardsPage() {
                 {data.invites.map((inv) => {
                   const meta = STATUS_META[inv.status] || STATUS_META.PENDING
                   return (
-                    <li key={inv.id} className="flex items-center justify-between gap-3 rounded-xl bg-navy-50 px-3.5 py-2.5 dark:bg-slate-800">
+                    <li key={inv.id} className="flex items-center justify-between gap-3 rounded-xl bg-navy-50 px-3.5 py-2.5 transition-all duration-200 hover:translate-x-0.5 hover:bg-navy-100/80 dark:bg-slate-800 dark:hover:bg-slate-700/80">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-navy-800 dark:text-slate-200">{inv.email}</p>
                         <p className="text-xs text-navy-400 dark:text-slate-500">
@@ -284,13 +281,11 @@ export default function RewardsPage() {
           <div className="mt-4 space-y-3">
             {data.tiers.map((tier) => {
               const pct = Math.min(100, Math.round((tier.progress / tier.points) * 100))
-              return (
-                <div
+              return (                <div
                   key={tier.id}
-                  className={`rounded-2xl border p-4 transition ${
-                    tier.plan === 'PRO'
-                      ? 'border-violet-200 bg-violet-50/50 dark:border-violet-900 dark:bg-violet-900/10'
-                      : 'border-blue-100 bg-blue-50/40 dark:border-blue-900 dark:bg-blue-900/10'
+                  className={`group rounded-2xl border p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg ${tier.plan === 'PRO'
+                      ? 'border-violet-200 bg-violet-50/50 hover:border-violet-300 hover:shadow-glow-purple dark:border-violet-900 dark:bg-violet-900/10'
+                      : 'border-blue-100 bg-blue-50/40 hover:border-blue-300 hover:shadow-glow-blue dark:border-blue-900 dark:bg-blue-900/10'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -313,9 +308,7 @@ export default function RewardsPage() {
                   </div>
                   <div className="mt-3 h-2 overflow-hidden rounded-full bg-navy-100 dark:bg-slate-700">
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        tier.plan === 'PRO' ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500' : 'bg-gradient-to-r from-blue-500 to-cyan-500'
-                      }`}
+                      className={`h-full rounded-full transition-all duration-700 ${tier.plan === 'PRO' ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500' : 'bg-gradient-to-r from-blue-500 to-cyan-500'}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -356,7 +349,7 @@ export default function RewardsPage() {
             </p>
           ) : (
             data.transactions.slice(0, 10).map((tx) => (
-              <div key={tx.id} className="flex items-center justify-between gap-3 rounded-xl bg-navy-50 px-3.5 py-2.5 dark:bg-slate-800">
+              <div key={tx.id} className="flex items-center justify-between gap-3 rounded-xl bg-navy-50 px-3.5 py-2.5 transition-all duration-200 hover:translate-x-0.5 hover:bg-navy-100/80 dark:bg-slate-800 dark:hover:bg-slate-700/80">
                 <div className="flex items-center gap-2.5">
                   <span
                     className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-extrabold ${

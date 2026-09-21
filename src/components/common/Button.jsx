@@ -24,6 +24,9 @@ const SIZES = {
   'icon-sm': 'h-9 w-9 p-0 justify-center',
 }
 
+// Nhóm nền đặc → có thêm vệt sáng quét qua (sheen) khi hover
+const SOLID_VARIANTS = ['primary', 'gradient', 'danger', 'navy']
+
 export default function Button({
   variant = 'primary',
   size = 'md',
@@ -36,15 +39,18 @@ export default function Button({
   disabled,
   ...props
 }) {
+  const solid = SOLID_VARIANTS.includes(variant)
+
   return (
     <button
       type="button"
       disabled={disabled || loading}
       className={[
-        'inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-150',
+        'group relative inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200',
         'cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
         'disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none',
-        'active:scale-[0.98]',
+        'hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:scale-[0.98]',
+        solid ? 'sheen' : '',
         VARIANTS[variant],
         SIZES[size],
         fullWidth ? 'w-full' : '',
@@ -59,7 +65,7 @@ export default function Button({
         </>
       ) : (
         <>
-          {Icon && <Icon size={size === 'lg' ? 20 : 18} weight={iconWeight} />}
+          {Icon && <Icon size={size === 'lg' ? 20 : 18} weight={iconWeight} className="icon-pop" />}
           {children}
         </>
       )}
