@@ -39,11 +39,13 @@ const VIETNAMESE_PATTERNS = {
   },
 
   // Relative days
+  // Không nhận "qua"/"kia" đứng một mình: "đi qua công ty", "bữa kia" không
+  // phải là chỉ định ngày hôm qua/ngày kia (trước đây làm việc sau thành 22/9)
   relativeDays: {
     'hôm nay': 0, 'hom nay': 0, 'nay': 0, 'hn': 0,
     'ngày mai': 1, 'ngay mai': 1, 'mai': 1, 'tmai': 1,
-    'ngày kia': 2, 'ngay kia': 2, 'kia': 2,
-    'hôm qua': -1, 'hom qua': -1, 'qua': -1,
+    'ngày kia': 2, 'ngay kia': 2,
+    'hôm qua': -1, 'hom qua': -1,
     'hôm kia': -2, 'hom kia': -2,
   },
 
@@ -91,9 +93,12 @@ const VIETNAMESE_PATTERNS = {
 
 const ENGLISH_PATTERNS = {
   days: {
-    'monday': 1, 'mon': 1, 'tuesday': 2, 'tue': 2,
-    'wednesday': 3, 'wed': 3, 'thursday': 4, 'thu': 4,
-    'friday': 5, 'fri': 5, 'saturday': 6, 'sat': 6,
+    // Không nhận "mon"/"thu"/"sat" lẻ sau khi bỏ dấu: "món ăn"→thứ 2,
+    // "thủ đức"→thứ 5, "gần sát"→thứ 7 (trước đây câu chứa "thủ đức"
+    // lấy nhầm ngày thứ 5 thay vì "ngày 26")
+    'monday': 1, 'tuesday': 2, 'tue': 2,
+    'wednesday': 3, 'wed': 3, 'thursday': 4,
+    'friday': 5, 'fri': 5, 'saturday': 6,
     'sunday': 0, 'sun': 0,
   },
   relativeDays: {
@@ -140,6 +145,9 @@ const TASK_START = new RegExp(
 const CLAUSE_SEPS = [
   /,/g,
   /\s+(?:sau\s*đó|sau\s*do|rồi|roi|xong|tiếp\s*theo|tiep\s*theo)\s+/gi,
+  // "…8h30 và …9h" — hai vế cùng có giờ → tách; "An, Lan và Bình lúc 9h"
+  // không tách vì vế trái chưa có giờ (guard trong splitClauses)
+  /\s+(?:và|va)\s+/gi,
 ]
 
 function findSeps(text) {
@@ -220,11 +228,14 @@ function applyPeriodHint(hint, hour) {
   if (!hint) return { hour, nextDay: false }
   const h = hint.toLowerCase()
   if (h === 'đêm' || h === 'dem' || h === 'khuya' || h === 'ngủ' || h === 'ngu' || h === 'sleep') {
-    if (hour === 12) return { hour: 0, nextDay: true }
-    if (hour > 0 && hour < 12) return { hour: hour + 12, nextDay: false }
+    // 0h/12h đêm = nửa đêm hôm sau; 6–11h đêm = buổi tối (+12);
+    // 1–5h đêm giữ nguyên ("về 3h sáng" = 03:00, không phải 15:00)
+    if (hour === 0 || hour === 12) return { hour: 0, nextDay: true }
+    if (hour >= 6 && hour < 12) return { hour: hour + 12, nextDay: false }
     return { hour, nextDay: false }
   }
   if (h === 'chiều' || h === 'chieu' || h === 'tối' || h === 'toi') {
+    if (hour === 0) return { hour: 0, nextDay: true } // "Tối 0h" = 00:00 hôm sau
     if (hour < 12) return { hour: hour + 12, nextDay: false }
     return { hour, nextDay: false }
   }
@@ -247,10 +258,11 @@ function extractTime(text) {
   // phải được kiểm tra TRƯỚC pattern "giờ + buổi" (5h chiều, 8h tối),
   // nếu không "chiều 5h" sẽ bị hiểu thành 5h SÁNG (lệch 12 giờ).
   const timePatterns = [
-    // Period trước số: "chiều 5h", "tối 8h", "sáng 7h30"
-    /(sang|sáng|trưa|trua|chiều|chieu|tối|toi|đêm|dem)\s*(\d{1,2})\s*[:h]?\s*(\d{2})?/i,
+    // Period trước số: "chiều 5h", "tối 8h", "sáng 7h30", "khuya 24h"
+    /(sang|sáng|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)\s*(\d{1,2})\s*[:h]?\s*(\d{2})?/i,
     // Số trước, period sau: "5h", "5:30", "14h", "14:00", "5h chiều", "8h tối"
-    /(\d{1,2})\s*[:h]\s*(\d{2})?\s*(sang|toi|chiều|chieu|sáng|trua|trưa|dem|đêm)?/i,
+    // (trước đây thiếu "tối"/"khuya" → "7h tối" mất hint → ra 07:00)
+    /(\d{1,2})\s*[:h]\s*(\d{2})?\s*(sang|sáng|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)?/i,
     // "2 giờ", "2 tiếng"
     /(\d{1,2})\s*(gio|giờ|tiếng|tieng|hour)/i,
     // "2am", "2pm"
@@ -272,7 +284,12 @@ function extractTime(text) {
       // Pattern 2–4: số đứng trước
       hour = parseInt(match[1]);
       minute = match[2] ? (parseInt(match[2]) || 0) : 0;
-      if (match[3]) periodHint = match[3].toLowerCase();
+      if (match[3]) {
+        periodHint = match[3].toLowerCase();
+      } else if (/(?:am|pm)\s*$/i.test(match[0])) {
+        // "7am/7pm" đã tường minh → đánh dấu để không ghép/kế thừa buổi khác
+        periodHint = 'am|pm';
+      }
     }
 
     // Buổi đứng TRƯỚC con số trong câu (vd "Chiều có cuộc họp lúc 2h")
@@ -280,16 +297,37 @@ function extractTime(text) {
 
     let res = applyPeriodHint(periodHint, hour);
     hour = res.hour;
+    let nextDay = res.nextDay;
 
     // Xử lý am/pm
     const fullMatch = match[0];
     if (fullMatch.includes('pm') && hour < 12) hour += 12;
     if (fullMatch.includes('am') && hour === 12) hour = 0;
 
+    // "24h khuya" = 00:00 hôm sau (24 nằm ngoài 0–23 nên trước đây bị bỏ qua
+    // hoàn toàn → câu không có giờ → công việc không có thời hạn)
+    if (hour === 24) {
+      hour = 0;
+      nextDay = true;
+    }
+
     if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
-      return { hour, minute, nextDay: res.nextDay, matched: match[0] };
+      return { hour, minute, nextDay, matched: match[0], period: periodHint };
     }
   }
+
+  // Không có giờ cụ thể nhưng có từ chỉ buổi ("trưa đi ăn", "chiều họp") →
+  // dùng giờ mặc định của buổi đó. Backend bắt buộc dueAt nên câu trống
+  // sẽ bị từ chối lúc tạo công việc.
+  const buoi = periodHintBefore(text, text.length);
+  if (buoi) {
+    // "…nhắc trước 5 phút mỗi buổi tối" vẫn là chỉ thị toàn cục, không phải việc
+    if (extractReminder(text) && GLOBAL_MARKERS.test(text)) return null;
+    const dflt = { 'sáng': 8, 'trưa': 12, 'chiều': 15, 'tối': 20, 'đêm': 22, 'ngủ': 22 }[buoi];
+    if (dflt) return { hour: dflt, minute: 0, nextDay: false, matched: null, period: buoi };
+  }
+  const enPer = ['morning', 'afternoon', 'evening', 'night'].find((w) => hasWord(normalizeText(text), w));
+  if (enPer) return { hour: ENGLISH_PATTERNS.times[enPer], minute: 0, nextDay: false, matched: null, period: enPer };
   return null;
 }
 
@@ -477,17 +515,32 @@ function cleanTitle(clause, spans) {
   // Bỏ "vào lúc / lúc / tại / at" còn sót
   s = s.replace(/\b(vào lúc|vào|tại|lúc|at)\b/gi, ' ')
   s = collapse(s)
-  // Bỏ từ chỉ buổi ở ĐẦU câu ("Trưa nay...", "Chiều có...", "Tối ăn...")
-  s = s.replace(/^(sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem|buổi sáng|buổi trưa|buổi chiều|buổi tối)\b/gi, ' ')
+  // Ngày còn sót (span có thể trỏ sai chỗ khi câu có dấu) — "ngày 23/9", "ngày 26"
+  s = s.replace(/\bngày\s*\d{1,2}\s*[/-]\s*\d{1,2}(?:\s*[/-]\s*\d{2,4})?\b/gi, ' ')
+  s = s.replace(/\bngày\s+\d{1,2}\b/gi, ' ')
+  s = s.replace(/\b\d{1,2}\s*[/-]\s*\d{1,2}(?:\s*[/-]\s*\d{2,4})?\b/g, ' ')
+  // Giờ còn sót — "9h", "8h30 sáng", "24h khuya"
+  // (biên như HAS_CLOCK: "4 học" không bị cắt mất chữ "học")
+  s = s.replace(/\b\d{1,2}\s*[:h](?![a-zà-ỹ])\s*\d{0,2}\s*(?:sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)?/gi, ' ')
   s = collapse(s)
-  // Bỏ chủ ngữ ở đầu câu ("tôi đi ăn trưa" → "đi ăn trưa")
-  s = s.replace(/^(tôi|toi|em|mình|minh|bạn|ban|chúng ta|chung ta|anh|chị|chi)\b(?:\s+(sẽ|se|cần|can|phải|phai|muốn|muon|đi|di))?/gi, ' ')
+  // Lặp tới khi ổn định — sau khi bỏ span/ngày/giờ, từ nối + chủ ngữ mới
+  // trồi ra đầu câu ("Sau đó tôi sẽ qua…" → cần bỏ nhiều lớp mới ra "Qua…")
+  for (let pass = 0; pass < 3; pass++) {
+    const before = s
+    // Bỏ từ chỉ buổi ở ĐẦU câu ("Trưa nay...", "Chiều có...", "Tối ăn...")
+    s = s.replace(/^(?:buổi\s+)?(?:sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)\b/gi, ' ')
+    s = collapse(s)
+    // Bỏ chủ ngữ ở đầu câu ("tôi đi ăn trưa" → "đi ăn trưa", "chúng tôi sẽ…" → bỏ "chúng tôi sẽ")
+    s = s.replace(/^(?:chúng tôi|chung toi|tôi|toi|em|mình|minh|bạn|ban|chúng ta|chung ta|anh|chị|chi)\b(?:\s+(?:sẽ|se|cần|can|phải|phai|muốn|muon|đi|di))?/gi, ' ')
+    s = collapse(s)
+    // Bỏ từ nối đầu câu
+    s = s.replace(/^(?:và|va|rồi|roi|sau đó|sau do|kế tiếp|ke tiep|tiếp theo|tiep theo|xong|hãy|hay|cần|can|phải|phai|sẽ|se|every)\b/gi, ' ')
+    s = collapse(s)
+    // Bỏ "có" đầu câu ("Có cuộc họp" → "Cuộc họp")
+    s = s.replace(/^có\s+/i, ' ')
+    if (s === before) break
+  }
   s = collapse(s)
-  // Bỏ từ nối đầu câu
-  s = s.replace(/^(và|va|rồi|roi|sau đó|sau do|kế tiếp|ke tiep|tiếp theo|tiep theo|xong|hãy|hay|cần|can|phải|phai|sẽ|se|every)\b/gi, ' ')
-  s = collapse(s)
-  // Bỏ "có" đầu câu ("Có cuộc họp" → "Cuộc họp")
-  s = s.replace(/^có\s+/i, ' ')
   // Bỏ từ chỉ mức ưu tiên / lặp lại / dấu phẩy thừa còn sót trong tiêu đề
   s = s.replace(/\b(khẩn cấp|khan cap|quan trọng|important|trung bình|thấp|thap|urgent|high|medium|low|nghiêm trọng|hàng ngày|hang ngay|hàng tuần|hang tuan|hàng tháng|hang thang|daily|weekly|monthly|every day|every week|every month)\b/gi, ' ')
   // Bỏ cụm "ưu tiên cao/thấp…" (biên tự viết thường/VI để \b không trượt:
@@ -520,29 +573,49 @@ function isModifierClause(clause, remInfo, timeInfo) {
  * @param {Date|null} carryDate - ngày đã biết ở câu TRƯỚC ("Sáng mai 7h lên
  *   trường, trưa 12h đi ăn" → câu sau không nhắc "mai" nữa nhưng vẫn là ngày mai).
  */
-function parseClause(clause, categories, globalReminderOffset, carryDate = null) {
+function parseClause(clause, categories, globalReminderOffset, carryDate = null, carryHour = null, carryPeriod = null) {
   const timeInfo = extractTime(clause)
   const dateInfo = extractDate(clause)
   const remInfo = extractReminder(clause)
 
   // Ngày đến hạn: ngày trong câu → ngày kế thừa từ câu trước → hôm nay.
-  // Không có giờ lẫn ngày → công việc chưa đặt thời hạn.
+  // Luôn có thời hạn (backend bắt buộc dueAt): câu không giờ không ngày
+  // mặc định 18:00 — trước đây ra null và bị server từ chối lúc tạo.
   let day = null
   if (dateInfo?.date) day = new Date(dateInfo.date)
-  else if (timeInfo) day = carryDate ? new Date(carryDate) : new Date()
-  if (day) day.setHours(0, 0, 0, 0)
+  else if (carryDate) day = new Date(carryDate)
+  else day = new Date()
+  day.setHours(0, 0, 0, 0)
 
   let hour = 18, minute = 0
   if (timeInfo) {
     hour = timeInfo.hour
     minute = timeInfo.minute
-    if (timeInfo.nextDay && day) day.setDate(day.getDate() + 1)
+    // Giờ lõm (chỉ có số, không nêu buổi) trong chuỗi đang là buổi tối/trưa/
+    // chiều → kế thừa buổi nếu vẫn đi tiếp về phía sau: "…8h30 và …9h" →
+    // 21:00, "…7h tối, …9h" → 21:00. Buổi sáng / "ngủ" không kế thừa; câu
+    // có ngày riêng thì coi như bắt đầu ngày/buỗi mới.
+    if (
+      !timeInfo.period &&
+      !dateInfo?.date &&
+      carryPeriod &&
+      /^(?:trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)$/.test(carryPeriod) &&
+      hour >= 1 && hour <= 11 &&
+      carryHour != null &&
+      hour + 12 >= carryHour
+    ) {
+      hour += 12
+    }
+    if (timeInfo.nextDay) day.setDate(day.getDate() + 1)
   }
-  let dueAt = null
-  if (day) {
-    day.setHours(hour, minute, 0, 0)
-    dueAt = day.toISOString()
+  day.setHours(hour, minute, 0, 0)
+  // Câu KHÔNG tự nêu ngày mà giờ đã lùi qua quá khứ → dời sang hôm sau
+  // ("sau đó 9h" gõ lúc 17h → 9h ngày mai), nếu không backend từ chối
+  // và việc bị mất im lặng khi bấm tạo.
+  if (!dateInfo?.date && day.getTime() <= Date.now()) {
+    day.setDate(day.getDate() + 1)
   }
+  const dueAt = day.toISOString()
 
   // Nhắc nhở: ưu tiên nhắc nhở riêng của câu, nếu không dùng chỉ thị toàn cục
   const reminders = []
@@ -602,17 +675,32 @@ export function parseNaturalLanguageTasks(text, categories = []) {
     }
   }
 
-  // Pass 2: parse từng câu thành công việc (kế thừa ngày từ câu trước)
+  // Pass 2: parse từng câu thành công việc (kế thừa ngày + buổi từ câu trước)
   const tasks = []
   let carryDate = null
+  let carryHour = null
+  let carryPeriod = null
   for (const clause of clauses) {
     const remInfo = extractReminder(clause)
     const timeInfo = extractTime(clause)
     if (isModifierClause(clause, remInfo, timeInfo)) continue
-    const task = parseClause(clause, categories, globalReminderOffset, carryDate)
+    const task = parseClause(clause, categories, globalReminderOffset, carryDate, carryHour, carryPeriod)
     if (task) tasks.push(task)
     const dateInfo = extractDate(clause)
-    if (dateInfo?.date) carryDate = dateInfo.date
+    // giờ ĐÃ resolve (+12/kế thừa…) của câu này — lấy từ dueAt để câu sau
+    // so sánh đúng (python cũng dùng giờ cuối)
+    const finalHour = task
+      ? new Date(task.dueAt).getHours() + new Date(task.dueAt).getMinutes() / 60
+      : (timeInfo ? timeInfo.hour + timeInfo.minute / 60 : null)
+    if (dateInfo?.date) {
+      carryDate = dateInfo.date
+      // ngày mới → mang theo buổi của CHÍNH câu đó (không thì bắt đầu mới)
+      carryPeriod = timeInfo?.period || null
+      carryHour = timeInfo ? finalHour : null
+    } else if (timeInfo) {
+      carryPeriod = timeInfo.period || carryPeriod
+      carryHour = finalHour
+    }
   }
 
   // Không tách được câu nào → thử parse cả chuỗi như một công việc
