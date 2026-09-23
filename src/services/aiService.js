@@ -60,6 +60,8 @@ const VIETNAMESE_PATTERNS = {
   priorities: {
     'khẩn cấp': 'URGENT', 'khan cap': 'URGENT', 'urgent': 'URGENT', 'quá重要': 'URGENT',
     'quan trọng': 'HIGH', 'important': 'HIGH', 'high': 'HIGH',
+    'ưu tiên cao': 'HIGH', 'uu tien cao': 'HIGH',
+    'ưu tiên khẩn cấp': 'URGENT', 'uu tien khan cap': 'URGENT',
     'trung bình': 'MEDIUM', 'medium': 'MEDIUM',
     'thấp': 'LOW', 'thap': 'LOW', 'low': 'LOW',
   },
@@ -114,13 +116,78 @@ function normalizeText(text) {
 }
 
 // ─── Tách câu: mỗi câu là một công việc tiềm năng ──────────
+// Bước 1: dấu kết thúc câu.
 const SENTENCE_SPLIT = /[.;!?]+|\n+/
+
+// Chứa giờ cụ thể: "7h", "12h30", "2 giờ", "2pm" (chữ "h" trong "4 học"
+// KHÔNG tính — lookbehind/lookahead tránh lẹm vào số học, số năm…)
+const HAS_CLOCK =
+  /(?<!\d)\d{1,2}\s*(?:[:h](?![a-zà-ỹ])|(?:giờ|gio|tiếng|tieng|hour)\b|(?:am|pm)\b)/i
+
+// Cụm mở đầu một việc mới: buổi trong ngày, "mai/ngày mai", "lúc N", "Nh giờ", thứ tuần
+const TASK_START = new RegExp(
+  [
+    '^(?:buổi\\s+)?(?:sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem)\\b',
+    '^(?:ngày\\s+)?(?:mai|nay|kia)\\b',
+    '^(?:lúc|luc)\\s*\\d',
+    '^\\d{1,2}\\s*[:h]',
+    '^(?:thứ\\s*\\d|thu\\s*\\d|chủ nhật|chu nhat)\\b',
+  ].join('|'),
+  'i',
+)
+
+// Dấu ngắt việc: dấu phẩy hoặc từ nối tuần tự
+const CLAUSE_SEPS = [
+  /,/g,
+  /\s+(?:sau\s*đó|sau\s*do|rồi|roi|xong|tiếp\s*theo|tiep\s*theo)\s+/gi,
+]
+
+function findSeps(text) {
+  const seps = []
+  for (const re of CLAUSE_SEPS) {
+    re.lastIndex = 0
+    let m
+    while ((m = re.exec(text))) seps.push([m.index, m.index + m[0].length])
+  }
+  return seps.sort((a, b) => a[0] - b[0])
+}
+
+/**
+ * Tách một câu không có dấu kết thúc thành nhiều việc:
+ * "…lên trường lúc 7h…, trưa đi ăn lúc 12h sau đó chiều 2h đi chụp hình"
+ * → 3 việc. Chỉ cắt khi PHÍA TRƯỚC đã có giờ VÀ cụm ngay sau dấu ngắt
+ * phải có giờ riêng hoặc mở đầu như một việc mới ("trưa…", "mai…").
+ * Câu phụ không có giờ riêng ("Đi ăn trưa, có 5 người tham dự lúc 12h")
+ * hay chỉ thị ("…19h, nhắc trước 30 phút") vẫn giữ nguyên.
+ */
+function splitClauses(text) {
+  const seps = findSeps(text)
+  const chunks = []
+  let pos = 0
+  for (const [start, end] of seps) {
+    if (start < pos) continue
+    const left = text.slice(pos, start)
+    const rest = text.slice(end)
+    if (rest.trim().length < 4) continue
+    if (!HAS_CLOCK.test(left)) continue
+    // head = phần NGAY SAU dấu ngắt, cắt trước dấu ngắt kế tiếp
+    const nextSep = findSeps(rest)[0]
+    const head = nextSep ? rest.slice(0, nextSep[0]) : rest
+    if (HAS_CLOCK.test(head) || TASK_START.test(rest.trim())) {
+      chunks.push(left.trim())
+      pos = end
+    }
+  }
+  chunks.push(text.slice(pos).trim())
+  return chunks.filter(Boolean)
+}
 
 function splitSentences(text) {
   return text
     .split(SENTENCE_SPLIT)
     .map((s) => s.trim())
     .filter(Boolean)
+    .flatMap(splitClauses)
 }
 
 /**
@@ -130,12 +197,15 @@ function splitSentences(text) {
  */
 function periodHintBefore(text, index) {
   const before = text.slice(0, index)
-  if (/(đêm|dem|khuya)/i.test(before)) return 'đêm'
-  if (/(tối|toi)/i.test(before)) return 'tối'
-  if (/(chiều|chieu)/i.test(before)) return 'chiều'
-  if (/(trưa|trua)/i.test(before)) return 'trưa'
-  if (/(sáng|sang)/i.test(before)) return 'sáng'
-  if (/(ngủ|ngu|sleep)/i.test(before)) return 'ngủ'
+  // Biên từ để "ngủ" không khớp trong "ngu iu"/"nguoi", "tối" không...
+  // (so NGUYÊN VĂN nên "tôi" tự tách khỏi "tối")
+  const has = (rx) => new RegExp(`(?<![a-zà-ỹ])(?:${rx})(?![a-zà-ỹ])`, 'i').test(before)
+  if (has('đêm|dem|khuya')) return 'đêm'
+  if (has('tối|toi')) return 'tối'
+  if (has('chiều|chieu')) return 'chiều'
+  if (has('trưa|trua')) return 'trưa'
+  if (has('sáng|sang')) return 'sáng'
+  if (has('ngủ|ngu|sleep')) return 'ngủ'
   return null
 }
 
@@ -224,6 +294,17 @@ function extractTime(text) {
 }
 
 /**
+ * Kiểm tra từ có xuất hiện NGUYÊN TỪ (không lẹm vào từ khác):
+ * "thu" (Thursday) không được khớp trong "thuốc", "nay" không khớp trong "vậy"…
+ * Text đã normalize (bỏ dấu) nên so bằng regex biên từ.
+ */
+function hasWord(normalized, keyword) {
+  const kw = normalizeText(keyword)
+  const esc = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`(?<![a-zà-ỹ0-9])${esc}(?![a-zà-ỹ0-9])`, 'i').test(normalized)
+}
+
+/**
  * Trích ngày từ một câu. Trả { date, matched } hoặc null.
  */
 function extractDate(text) {
@@ -234,7 +315,7 @@ function extractDate(text) {
 
   // Relative days
   for (const [keyword, offset] of Object.entries(VIETNAMESE_PATTERNS.relativeDays)) {
-    if (normalized.includes(normalizeText(keyword))) {
+    if (hasWord(normalized, keyword)) {
       const date = new Date(today);
       date.setDate(date.getDate() + offset);
       return { date, matched: keyword };
@@ -242,7 +323,7 @@ function extractDate(text) {
   }
 
   for (const [keyword, offset] of Object.entries(ENGLISH_PATTERNS.relativeDays)) {
-    if (normalized.includes(keyword)) {
+    if (hasWord(normalized, keyword)) {
       const date = new Date(today);
       date.setDate(date.getDate() + offset);
       return { date, matched: keyword };
@@ -251,7 +332,7 @@ function extractDate(text) {
 
   // Day of week
   for (const [keyword, dayNum] of Object.entries(VIETNAMESE_PATTERNS.days)) {
-    if (normalized.includes(normalizeText(keyword))) {
+    if (hasWord(normalized, keyword)) {
       const date = new Date(today);
       const currentDay = date.getDay();
       let daysUntil = dayNum - currentDay;
@@ -262,7 +343,7 @@ function extractDate(text) {
   }
 
   for (const [keyword, dayNum] of Object.entries(ENGLISH_PATTERNS.days)) {
-    if (normalized.includes(keyword)) {
+    if (hasWord(normalized, keyword)) {
       const date = new Date(today);
       const currentDay = date.getDay();
       let daysUntil = dayNum - currentDay;
@@ -409,6 +490,9 @@ function cleanTitle(clause, spans) {
   s = s.replace(/^có\s+/i, ' ')
   // Bỏ từ chỉ mức ưu tiên / lặp lại / dấu phẩy thừa còn sót trong tiêu đề
   s = s.replace(/\b(khẩn cấp|khan cap|quan trọng|important|trung bình|thấp|thap|urgent|high|medium|low|nghiêm trọng|hàng ngày|hang ngay|hàng tuần|hang tuan|hàng tháng|hang thang|daily|weekly|monthly|every day|every week|every month)\b/gi, ' ')
+  // Bỏ cụm "ưu tiên cao/thấp…" (biên tự viết thường/VI để \b không trượt:
+  // chữ "ư" KHÔNG phải \w nên \b(?:ưu…) không bao giờ khớp)
+  s = s.replace(/(?<![a-zà-ỹ])(?:ưu tiên|uu tien)\s+(?:cao|thấp|thap|trung bình|trung binh|khẩn cấp|khan cap|urgent|high|low)(?![a-zà-ỹ0-9])/gi, ' ')
   s = s.replace(/,/g, ' ')
   s = collapse(s)
   s = s.replace(/[.,;!?]\s*$/g, '').trim()
@@ -433,24 +517,26 @@ function isModifierClause(clause, remInfo, timeInfo) {
 
 /**
  * Parse MỘT câu thành một công việc đầy đủ trường.
+ * @param {Date|null} carryDate - ngày đã biết ở câu TRƯỚC ("Sáng mai 7h lên
+ *   trường, trưa 12h đi ăn" → câu sau không nhắc "mai" nữa nhưng vẫn là ngày mai).
  */
-function parseClause(clause, categories, globalReminderOffset) {
+function parseClause(clause, categories, globalReminderOffset, carryDate = null) {
   const timeInfo = extractTime(clause)
   const dateInfo = extractDate(clause)
   const remInfo = extractReminder(clause)
 
-  // Ngày đến hạn: ngày trích được (hoặc hôm nay) + giờ trích được
-  let day = dateInfo?.date ? new Date(dateInfo.date) : new Date()
-  day.setHours(0, 0, 0, 0)
+  // Ngày đến hạn: ngày trong câu → ngày kế thừa từ câu trước → hôm nay.
+  // Không có giờ lẫn ngày → công việc chưa đặt thời hạn.
+  let day = null
+  if (dateInfo?.date) day = new Date(dateInfo.date)
+  else if (timeInfo) day = carryDate ? new Date(carryDate) : new Date()
+  if (day) day.setHours(0, 0, 0, 0)
 
   let hour = 18, minute = 0
   if (timeInfo) {
     hour = timeInfo.hour
     minute = timeInfo.minute
-    if (timeInfo.nextDay) day.setDate(day.getDate() + 1)
-  } else if (!dateInfo) {
-    // Không có ngày lẫn giờ → công việc chưa đặt thời hạn
-    day = null
+    if (timeInfo.nextDay && day) day.setDate(day.getDate() + 1)
   }
   let dueAt = null
   if (day) {
@@ -516,14 +602,17 @@ export function parseNaturalLanguageTasks(text, categories = []) {
     }
   }
 
-  // Pass 2: parse từng câu thành công việc
+  // Pass 2: parse từng câu thành công việc (kế thừa ngày từ câu trước)
   const tasks = []
+  let carryDate = null
   for (const clause of clauses) {
     const remInfo = extractReminder(clause)
     const timeInfo = extractTime(clause)
     if (isModifierClause(clause, remInfo, timeInfo)) continue
-    const task = parseClause(clause, categories, globalReminderOffset)
+    const task = parseClause(clause, categories, globalReminderOffset, carryDate)
     if (task) tasks.push(task)
+    const dateInfo = extractDate(clause)
+    if (dateInfo?.date) carryDate = dateInfo.date
   }
 
   // Không tách được câu nào → thử parse cả chuỗi như một công việc
