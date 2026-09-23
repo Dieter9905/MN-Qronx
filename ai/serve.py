@@ -140,13 +140,15 @@ _REL_RX = [
     (r"\btomorrow\b", 1), (r"\btoday\b", 0),
     (r"(?<![\wà-ỹ])mai(?![\wà-ỹ])", 1), (r"(?<![\wà-ỹ])nay(?![\wà-ỹ])", 0),
 ]
+# Không nhận "mon"/"thu"/"sat" lẻ (bỏ dấu: "mon an"→thứ 2, "thu duc"→thứ 5,
+# "ap sat"→thứ 7) — vẫn giữ dạng đầy đủ và "thu 5"/"thứ 5" như cũ
 _WD_RX = [
-    (r"thứ\s*2|thu\s*2|thứ hai|thu hai|monday|\bmon\b", 0),
+    (r"thứ\s*2|thu\s*2|thứ hai|thu hai|monday", 0),
     (r"thứ\s*3|thu\s*3|thứ ba|thu ba|tuesday|\btue\b", 1),
     (r"thứ\s*4|thu\s*4|thứ tư|thu tu|wednesday|\bwed\b", 2),
-    (r"thứ\s*5|thu\s*5|thứ năm|thu nam|thursday|\bthu\b", 3),
+    (r"thứ\s*5|thu\s*5|thứ năm|thu nam|thursday", 3),
     (r"thứ\s*6|thu\s*6|thứ sáu|thu sau|friday|\bfri\b", 4),
-    (r"thứ\s*7|thu\s*7|thứ bảy|thu bay|saturday|\bsat\b", 5),
+    (r"thứ\s*7|thu\s*7|thứ bảy|thu bay|saturday", 5),
     (r"chủ nhật|chu nhat|sunday|\bsun\b|(?<![\wà-ỹ])cn(?![\wà-ỹ])", 6),
 ]
 _CAT = {"hoc tap": "Học tập", "on tap": "Học tập", "study": "Học tập",
@@ -174,22 +176,36 @@ def _extract_time(clause):
             h += 12
         if m.group(3).lower() == "am" and h == 12:
             h = 0
-        return (h, mi, False), m.group(0), m.start()
+        # "ampm" = buổi đã tường minh → không kế thừa buổi khác cho câu sau
+        return (h, mi, False, "ampm"), m.group(0), m.start()
     # Giờ bắt buộc có mốc (h / : / giờ) + ranh giới từ — số lẻ không phải giờ,
     # "h" trong "hàng" không phải mốc giờ
     m = re.search(
-        r"(sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem)?\s*(\d{1,2})\s*[:h]\s*(\d{2})?\b\s*(sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem)?",
+        r"(sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)?\s*(\d{1,2})\s*[:h]\s*(\d{2})?\b\s*(sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)?",
         clause, re.I)
     if not m:
         m = re.search(r"(\d{1,2})\s*(giờ|gio|tiếng|tieng|hour)\b", clause, re.I)
         if not m:
+            # Không có giờ cụ thể nhưng có từ chỉ buổi ("trưa đi ăn", "chiều
+            # họp") → giờ mặc định của buổi (backend bắt buộc dueAt nên câu
+            # trống sẽ bị từ chối lúc tạo công việc)
+            for words, hh, bucket in ((("đêm", "dem", "khuya"), 22, "dem"),
+                                      (("tối", "toi"), 20, "toi"),
+                                      (("chiều", "chieu"), 15, "toi"),
+                                      (("trưa", "trua"), 12, "trua"),
+                                      (("sáng", "sang"), 8, "sang"),
+                                      (("ngủ", "ngu", "sleep"), 22, "ngu")):
+                for w in words:
+                    mm = re.search(rf"(?<!\w){w}(?!\w)", clause, re.I)
+                    if mm:
+                        return (hh, 0, False, bucket), mm.group(0), mm.start()
             return None, None, -1
         h, mi, post = int(m.group(1)), 0, None
         pre = None
     else:
         pre, h, mi, post = m.group(1), int(m.group(2)), int(m.group(3) or 0), m.group(4)
     hint = _norm(f"{pre or ''} {post or ''}")
-    if h < 0 or h > 23 or mi < 0 or mi > 59:
+    if h < 0 or h > 24 or mi < 0 or mi > 59:
         return None, None, -1
     nxt = False
     # So NGUYÊN VĂN + biên từ: sau bỏ dấu "tôi"→"toi" trùng "tối" và
@@ -200,21 +216,52 @@ def _extract_time(clause):
         return any(re.search(rf"(?<!\w){re.escape(w)}(?!\w)", raw, re.I)
                    for w in words)
 
-    if "dem" in hint or _w(before, "đêm", "dem", "khuya", "ngủ", "ngu", "sleep"):
-        if h == 12:
+    # Buỗi của câu này — dùng cho câu SAU kế thừa khi câu sau chỉ có số
+    # ("…8h30 và …9h" → 9h = 21:00). Thứ tự như periodHintBefore: "sáng" và
+    # "ngủ" KHÔNG kế thừa, các buổi còn lại (trưa/chiều/tối/đêm) mới kế thừa.
+    if "khuya" in hint or "dem" in hint or _w(before, "đêm", "dem", "khuya"):
+        ph = "dem"
+    elif "chieu" in hint or "toi" in hint or _w(before, "chiều", "chieu", "tối", "toi"):
+        ph = "toi"
+    elif "trua" in hint or _w(before, "trưa", "trua"):
+        ph = "trua"
+    elif "sang" in hint or _w(before, "sáng", "sang"):
+        ph = "sang"
+    elif _w(before, "ngủ", "ngu", "sleep"):
+        ph = "ngu"
+    else:
+        ph = None
+
+    if "khuya" in hint or "dem" in hint or _w(before, "đêm", "dem", "khuya", "ngủ", "ngu", "sleep"):
+        # 0h/12h đêm = nửa đêm hôm sau; 6–11h đêm = buổi tối (+12);
+        # 1–5h đêm giữ nguyên ("về 3h sáng" = 03:00, không phải 15:00)
+        if h in (0, 12):
+            h, nxt = 0, True
+        elif 6 <= h < 12:
+            h += 12
+    elif "chieu" in hint or "toi" in hint:
+        if h == 0:  # "Tối 0h" = 00:00 hôm sau
             h, nxt = 0, True
         elif h < 12:
             h += 12
-    elif "chieu" in hint or "toi" in hint:
-        if h < 12:
-            h += 12
+    elif "sang" in hint:
+        if h == 12:
+            h = 0
+    elif "trua" in hint and h <= 10:
+        h += 12
     else:
         if _w(before, "chiều", "chieu", "tối", "toi"):
-            if h < 12:
+            if h == 0:
+                h, nxt = 0, True
+            elif h < 12:
                 h += 12
         elif _w(before, "trưa", "trua") and h <= 10:
             h += 12
-    return (h, mi, nxt), m.group(0), m.start()
+    # "24h khuya" = 00:00 hôm sau (24 nằm ngoài 0–23 nên trước đây bị bỏ
+    # hoàn toàn → câu không có giờ → công việc không có thời hạn)
+    if h == 24:
+        h, nxt = 0, True
+    return (h, mi, nxt, ph), m.group(0), m.start()
 
 
 def _extract_date(clause, now):
@@ -255,12 +302,29 @@ def _clean_title(clause, spans):
             pat = rf"\b{re.escape(sp)}\b" if len(sp) <= 4 else re.escape(sp)
             s = re.sub(pat, " ", s, flags=re.I)
     s = re.sub(r"\b(vào lúc|vao luc|vào|vao|tại|tai|lúc|luc|at)\b", " ", s, flags=re.I)
-    s = re.sub(r"^(sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem|buổi sáng|buổi trưa|buổi chiều|buổi tối)\b",
-               " ", s, flags=re.I).strip()
-    s = re.sub(r"^(tôi|toi|em|mình|minh|bạn|ban|chúng ta|chung ta|anh|chị|chi)\b(\s+(sẽ|se|cần|can|phải|phai|muốn|muon|đi|di))?", " ",
-               s, flags=re.I).strip()
-    s = re.sub(r"^(và|va|rồi|roi|sau đó|sau do|tiếp theo|tiep theo|hãy|hay|cần|can|phải|phai|sẽ|se)\b", " ", s, flags=re.I).strip()
-    s = re.sub(r"^(có|co)\s+", "", s, flags=re.I).strip()
+    # Ngày còn sót — "ngày 23/9", "ngày 26"
+    s = re.sub(r"\bngày\s*\d{1,2}\s*[/-]\s*\d{1,2}(?:\s*[/-]\s*\d{2,4})?\b", " ", s, flags=re.I)
+    s = re.sub(r"\bngày\s+\d{1,2}\b", " ", s, flags=re.I)
+    s = re.sub(r"\b\d{1,2}\s*[/-]\s*\d{1,2}(?:\s*[/-]\s*\d{2,4})?\b", " ", s, flags=re.I)
+    # Giờ còn sót — "9h", "24h khuya" (biên như _HAS_CLOCK: "4 học" không mất chữ học)
+    s = re.sub(r"\b\d{1,2}\s*[:h](?![a-zà-ỹ])\s*\d{0,2}\s*(?:sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)?",
+               " ", s, flags=re.I)
+    # Lặp tới khi ổn định — sau khi bỏ span/ngày/giờ, từ nối + chủ ngữ mới
+    # trồi ra đầu câu ("Sau đó tôi sẽ qua…" → cần bỏ nhiều lớp mới ra "Qua…")
+    for _ in range(3):
+        prev = s
+        # Từ chỉ buổi ở ĐẦU câu ("Trưa nay…", "Chiều có…", "Tối ăn…")
+        s = re.sub(r"^(?:buổi|buỗi)\s+|^(?:sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)\b",
+                   " ", s, flags=re.I).strip()
+        # Chủ ngữ ("tôi đi ăn trưa" → "đi ăn trưa", bỏ cả "chúng tôi sẽ")
+        s = re.sub(r"^(?:chúng tôi|chung toi|tôi|toi|em|mình|minh|bạn|ban|chúng ta|chung ta|anh|chị|chi)\b"
+                   r"(?:\s+(?:sẽ|se|cần|can|phải|phai|muốn|muon|đi|di))?", " ", s, flags=re.I).strip()
+        # Từ nối đầu câu
+        s = re.sub(r"^(?:và|va|rồi|roi|sau đó|sau do|kế tiếp|ke tiep|tiếp theo|tiep theo|xong"
+                   r"|hãy|hay|cần|can|phải|phai|sẽ|se|every)\b", " ", s, flags=re.I).strip()
+        s = re.sub(r"^(?:có|co)\s+", "", s, flags=re.I).strip()
+        if s == prev:
+            break
     s = re.sub(r"\b(khẩn cấp|khan cap|quan trọng|important|trung bình|thấp|thap|urgent|high|medium|low|hàng ngày|hang ngay|hàng tuần|hang tuan|hàng tháng|hang thang|daily|weekly|monthly)\b",
                " ", s, flags=re.I)
     # Cụm "ưu tiên cao/thấp…" đã đọc vào priority → bỏ hẳn khỏi tiêu đề
@@ -285,7 +349,10 @@ _TASK_START = re.compile(
     r"|^(?:thứ\s*\d|thu\s*\d|chủ nhật|chu nhat)\b", re.I)
 _SEP_RES = [re.compile(r","),
             re.compile(r"\s+(?:sau\s*đó|sau\s*do|rồi|roi|xong|tiếp\s*theo|tiep\s*theo)\s+",
-                       re.I)]
+                       re.I),
+            # "…8h30 và …9h" — hai vế cùng có giờ → tách; "An, Lan và Bình
+            # lúc 9h" không tách vì vế trái chưa có giờ (guard trong _split_clauses)
+            re.compile(r"\s+(?:và|va)\s+", re.I)]
 
 
 def _find_seps(text):
@@ -335,6 +402,8 @@ def rule_parse(text):
             infos.append((c, t, tm, r, rm))
     tasks = []
     carry = None  # ngày đã biết ở câu trước ("Sáng mai 7h…, trưa 12h…" → cùng ngày mai)
+    carry_h = None   # giờ đã resolve ở câu trước (dùng để quyết định kế thừa buổi)
+    carry_ph = None  # buổi của câu trước ("…8h30 và …9h" → 9h = 21:00)
     for info in infos:
         if not info:
             continue
@@ -342,18 +411,41 @@ def rule_parse(text):
         day, dm = _extract_date(c, now)
         if day is not None:
             carry = day
+        hh = t[0] if t else None
         due = None
         if t:
+            # Giờ lõm (không nêu buổi) sau câu buổi tối/trưa/chiều → kế thừa
+            # buổi khi vẫn đi tiếp về phía sau; buổi sáng/"ngủ" và câu có ngày
+            # riêng thì không kế thừa
+            if (dm is None and t[3] is None and carry_ph in ("trua", "toi", "dem", "khuya")
+                    and 1 <= hh <= 11 and carry_h is not None and hh + 12 >= carry_h):
+                hh += 12
             d = day or carry or now.date()
             if t[2]:
                 d += timedelta(days=1)
             # defensive: validate hour/minute
-            if 0 <= t[0] <= 23 and 0 <= t[1] <= 59:
-                due = datetime(d.year, d.month, d.day, t[0], t[1], tzinfo=VN_TZ)
-            else:
-                due = None
+            if 0 <= hh <= 23 and 0 <= t[1] <= 59:
+                due = datetime(d.year, d.month, d.day, hh, t[1], tzinfo=VN_TZ)
         elif day:
             due = datetime(day.year, day.month, day.day, 18, 0, tzinfo=VN_TZ)
+        else:
+            # Không có giờ lẫn ngày → vẫn phải có thời hạn (backend bắt buộc):
+            # mặc định 18:00 ngày kế thừa / hôm nay
+            d = carry or now.date()
+            due = datetime(d.year, d.month, d.day, 18, 0, tzinfo=VN_TZ)
+        # Câu KHÔNG tự nêu ngày mà giờ đã lùi qua quá khứ → dời sang hôm sau
+        # ("sau đó 9h" gõ lúc 17h → 9h ngày mai), nếu không backend từ chối
+        # và việc bị mất lúc bấm tạo
+        if dm is None and due and due <= now:
+            due += timedelta(days=1)
+        # Cập nhật mang ngày/buỗi cho câu sau
+        if day is not None:
+            carry_ph = t[3] if t else None
+            carry_h = (hh + t[1] / 60) if t else None
+        elif t:
+            if t[3] is not None:
+                carry_ph = t[3]
+            carry_h = hh + t[1] / 60
         off = r if r is not None else glob_off
         rems = []
         if off is not None and due:

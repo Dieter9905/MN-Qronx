@@ -109,28 +109,46 @@ export default function QuickCapture({ onClose, onCreated }) {
       }
       setSaving(true)
       let created = 0
-      let firstErr = ''
+      const failed = []
       for (const tk of parsedTasks) {
+        // Backend bắt buộc dueAt ở TƯƠNG LAI — kiểm tra trước, không gửi
+        // request chắc chắn bị từ chối (trước đây lỗi bị nuốt im lặng nên
+        // tạo N việc nhưng chỉ ra được 1–2 mà không báo gì).
+        const due = tk.dueAt ? new Date(tk.dueAt) : null
+        if (!due || isNaN(due.getTime())) {
+          failed.push(`“${tk.title}” thiếu thời hạn`)
+          continue
+        }
+        if (due.getTime() <= Date.now()) {
+          failed.push(`“${tk.title}” đã ở quá khứ`)
+          continue
+        }
         const res = await createTask({
           title: tk.title,
           description: tk.description || '',
           categoryId: tk.categoryId || undefined,
           priority: tk.priority || 'MEDIUM',
-          dueAt: tk.dueAt || undefined,
+          dueAt: tk.dueAt,
           repeatType: tk.repeatType || 'NONE',
           repeatDays: tk.repeatDays || [],
           reminders: tk.reminders || [],
           subtasks: parsedTasks.length === 1 ? suggestedSubtasks : [],
         })
         if (res.success) created += 1
-        else if (!firstErr) firstErr = res.message
+        else failed.push(`“${tk.title}”: ${res.message || t.quickCaptureError}`)
       }
       setSaving(false)
       if (!created) {
-        toast.error(firstErr || t.quickCaptureError)
+        toast.error(failed[0] || t.quickCaptureError)
         return
       }
-      toast.success(created > 1 ? `Đã tạo ${created} công việc` : t.quickCaptureSuccess)
+      if (failed.length) {
+        // Tạo được nhưng thiếu việc → báo đúng số lượng + lý do, đừng để
+        // người dùng tưởng đã tạo đủ
+        toast.info(`Đã tạo ${created}/${parsedTasks.length} công việc. Bỏ qua: ${failed[0]}`)
+      } else {
+        toast.success(created > 1 ? `Đã tạo ${created} công việc` : t.quickCaptureSuccess)
+      }
       onCreated?.()
       onClose()
       return
