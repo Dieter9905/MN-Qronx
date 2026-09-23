@@ -5,7 +5,7 @@ import { success } from '../dto/response/apiResponse.js'
 
 /**
  * POST /api/v1/ai/parse-tasks
- * Gửi đoạn văn tự nhiên lên 9Router → danh sách công việc (đã sanitize).
+ * Gửi đoạn văn tự nhiên tới AI riêng (AI_INFER_URL) → danh sách công việc (đã sanitize).
  * Chỉ dành cho gói PRO.
  */
 export async function parseTasks(req, res, next) {

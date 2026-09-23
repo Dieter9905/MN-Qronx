@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MN-Qronx AI parse output",
+  "description": "Output chuẩn của AI riêng, khớp 1-1 form tạo công việc",
+  "type": "object",
+  "required": ["tasks"],
+  "properties": {
+    "tasks": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "description": "Ngắn gọn, bỏ chủ ngữ/giờ/ngày. VD 'Tập gym'" },
+          "description": { "type": "string" },
+          "dueAt": {
+            "type": ["string", "null"],
+            "description": "ISO 8601 kèm +07:00. Không rõ giờ → null; có ngày không giờ → 18:00"
+          },
+          "priority": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"], "default": "MEDIUM" },
+          "repeatType": { "type": "string", "enum": ["NONE", "DAILY", "WEEKLY", "MONTHLY"], "default": "NONE" },
+          "repeatDays": {
+            "type": "array",
+            "description": "Chỉ dùng khi WEEKLY. 1=Thứ 2 … 7=Chủ nhật",
+            "items": { "type": "integer", "minimum": 1, "maximum": 7 }
+          },
+          "reminders": {
+            "type": "array",
+            "maxItems": 5,
+            "description": "Mỗi remindAt phải ≤ dueAt",
+            "items": {
+              "type": "object",
+              "required": ["remindAt"],
+              "properties": { "remindAt": { "type": "string" } }
+            }
+          },
+          "categoryName": { "type": ["string", "null"], "description": "VD Học tập, Công việc, Cá nhân, Sức khỏe" }
+        }
+      }
+    }
+  }
+}

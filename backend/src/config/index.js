@@ -83,11 +83,12 @@ const config = {
     clientEmail: process.env.FCM_CLIENT_EMAIL || '',
   },
 
-  // AI thật qua 9Router (OpenAI-compatible gateway, key chỉ nằm ở server)
+  // AI riêng của MN-Qronx (self-hosted inference server, xem thư mục ai/ ở root).
+  // Giữ đọc AI_BASE_URL/AI_MODEL cũ để tương thích ngược, ưu tiên tên mới.
   ai: {
-    baseUrl: process.env.AI_BASE_URL || 'http://localhost:20128/v1',
+    inferUrl: (process.env.AI_INFER_URL || process.env.AI_BASE_URL || 'http://localhost:8000').replace(/\/+$/, ''),
     apiKey: process.env.AI_API_KEY || '',
-    model: process.env.AI_MODEL || 'kr/claude-sonnet-4.5',
+    modelVersion: process.env.AI_MODEL_VERSION || process.env.AI_MODEL || 'mn-qronx-parser-v1',
   },
 }
 
