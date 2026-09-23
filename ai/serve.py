@@ -157,6 +157,7 @@ _CAT = {"hoc tap": "Học tập", "on tap": "Học tập", "study": "Học tập
         "thuoc": "Sức khỏe", "doc sach": "Cá nhân", "sach": "Cá nhân"}
 _PRI = [("khan cap", "URGENT"), ("urgent", "URGENT"),
         ("quan trong", "HIGH"), ("important", "HIGH"),
+        ("uu tien cao", "HIGH"),
         ("trung binh", "MEDIUM"), ("medium", "MEDIUM"),
         ("thap", "LOW"), ("low", "LOW"), ("chua gap", "LOW")]
 _REP = [("hang ngay", "DAILY"), ("moi ngay", "DAILY"), ("daily", "DAILY"),
@@ -191,7 +192,15 @@ def _extract_time(clause):
     if h < 0 or h > 23 or mi < 0 or mi > 59:
         return None, None, -1
     nxt = False
-    if "dem" in hint or "ngu" in _norm(clause[:m.start()]):
+    # So NGUYÊN VĂN + biên từ: sau bỏ dấu "tôi"→"toi" trùng "tối" và
+    # "người"→"nguoi" chứa "ngu" (ngủ) → trước đây 7h thành 19h, 12h thành 0h hôm sau
+    before = clause[:m.start()]
+
+    def _w(raw, *words):
+        return any(re.search(rf"(?<!\w){re.escape(w)}(?!\w)", raw, re.I)
+                   for w in words)
+
+    if "dem" in hint or _w(before, "đêm", "dem", "khuya", "ngủ", "ngu", "sleep"):
         if h == 12:
             h, nxt = 0, True
         elif h < 12:
@@ -200,11 +209,10 @@ def _extract_time(clause):
         if h < 12:
             h += 12
     else:
-        before = _norm(clause[:m.start()])
-        if "chieu" in before or "toi" in before:
+        if _w(before, "chiều", "chieu", "tối", "toi"):
             if h < 12:
                 h += 12
-        elif "trua" in before and h <= 10:
+        elif _w(before, "trưa", "trua") and h <= 10:
             h += 12
     return (h, mi, nxt), m.group(0), m.start()
 
@@ -255,13 +263,61 @@ def _clean_title(clause, spans):
     s = re.sub(r"^(có|co)\s+", "", s, flags=re.I).strip()
     s = re.sub(r"\b(khẩn cấp|khan cap|quan trọng|important|trung bình|thấp|thap|urgent|high|medium|low|hàng ngày|hang ngay|hàng tuần|hang tuan|hàng tháng|hang thang|daily|weekly|monthly)\b",
                " ", s, flags=re.I)
+    # Cụm "ưu tiên cao/thấp…" đã đọc vào priority → bỏ hẳn khỏi tiêu đề
+    s = re.sub(r"\b(?:ưu tiên|uu tien)\s+(?:cao|thấp|thap|trung bình|trung binh|khẩn cấp|khan cap|urgent|high|low)\b",
+               " ", s, flags=re.I)
     s = re.sub(r"\s+", " ", s.replace(",", " ")).strip(" .,;!?")
     return (s[:1].upper() + s[1:]) if s else None
+
+
+# ── Tách câu → việc: dấu phẩy, "sau đó", "rồi", "xong", "tiếp theo" ──
+# Chỉ cắt khi PHÍA TRƯỚC đã có giờ VÀ cụm sau dấu ngắt có giờ riêng
+# ("trưa… lúc 12h") hoặc mở đầu như việc mới ("trưa…", "mai…").
+# Câu phụ không có giờ riêng ("Đi ăn trưa, có 5 người tham dự lúc 12h")
+# và chỉ thị ("…19h, nhắc trước 30 phút") giữ nguyên.
+_HAS_CLOCK = re.compile(
+    r"(?<!\d)\d{1,2}\s*(?:[:h](?![a-zà-ỹ])|(?:giờ|gio|tiếng|tieng|hour)\b|(?:am|pm)\b)",
+    re.I)
+_TASK_START = re.compile(
+    r"^(?:(?:buỗi|buổi|buoi)\s+)?(?:sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem)\b"
+    r"|^(?:ngày\s+|ngay\s+)?(?:mai|nay|kia)\b"
+    r"|^(?:lúc|luc)\s*\d|^\d{1,2}\s*[:h]"
+    r"|^(?:thứ\s*\d|thu\s*\d|chủ nhật|chu nhat)\b", re.I)
+_SEP_RES = [re.compile(r","),
+            re.compile(r"\s+(?:sau\s*đó|sau\s*do|rồi|roi|xong|tiếp\s*theo|tiep\s*theo)\s+",
+                       re.I)]
+
+
+def _find_seps(text):
+    seps = []
+    for rx in _SEP_RES:
+        seps += [(m.start(), m.end()) for m in rx.finditer(text)]
+    return sorted(seps)
+
+
+def _split_clauses(text):
+    chunks, pos = [], 0
+    for start, end in _find_seps(text):
+        if start < pos:
+            continue
+        left, rest = text[pos:start], text[end:]
+        if len(rest.strip()) < 4 or not _HAS_CLOCK.search(left):
+            continue
+        nxt = _find_seps(rest)
+        head = rest[:nxt[0][0]] if nxt else rest
+        if _HAS_CLOCK.search(head) or _TASK_START.match(rest.strip()):
+            chunks.append(left.strip())
+            pos = end
+    chunks.append(text[pos:].strip())
+    return [c for c in chunks if c]
 
 
 def rule_parse(text):
     now = datetime.now(VN_TZ)
     clauses = [c.strip() for c in re.split(r"[.;!?]+\n*|\n+", text) if c.strip()]
+    # Ngoài dấu kết thúc câu, tách thêm theo dấu phẩy / "sau đó" / "rồi"…
+    # ("…lên trường lúc 7h…, trưa đi ăn lúc 12h sau đó chiều 2h…" → 3 việc)
+    clauses = [x for c in clauses for x in _split_clauses(c)]
     glob_off = None
     infos = []
     for c in clauses:
@@ -278,14 +334,17 @@ def rule_parse(text):
         else:
             infos.append((c, t, tm, r, rm))
     tasks = []
+    carry = None  # ngày đã biết ở câu trước ("Sáng mai 7h…, trưa 12h…" → cùng ngày mai)
     for info in infos:
         if not info:
             continue
         c, t, tm, r, rm = info
         day, dm = _extract_date(c, now)
+        if day is not None:
+            carry = day
         due = None
         if t:
-            d = day or now.date()
+            d = day or carry or now.date()
             if t[2]:
                 d += timedelta(days=1)
             # defensive: validate hour/minute
