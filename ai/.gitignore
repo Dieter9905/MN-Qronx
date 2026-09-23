@@ -1,0 +1,11 @@
+# Checkpoint huấn luyện (~11 GB cho cả v1..v6) — không commit vào git.
+# Tái tạo được bằng: python train.py --out checkpoints/v1
+#                    python warmup.py --ckpt checkpoints/v1
+#                    python continue_train.py --ckpt checkpoints/v1 --steps 1500
+checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/

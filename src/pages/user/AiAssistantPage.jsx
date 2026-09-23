@@ -16,6 +16,7 @@ import { useToast } from '../../components/common/Toast'
 import Button from '../../components/common/Button'
 import { Skeleton } from '../../components/common/Feedback'
 import { getTasks, createTask, completeTask } from '../../services/taskService'
+import AiTaskChat from '../../components/AiTaskChat'
 import {
   prioritizeTasks,
   detectScheduleWarnings,
@@ -162,13 +163,18 @@ export default function AiAssistantPage() {
           <Skeleton className="h-24" />
           <Skeleton className="h-64" />
         </div>
-      ) : priorityList.length === 0 && tasks.length === 0 ? (
+      ) : (
+        <>
+          {/* Chatbot tạo việc bằng AI – phân loại đúng cấu trúc form */}
+          <AiTaskChat onTasksCreated={load} />
+
+          {priorityList.length === 0 && tasks.length === 0 ? (
         <div className="card p-10 text-center">
           <Brain size={40} className="mx-auto text-navy-300" />
           <p className="mt-3 font-bold text-navy-700">Chưa có công việc nào để AI phân tích</p>
           <p className="mt-1 text-sm text-navy-400">Tạo vài công việc rồi quay lại, AI sẽ giúp bạn sắp xếp.</p>
         </div>
-      ) : (
+          ) : (
         <>
           {/* Nên làm gì tiếp theo */}
           <section className="card overflow-hidden dark:bg-slate-800">
@@ -336,6 +342,8 @@ export default function AiAssistantPage() {
               </div>
             )}
           </section>
+        </>
+          )}
         </>
       )}
     </div>

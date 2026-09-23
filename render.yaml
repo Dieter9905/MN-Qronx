@@ -51,12 +51,12 @@ services:
         sync: false
       - key: SMTP_PASS
         sync: false
-      # AI thật (9Router) – để dùng trên production, trỏ AI_BASE_URL tới 9Router
-      # deploy công khai (VD VPS/Cloudflare tunnel). Thiếu URL/key → app tự fallback
-      # về parser cục bộ, không ảnh hưởng người dùng.
-      - key: AI_BASE_URL
+      # AI riêng (self-hosted, xem thư mục ai/). Trỏ AI_INFER_URL tới URL
+      # của inference server (VD https://mn-qronx-ai.onrender.com).
+      # Thiếu URL → backend báo AI_NETWORK, app tự fallback về parser cục bộ.
+      - key: AI_INFER_URL
         sync: false
       - key: AI_API_KEY
         sync: false
-      - key: AI_MODEL
-        value: kr/claude-sonnet-4.5
+      - key: AI_MODEL_VERSION
+        value: mn-qronx-parser-v1

@@ -1,7 +1,7 @@
 import api from './apiClient'
 
 /**
- * Gọi AI THẬT (9Router) qua backend để phân tích văn bản thành NHIỀU công việc.
+ * Gọi AI riêng (backend) để phân tích văn bản thành NHIỀU công việc.
  * Backend giữ key, gói PRO, và trả về danh sách đã sanitize.
  * @param {string} text
  * @returns {Promise<Array>} tasks

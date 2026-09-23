@@ -63,7 +63,7 @@ export default function QuickCapture({ onClose, onCreated }) {
     [categories]
   )
 
-  // Parse input text when it changes — AI THẬT (9Router) qua backend, fallback parser cục bộ
+  // Parse input text khi đổi — AI riêng qua backend, fallback parser cục bộ
   useEffect(() => {
     if (mode === 'ai' && inputText.trim()) {
       const timer = setTimeout(async () => {
