@@ -14,7 +14,8 @@
     "mail:test": "node scripts/send-test-email.mjs",
     "mail:send": "node scripts/send-test-email.mjs",
     "mail:status": "node scripts/mailjet-status.mjs",
-    "mail:verify": "node scripts/verify-mailjet-domain.mjs"
+    "mail:verify": "node scripts/verify-mailjet-domain.mjs",
+    "mail:resend": "node scripts/check-resend.mjs"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

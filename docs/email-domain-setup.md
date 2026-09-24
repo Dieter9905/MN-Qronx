@@ -293,8 +293,9 @@ Kết quả mong đợi: `✅ Đã gửi qua api — messageId: …`
 
 | `MAIL_TRANSPORT` | Hành vi |
 |---|---|
-| `auto` (mặc định) | Có API key → dùng **Send API v3.1**; không có → dùng SMTP |
-| `api` | Chỉ dùng API (báo lỗi rõ ràng nếu thiếu key) |
+| `auto` (mặc định) | **Resend → Mailjet Send API v3.1 → SMTP** (đường nào cấu hình trước thì dùng) |
+| `resend` | Chỉ dùng Resend (Bước 9) |
+| `api` | Chỉ dùng Mailjet API (báo lỗi rõ ràng nếu thiếu key) |
 | `smtp` | Chỉ dùng SMTP (như trước đây) |
 
 ```env
@@ -375,6 +376,102 @@ us know what else is required from our side?
 Best regards,
 MN-Qronx Team
 ```
+
+### Cập nhật 15/09/2026 — ticket đã được chuyển nhóm, nên nhắc thêm một lần
+
+Sunidhi trả lời ngày 13/09: *"we will need to engage another group of colleagues.
+We are transferring the ticket to them, and they will be responding as soon as
+possible."* Từ đó **không có thư nào nữa**.
+
+Kiểm tra lại bằng API ngày 15/09/2026:
+
+| Hạng mục | Kết quả |
+|---|---|
+| API key `63bbffe…` | `IsActive: true`, `Runlevel: Normal` |
+| Sender `*@mn-qronx.id.vn` | `Status: Active` (ID `6485107452`) |
+| Tài khoản (`/v3/REST/user`) | vẫn đăng nhập được |
+| `POST /v3.1/send` | **`401 mj-0001`** — vẫn bị khoá |
+
+Việc im lặng 2 ngày là **bình thường** khi ticket đã sang hàng đợi khác (Mailjet xử lý
+loại này thường 3–10 ngày làm việc). Nhưng nên nhắc **một lần**: trả lời ngay trong
+ticket đó, **không mở ticket mới** (sẽ bị gộp và chậm thêm).
+
+```
+Hello Mailjet Support,
+
+Following up on ticket #4264560 — it was transferred to another team on Sep 13.
+Could you please share a status update?
+
+Current state on our side:
+- Sending domain mn-qronx.id.vn: validated (ownership TXT verified, SPF + DKIM OK)
+- Sender no-reply@mn-qronx.id.vn: Status = Active (ID 6485107452)
+- API key 63bbffe…: IsActive = true, Runlevel = Normal
+- Account login works; every send attempt still returns 401 mj-0001 "Your account has
+  been temporarily blocked."
+
+Our app is a task-reminder service and cannot deliver signup verification emails while
+the account is blocked. Could you confirm: (1) what triggered the block, (2) exactly what
+information or documents you need from us, and (3) an estimated timeline?
+
+Happy to provide anything required — business details, sample emails, or a description of
+our signup flow (one opt-in verification email per user, no bulk sending).
+
+Thank you,
+Tô Văn Minh Nhật
+```
+
+---
+
+## Bước 9 — Email dự phòng bằng Resend (dùng khi Mailjet còn khoá)
+
+Mailjet có thể mất **3–10 ngày làm việc** mới gỡ khoá. Trong lúc đó app **không gửi được
+thư nào** — mã xác nhận đăng ký vẫn hiện trên màn hình nên người dùng đăng ký được, nhưng
+hộp thư thì trống. Resend là đường dự phòng chạy được ngay và **vẫn gửi từ tên miền riêng**.
+
+Code đã hỗ trợ sẵn, không cần sửa gì: `MAIL_TRANSPORT=auto` sẽ thử
+**Resend → Mailjet API → SMTP**.
+
+### 9a. Lấy API key
+
+1. Vào <https://resend.com> → đăng ký bằng Gmail
+2. Menu trái → **API Keys** → **Create API Key** (quyền *Sending access*) → copy key `re_...`
+3. Thêm vào `backend/.env`:
+
+   ```env
+   RESEND_API_KEY=re_xxxxxxxxxxxxxxxx
+   RESEND_FROM=MN-Qronx <no-reply@mn-qronx.id.vn>
+   ```
+
+4. Render → service **taskalarm-api** → Environment → thêm `RESEND_API_KEY`
+   (và `RESEND_FROM` nếu muốn ghi rõ tên hiển thị)
+
+### 9b. Xác thực tên miền gửi
+
+Dùng **tên miền con** `send.mn-qronx.id.vn` để **không đụng** các bản ghi Mailjet đang có
+trên tên miền gốc `mn-qronx.id.vn`.
+
+1. <https://resend.com/domains> → **Add Domain** → nhập `send.mn-qronx.id.vn`
+2. `cd backend && npm run mail:resend` → in ra **đúng** tên bản ghi + giá trị cần thêm,
+   kèm đối chiếu với DNS thật
+3. Thêm các bản ghi đó tại PA Vietnam (cùng chỗ đã thêm bản ghi Mailjet)
+4. Chờ 5–30 phút → `npm run mail:resend -- --verify`
+5. Khi trạng thái là `verified` → `npm run mail:send -- <gmail-của-bạn>`
+
+> ⚠️ Đây đúng là cái bẫy đã gặp với Mailjet: nhiều panel DNS **báo lưu thành công nhưng
+> không ghi thay đổi khi SỬA bản ghi cũ**. Nếu công cụ báo “DNS đang có” khác với Resend
+> yêu cầu, hãy **xoá hẳn bản ghi cũ rồi thêm lại**.
+
+> ℹ️ Trước khi tên miền `verified`, Resend chỉ cho gửi từ `onboarding@resend.dev` tới
+> **chính email chủ tài khoản** — đủ để thử luồng đăng ký trước khi chờ DNS.
+
+### 9c. Ghi chú kỹ thuật
+
+| | |
+|---|---|
+| Endpoint | `POST https://api.resend.com/emails` (header `Authorization: Bearer re_...`) |
+| Hạn mức miễn phí | 3.000 thư/tháng · 100 thư/ngày |
+| Mã lỗi | `401` key sai · `403` tên miền chưa xác thực · `422` payload sai · `429` vượt hạn mức — đã dịch sẵn trong `emailService.js` |
+| Tắt Resend, quay lại Mailjet | xoá `RESEND_API_KEY` khỏi `.env`/Render — `auto` tự chọn lại Mailjet |
 
 ---
 

@@ -61,7 +61,7 @@ const config = {
   },
 
   // Mailjet Send API v3.1 (HTTPS 443) — xem docs/email-domain-setup.md
-  // transport: 'auto' (API trước, SMTP dự phòng) | 'api' | 'smtp'
+  // transport: 'auto' (Resend → Mailjet API → SMTP) | 'resend' | 'api' | 'smtp'
   mail: {
     transport: (process.env.MAIL_TRANSPORT || 'auto').toLowerCase(),
     apiUrl: process.env.MAILJET_API_URL || 'https://api.mailjet.com/v3.1/send',
@@ -75,6 +75,17 @@ const config = {
     hourlyLimit: parseLimit(process.env.MAIL_HOURLY_LIMIT),
     dailyLimit: parseLimit(process.env.MAIL_DAILY_LIMIT),
     quotaTimezone: process.env.MAIL_QUOTA_TZ || 'Asia/Ho_Chi_Minh',
+  },
+
+  // Resend (https://resend.com) — gửi qua HTTPS, dùng khi Mailjet bị khoá.
+  // Cần xác thực tên miền gửi bằng bản ghi DNS: xem docs/email-domain-setup.md (mục Resend).
+  resend: {
+    apiKey: process.env.RESEND_API_KEY || '',
+    apiUrl: process.env.RESEND_API_URL || 'https://api.resend.com/emails',
+    // Để trống → dùng EMAIL_FROM. Trước khi xác thực tên miền, Resend chỉ cho gửi
+    // từ onboarding@resend.dev tới chính email chủ tài khoản.
+    from: process.env.RESEND_FROM || '',
+    timeoutMs: parseInt(process.env.RESEND_TIMEOUT_MS, 10) || 15000,
   },
 
   fcm: {

@@ -374,14 +374,39 @@ export async function forgotPassword(email) {
 
   await authRepo.createPasswordResetRequest(user.userId, resetToken, expiresAt)
 
-  // TODO: Gửi email qua nodemailer (giai đoạn sau)
-  // Hiện tại chỉ log để test
-  console.log(`[Auth] Reset token cho ${email}: ${resetToken}`)
+  // Gửi email chứa liên kết đặt lại mật khẩu (Resend → Mailjet API → SMTP).
+  // Lỗi gửi KHÔNG được lộ ra ngoài: nếu lộ sẽ thành kênh dò xem email nào đã
+  // đăng ký. Vì vậy chỉ ghi log phía server.
+  const resetUrl = `${String(config.frontendUrl).replace(/\/$/, '')}/reset-password?token=${resetToken}`
+  const to = user.email || email
+  let sent = false
+  try {
+    const result = await sendEmail({
+      to,
+      subject: 'MN-Qronx – Đặt lại mật khẩu',
+      text: `Bạn (hoặc ai đó) vừa yêu cầu đặt lại mật khẩu cho tài khoản MN-Qronx.\nMở liên kết sau để tạo mật khẩu mới (hiệu lực ${RESET_TOKEN_EXPIRY_HOURS} giờ):\n${resetUrl}\nNếu không phải bạn thực hiện, hãy bỏ qua email này — mật khẩu hiện tại vẫn giữ nguyên.`,
+      html: `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:24px;background:#f6f7fb;border-radius:12px">
+        <h2 style="margin:0 0 8px;color:#0b172a">MN-Qronx – Đặt lại mật khẩu</h2>
+        <p style="color:#475569;font-size:14px;line-height:1.6">Bạn (hoặc ai đó) vừa yêu cầu đặt lại mật khẩu cho tài khoản này. Bấm nút bên dưới để tạo mật khẩu mới.</p>
+        <div style="margin:20px 0;text-align:center">
+          <a href="${resetUrl}" style="display:inline-block;padding:12px 22px;background:#2563eb;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:bold;font-size:14px">Đặt lại mật khẩu</a>
+        </div>
+        <p style="color:#475569;font-size:13px;line-height:1.6">Liên kết có hiệu lực trong <b>${RESET_TOKEN_EXPIRY_HOURS} giờ</b>. Nếu không phải bạn thực hiện, hãy bỏ qua email này — mật khẩu hiện tại vẫn giữ nguyên.</p>
+        <p style="color:#94a3b8;font-size:12px;word-break:break-all">Hoặc mở liên kết: ${resetUrl}</p>
+      </div>`,
+    })
+    sent = result.sent === true
+  } catch (err) {
+    console.error('[Email] Gửi email đặt lại mật khẩu lỗi:', err.message)
+  }
+  if (!sent) console.log(`[Auth] Chưa gửi được email đặt lại mật khẩu cho ${to}`)
 
   return {
     message: 'Nếu email tồn tại, hướng dẫn đặt lại mật khẩu đã được gửi',
-    // Chỉ trả về ở dev,prod sẽ xóa
-    ...(process.env.NODE_ENV !== 'production' && { resetToken }),
+    // Chỉ trả token ở môi trường dev VÀ khi không gửi được email (tiện test cục bộ).
+    // Production tuyệt đối không trả — sẽ thành lỗ hổng chiếm tài khoản.
+    ...(!sent && process.env.NODE_ENV !== 'production' && { resetToken }),
   }
 }
 

@@ -7,6 +7,7 @@ import {
   MailjetSendError,
   resolveTransport,
   isApiConfigured,
+  isResendConfigured,
 } from '../src/services/emailService.js'
 
 // Giả lập phản hồi của Mailjet Send API v3.1
@@ -145,7 +146,8 @@ describe('sendEmail qua Mailjet Send API v3.1', () => {
 })
 
 describe('chọn đường gửi', () => {
-  it('ưu tiên API khi đã có API key (mặc định MAIL_TRANSPORT=auto)', () => {
+  it('chưa có RESEND_API_KEY → dùng Mailjet API khi đã có key (MAIL_TRANSPORT=auto)', () => {
+    expect(isResendConfigured()).toBe(false)
     expect(isApiConfigured()).toBe(true)
     expect(resolveTransport()).toBe('api')
   })

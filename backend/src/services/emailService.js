@@ -18,19 +18,32 @@ export function isSmtpConfigured() {
   return Boolean(config.smtp.host && config.smtp.user && config.smtp.pass)
 }
 
+/** Resend đã có API key chưa (RESEND_API_KEY). */
+export function isResendConfigured() {
+  return Boolean(config.resend.apiKey)
+}
+
+/** Địa chỉ gửi thực tế của Resend: RESEND_FROM, không có thì dùng EMAIL_FROM. */
+export function resendFrom() {
+  return config.resend.from || config.smtp.from
+}
+
 /**
- * SMTP đã được cấu hình chưa (SMTP_HOST + SMTP_USER + SMTP_PASS).
+ * Đã cấu hình được ít nhất một đường gửi chưa.
  * Giữ tên cũ để không phá vỡ các chỗ đang gọi.
  */
 export function isEmailConfigured() {
-  return isApiConfigured() || isSmtpConfigured()
+  return isResendConfigured() || isApiConfigured() || isSmtpConfigured()
 }
 
-/** Đường gửi sẽ được dùng thực tế: 'api' | 'smtp' | 'none'. */
+/** Đường gửi sẽ được dùng thực tế: 'resend' | 'api' | 'smtp' | 'none'. */
 export function resolveTransport() {
   const want = config.mail.transport
+  if (want === 'resend') return isResendConfigured() ? 'resend' : 'none'
   if (want === 'api') return isApiConfigured() ? 'api' : 'none'
   if (want === 'smtp') return isSmtpConfigured() ? 'smtp' : 'none'
+  // auto: Resend trước (không phụ thuộc tài khoản Mailjet), rồi Mailjet API, cuối cùng SMTP
+  if (isResendConfigured()) return 'resend'
   if (isApiConfigured()) return 'api'
   if (isSmtpConfigured()) return 'smtp'
   return 'none'
@@ -38,12 +51,14 @@ export function resolveTransport() {
 
 /** Thông tin chẩn đoán — dùng cho log khởi động và script gửi thử. */
 export function getMailStatus() {
+  const transport = resolveTransport()
   return {
-    transport: resolveTransport(),
+    transport,
     requested: config.mail.transport,
+    resendConfigured: isResendConfigured(),
     apiConfigured: isApiConfigured(),
     smtpConfigured: isSmtpConfigured(),
-    from: config.smtp.from,
+    from: transport === 'resend' ? resendFrom() : config.smtp.from,
     sandbox: config.mail.sandbox,
     // Hạn mức gửi của Mailjet khi còn duyệt tạm (0 = tắt kiểm tra cửa sổ đó)
     hourlyLimit: config.mail.hourlyLimit,
@@ -240,12 +255,117 @@ async function sendViaSmtp({ to, cc, bcc, replyTo, subject, text, html }) {
   return { sent: true, via: 'smtp', messageId: info.messageId }
 }
 
+// ─── Gửi qua Resend (https://resend.com) ───────────────────
+// POST https://api.resend.com/emails
+// Tài liệu: https://resend.com/docs/api-reference/emails/send-email
+
+const RESEND_ERROR_HINTS = {
+  401: 'RESEND_API_KEY sai hoặc đã bị thu hồi. Lấy key mới ở Resend → API Keys.',
+  403: 'Tên miền gửi chưa được xác thực trong Resend. Thêm bản ghi DNS rồi bấm Verify — xem docs/email-domain-setup.md (mục Resend).',
+  422: 'Dữ liệu gửi không hợp lệ (from/to/subject) — kiểm tra lại EMAIL_FROM / RESEND_FROM.',
+  429: 'Vượt hạn mức gửi của Resend (gói miễn phí: 100 thư/ngày · 3.000/tháng). Thử lại sau.',
+}
+
+export class ResendSendError extends Error {
+  constructor({ status, code, message, hint }) {
+    super(hint ? `${message} — ${hint}` : message)
+    this.name = 'ResendSendError'
+    this.status = status
+    this.code = code
+    this.hint = hint
+  }
+}
+
+/** Định dạng địa chỉ theo Resend: "Tên <email@x.com>" hoặc "email@x.com". */
+export function formatResendAddress(value) {
+  const { Name, Email } = parseAddress(value)
+  if (!Email) return ''
+  return Name ? `${Name} <${Email}>` : Email
+}
+
+/** Dựng payload theo Send Email API của Resend. */
+export function buildResendPayload({ to, cc, bcc, replyTo, subject, text, html, headers }) {
+  const asList = (value) =>
+    normalizeRecipients(value)
+      .map((a) => formatResendAddress(a.Name ? `${a.Name} <${a.Email}>` : a.Email))
+      .filter(Boolean)
+
+  const payload = {
+    from: formatResendAddress(resendFrom()),
+    to: asList(to),
+    subject: subject || '',
+  }
+
+  const ccList = asList(cc)
+  const bccList = asList(bcc)
+  if (ccList.length) payload.cc = ccList
+  if (bccList.length) payload.bcc = bccList
+  if (replyTo) payload.reply_to = formatResendAddress(replyTo)
+  if (text) payload.text = text
+  if (html) payload.html = html
+  if (headers) payload.headers = headers
+  return payload
+}
+
+async function sendViaResend(payload) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), config.resend.timeoutMs)
+
+  let res
+  let raw
+  try {
+    res = await fetch(config.resend.apiUrl, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${config.resend.apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    })
+    raw = await res.text()
+  } catch (err) {
+    throw new ResendSendError({
+      status: 0,
+      message: err.name === 'AbortError' ? 'Gọi Resend API quá thời gian chờ' : `Không kết nối được Resend API: ${err.message}`,
+      hint: 'Kiểm tra kết nối mạng / RESEND_API_URL.',
+    })
+  } finally {
+    clearTimeout(timer)
+  }
+
+  let data = null
+  try {
+    data = JSON.parse(raw)
+  } catch {
+    data = null
+  }
+
+  if (!res.ok) {
+    const message = data?.message || `Resend API trả HTTP ${res.status}`
+    // Resend không nhất quán mã trạng thái (key sai có lúc trả 400, lúc 401), nên
+    // ngoài mã HTTP còn soi nội dung thông báo để chọn gợi ý đúng.
+    const hint =
+      RESEND_ERROR_HINTS[res.status] ||
+      (/verif/i.test(message)
+        ? RESEND_ERROR_HINTS[403]
+        : /api key/i.test(message)
+          ? RESEND_ERROR_HINTS[401]
+          : '')
+    throw new ResendSendError({ status: res.status, code: data?.name || '', message, hint })
+  }
+
+  return {
+    status: 'success',
+    messageId: data?.id ? String(data.id) : '',
+    accepted: payload.to.length + (payload.cc?.length || 0) + (payload.bcc?.length || 0),
+  }
+}
+
 // ─── API công khai ─────────────────────────────────────────
 
 /**
- * Gửi 1 email. Mặc định dùng Mailjet Send API v3.1; đặt MAIL_TRANSPORT=smtp
- * để buộc đi SMTP. Khi chưa cấu hình gì: log nội dung ra console và trả
- * sent:false để phía gọi hiển thị mã xác nhận.
+ * Gửi 1 email. Thứ tự mặc định (MAIL_TRANSPORT=auto): Resend → Mailjet Send API
+ * v3.1 → SMTP. Đặt MAIL_TRANSPORT=resend|api|smtp để buộc đi một đường.
+ * Khi chưa cấu hình gì: log nội dung ra console và trả sent:false để phía gọi
+ * hiển thị mã xác nhận.
  *
  * @param {object} opts { to, subject, text, html, cc, bcc, replyTo, templateId, templateVariables, customId }
  * @returns {Promise<{sent: boolean, via?: string, messageId?: string, smtpMissing?: boolean, devLog?: string}>}
@@ -261,9 +381,21 @@ export async function sendEmail(opts) {
 
   // Hạn mức gửi là giới hạn ở tầng tài khoản Mailjet (áp cho cả API và SMTP), nên kiểm
   // tra trước khi gửi để không đốt quota bằng những lần gửi chắc chắn thất bại.
-  // SandboxMode không gửi thật → bỏ qua kiểm tra.
-  if (!config.mail.sandbox) {
+  // SandboxMode không gửi thật → bỏ qua kiểm tra. Đi đường Resend thì hạn mức của
+  // Mailjet không liên quan, không được để nó chặn thư gửi được.
+  if (transport !== 'resend' && !config.mail.sandbox) {
     await assertQuotaAvailable()
+  }
+
+  if (transport === 'resend') {
+    const payload = buildResendPayload(opts)
+    try {
+      const result = await sendViaResend(payload)
+      return { sent: true, via: 'resend', messageId: result.messageId, accepted: result.accepted }
+    } catch (err) {
+      console.error(`[Email] Resend lỗi${err.status ? ` (HTTP ${err.status})` : ''}: ${err.message}`)
+      throw err
+    }
   }
 
   if (transport === 'api') {
@@ -289,6 +421,7 @@ export default {
   isEmailConfigured,
   isApiConfigured,
   isSmtpConfigured,
+  isResendConfigured,
   resolveTransport,
   getMailStatus,
   sendEmail,

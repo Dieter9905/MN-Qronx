@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
                 Nếu email tồn tại, chúng tôi đã gửi liên kết đặt lại mật khẩu.
               </p>
               <p className="mt-1 text-sm leading-relaxed text-emerald-700">
-                Vui lòng kiểm tra hộp thư <strong>{email}</strong> (kể cả thư rác). Liên kết có giá trị trong 30 phút.
+                Vui lòng kiểm tra hộp thư <strong>{email}</strong> (kể cả thư rác). Liên kết có giá trị trong 1 giờ.
               </p>
             </div>
           </div>

@@ -23,12 +23,13 @@ if (!to) {
 
 // Import động SAU khi đã đặt biến môi trường, vì config đọc process.env lúc nạp module
 const { default: config } = await import('../src/config/index.js')
-const { getMailStatus, sendEmail, MailjetSendError } = await import('../src/services/emailService.js')
+const { getMailStatus, sendEmail, MailjetSendError, ResendSendError } = await import('../src/services/emailService.js')
 
 const status = getMailStatus()
 console.log('Cấu hình gửi thư:')
 console.log(`  Đường gửi      : ${status.transport}${status.requested === 'auto' ? ' (auto)' : ` (MAIL_TRANSPORT=${status.requested})`}`)
 console.log(`  Mailjet API key: ${status.apiConfigured ? 'đã có' : 'CHƯA CÓ'}`)
+console.log(`  Resend API key : ${status.resendConfigured ? 'đã có' : 'CHƯA CÓ'}`)
 console.log(`  SMTP           : ${status.smtpConfigured ? `${config.smtp.host}:${config.smtp.port}` : 'CHƯA CÓ'}`)
 console.log(`  From           : ${status.from}`)
 console.log(`  Sandbox        : ${status.sandbox ? 'BẬT (không gửi thật)' : 'tắt'}`)
@@ -53,7 +54,7 @@ try {
   if (r.messageUuid) console.log(`   MessageUUID: ${r.messageUuid}`)
   if (r.accepted) console.log(`   Số người nhận Mailjet đã nhận: ${r.accepted}`)
 } catch (err) {
-  if (err instanceof MailjetSendError || err.name === 'MailjetQuotaError') {
+  if (err instanceof MailjetSendError || err instanceof ResendSendError || err.name === 'MailjetQuotaError') {
     console.error(`\u274c Gửi thất bại — HTTP ${err.status}${err.code ? ` · ${err.code}` : ''}`)
     console.error(`   ${err.message}`)
     if (err.hint) console.error(`   \u2192 ${err.hint}`)

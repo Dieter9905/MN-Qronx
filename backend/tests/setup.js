@@ -47,9 +47,21 @@ export async function api(method, path, { body, token, query } = {}) {
 
 // ─── Auth helpers ──────────────────────────────────────
 
+/**
+ * Bước 1 của đăng ký: xin mã xác nhận qua email.
+ * Backend trả devCode khi KHÔNG gửi được email (đúng cảnh chạy test), nhờ vậy
+ * test không phụ thuộc vào dịch vụ email bên ngoài.
+ */
+export async function requestVerificationCode(email) {
+  return api('POST', '/auth/send-verification-code', { body: { email } })
+}
+
+/** Đăng ký đầy đủ 2 bước: xin mã xác nhận email → đăng ký bằng mã đó. */
 export async function register(email, password, fullName) {
+  const codeRes = await requestVerificationCode(email)
+  const verificationCode = codeRes.data?.data?.devCode
   return api('POST', '/auth/register', {
-    body: { email, password, fullName, phoneNumber: '0901234567' },
+    body: { email, password, fullName, phoneNumber: '0901234567', verificationCode },
   })
 }
 
