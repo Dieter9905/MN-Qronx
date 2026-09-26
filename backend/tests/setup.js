@@ -94,20 +94,25 @@ export async function rawGet(path, token) {
 // ─── DB helpers ────────────────────────────────────────
 
 export async function cleanup() {
-  // Hội thoại hỗ trợ: chỉ xoá của tài khoản test, KHÔNG đụng dữ liệu thật
-  // (tin nhắn + ảnh tự xoá theo khoá ngoại)
-  await prisma.supportConversation.deleteMany({
-    where: { user: { email: { endsWith: '@example.com' } } },
-  })
-  await prisma.notificationLog.deleteMany()
-  await prisma.notificationSetting.deleteMany()
-  await prisma.device.deleteMany()
-  await prisma.refreshToken.deleteMany()
-  await prisma.passwordResetRequest.deleteMany()
-  await prisma.reminder.deleteMany()
-  await prisma.subtask.deleteMany()
-  await prisma.task.deleteMany()
-  await prisma.category.deleteMany()
+  // ⚠️ CHỈ xoá dữ liệu của tài khoản test (`*@example.com`).
+  // Trước đây các lệnh deleteMany() không có `where` nên mỗi lần chạy test là
+  // xoá sạch công việc / danh mục / nhắc nhở / thiết bị của MỌI người dùng
+  // trong DATABASE_URL — mà biến này đang trỏ vào Postgres production.
+  const testUser = { user: { email: { endsWith: '@example.com' } } }
+  const testUserTask = { task: { user: { email: { endsWith: '@example.com' } } } }
+
+  // Hội thoại hỗ trợ (tin nhắn + ảnh tự xoá theo khoá ngoại)
+  await prisma.supportConversation.deleteMany({ where: testUser })
+  await prisma.notificationLog.deleteMany({ where: { reminder: testUserTask } })
+  await prisma.notificationSetting.deleteMany({ where: testUser })
+  await prisma.device.deleteMany({ where: testUser })
+  await prisma.refreshToken.deleteMany({ where: testUser })
+  await prisma.passwordResetRequest.deleteMany({ where: testUser })
+  await prisma.reminder.deleteMany({ where: testUserTask })
+  await prisma.subtask.deleteMany({ where: testUserTask })
+  await prisma.task.deleteMany({ where: testUser })
+  await prisma.category.deleteMany({ where: testUser })
+  await prisma.emailVerificationCode.deleteMany({ where: { email: { endsWith: '@example.com' } } })
   // Keep roles and admin user
 }
 
