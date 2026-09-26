@@ -269,6 +269,34 @@ check(
 t = rule_parse("Hôm nay là thứ Ba, ngày 04/08/2026. Đọc sách thứ 6 tối 10h. Đọc sách lúc 11h tối")
 check("việc nhắc lại cùng tiêu đề cùng ngày", t[0]["dueAt"][:10] == t[1]["dueAt"][:10], f"{t[0]['dueAt']} vs {t[1]['dueAt']}")
 
+print("12. Lịch lặp theo thứ (repeatDays) và tiêu đề có ngày viết tắt")
+t = rule_parse("nhắc tôi mỗi tối t4 với t6 hàng tuần lúc 7h đi học thêm tiếng anh")
+check("viết tắt t4/t6 → WEEKLY [3, 5]",
+      len(t) == 1 and t[0]["repeatType"] == "WEEKLY" and t[0]["repeatDays"] == [3, 5],
+      json.dumps(t, ensure_ascii=False))
+check("tên việc không còn 'nhắc tôi mỗi tối t4 với t6'",
+      bool(t) and t[0]["title"] == "Đi học thêm tiếng anh",
+      t[0]["title"] if t else "")
+check("giờ 7h tối = 19:00", bool(t) and t[0]["dueAt"][11:16] == "19:00", t[0]["dueAt"] if t else "")
+
+t = rule_parse("Họp team thứ 2 9h hàng tuần")
+check("thứ 2 hàng tuần → [1]", bool(t) and t[0]["repeatDays"] == [1], json.dumps(t, ensure_ascii=False))
+
+t = rule_parse("Tập gym t3 và t5 hàng tuần 6h sáng")
+check("t3 và t5 hàng tuần → [2, 4]", bool(t) and t[0]["repeatDays"] == [2, 4], json.dumps(t, ensure_ascii=False))
+check("'và' giữa hai thứ không ở lại trong tiêu đề", bool(t) and t[0]["title"] == "Tập gym", t[0]["title"] if t else "")
+
+# Việc một lần có nêu thứ thì KHÔNG thành lịch lặp (giống parser phía web)
+t = rule_parse("Khám răng thứ 4 15h")
+check("nêu thứ nhưng không nói hằng tuần → không lặp",
+      bool(t) and t[0]["repeatType"] == "NONE" and t[0]["repeatDays"] == [],
+      json.dumps(t, ensure_ascii=False))
+check("thứ 4 trong tiêu đề được bỏ đi", bool(t) and t[0]["title"] == "Khám răng", t[0]["title"] if t else "")
+
+check("việc lặp hằng ngày không có repeatDays",
+      rule_parse("Uống thuốc hàng ngày 8h")[0]["repeatDays"] == [],
+      "repeatDays phải rỗng với DAILY")
+
 print()
 if FAILED:
     print(f"❌ {len(FAILED)} kiểm tra KHÔNG đạt: " + "; ".join(FAILED))

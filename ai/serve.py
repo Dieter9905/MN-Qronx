@@ -147,14 +147,35 @@ _WD_RX = [
     # Bộ sinh nhãn dùng "thứ 1" cho thứ Hai — thiếu alias này thì "thứ 1" không
     # được nhận là ngày nào và dính lại trong tiêu đề.
     (r"thứ\s*(?:1|01|nhất|nhat)|thu\s*(?:1|01|nhat)|monday", 0),
-    (r"thứ\s*2|thu\s*2|thứ hai|thu hai|monday", 0),
-    (r"thứ\s*3|thu\s*3|thứ ba|thu ba|tuesday|\btue\b", 1),
-    (r"thứ\s*4|thu\s*4|thứ tư|thu tu|wednesday|\bwed\b", 2),
-    (r"thứ\s*5|thu\s*5|thứ năm|thu nam|thursday", 3),
-    (r"thứ\s*6|thu\s*6|thứ sáu|thu sau|friday|\bfri\b", 4),
-    (r"thứ\s*7|thu\s*7|thứ bảy|thu bay|saturday", 5),
+    # Alias viết tắt "t2"…"t7" là cách gõ rất phổ biến ("t4 với t6 hàng tuần"):
+    # thiếu thì câu không có ngày và tiêu đề còn nguyên "t4 với t6".
+    (r"thứ\s*2|thu\s*2|thứ hai|thu hai|\bt2\b|monday", 0),
+    (r"thứ\s*3|thu\s*3|thứ ba|thu ba|\bt3\b|tuesday|\btue\b", 1),
+    (r"thứ\s*4|thu\s*4|thứ tư|thu tu|\bt4\b|wednesday|\bwed\b", 2),
+    (r"thứ\s*5|thu\s*5|thứ năm|thu nam|\bt5\b|thursday", 3),
+    (r"thứ\s*6|thu\s*6|thứ sáu|thu sau|\bt6\b|friday|\bfri\b", 4),
+    (r"thứ\s*7|thu\s*7|thứ bảy|thu bay|\bt7\b|saturday", 5),
     (r"chủ nhật|chu nhat|sunday|\bsun\b|(?<![\wà-ỹ])cn(?![\wà-ỹ])", 6),
 ]
+
+# Ngày trong tuần được NÊU trong câu, quy về ISO 1..7 (1 = Thứ Hai … 7 = Chủ nhật)
+# đúng như backend và lịch của app. Dùng cho lịch LẶP theo thứ: "mỗi tối t4 với t6
+# hàng tuần" → [3, 5]. Trước đây rule_parse luôn trả repeatDays rỗng nên backend
+# phải hạ WEEKLY thành NONE (mất hẳn lịch lặp người dùng vừa nói).
+_WD_ISO = [
+    (r"thứ\s*2|thu\s*2|thứ hai|thu hai|\bt2\b|monday", 1),
+    (r"thứ\s*3|thu\s*3|thứ ba|thu ba|\bt3\b|tuesday|\btue\b", 2),
+    (r"thứ\s*4|thu\s*4|thứ tư|thu tu|\bt4\b|wednesday|\bwed\b", 3),
+    (r"thứ\s*5|thu\s*5|thứ năm|thu nam|\bt5\b|thursday", 4),
+    (r"thứ\s*6|thu\s*6|thứ sáu|thu sau|\bt6\b|friday|\bfri\b", 5),
+    (r"thứ\s*7|thu\s*7|thứ bảy|thu bay|\bt7\b|saturday", 6),
+    (r"chủ nhật|chu nhat|\bcn\b|sunday|\bsun\b", 7),
+]
+
+
+def _extract_repeat_days(clause):
+    n = _norm(clause)
+    return sorted({iso for pat, iso in _WD_ISO if re.search(pat, n)})
 _CAT = {"hoc tap": "Học tập", "on tap": "Học tập", "study": "Học tập",
         "cong viec": "Công việc", "work": "Công việc", "hop": "Công việc",
         "ca nhan": "Cá nhân", "personal": "Cá nhân",
@@ -398,9 +419,21 @@ def _clean_title(clause, spans):
     # Giờ còn sót — "9h", "24h khuya" (biên như _HAS_CLOCK: "4 học" không mất chữ học)
     s = re.sub(r"\b\d{1,2}\s*[:h](?![a-zà-ỹ])\s*\d{0,2}\s*(?:sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)?",
                " ", s, flags=re.I)
+    # Ngày trong tuần còn sót trong tiêu đề ("t4 với t6", "thứ 6", "Chủ nhật"):
+    # lịch lặp đã tách sang repeatType + repeatDays nên không để lại trong tên việc.
+    for _ in range(3):
+        prev_wd = s
+        # Bỏ từ nối TRƯỚC khi bỏ ngày: sau khi "t3"/"t5" bị xoá thì "và" không còn
+        # đứng ngay trước một ngày nào nữa nên lookahead trượt → tiêu đề giữ "và"
+        # ("Tập gym t3 và t5 hàng tuần" → "Tập gym và").
+        s = re.sub(_WD_LINK_TITLE_RX, " ", s)
+        s = re.sub(_WD_TITLE_RX, " ", s)
+        s = re.sub(r"\s+", " ", s).strip()
+        if s == prev_wd:
+            break
     # Lặp tới khi ổn định — sau khi bỏ span/ngày/giờ, từ nối + chủ ngữ mới
     # trồi ra đầu câu ("Sau đó tôi sẽ qua…" → cần bỏ nhiều lớp mới ra "Qua…")
-    for _ in range(3):
+    for _ in range(6):
         prev = s
         # Từ chỉ buổi ở ĐẦU câu ("Trưa nay…", "Chiều có…", "Tối ăn…")
         s = re.sub(r"^(?:buổi|buỗi)\s+|^(?:sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)\b",
@@ -412,6 +445,10 @@ def _clean_title(clause, spans):
         s = re.sub(r"^(?:và|va|rồi|roi|sau đó|sau do|kế tiếp|ke tiep|tiếp theo|tiep theo|xong"
                    r"|hãy|hay|cần|can|phải|phai|sẽ|se|every)\b", " ", s, flags=re.I).strip()
         s = re.sub(r"^(?:có|co)\s+", "", s, flags=re.I).strip()
+        # "nhắc tôi", "mỗi" còn sót ở đầu câu, và "với" mồ côi sau khi bỏ ngày
+        # trong tuần ("mỗi tối với đi học thêm" → "đi học thêm")
+        s = re.sub(r"^(?:nhắc|nhac|mỗi|moi)(?![a-zà-ỹ0-9])\s*", " ", s, flags=re.I).strip()
+        s = re.sub(r"^(?:với|voi)(?![a-zà-ỹ0-9])\s*", " ", s, flags=re.I).strip()
         if s == prev:
             break
     # Ưu tiên / lặp lại / kiểu nhắc — phải bỏ khỏi tiêu đề. "chưa gấp", "bình
@@ -432,6 +469,20 @@ def _clean_title(clause, spans):
 # ("trưa… lúc 12h") hoặc mở đầu như việc mới ("trưa…", "mai…").
 # Câu phụ không có giờ riêng ("Đi ăn trưa, có 5 người tham dự lúc 12h")
 # và chỉ thị ("…19h, nhắc trước 30 phút") giữ nguyên.
+# Ngày trong tuần còn lại trong TIÊU ĐỀ (viết hoa/thường, có dấu) — xem _clean_title
+_WD_TITLE_RX = re.compile(
+    r"(?<![a-zà-ỹ0-9])(?:thứ|thu)\s*(?:[2-7]|hai|ba|tư|tu|năm|nam|sáu|sau|bảy|bay)(?![a-zà-ỹ0-9])"
+    r"|(?<![a-zà-ỹ0-9])t[2-7](?![a-zà-ỹ0-9])"
+    r"|(?<![a-zà-ỹ0-9])(?:chủ nhật|chu nhat|cn)(?![a-zà-ỹ0-9])",
+    re.I,
+)
+# Chỉ bỏ "với/và/," khi ngay sau đó là một ngày trong tuần nữa
+_WD_LINK_TITLE_RX = re.compile(
+    r"(?<![a-zà-ỹ0-9])(?:với|voi|và|va|,|&)(?![a-zà-ỹ0-9])"
+    r"(?=\s*(?:t[2-7](?![a-zà-ỹ0-9])|(?:thứ|thu)\s*(?:[2-7]|hai|ba|tư|tu|năm|nam|sáu|sau|bảy|bay)))",
+    re.I,
+)
+
 _HAS_CLOCK = re.compile(
     r"(?<!\d)\d{1,2}\s*(?:[:h](?![a-zà-ỹ])|(?:giờ|gio|tiếng|tieng|hour)\b|(?:am|pm)\b)",
     re.I)
@@ -663,12 +714,15 @@ def rule_parse(text, now=None):
         # "không tạo được việc lặp lại" thì việc đó còn bị backend từ chối).
         n_body = _drop_words(n, _norm(title).split()) if title else n
         rep = next((p for k, p in _REP if k in n_body), "NONE")
+        # Lịch lặp theo thứ: chỉ có ý nghĩa khi việc thật sự lặp hằng tuần
+        # (giống parser phía web) — "Họp team thứ 2 9h" đơn lẻ vẫn là việc một lần.
+        rep_days = _extract_repeat_days(c) if rep == "WEEKLY" else []
         cat = next((v for k, v in _CAT.items() if _word_in(k, n)), None)
         if not title:
             continue
         prev_title, prev_day = title, (due.date() if due else None)
         tasks.append({"title": title, "description": "", "dueAt": due.isoformat() if due else None,
-                      "priority": pri, "repeatType": rep, "repeatDays": [],
+                      "priority": pri, "repeatType": rep, "repeatDays": rep_days,
                       "reminders": rems, "categoryName": cat})
     return tasks[:20]
 
