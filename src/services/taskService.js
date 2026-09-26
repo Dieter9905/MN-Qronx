@@ -15,18 +15,11 @@ export async function getTasks(filters = {}) {
     page = 1, pageSize = 20,
   } = filters
 
-  // Backend không hiểu trạng thái ảo OVERDUE → lấy danh sách lớn rồi lọc local
+  // Backend không hiểu trạng thái ảo OVERDUE → lấy hết rồi lọc local
   if (status === 'OVERDUE') {
-    const res = await api('GET', '/tasks', {
-      query: {
-        status: '', priority, categoryId, keyword, dueFrom, dueTo,
-        sort, page: 1, pageSize: 200,
-      },
-    })
+    const res = await getAllTasks({ priority, categoryId, keyword, dueFrom, dueTo, sort })
     if (!res.success) return res
-    const items = (res.data?.items || [])
-      .map(toTask)
-      .filter((t) => t.overdue)
+    const items = (res.data?.items || []).filter((t) => t.overdue)
     res.data = { items, total: items.length, page: Number(page), pageSize: Number(pageSize) }
     return res
   }
@@ -38,6 +31,31 @@ export async function getTasks(filters = {}) {
     },
   })
   return toPagedTaskList(res)
+}
+
+/**
+ * Lấy TOÀN BỘ công việc khớp bộ lọc bằng cách duyệt từng trang.
+ *
+ * Máy chủ chỉ trả tối đa MAX_PAGE_SIZE (200) mỗi lần, nên chỗ nào cần "cả sổ"
+ * (lịch tháng, lệnh trong chat AI, lọc quá hạn) mà xin một request pageSize lớn
+ * thì phần vượt trần bị cắt im lặng — lịch thiếu việc, câu lệnh không tìm thấy
+ * việc cần đánh dấu.
+ */
+export async function getAllTasks(filters = {}, { pageSize = 200, maxPages = 25 } = {}) {
+  const first = await getTasks({ ...filters, page: 1, pageSize })
+  if (!first.success) return first
+
+  let items = first.data.items || []
+  const total = first.data.total ?? items.length
+  const pages = Math.min(maxPages, Math.ceil(total / pageSize))
+  for (let p = 2; p <= pages; p += 1) {
+    const next = await getTasks({ ...filters, page: p, pageSize })
+    if (!next.success || !(next.data?.items || []).length) break
+    items = items.concat(next.data.items)
+  }
+
+  first.data = { ...first.data, items, total: items.length, page: 1, pageSize: items.length }
+  return first
 }
 
 // GET /api/v1/tasks/{id}

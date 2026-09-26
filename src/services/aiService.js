@@ -565,7 +565,11 @@ function cleanTitle(clause, spans) {
 
   for (let pass = 0; pass < 3; pass++) {
     const beforeWd = s
-    s = collapse(s.replace(WD_RX, ' ').replace(WD_LINK_RX, ' '))
+    // Bỏ từ nối TRƯỚC khi bỏ ngày trong tuần: cả hai thay thế trên cùng một
+    // chuỗi thì "t3"/"t5" biến mất trước, "và" không còn đứng ngay trước một
+    // ngày nào nữa nên lookahead của WD_LINK_RX trượt → tiêu đề giữ "và"
+    // ("Tập gym t3 và t5 hàng tuần" → "Tập gym và").
+    s = collapse(s.replace(WD_LINK_RX, ' ').replace(WD_RX, ' '))
     if (s === beforeWd) break
   }
 

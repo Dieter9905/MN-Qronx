@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Brain, PaperPlaneTilt, Sparkle, Trash, Plus, CheckCircle } from '@phosphor-icons/react'
 import { useToast } from './common/Toast'
-import { createTask, getTasks, completeTask, deleteTask } from '../services/taskService'
+import { createTask, getAllTasks, completeTask, deleteTask } from '../services/taskService'
 import { TASK_COMMAND, detectTaskCommand, findTaskMatches, doneMessage, noMatchMessage } from '../lib/aiCommand'
 import { loadChatMessages, saveChatMessages, clearChatMessages, lastMentionedFrom } from '../lib/chatHistory'
 import { getCategories } from '../services/categoryService'
@@ -177,7 +177,9 @@ export default function AiTaskChat({ onTasksCreated }) {
       return
     }
     setBusy(true)
-    const res = await getTasks({ pageSize: 200 })
+    // Lấy hết việc (duyệt nhiều trang): máy chủ chỉ trả tối đa 200 việc mỗi lần,
+    // xin một phát pageSize lớn thì việc nằm ngoài cửa sổ sẽ không tìm thấy.
+    const res = await getAllTasks()
     setBusy(false)
     if (!res.success) {
       pushMsg({ role: 'bot', text: `Tôi chưa đọc được danh sách công việc (${res.message || 'lỗi mạng'}). Bạn thử lại giúp tôi nhé.` })

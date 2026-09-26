@@ -9,7 +9,7 @@ import {
   Bell,
   Repeat,
 } from '@phosphor-icons/react'
-import { getTasks } from '../../services/taskService'
+import { getAllTasks } from '../../services/taskService'
 import { repeatSummary } from '../../lib/constants'
 import { Skeleton } from '../../components/common/Feedback'
 import Button from '../../components/common/Button'
@@ -62,10 +62,10 @@ export default function CalendarPage() {
     let cancelled = false
     ;(async () => {
       setLoading(true)
-      const res = await getTasks({
+      // Duyệt nhiều trang: trần mỗi request của máy chủ là 200 việc.
+      const res = await getAllTasks({
         dueFrom: range.from.toISOString(),
         dueTo: range.to.toISOString(),
-        pageSize: 500,
       })
       if (!cancelled && res.success) {
         setTasks(res.data.items)
