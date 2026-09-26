@@ -36,6 +36,9 @@ const VIETNAMESE_PATTERNS = {
     'thứ 4': 3, 'thứ tư': 3, 'thứ 5': 4, 'thứ năm': 4,
     'thứ 6': 5, 'thứ sáu': 5, 'thứ 7': 6, 'thứ bảy': 6,
     'chủ nhật': 0, 'cn': 0, 'chủ nhat': 0,
+    // Viết tắt số rất hay dùng: "t4" = thứ 4, "t6" = thứ 6 (trước đây không
+    // nhận nên "t6 hàng tuần" bị hiểu thành 6h, kèm cả chữ "h" của "hàng")
+    't2': 1, 't3': 2, 't4': 3, 't5': 4, 't6': 5, 't7': 6,
   },
 
   // Relative days
@@ -254,6 +257,14 @@ function applyPeriodHint(hint, hour) {
  * Trích giờ từ một câu. Trả { hour, minute, nextDay, matched } hoặc null.
  */
 function extractTime(text) {
+  // "…t6 hàng tuần lúc 7h" — chữ "h" của "hàng" bị dò thành đơn vị giờ nên
+  // câu ra 06:00 (rồi thành 18:00 vì có "tối") và tiêu đề mất chữ "h".
+  // Bỏ cụm lặp trước khi dò giờ; extractRepeat vẫn đọc câu gốc nên repeatType
+  // không đổi, còn span tìm được ("7h") vẫn tồn tại trong câu gốc.
+  text = text.replace(
+    /(?<![a-zà-ỹ0-9])(?:hàng|hằng|hang)\s+(?:ngày|ngay|tuần|tuan|tháng|thang)(?![a-zà-ỹ0-9])/gi,
+    ' '
+  )
   // Thứ tự quan trọng: pattern "buổi + giờ" (chiều 5h, tối 8h, sáng 7h30)
   // phải được kiểm tra TRƯỚC pattern "giờ + buổi" (5h chiều, 8h tối),
   // nếu không "chiều 5h" sẽ bị hiểu thành 5h SÁNG (lệch 12 giờ).
@@ -392,7 +403,9 @@ function extractDate(text) {
   }
 
   // "ngày X"
-  const dayMatch = normalized.match(/ngay\s*(\d{1,2})/);
+  // "Họp team hằng ngày 8h" — số của GIỜ không được đọc thành "ngày 8"
+  // (trước đây hạn rơi vào mùng 8 tháng sau và tiêu đề mất chữ "h").
+  const dayMatch = normalized.match(/ngay\s*(\d{1,2})(?!\s*(?:[:h]|gio|giờ|tieng|tiếng|am|pm))/);
   if (dayMatch) {
     const day = parseInt(dayMatch[1]);
     const date = new Date(today);
@@ -473,6 +486,23 @@ function extractRepeat(text) {
   return 'NONE';
 }
 
+/**
+ * Các ngày trong tuần được nêu trong câu, theo chuẩn ISO 1..7 (1 = Thứ Hai,
+ * 7 = Chủ Nhật) đúng như backend và lịch của app quy ước.
+ * "mỗi tối t4 với t6 hàng tuần" → [3, 5] (thứ 4 = ISO 3, thứ 6 = ISO 5).
+ */
+function extractRepeatDays(text) {
+  const normalized = normalizeText(text)
+  const found = new Set()
+  for (const [keyword, dayNum] of Object.entries({
+    ...VIETNAMESE_PATTERNS.days,
+    ...ENGLISH_PATTERNS.days,
+  })) {
+    if (hasWord(normalized, keyword)) found.add(dayNum === 0 ? 7 : dayNum)
+  }
+  return [...found].sort((a, b) => a - b)
+}
+
 function extractPriority(text) {
   const normalized = normalizeText(text);
 
@@ -525,10 +555,32 @@ function cleanTitle(clause, spans) {
   s = collapse(s)
   // Lặp tới khi ổn định — sau khi bỏ span/ngày/giờ, từ nối + chủ ngữ mới
   // trồi ra đầu câu ("Sau đó tôi sẽ qua…" → cần bỏ nhiều lớp mới ra "Qua…")
+  // Ngày trong tuần còn sót trong tiêu đề ("t4 với t6", "thứ 6", "Chủ nhật"):
+  // lịch lặp đã tách thành repeatType + repeatDays, không để lại trong tên việc.
+  const WD_RX =
+    /(?<![a-zà-ỹ0-9])(?:thứ|thu)\s*(?:[2-7]|hai|ba|tư|tu|năm|nam|sáu|sau|bảy|bay)(?![a-zà-ỹ0-9])|(?<![a-zà-ỹ0-9])t[2-7](?![a-zà-ỹ0-9])|(?<![a-zà-ỹ0-9])(?:chủ nhật|chu nhat|cn)(?![a-zà-ỹ0-9])/gi
+  // Chỉ bỏ "với/và/," khi ngay sau đó là một ngày trong tuần nữa
+  const WD_LINK_RX =
+    /(?<![a-zà-ỹ0-9])(?:với|voi|và|va|,|&)(?![a-zà-ỹ0-9])(?=\s*(?:t[2-7](?![a-zà-ỹ0-9])|(?:thứ|thu)\s*(?:[2-7]|hai|ba|tư|tu|năm|nam|sáu|sau|bảy|bay)))/gi
+
   for (let pass = 0; pass < 3; pass++) {
+    const beforeWd = s
+    s = collapse(s.replace(WD_RX, ' ').replace(WD_LINK_RX, ' '))
+    if (s === beforeWd) break
+  }
+
+  // 6 lượt (thay vì 3): câu kiểu "nhắc tôi mỗi tối t4 với t6 …" cần bỏ lần lượt
+  // nhắc → tôi → mỗi → tối → với mới ra tên việc; vòng lặp tự dừng khi ổn định.
+  for (let pass = 0; pass < 6; pass++) {
     const before = s
     // Bỏ từ chỉ buổi ở ĐẦU câu ("Trưa nay...", "Chiều có...", "Tối ăn...")
     s = s.replace(/^(?:buổi\s+)?(?:sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)\b/gi, ' ')
+    // "Tối với đi học thêm…": từ chỉ buổi + từ nối rác ở đầu câu. Chỉ bỏ khi
+    // theo sau là từ nối/mỗi (không phá tiêu đề thật như "Sáng tạo nội dung").
+    s = s.replace(
+      /^(?:buổi\s+)?(?:sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)\s+(?=(?:với|voi|mỗi|moi|và|va)(?![a-zà-ỹ0-9]))/gi,
+      ' '
+    )
     s = collapse(s)
     // Bỏ chủ ngữ ở đầu câu ("tôi đi ăn trưa" → "đi ăn trưa", "chúng tôi sẽ…" → bỏ "chúng tôi sẽ")
     s = s.replace(/^(?:chúng tôi|chung toi|tôi|toi|em|mình|minh|bạn|ban|chúng ta|chung ta|anh|chị|chi)\b(?:\s+(?:sẽ|se|cần|can|phải|phai|muốn|muon|đi|di))?/gi, ' ')
@@ -538,6 +590,9 @@ function cleanTitle(clause, spans) {
     s = collapse(s)
     // Bỏ "có" đầu câu ("Có cuộc họp" → "Cuộc họp")
     s = s.replace(/^có\s+/i, ' ')
+    // "nhắc tôi", "mỗi", "với" còn sót ở đầu câu ("Mỗi tối với thứ àng tuần …")
+    s = s.replace(/^(?:mỗi|moi|nhắc|nhac)(?![a-zà-ỹ0-9])\s*/gi, ' ')
+    s = s.replace(/^(?:với|voi)(?![a-zà-ỹ0-9])\s*/gi, ' ')
     if (s === before) break
   }
   s = collapse(s)
@@ -648,6 +703,9 @@ function parseClause(clause, categories, globalReminderOffset, carryDate = null,
     dueAt,
     repeatType,
     reminders,
+    // Lịch lặp theo thứ: trước đây parser cục bộ bỏ trống repeatDays nên
+    // "Họp team thứ 2 9h hàng tuần" mất luôn lịch lặp ở tầng backend.
+    repeatDays: repeatType === 'WEEKLY' ? extractRepeatDays(clause) : [],
     confidence: dueAt ? 0.9 : 0.6,
   }
 }

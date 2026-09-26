@@ -38,10 +38,13 @@ export default function AiAssistantPage() {
   const [creating, setCreating] = useState(false)
   const [completing, setCompleting] = useState(null)
 
-  const load = async () => {
-    setLoading(true)
+  // `silent` = làm mới nền: KHÔNG bật skeleton, nếu không cả cây (kể cả chat)
+  // bị unmount và lịch sử trò chuyện biến mất mỗi lần thực hiện xong một câu lệnh.
+  const load = async (opts = {}) => {
+    const silent = opts?.silent === true
+    if (!silent) setLoading(true)
     const res = await getTasks({ status: '', pageSize: 100, sort: 'dueAsc' })
-    setLoading(false)
+    if (!silent) setLoading(false)
     if (!res.success) return
     const list = res.data.items
     setTasks(list)
@@ -166,7 +169,7 @@ export default function AiAssistantPage() {
       ) : (
         <>
           {/* Chatbot tạo việc bằng AI – phân loại đúng cấu trúc form */}
-          <AiTaskChat onTasksCreated={load} />
+          <AiTaskChat onTasksCreated={() => load({ silent: true })} />
 
           {priorityList.length === 0 && tasks.length === 0 ? (
         <div className="card p-10 text-center">

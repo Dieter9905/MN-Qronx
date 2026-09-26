@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Brain, PaperPlaneTilt, Sparkle, Trash, Plus, CheckCircle } from '@phosphor-icons/react'
 import { useToast } from './common/Toast'
-import { createTask } from '../services/taskService'
+import { createTask, getTasks, completeTask, deleteTask } from '../services/taskService'
+import { TASK_COMMAND, detectTaskCommand, findTaskMatches, doneMessage, noMatchMessage } from '../lib/aiCommand'
+import { loadChatMessages, saveChatMessages, clearChatMessages, lastMentionedFrom } from '../lib/chatHistory'
 import { getCategories } from '../services/categoryService'
 import { parseNaturalLanguageTasks, fetchAIParseTasks, suggestTaskBreakdown } from '../services/aiService'
 import { PRIORITY, REPEAT_TYPE_LIST } from '../lib/constants'
@@ -21,11 +23,16 @@ const REMINDER_CHOICES = [
   { label: 'Trước 1h', offset: -60 },
 ]
 
+const WELCOME_TEXT =
+  'Chào bạn! Gõ tự nhiên như “Sáng 7h tập gym. Chiều 2h họp team, nhắc trước 10 phút” để tôi tách thành từng công việc cho bạn duyệt. Tôi cũng làm được việc khác: “đánh dấu hoàn thành việc Họp team”, “xóa việc Đi siêu thị”, “hoàn thành việc đó”.'
+
 const QUICK_REPLIES = [
   'Sáng 7h tập gym. Chiều 2h họp team. Tối 8h đọc sách. Nhắc trước 10 phút mỗi cái',
   'Ôn tập Toán ngày mai 19h, nhắc trước 30 phút, ưu tiên Cao',
   'Họp team thứ 2 9h hàng tuần',
   'Tạo hết đi',
+  'Đánh dấu hoàn thành việc Họp team',
+  'Xóa việc đi siêu thị',
 ]
 
 function aiTaskToEditable(tk, categories) {
@@ -66,18 +73,17 @@ function missingFields(t) {
 export default function AiTaskChat({ onTasksCreated }) {
   const toast = useToast()
   const [categories, setCategories] = useState([])
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      role: 'bot',
-      text: 'Chào bạn! Gõ tự nhiên như “Sáng 7h tập gym. Chiều 2h họp team, nhắc trước 10 phút”. Tôi tách thành từng công việc đúng cấu trúc form (tiêu đề, mô tả, danh mục, hạn, ưu tiên, lặp, nhắc, việc con) để bạn duyệt rồi tạo.',
-    },
-  ])
+  // Hội thoại được khôi phục từ lần trước (lưu theo tài khoản) — F5 không mất
+  const [messages, setMessages] = useState(() => loadChatMessages([{ id: 1, role: 'bot', text: WELCOME_TEXT }]))
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [creating, setCreating] = useState(false)
   const [usedAI, setUsedAI] = useState(null)
   const bottomRef = useRef(null)
+  // Việc vừa được nhắc/tạo trong chat — dùng cho câu lệnh kiểu "hoàn thành việc đó"
+  // Khôi phục "việc vừa nhắc" từ lịch sử đã lưu để câu "hoàn thành việc đó"
+  // vẫn hiểu đúng sau khi tải lại trang
+  const lastMentionedRef = useRef(lastMentionedFrom(messages))
 
   useEffect(() => {
     getCategories().then((res) => {
@@ -89,7 +95,19 @@ export default function AiTaskChat({ onTasksCreated }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [messages, busy])
 
+  // Lưu hội thoại mỗi khi có tin nhắn mới (khoá theo tài khoản)
+  useEffect(() => {
+    saveChatMessages(messages)
+  }, [messages])
+
   const pushMsg = (msg) => setMessages((ms) => [...ms, { id: Date.now() + Math.random(), ...msg }])
+
+  const clearChat = () => {
+    clearChatMessages()
+    lastMentionedRef.current = null
+    setMessages([{ id: Date.now(), role: 'bot', text: WELCOME_TEXT }])
+    toast.success('Đã xoá hội thoại')
+  }
 
   const parseText = async (text) => {
     // 1. Thử AI riêng (backend, PRO) 2. Fallback parser cục bộ
@@ -151,11 +169,83 @@ export default function AiTaskChat({ onTasksCreated }) {
     return null
   }
 
+  // --- Câu lệnh: "xóa việc …", "đánh dấu hoàn thành …" --------------------
+  const runCommand = async (cmd, rawText) => {
+    const shown = cmd.rawTarget || rawText
+    if (cmd.deictic && !lastMentionedRef.current) {
+      pushMsg({ role: 'bot', text: 'Tôi chưa biết bạn đang nói tới việc nào. Bạn gõ tên việc giúp tôi, ví dụ “xóa việc Đi siêu thị”.' })
+      return
+    }
+    setBusy(true)
+    const res = await getTasks({ pageSize: 200 })
+    setBusy(false)
+    if (!res.success) {
+      pushMsg({ role: 'bot', text: `Tôi chưa đọc được danh sách công việc (${res.message || 'lỗi mạng'}). Bạn thử lại giúp tôi nhé.` })
+      return
+    }
+    const tasks = res.data?.items || []
+    const { candidates, confident } = findTaskMatches(cmd.target, tasks, {
+      openOnly: cmd.intent === TASK_COMMAND.COMPLETE,
+      lastTask: lastMentionedRef.current,
+    })
+    if (!candidates.length) {
+      pushMsg({ role: 'bot', text: noMatchMessage(cmd.intent, shown) })
+      return
+    }
+    const verb = cmd.intent === TASK_COMMAND.DELETE ? 'xóa' : 'đánh dấu hoàn thành'
+    const text = confident
+      ? cmd.intent === TASK_COMMAND.DELETE
+        ? 'Bạn chắc muốn xóa việc này chứ? Xóa rồi không khôi phục được.'
+        : 'Tôi hiểu là bạn muốn đánh dấu hoàn thành việc này. Bấm xác nhận nhé.'
+      : `Có ${candidates.length} việc khớp với “${shown}”. Bạn muốn ${verb} việc nào?`
+    pushMsg({
+      role: 'bot',
+      text,
+      command: {
+        intent: cmd.intent,
+        candidates: confident ? [candidates[0]] : candidates,
+        resolved: false,
+      },
+    })
+  }
+
+  const executeCommand = async (msgId, task) => {
+    const msg = messages.find((m) => m.id === msgId)
+    const intent = msg?.command?.intent
+    if (!intent) return
+    setBusy(true)
+    const res = intent === TASK_COMMAND.DELETE ? await deleteTask(task.id) : await completeTask(task.id)
+    setBusy(false)
+    if (!res.success) {
+      toast.error(res.message || 'Không thực hiện được')
+      pushMsg({ role: 'bot', text: `Không ${intent === TASK_COMMAND.DELETE ? 'xóa' : 'hoàn thành'} được “${task.title}”: ${res.message || 'lỗi không rõ'}.` })
+      return
+    }
+    setMessages((ms) => ms.map((m) => (m.id === msgId ? { ...m, command: { ...m.command, resolved: true } } : m)))
+    lastMentionedRef.current = task
+    toast.success(doneMessage(intent, task))
+    pushMsg({ role: 'bot', text: `${doneMessage(intent, task)} Bạn cần tôi làm gì nữa không?` })
+    onTasksCreated?.()
+  }
+
+  const cancelCommand = (msgId) => {
+    setMessages((ms) => ms.map((m) => (m.id === msgId ? { ...m, command: { ...m.command, resolved: true } } : m)))
+    pushMsg({ role: 'bot', text: 'Đã bỏ qua. Bạn muốn tôi làm gì khác không?' })
+  }
+
   const handleSend = async (rawText) => {
     const text = (rawText ?? input).trim()
     if (!text || busy || creating) return
     setInput('')
     pushMsg({ role: 'user', text })
+
+    // Câu LỆNH ("xóa việc …", "đánh dấu hoàn thành …") thì thực hiện luôn,
+    // không tạo công việc mới.
+    const command = detectTaskCommand(text)
+    if (command) {
+      await runCommand(command, text)
+      return
+    }
 
     const confirmWords = /^(tạo hết|tạo đi|ok|đồng ý|tạo|yes|tao het|tao di)$/i
     const pendingMsg = lastPending()
@@ -272,7 +362,10 @@ export default function AiTaskChat({ onTasksCreated }) {
         reminders,
         subtasks: (t.subtasks || []).filter((s) => s.content?.trim()),
       })
-      if (res.success) created += 1
+      if (res.success) {
+        created += 1
+        if (res.data?.id) lastMentionedRef.current = { id: res.data.id, title: t.title }
+      }
       else if (!firstErr) firstErr = res.message
     }
     setCreating(false)
@@ -294,11 +387,24 @@ export default function AiTaskChat({ onTasksCreated }) {
           <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-brand-gradient text-white">
             <Brain size={18} weight="fill" />
           </span>
-          Chatbot tạo việc bằng AI
+          Trợ lý AI – tạo việc & ra lệnh
         </h2>
-        <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
-          {usedAI === null ? 'AI + Local' : usedAI ? 'AI riêng' : 'Local AI'}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+            {usedAI === null ? 'AI + Local' : usedAI ? 'AI riêng' : 'Local AI'}
+          </span>
+          {messages.length > 1 && (
+            <button
+              type="button"
+              onClick={clearChat}
+              title="Xoá hội thoại"
+              aria-label="Xoá hội thoại"
+              className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-navy-400 transition hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-900/20"
+            >
+              <Trash size={14} />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="max-h-[480px] space-y-3 overflow-y-auto px-4 py-4">
@@ -312,6 +418,55 @@ export default function AiTaskChat({ onTasksCreated }) {
               }`}
             >
               <p className="whitespace-pre-wrap">{m.text}</p>
+              {m.command && (
+                <div className="mt-2.5 space-y-1.5">
+                  {m.command.candidates.map(({ task }) => (
+                    <div
+                      key={task.id}
+                      className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2 ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-600"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-bold text-navy-900 dark:text-white">{task.title}</p>
+                        <p className="text-[11px] text-navy-400">
+                          {task.dueAt
+                            ? new Date(task.dueAt).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+                            : 'Không có thời hạn'}
+                          {task.status === 'COMPLETED' ? ' · đã xong' : ''}
+                        </p>
+                      </div>
+                      {m.command.resolved ? (
+                        <span className="shrink-0 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Đã xong</span>
+                      ) : m.command.expired ? (
+                        <span className="shrink-0 text-[11px] font-bold text-amber-600 dark:text-amber-400">Hết hiệu lực</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => executeCommand(m.id, task)}
+                          className={`shrink-0 cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-bold text-white transition ${
+                            m.command.intent === TASK_COMMAND.DELETE ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-500 hover:bg-emerald-600'
+                          }`}
+                        >
+                          {m.command.intent === TASK_COMMAND.DELETE ? 'Xóa' : 'Hoàn thành'}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {!m.command.resolved && !m.command.expired && (
+                    <button
+                      type="button"
+                      onClick={() => cancelCommand(m.id)}
+                      className="cursor-pointer rounded-lg bg-navy-50 px-3 py-1.5 text-[11px] font-bold text-navy-500 hover:bg-navy-100 dark:bg-slate-700 dark:text-slate-300"
+                    >
+                      Bỏ qua
+                    </button>
+                  )}
+                  {m.command.expired && (
+                    <p className="text-[11px] leading-relaxed text-amber-600 dark:text-amber-400">
+                      Thẻ xác nhận hết hiệu lực sau khi tải lại trang — gõ lại lệnh nếu bạn vẫn muốn làm.
+                    </p>
+                  )}
+                </div>
+              )}
               {m.tasks?.length > 0 && (
                 <div className="mt-3 space-y-2.5">
                   {m.tasks.map((t, i) => (
