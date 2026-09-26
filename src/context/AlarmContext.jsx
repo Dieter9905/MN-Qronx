@@ -142,7 +142,10 @@ export function AlarmProvider({ children }) {
     }, 5 * 60 * 1000)
   }, [settings])
 
-  // Polling dự phòng: kiểm tra reminder đến hạn mỗi 20s + khi mở app
+  // Polling dự phòng: kiểm tra reminder đến hạn mỗi 60s + khi mở app.
+  // Trước đây 20s ⇒ mỗi tab mở gọi API ~4.300 lần/ngày (tốn pin, dữ liệu di động
+  // và cả giờ chạy của web service gói free). Nhịp 60s trùng với cron nhắc nhở
+  // phía máy chủ (reminderScheduler chạy mỗi phút) nên báo thức vẫn đúng phút.
   useEffect(() => {
     if (!user) return undefined
     let cancelled = false
@@ -158,7 +161,7 @@ export function AlarmProvider({ children }) {
       }
     }
     check()
-    const interval = setInterval(check, 20000)
+    const interval = setInterval(check, 60000)
     return () => {
       cancelled = true
       clearInterval(interval)

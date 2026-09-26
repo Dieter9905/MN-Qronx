@@ -156,6 +156,12 @@ export default function QuickCapture({ onClose, onCreated }) {
 
     // ── Form mode: tạo 1 công việc ──
     if (!title.trim()) return
+    // Thiếu thời hạn thì server trả 400 chung chung ("Thông tin đầu vào không hợp lệ")
+    // → chặn tại đây để nói rõ đang thiếu ô nào.
+    if (!dueAt) {
+      toast.error('Chọn thời điểm đến hạn cho công việc')
+      return
+    }
     setSaving(true)
     // dueAt từ input datetime-local là giờ địa phương KHÔNG kèm múi giờ
     // (vd "2026-09-10T14:30") → phải chuyển sang ISO (UTC) trước khi gửi,

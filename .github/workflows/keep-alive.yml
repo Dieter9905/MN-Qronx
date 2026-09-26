@@ -1,13 +1,16 @@
-name: Giữ backend luôn thức
+name: Đánh thức backend (thủ công)
 
-# Render gói free cho web service "ngủ" sau 15 phút không có request.
-# Lần truy cập kế tiếp phải chờ máy chủ khởi động lại (~30-60 giây), khiến
-# người dùng thấy đăng nhập bị treo rất lâu. Ping định kỳ để tránh việc đó.
+# Bối cảnh: Render gói free cho web service "ngủ" sau 15 phút không có request,
+# lần truy cập kế tiếp phải chờ khởi động ~30–60 giây.
+#
+# Bản trước đặt lịch `*/5 * * * *`. Với repo PRIVATE, GitHub Free chỉ cho 2.000
+# phút Actions/tháng và mỗi lần chạy scheduled bị tính tối thiểu 1 phút:
+#   288 lần/ngày × 1 phút ≈ 8.600 phút/tháng ⇒ hết quota sau ~7 ngày, sau đó
+#   GitHub TẮT toàn bộ Actions cho tới khi reset chu kỳ ⇒ ping dừng ⇒ máy chủ ngủ.
+# Vì vậy lịch định kỳ đã bỏ; việc giữ ấm giao cho monitor ngoài miễn phí
+# (xem docs/keep-awake.md). File này giữ lại để bấm tay khi cần đánh thức ngay.
 
 on:
-  schedule:
-    # GitHub Actions dùng giờ UTC. Mỗi 5 phút.
-    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -26,5 +29,5 @@ jobs:
             fi
             sleep 10
           done
-          # Không thoát lỗi để tránh gửi email cảnh báo mỗi 5 phút
+          # Không thoát lỗi để tránh gửi email cảnh báo mỗi lần chạy
           echo "::warning::Không ping được backend (có thể đang bảo trì hoặc hết quota)."

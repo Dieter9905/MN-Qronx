@@ -78,7 +78,10 @@ export default function RegisterPage() {
       setServerError(res.message)
       return
     }
-    setDevCode(res.data?.devCode || '')
+    // Chỉ đổi mã khi có mã mới. Bấm gửi lại trong 60s thì backend trả về mã CŨ
+    // (nhánh cooldown, không kèm devCode) — xoá đi là người dùng mất mã đang
+    // hiển thị trong khi email thì chưa chắc đã tới.
+    if (res.data?.devCode) setDevCode(res.data.devCode)
     setResendIn(RESEND_SECONDS)
     toast.success(res.message || 'Đã gửi mã xác nhận!')
   }

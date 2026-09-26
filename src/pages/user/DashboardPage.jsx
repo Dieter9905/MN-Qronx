@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   CalendarDots,
@@ -12,6 +11,8 @@ import {
   Gift,
 } from '@phosphor-icons/react'
 import { getDashboard, completeTask } from '../../services/taskService'
+import { useCachedQuery } from '../../lib/useCachedQuery'
+import { SERVER_WAKE_HINT } from '../../lib/useSlowHint'
 import { useToast } from '../../components/common/Toast'
 import { Skeleton, EmptyState } from '../../components/common/Feedback'
 import Button from '../../components/common/Button'
@@ -47,19 +48,11 @@ export default function DashboardPage() {
   const { lang } = useLanguage()
   const t = app[lang]
   const toast = useToast()
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  const load = async () => {
-    const res = await getDashboard()
-    if (res.success) setData(res.data)
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // Hiện số liệu đã lưu NGAY khi mở, rồi làm mới ở chế độ ngầm: web service gói
+  // free của Render có thể đang khởi động 30–60 giây, trước đây màn hình chỉ có
+  // skeleton trong suốt thời gian đó, còn nếu request đầu thất bại thì `data`
+  // null làm cả trang trắng (không có ErrorBoundary).
+  const { data, loading, error, slow, reload } = useCachedQuery('dashboard', getDashboard)
 
   const toggleComplete = async (task) => {
     const res = await completeTask(task.id)
@@ -68,7 +61,7 @@ export default function DashboardPage() {
       return
     }
     toast.success(res.data.nextTask ? t.completedRepeat : t.completedTask)
-    load()
+    reload()
   }
 
   const today = formatDate(new Date(), { weekday: true })
@@ -83,6 +76,31 @@ export default function DashboardPage() {
           ))}
         </div>
         <Skeleton className="h-64" />
+        {slow && (
+          <p className="text-center text-xs leading-relaxed text-navy-400 dark:text-slate-500">
+            {SERVER_WAKE_HINT}
+          </p>
+        )}
+      </div>
+    )
+  }
+
+  if (!data) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <EmptyState
+          icon={WarningCircle}
+          title="Chưa tải được dữ liệu"
+          description={error || 'Không nhận được phản hồi từ máy chủ.'}
+          action={
+            <Button variant="gradient" onClick={reload}>
+              Thử lại
+            </Button>
+          }
+        />
+        <p className="text-center text-xs leading-relaxed text-navy-400 dark:text-slate-500">
+          {SERVER_WAKE_HINT}
+        </p>
       </div>
     )
   }
@@ -93,6 +111,15 @@ export default function DashboardPage() {
         <h1 className="page-title dark:text-white">{t.welcome}, {user?.fullName?.split(' ').slice(-1)[0]}! 👋</h1>
         <p className="mt-1 text-sm font-medium text-navy-400 dark:text-slate-500">{today}</p>
       </div>
+
+      {error && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:ring-amber-800/50">
+          <span>Số liệu có thể chưa mới nhất — {error}</span>
+          <button type="button" onClick={reload} className="font-bold underline">
+            Thử lại
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard icon={CalendarDots} label={t.todayCount} value={data.todayCount} tone="blue" sub={t.todayCountSub} delay={0} />

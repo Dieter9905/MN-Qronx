@@ -1,5 +1,7 @@
 import api, { getAccessToken, getRefreshToken, API_BASE_URL } from './apiClient'
 import { getSession, setSession, clearSession } from './session'
+import { clearQueryCache } from '../lib/useCachedQuery'
+import { clearChatMessages } from '../lib/chatHistory'
 
 // Chuẩn hoá user trả về từ backend (có thể là {userId,...} hoặc {id,...})
 // về shape frontend quen dùng: { id, fullName, email, phoneNumber, avatarUrl, role, isActive, createdAt }
@@ -64,6 +66,10 @@ export async function login({ email, password } = {}) {
 export async function logout() {
   const token = getAccessToken()
   clearSession()
+  // Xoá luôn dữ liệu đã lưu để máy dùng chung không lộ số liệu của tài khoản cũ
+  clearQueryCache()
+  // và cả lịch sử hội thoại với Trợ lý AI (có thể chứa tên công việc riêng tư)
+  clearChatMessages()
   if (token) {
     try {
       await fetch(`${API_BASE_URL}/auth/logout`, {

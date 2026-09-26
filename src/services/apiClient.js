@@ -113,13 +113,17 @@ export async function api(method, path, { body, query } = {}) {
     return data || { success: true, message: 'Thao tác thành công', data: null }
   }
 
-  // Lỗi nghiệp vụ từ backend – trả về envelope để UI hiển thị message/errors
-  return (
-    data || {
+  // Lỗi nghiệp vụ từ backend – trả về envelope để UI hiển thị message/errors.
+  // Kèm `status` để lớp gọi biết lỗi nào nên thử lại: 429/5xx là hạ tầng tạm
+  // hỏng (thường gặp khi máy chủ Render gói free đang khởi động), còn 4xx là lỗi
+  // nghiệp vụ thì thử lại vô ích.
+  return {
+    ...(data || {
       success: false,
       message: `Lỗi máy chủ (${res.status})`,
-    }
-  )
+    }),
+    status: res.status,
+  }
 }
 
 /**
