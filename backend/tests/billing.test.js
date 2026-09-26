@@ -290,15 +290,24 @@ describe('Admin xác nhận thanh toán', () => {
 
 describe('Webhook ngân hàng', () => {
   it('từ chối khi chưa có mã xác thực webhook (không để ai tự kích hoạt gói)', async () => {
-    // Bảo đảm đúng cảnh chưa cấu hình, dù trước đó có test nào đã đặt mã
+    // Đúng cảnh production: đã khai tài khoản nhận tiền nhưng chưa sinh mã xác thực.
+    // Phải là 401 chứ không phải 500 — 500 khiến SePay tưởng lỗi tạm thời và gửi lại mãi.
     await prisma.billingSetting.deleteMany({ where: { settingId: 1 } })
+    await prisma.billingSetting.create({
+      data: {
+        settingId: 1,
+        bankId: '970416',
+        bankAccount: '38037797',
+        bankAccountName: 'TO VAN MINH NHAT',
+      },
+    })
     billingService.clearBillingSettingsCache()
 
     const res = await api('POST', '/billing/webhook/bank', {
       body: { data: [{ id: 1, description: 'MNQAAAA2222', amount: 39000 }] },
     })
     // Chưa có mã xác thực → đóng cửa, không xử lý gì
-    expect(res.status).toBe(500)
+    expect(res.status).toBe(401)
     expect(res.data.message).toMatch(/mã xác thực webhook/i)
   })
 

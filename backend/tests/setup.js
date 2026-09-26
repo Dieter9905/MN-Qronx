@@ -2,6 +2,7 @@ import app from '../src/app.js'
 import prisma from '../src/config/prisma.js'
 import jwt from 'jsonwebtoken'
 import config from '../src/config/index.js'
+import { cleanupTestData } from './cleanupTestData.js'
 
 let server
 let PORT
@@ -94,26 +95,9 @@ export async function rawGet(path, token) {
 // ─── DB helpers ────────────────────────────────────────
 
 export async function cleanup() {
-  // ⚠️ CHỈ xoá dữ liệu của tài khoản test (`*@example.com`).
-  // Trước đây các lệnh deleteMany() không có `where` nên mỗi lần chạy test là
-  // xoá sạch công việc / danh mục / nhắc nhở / thiết bị của MỌI người dùng
-  // trong DATABASE_URL — mà biến này đang trỏ vào Postgres production.
-  const testUser = { user: { email: { endsWith: '@example.com' } } }
-  const testUserTask = { task: { user: { email: { endsWith: '@example.com' } } } }
-
-  // Hội thoại hỗ trợ (tin nhắn + ảnh tự xoá theo khoá ngoại)
-  await prisma.supportConversation.deleteMany({ where: testUser })
-  await prisma.notificationLog.deleteMany({ where: { reminder: testUserTask } })
-  await prisma.notificationSetting.deleteMany({ where: testUser })
-  await prisma.device.deleteMany({ where: testUser })
-  await prisma.refreshToken.deleteMany({ where: testUser })
-  await prisma.passwordResetRequest.deleteMany({ where: testUser })
-  await prisma.reminder.deleteMany({ where: testUserTask })
-  await prisma.subtask.deleteMany({ where: testUserTask })
-  await prisma.task.deleteMany({ where: testUser })
-  await prisma.category.deleteMany({ where: testUser })
-  await prisma.emailVerificationCode.deleteMany({ where: { email: { endsWith: '@example.com' } } })
-  // Keep roles and admin user
+  // Dùng chung một bản dọn với hook toàn cục (tests/globalSetup.js) để mọi đường
+  // chạy test đều dọn giống nhau — xem tests/cleanupTestData.js.
+  return cleanupTestData()
 }
 
 export { prisma }

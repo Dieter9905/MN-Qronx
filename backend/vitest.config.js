@@ -8,6 +8,9 @@ export default defineConfig({
     testTimeout: 30000,
     pool: 'forks',
     maxWorkers: 1,
+    // Dọn tài khoản test cả trước và sau khi chạy: DATABASE_URL đang trỏ vào
+    // Postgres production nên nếu không dọn ở cuối thì rác cứ tích lại.
+    globalSetup: ['./tests/globalSetup.js'],
     // Cấu hình gửi thư cố định cho test: có API key để luôn đi nhánh Mailjet API,
     // và TẮT mọi cửa sổ hạn mức để mỗi lần gửi chỉ có 1 request
     // (mailQuota.test.js tự bật lại cửa sổ cần kiểm tra).

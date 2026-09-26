@@ -822,8 +822,10 @@ export async function startTrial(userId) {
 export async function verifyWebhookRequest(req) {
   const expected = await webhookSecret()
   if (!expected) {
-    // Chưa cấu hình bí mật → từ chối để không ai tự kích hoạt gói miễn phí
-    throw ApiError.internal('Chưa có mã xác thực webhook — vào Quản trị → Đơn hàng → Cài đặt nhận tiền để sinh mã.')
+    // Chưa cấu hình bí mật → từ chối để không ai tự kích hoạt gói miễn phí.
+    // Dùng 401 chứ không phải 500: đây là lỗi cấu hình phía mình, và 500 sẽ khiến
+    // SePay/Casso tưởng lỗi tạm thời nên gửi lại liên tục.
+    throw ApiError.unauthorized('Chưa có mã xác thực webhook — vào Quản trị → Đơn hàng → Cài đặt nhận tiền để sinh mã.')
   }
   const provided =
     req.get('secure-token') ||
