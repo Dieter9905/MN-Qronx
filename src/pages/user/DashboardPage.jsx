@@ -11,6 +11,7 @@ import {
   Gift,
 } from '@phosphor-icons/react'
 import { getDashboard, completeTask } from '../../services/taskService'
+import { getMyBilling } from '../../services/billingService'
 import { useCachedQuery } from '../../lib/useCachedQuery'
 import { SERVER_WAKE_HINT } from '../../lib/useSlowHint'
 import { useToast } from '../../components/common/Toast'
@@ -53,6 +54,9 @@ export default function DashboardPage() {
   // skeleton trong suốt thời gian đó, còn nếu request đầu thất bại thì `data`
   // null làm cả trang trắng (không có ErrorBoundary).
   const { data, loading, error, slow, reload } = useCachedQuery('dashboard', getDashboard)
+  // Gói sắp hết hạn: chuyển khoản không tự gia hạn được nên phải nhắc ngay trên
+  // màn hình chính, không để khách vô tình mất quyền lợi khi quên mua kỳ mới.
+  const { data: billing } = useCachedQuery('billing-me', getMyBilling)
 
   const toggleComplete = async (task) => {
     const res = await completeTask(task.id)
@@ -120,6 +124,36 @@ export default function DashboardPage() {
           </button>
         </div>
       )}
+
+      {billing?.plan !== 'FREE' &&
+        billing?.planExpiresAt &&
+        typeof billing?.daysLeft === 'number' &&
+        billing.daysLeft <= 7 && (
+          <Link
+            to="/app/billing"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-amber-50 px-4 py-3.5 ring-1 ring-inset ring-amber-200 transition hover:bg-amber-100 dark:bg-amber-900/20 dark:ring-amber-800/50 dark:hover:bg-amber-900/30"
+          >
+            <span className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300">
+                <BellRinging size={20} weight="duotone" />
+              </span>
+              <span>
+                <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                  {billing.daysLeft > 0
+                    ? `Gói ${billing.planName} còn ${billing.daysLeft} ngày nữa là hết hạn`
+                    : `Gói ${billing.planName} hết hạn hôm nay`}
+                </p>
+                <p className="text-xs font-medium text-amber-700 dark:text-amber-300/80">
+                  Hạn {formatDate(billing.planExpiresAt)} — chuyển khoản không tự gia hạn nên bạn cần mua kỳ mới để giữ
+                  nguyên quyền lợi.
+                </p>
+              </span>
+            </span>
+            <span className="flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-bold text-white">
+              Gia hạn ngay <ArrowRight size={14} weight="bold" />
+            </span>
+          </Link>
+        )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard icon={CalendarDots} label={t.todayCount} value={data.todayCount} tone="blue" sub={t.todayCountSub} delay={0} />

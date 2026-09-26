@@ -1,6 +1,7 @@
 import app from './app.js'
 import './schedulers/reminderScheduler.js'
 import { runBankSyncIfDue } from './schedulers/bankSyncScheduler.js'
+import { runRenewalRemindersIfDue } from './schedulers/billingReminderScheduler.js'
 import { onHealthPing } from './routes/index.js'
 import config from './config/index.js'
 
@@ -17,6 +18,11 @@ const server = app.listen(config.port, () => {
 
 onHealthPing(() => {
   runBankSyncIfDue().catch((err) => console.error('[BankSync] Lỗi khi kiểm tra theo nhịp health:', err.message))
+  // Nhắc trước khi gói hết hạn: cron có thể ngủ cùng máy, nên cũng cho chạy
+  // ngay sau mỗi lần tỉnh dậy để khách không bị lỡ email nhắc.
+  runRenewalRemindersIfDue().catch((err) =>
+    console.error('[RenewalReminder] Lỗi khi kiểm tra theo nhịp health:', err.message)
+  )
 })
 
 // ── Graceful shutdown ──────────────────────────────────────

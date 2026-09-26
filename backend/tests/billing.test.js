@@ -1170,3 +1170,117 @@ describe('Hạn mức trợ lý AI', () => {
     expect(quota.data.data.unlimited).toBe(true)
   }, 120000)
 })
+
+// ─── Nhắc trước khi hết hạn ────────────────────────────────
+
+describe('Nhắc trước khi hết hạn', () => {
+  async function newSubscription(userId, expiresAt, plan = 'PLUS') {
+    return prisma.subscription.create({
+      data: {
+        userId,
+        plan,
+        cycle: 'MONTHLY',
+        provider: 'VIETQR',
+        status: 'ACTIVE',
+        startedAt: new Date(Date.now() - 86400000),
+        expiresAt,
+      },
+    })
+  }
+
+  it('liệt kê đúng gói sắp hết hạn trong 7 ngày, bỏ gói đã hết hạn', async () => {
+    const u = await newUser('renew_soon')
+    const soon = await newSubscription(u.userId, new Date(Date.now() + 2 * 86400000))
+    const farAway = await newSubscription(u.userId, new Date(Date.now() + 30 * 86400000))
+    const expired = await newSubscription(u.userId, new Date(Date.now() - 86400000))
+
+    const list = await billingService.listExpiringSoon({ daysAhead: 7 })
+    const ids = list.map((x) => x.subscriptionId)
+
+    expect(ids).toContain(soon.subscriptionId)
+    expect(ids).not.toContain(farAway.subscriptionId)
+    expect(ids).not.toContain(expired.subscriptionId)
+    // Không thể có dòng nào vượt quá khung 7 ngày
+    expect(list.every((x) => x.daysLeft >= 0 && x.daysLeft <= 7)).toBe(true)
+
+    const mine = list.find((x) => x.subscriptionId === soon.subscriptionId)
+    expect(mine.user.email).toBe(u.email)
+    expect(mine.planName).toBe('Plus')
+    expect(mine.daysLeft).toBe(2)
+    expect(mine.reminded).toBe(false)
+  })
+
+  it('gửi nhắc tối đa một lần cho mỗi kỳ — chạy lại không gửi trùng', async () => {
+    const u = await newUser('renew_mail')
+    await newSubscription(u.userId, new Date(Date.now() + 3 * 86400000))
+
+    const sent = []
+    const mailer = async (opts) => {
+      sent.push(opts)
+      return { sent: true }
+    }
+
+    const first = await billingService.sendRenewalReminders({ mailer })
+    expect(first.due).toBeGreaterThanOrEqual(1)
+    const mineFirst = sent.filter((m) => m.to === u.email)
+    expect(mineFirst).toHaveLength(1)
+    expect(mineFirst[0].subject).toMatch(/hết hạn/i)
+    expect(mineFirst[0].text).toContain('/app/billing')
+    expect(mineFirst[0].html).toContain('Gia hạn ngay')
+
+    // Chạy lại lần thứ hai: đúng kỳ đó không được gửi thêm
+    await billingService.sendRenewalReminders({ mailer })
+    expect(sent.filter((m) => m.to === u.email)).toHaveLength(1)
+  })
+
+  it('gửi thất bại thì không đánh dấu đã nhắc, lần sau tự gửi lại', async () => {
+    const u = await newUser('renew_fail')
+    const sub = await newSubscription(u.userId, new Date(Date.now() + 2 * 86400000))
+
+    const failing = async () => {
+      throw new Error('máy chủ thư đang chết')
+    }
+    const failedRun = await billingService.sendRenewalReminders({ mailer: failing })
+    expect(failedRun.failed).toBeGreaterThanOrEqual(1)
+
+    const afterFail = await prisma.subscription.findUnique({
+      where: { subscriptionId: sub.subscriptionId },
+    })
+    expect(afterFail.reminderSentAt).toBeNull()
+
+    // Vẫn còn trong hạn nên lần chạy kế gửi lại được
+    const sent = []
+    const okRun = await billingService.sendRenewalReminders({
+      mailer: async (opts) => {
+        sent.push(opts)
+        return { sent: true }
+      },
+    })
+    expect(okRun.sent).toBeGreaterThanOrEqual(1)
+    expect(sent.some((m) => m.to === u.email)).toBe(true)
+
+    const afterOk = await prisma.subscription.findUnique({
+      where: { subscriptionId: sub.subscriptionId },
+    })
+    expect(afterOk.reminderSentAt).not.toBeNull()
+  })
+
+  it('không nhắc gói FREE — gói miễn phí không có khái niệm hết hạn', async () => {
+    const u = await newUser('renew_free')
+    const freeSoon = await newSubscription(u.userId, new Date(Date.now() + 1 * 86400000), 'FREE')
+
+    // Không có trong danh sách admin "sắp hết hạn"
+    const list = await billingService.listExpiringSoon({ daysAhead: 7 })
+    expect(list.map((x) => x.subscriptionId)).not.toContain(freeSoon.subscriptionId)
+
+    // Và cũng không gửi email nhắc
+    const sent = []
+    await billingService.sendRenewalReminders({
+      mailer: async (opts) => {
+        sent.push(opts)
+        return { sent: true }
+      },
+    })
+    expect(sent.some((m) => m.to === u.email)).toBe(false)
+  })
+})

@@ -408,8 +408,11 @@ model Subscription {
   providerRef    String?            @map("provider_ref") @db.VarChar(190)
   startedAt      DateTime           @default(now()) @map("started_at")
   expiresAt      DateTime           @map("expires_at")
-  autoRenew      Boolean            @default(false) @map("auto_renew")
-  cancelledAt    DateTime?          @map("cancelled_at")
+  autoRenew      Boolean             @default(false) @map("auto_renew")
+  cancelledAt    DateTime?           @map("cancelled_at")
+  // Nhắc trước khi hết hạn đã gửi cho kỳ này chưa — mỗi kỳ tối đa 1 lần, nên
+  // cột này cũng là chốt chặn chống spam email cho người dùng.
+  reminderSentAt DateTime?           @map("reminder_sent_at")
   note           String?            @db.VarChar(255)
   createdAt      DateTime           @default(now()) @map("created_at")
 

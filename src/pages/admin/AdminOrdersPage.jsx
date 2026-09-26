@@ -7,6 +7,7 @@ import {
   ArrowClockwise,
   Warning,
   Bank,
+  ClockCountdown,
 } from '@phosphor-icons/react'
 import Button from '../../components/common/Button'
 import { useToast } from '../../components/common/Toast'
@@ -307,6 +308,63 @@ export default function AdminOrdersPage() {
           Làm mới
         </Button>
       </div>
+
+      {/* Gói sắp hết hạn: chuyển khoản không tự gia hạn nên admin cần chủ động nhắc */}
+      {setup?.expiringSoon?.length > 0 && (
+        <section className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="inline-flex items-center gap-2 text-sm font-extrabold text-navy-900 dark:text-white">
+                <ClockCountdown size={18} weight="fill" className="text-amber-500" />
+                Sắp hết hạn trong 7 ngày
+              </p>
+              <p className="mt-1 text-xs font-semibold text-navy-500 dark:text-slate-400">
+                {setup.expiringSoon.length} gói — chuyển khoản không tự gia hạn nên hãy nhắc họ mua kỳ mới trước khi
+                mất quyền lợi.
+              </p>
+            </div>
+          </div>
+
+          <ul className="mt-3 divide-y divide-navy-100 dark:divide-slate-700">
+            {setup.expiringSoon.map((s) => (
+              <li key={s.subscriptionId} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2.5">
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-bold text-navy-900 dark:text-white">
+                    {s.user.fullName || s.user.email}
+                  </span>
+                  <span className="block truncate text-xs font-medium text-navy-400 dark:text-slate-500">
+                    {s.user.email}
+                  </span>
+                </span>
+                <span className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                  <span className="rounded-lg bg-blue-50 px-2 py-1 text-blue-700 ring-1 ring-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-800/50">
+                    {s.planName}
+                  </span>
+                  <span
+                    className={
+                      s.daysLeft <= 3
+                        ? 'rounded-lg bg-rose-50 px-2 py-1 text-rose-700 ring-1 ring-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:ring-rose-800/50'
+                        : 'rounded-lg bg-amber-50 px-2 py-1 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:ring-amber-800/50'
+                    }
+                  >
+                    còn {s.daysLeft} ngày
+                  </span>
+                  <span className="text-navy-400 dark:text-slate-500">hạn {formatDateTime(s.expiresAt)}</span>
+                  <span className={s.reminded ? 'text-emerald-600 dark:text-emerald-400' : 'text-navy-400 dark:text-slate-500'}>
+                    {s.reminded ? `đã nhắc ${formatDateTime(s.reminderSentAt)}` : 'chưa nhắc email'}
+                  </span>
+                  <a
+                    href={`mailto:${s.user.email}?subject=${encodeURIComponent(`Gói ${s.planName} của bạn sắp hết hạn`)}`}
+                    className="rounded-lg bg-navy-900 px-2.5 py-1 text-white transition hover:bg-navy-700 dark:bg-white dark:text-navy-900 dark:hover:bg-slate-200"
+                  >
+                    Nhắc khách
+                  </a>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Cài đặt nhận tiền: đặt ngay trong app, đổi là ăn liền (không cần deploy) */}
       <section className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">

@@ -296,13 +296,24 @@ liên tục.
 
 ## 3b. Gia hạn khi không có tự động trừ tiền
 
-Với chuyển khoản, người dùng phải tự mua lại kỳ mới. Vì vậy cần (chưa làm):
+Chuyển khoản không tự gia hạn được nên người dùng phải tự mua lại kỳ mới. Chuỗi
+giữ khách gồm bốn tầng — **đã làm hết**:
 
-- Hiển thị rõ số ngày còn lại trên Dashboard khi còn ≤ 7 ngày (đã có trên trang Gói).
-- Nhắc trước 3 ngày qua email + thông báo trong app, kèm nút "Gia hạn ngay" mở sẵn
-  khung thanh toán của gói đang dùng.
-- Admin xem danh sách "sắp hết hạn trong 7 ngày" ở `/admin/orders` để chủ động nhắc.
-- Mọi gói đã hết hạn vẫn giữ nguyên dữ liệu, chỉ tụt giới hạn về gói Miễn phí.
+| Việc | Chỗ nằm | Cách chạy |
+|---|---|---|
+| Số ngày còn lại trên **Dashboard** khi ≤ 7 ngày | `src/pages/user/DashboardPage.jsx` | Banner vàng kèm nút **Gia hạn ngay** mở `/app/billing`; hiện cả khi còn 0 ngày (`hết hạn hôm nay`) |
+| **Email nhắc trước 3 ngày** kèm nút Gia hạn ngay | `billingService.sendRenewalReminders` + `schedulers/billingReminderScheduler.js` | Cron mỗi phút nhưng tự chọn lọc: 08:00–21:00 giờ VN, chu kỳ 15 phút, và cũng chạy theo nhịp `/health` để máy ngủ gói free vẫn gửi kịp |
+| **Admin danh sách** "sắp hết hạn trong 7 ngày" | `GET /admin/billing/settings` → trường `expiringSoon`, card ở `/admin/orders` | Kèm ngày nhắc, trạng thái *đã nhắc/chưa nhắc* và nút **Nhắc khách** (mailto) |
+| Hết hạn → giữ nguyên dữ liệu, tụt về gói Miễn phí | `planLimits.downgradeExpiredPlans()` | Chạy mỗi phút trong `reminderScheduler` |
+
+**Chống spam email:** cột `subscriptions.reminder_sent_at` — mỗi kỳ đúng một lần;
+gửi thất bại thì **không** đánh dấu nên lần chạy sau tự gửi lại. Gói Miễn phí không
+nhắc (vốn không có khái niệm hết hạn). Cột này chỉ thêm, `prisma db push` không đụng
+dữ liệu cũ.
+
+**Chỉnh thời điểm nhắc:** đổi `daysBefore` trong lời gọi `sendRenewalReminders`
+tại `billingReminderScheduler.js`, hoặc đổi khung giờ im lặng `QUIET_FROM_HOUR` /
+`QUIET_AFTER_HOUR` (đơn vị: giờ Việt Nam).
 
 ## 4. Hạn mức AI theo ngày
 

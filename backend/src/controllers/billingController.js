@@ -141,13 +141,17 @@ export const adminCancelOrder = catchAsync(async (req, res) => {
  * vào SePay/Casso, kèm cảnh báo còn thiếu bước nào.
  */
 export const adminGetBillingSetup = catchAsync(async (req, res) => {
-  const [setup, sync] = await Promise.all([
+  const [setup, sync, expiringSoon] = await Promise.all([
     billingService.adminBillingSetup({ baseUrl: publicBaseUrl(req) }),
     bankApiService.syncStatus(),
+    // Gói sắp hết hạn trong 7 ngày: chuyển khoản không tự gia hạn nên đây là
+    // danh sách khách admin nên chủ động liên hệ trước khi mất quyền lợi.
+    billingService.listExpiringSoon({ daysAhead: 7 }),
   ])
   success(res, 200, 'Thao tác thành công', {
     ...setup,
     sync,
+    expiringSoon,
     apiProviders: bankApiService.API_PROVIDERS.map((p) => ({
       id: p.id,
       name: p.name,

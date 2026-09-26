@@ -14,6 +14,7 @@ import {
   planLimit,
 } from '../utils/planLimits.js'
 import { buildVietQr } from './vietQrService.js'
+import { sendEmail } from './emailService.js'
 import { defaultBaseUrlOf } from '../utils/bankProviders.js'
 
 // ─── Tiện ích ───────────────────────────────────────────────
@@ -623,6 +624,129 @@ export async function expireStaleOrders(userId) {
     where: { userId, status: 'PENDING', expiresAt: { lt: new Date() } },
     data: { status: 'EXPIRED' },
   })
+}
+
+// ─── Nhắc trước khi hết hạn ─────────────────────────────────
+// Chuyển khoản không tự gia hạn được, nên phần giữ khách nằm ở đây: email nhắc
+// khi còn ≤ 3 ngày kèm nút "Gia hạn ngay", và danh sách cho admin chủ động liên hệ.
+
+const DAY_MS = 86400000
+
+/**
+ * Số ngày còn lại tới hạn, làm tròn LÊN cho khớp với `daysLeft` mà trang Gói và
+ * Dashboard đang dùng (còn 2 ngày rưỡi vẫn là “còn 3 ngày” thay vì lệch một ngày).
+ */
+export function daysUntil(expiresAt) {
+  return Math.ceil((new Date(expiresAt).getTime() - Date.now()) / DAY_MS)
+}
+
+/** Ngày giờ dạng dd/mm/yyyy theo múi giờ Việt Nam. */
+function vnDate(date) {
+  return new Date(date).toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'Asia/Ho_Chi_Minh',
+  })
+}
+
+/**
+ * Danh sách gói sắp hết hạn trong N ngày tới — admin xem ở /admin/orders để
+ * chủ động nhắc khách. Kèm trạng thái "đã nhắc chưa" cho từng kỳ.
+ */
+export async function listExpiringSoon({ daysAhead = 7 } = {}) {
+  const now = new Date()
+  const horizon = new Date(now.getTime() + daysAhead * DAY_MS)
+  const rows = await prisma.subscription.findMany({
+    where: { status: 'ACTIVE', plan: { not: 'FREE' }, expiresAt: { gte: now, lte: horizon } },
+    include: { user: { select: { email: true, fullName: true } } },
+    orderBy: { expiresAt: 'asc' },
+    take: 100,
+  })
+
+  return rows.map((s) => ({
+    subscriptionId: s.subscriptionId,
+    plan: s.plan,
+    planName: PLANS[s.plan]?.name || s.plan,
+    cycle: s.cycle,
+    expiresAt: s.expiresAt,
+    daysLeft: daysUntil(s.expiresAt),
+    reminderSentAt: s.reminderSentAt,
+    reminded: Boolean(s.reminderSentAt),
+    user: { email: s.user.email, fullName: s.user.fullName },
+  }))
+}
+
+/**
+ * Gửi email nhắc trước khi hết hạn — mỗi kỳ đúng một lần (chốt bằng cột
+ * reminder_sent_at). Gửi thất bại thì KHÔNG đánh dấu đã nhắc để lần chạy sau
+ * tự gửi lại; gửi thành công thì ghi lại ngay nên chạy song song không trùng.
+ *
+ * @param {object} [opts]
+ * @param {number} [opts.daysBefore] nhắc khi còn ≤ bao nhiêu ngày (mặc định 3)
+ * @param {function} [opts.mailer] hàm gửi thư — đổi được trong test
+ * @param {function} [opts.now] đồng hồ ảo cho test
+ */
+export async function sendRenewalReminders({
+  daysBefore = 3,
+  mailer = sendEmail,
+  now = () => new Date(),
+} = {}) {
+  const from = now()
+  const horizon = new Date(from.getTime() + daysBefore * DAY_MS)
+
+  const due = await prisma.subscription.findMany({
+    where: { status: 'ACTIVE', plan: { not: 'FREE' }, expiresAt: { gte: from, lte: horizon }, reminderSentAt: null },
+    include: { user: { select: { email: true, fullName: true } } },
+    orderBy: { expiresAt: 'asc' },
+    take: 200,
+  })
+  if (due.length === 0) return { due: 0, sent: 0, failed: 0 }
+
+  const link = `${config.frontendUrl.replace(/\/$/, '')}/app/billing`
+  let sent = 0
+  let failed = 0
+
+  for (const sub of due) {
+    const planName = PLANS[sub.plan]?.name || sub.plan
+    const days = daysUntil(sub.expiresAt)
+    const expires = vnDate(sub.expiresAt)
+    const subject = `Gói ${planName} của bạn còn ${days} ngày nữa là hết hạn`
+    const text = [
+      `Chào ${sub.user.fullName || 'bạn'},`,
+      '',
+      `Gói ${planName} của bạn hết hạn vào ngày ${expires} — còn ${days} ngày nữa.`,
+      'Vì chuyển khoản không tự gia hạn nên bạn cần mua kỳ mới để giữ nguyên quyền lợi.',
+      `Gia hạn ngay: ${link}`,
+      '',
+      'MN-Qronx',
+    ].join('\n')
+    const html = `
+      <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1f2430;line-height:1.6">
+        <h2 style="margin:0 0 12px;font-size:20px">Gói ${planName} sắp hết hạn</h2>
+        <p>Xin chào ${sub.user.fullName || 'bạn'},</p>
+        <p>Gói <b>${planName}</b> của bạn hết hạn vào <b>${expires}</b> — còn <b>${days} ngày</b> nữa.</p>
+        <p>Vì chuyển khoản không tự gia hạn được, bạn cần mua kỳ mới để giữ nguyên quyền lợi, dữ liệu và hạn mức.</p>
+        <p style="margin:24px 0">
+          <a href="${link}" style="background:#4f46e5;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:bold;display:inline-block">Gia hạn ngay</a>
+        </p>
+        <p style="color:#6b7280;font-size:13px">Liên kết: ${link}</p>
+      </div>`
+
+    try {
+      await mailer({ to: sub.user.email, subject, text, html })
+      await prisma.subscription.update({
+        where: { subscriptionId: sub.subscriptionId },
+        data: { reminderSentAt: from },
+      })
+      sent += 1
+    } catch (err) {
+      failed += 1
+      console.error(`[Billing] Không gửi được nhắc hạn cho ${sub.user.email}: ${err.message}`)
+    }
+  }
+
+  return { due: due.length, sent, failed }
 }
 
 // ─── Kích hoạt gói ──────────────────────────────────────────
