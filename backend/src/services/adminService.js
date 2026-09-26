@@ -3,7 +3,7 @@ import prisma from '../config/prisma.js'
 import { parsePagination, paginationMeta } from '../utils/pagination.js'
 import ApiError from '../utils/ApiError.js'
 import { startOfDay } from '../utils/dateUtils.js'
-import { computePlanDates } from '../utils/planDates.js'
+import { applyPlanChange } from './billingService.js'
 
 // ─── Admin Dashboard ───────────────────────────────────
 
@@ -117,27 +117,36 @@ export async function setUserPlan(userId, plan) {
     throw ApiError.badRequest('Gói chỉ có thể là FREE, PLUS hoặc PRO')
   }
 
-  // Khi admin đổi gói: về FREE thì xoá mốc thời gian, sang gói trả phí thì
-  // mở kỳ 30 ngày mới (gia hạn cùng gói sẽ cộng thêm 30 ngày).
-  const dates = computePlanDates({
-    currentPlan: user.plan,
-    currentStartedAt: user.planStartedAt,
-    currentExpiresAt: user.planExpiresAt,
-    newPlan: plan,
-  })
+  // Đổi về FREE: xoá mốc thời gian và đóng các dòng Subscription đang mở.
+  if (plan === 'FREE') {
+    await prisma.subscription.updateMany({
+      where: { userId, status: 'ACTIVE' },
+      data: { status: 'EXPIRED' },
+    })
+    return prisma.user.update({
+      where: { userId },
+      data: { plan: 'FREE', planStartedAt: null, planExpiresAt: null },
+      select: {
+        userId: true,
+        fullName: true,
+        email: true,
+        plan: true,
+        planStartedAt: true,
+        planExpiresAt: true,
+      },
+    })
+  }
 
-  return prisma.user.update({
-    where: { userId },
-    data: { plan, ...dates },
-    select: {
-      userId: true,
-      fullName: true,
-      email: true,
-      plan: true,
-      planStartedAt: true,
-      planExpiresAt: true,
-    },
+  // Sang gói trả phí: mở kỳ 30 ngày mới (đang còn hạn thì cộng dồn), đi qua
+  // applyPlanChange để có dòng Subscription ghi rõ đây là gói admin tặng.
+  const result = await applyPlanChange({
+    userId,
+    plan,
+    cycle: 'MONTHLY',
+    provider: 'ADMIN',
+    note: 'Admin đổi gói thủ công',
   })
+  return result.user
 }
 
 // ─── List Users ────────────────────────────────────────

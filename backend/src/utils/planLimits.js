@@ -3,41 +3,150 @@ import ApiError from './ApiError.js'
 
 const PAID_PLANS = ['PLUS', 'PRO']
 
-// ─── Cấu hình giới hạn tính năng theo gói ───────────────────
-// FREE  → Miễn phí (giới hạn cơ bản)
-// PLUS  → Plus (mở rộng)
-// PRO   → Pro (không giới hạn)
+// ─── Cấu hình gói ───────────────────────────────────────────
+// Nguyên tắc đóng gói (xem docs/billing.md):
+//   • FREE đủ rộng cho thói quen cơ bản — kể cả công việc LẶP LẠI, vì app nhắc
+//     việc mà không cho lặp thì người dùng bỏ app chứ không nâng cấp.
+//   • Tiền thu ở chỗ cảm nhận được giá trị: hạn mức AI, đồng bộ lịch, nhắc qua
+//     Zalo, báo cáo, thiết bị, âm thanh riêng.
+//   • Giá để ở đây là NGUỒN DUY NHẤT cho cả web (VietQR) và app Android (Play
+//     Billing) — Play Console phải tạo sản phẩm trùng đúng giá và đúng mã.
+export const PLAN_ORDER = { FREE: 0, PLUS: 1, PRO: 2 }
+
+export const CYCLES = {
+  MONTHLY: { days: 30, label: 'tháng' },
+  YEARLY: { days: 365, label: 'năm', monthsFree: 2 },
+}
+
+/** Mã sản phẩm dùng cho Google Play Console (đặt trùng y hệt trong Play Console). */
+export const PRODUCT_IDS = {
+  'PLUS:MONTHLY': 'mnq_plus_monthly',
+  'PLUS:YEARLY': 'mnq_plus_yearly',
+  'PRO:MONTHLY': 'mnq_pro_monthly',
+  'PRO:YEARLY': 'mnq_pro_yearly',
+}
+
 export const PLANS = {
   FREE: {
     name: 'Miễn phí',
-    activeTasks: 10,
-    remindersPerTask: 2,
-    categories: 5,
-    subtasksPerTask: 5,
-    devices: 1,
-    repeatTasks: false,
-    alarmSounds: ['classic', 'DEFAULT', 'URGENT'],
+    tagline: 'Đủ để tạo thói quen nhắc việc mỗi ngày',
+    activeTasks: 50,
+    remindersPerTask: 3,
+    categories: 10,
+    subtasksPerTask: 20,
+    devices: 2,
+    repeatTasks: true,
+    aiDailyLimit: 5,
+    calendarSync: false,
+    zaloReminders: false,
+    exportReports: false,
+    alarmSounds: ['classic', 'digital', 'DEFAULT', 'URGENT'],
+    priceMonthly: 0,
+    priceYearly: 0,
+    features: [
+      '50 công việc đang mở',
+      'Nhắc nhở & công việc lặp lại hằng ngày/tuần/tháng',
+      '10 danh mục, 20 việc con mỗi công việc',
+      '2 thiết bị đồng bộ',
+      'Trợ lý AI: 5 lần mỗi ngày',
+    ],
   },
   PLUS: {
     name: 'Plus',
-    activeTasks: 100,
+    tagline: 'Cho người quản lý nhiều công việc mỗi ngày',
+    activeTasks: Infinity,
     remindersPerTask: 5,
-    categories: 20,
-    subtasksPerTask: 50,
-    devices: 3,
+    categories: Infinity,
+    subtasksPerTask: Infinity,
+    devices: 5,
     repeatTasks: true,
-    alarmSounds: ['classic', 'digital', 'bell', 'DEFAULT', 'URGENT'],
+    aiDailyLimit: 50,
+    calendarSync: false,
+    zaloReminders: false,
+    exportReports: false,
+    alarmSounds: ['classic', 'digital', 'bell', 'morning', 'DEFAULT', 'URGENT'],
+    priceMonthly: 39000,
+    priceYearly: 390000,
+    features: [
+      'Không giới hạn công việc đang mở',
+      '5 nhắc nhở mỗi công việc, không giới hạn danh mục & việc con',
+      '5 thiết bị đồng bộ',
+      'Trợ lý AI: 50 lần mỗi ngày',
+      'Toàn bộ âm thanh báo thức có sẵn',
+      'Hỗ trợ qua chat ưu tiên',
+    ],
   },
   PRO: {
     name: 'Pro',
+    tagline: 'Toàn bộ sức mạnh MN-Qronx, không giới hạn',
     activeTasks: Infinity,
     remindersPerTask: 5,
     categories: Infinity,
     subtasksPerTask: Infinity,
     devices: Infinity,
     repeatTasks: true,
+    aiDailyLimit: Infinity,
+    calendarSync: true,
+    zaloReminders: true,
+    exportReports: true,
     alarmSounds: ['classic', 'digital', 'bell', 'morning', 'gentle', 'DEFAULT', 'URGENT'],
+    priceMonthly: 79000,
+    priceYearly: 790000,
+    features: [
+      'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
+      'Không giới hạn thiết bị đồng bộ',
+      'Trợ lý AI không giới hạn + AI lập kế hoạch tuần',
+      'Đồng bộ hai chiều Google Calendar',
+      'Nhắc nhở qua Zalo khi không mở app',
+      'Báo cáo năng suất & xuất dữ liệu',
+      'Âm thanh báo thức tùy chỉnh',
+    ],
   },
+}
+
+/** Bảng giá công khai (dùng cho trang giá, trang thanh toán và app Android). */
+export function planCatalog() {
+  return Object.entries(PLANS).map(([id, plan]) => ({
+    id,
+    name: plan.name,
+    tagline: plan.tagline,
+    features: plan.features,
+    priceMonthly: plan.priceMonthly,
+    priceYearly: plan.priceYearly,
+    productIds: {
+      MONTHLY: PRODUCT_IDS[`${id}:MONTHLY`] || null,
+      YEARLY: PRODUCT_IDS[`${id}:YEARLY`] || null,
+    },
+    limits: {
+      activeTasks: finiteOrNull(plan.activeTasks),
+      remindersPerTask: plan.remindersPerTask,
+      categories: finiteOrNull(plan.categories),
+      subtasksPerTask: finiteOrNull(plan.subtasksPerTask),
+      devices: finiteOrNull(plan.devices),
+      aiDailyLimit: finiteOrNull(plan.aiDailyLimit),
+      repeatTasks: plan.repeatTasks,
+      calendarSync: plan.calendarSync,
+      zaloReminders: plan.zaloReminders,
+      exportReports: plan.exportReports,
+    },
+  }))
+}
+
+function finiteOrNull(value) {
+  return value === Infinity ? null : value
+}
+
+/** Số tiền phải trả (VND) cho một gói + kỳ. Gói FREE luôn 0. */
+export function planPrice(plan, cycle = 'MONTHLY') {
+  const cfg = PLANS[plan]
+  if (!cfg) return null
+  if (plan === 'FREE') return 0
+  return cycle === 'YEARLY' ? cfg.priceYearly : cfg.priceMonthly
+}
+
+/** Số ngày của một kỳ đăng ký. */
+export function cycleDays(cycle = 'MONTHLY') {
+  return CYCLES[cycle]?.days || CYCLES.MONTHLY.days
 }
 
 /**
@@ -71,6 +180,10 @@ export async function downgradeUser(userId) {
     where: { userId },
     data: { plan: 'FREE', planStartedAt: null, planExpiresAt: null },
   })
+  await prisma.subscription.updateMany({
+    where: { userId, status: 'ACTIVE' },
+    data: { status: 'EXPIRED' },
+  })
   // Âm thanh import chỉ dành cho gói trả phí → về chuông mặc định
   await prisma.notificationSetting.updateMany({
     where: { userId, alarmSound: { startsWith: 'custom:' } },
@@ -86,14 +199,22 @@ export async function downgradeUser(userId) {
  */
 export async function downgradeExpiredPlans() {
   const now = new Date()
-  const res = await prisma.user.updateMany({
+  const expired = await prisma.user.findMany({
     where: { plan: { in: PAID_PLANS }, planExpiresAt: { lt: now } },
+    select: { userId: true },
+  })
+
+  const res = await prisma.user.updateMany({
+    where: { userId: { in: expired.map((u) => u.userId) } },
     data: { plan: 'FREE', planStartedAt: null, planExpiresAt: null },
   })
 
   if (res.count > 0) {
+    await prisma.subscription.updateMany({
+      where: { userId: { in: expired.map((u) => u.userId) }, status: 'ACTIVE' },
+      data: { status: 'EXPIRED' },
+    })
     // Đưa âm thanh tùy chỉnh của các user vừa hạ gói về chuông mặc định
-    // (chỉ nhắm user đang FREE – user trả phí đang hoạt động không bị ảnh hưởng)
     await prisma.notificationSetting.updateMany({
       where: { alarmSound: { startsWith: 'custom:' }, user: { plan: 'FREE' } },
       data: { alarmSound: 'classic' },
@@ -116,21 +237,37 @@ export async function getUserPlan(userId) {
   return isPlanExpired(user) ? 'FREE' : user.plan
 }
 
-/**
- * Lấy giới hạn của một tính năng theo gói.
- */
+/** Lấy giới hạn của một tính năng theo gói. */
 export function planLimit(plan, key) {
   return PLANS[plan]?.[key] ?? Infinity
 }
 
+/** Gói nào có quyền dùng một tính năng bật/tắt (vd calendarSync, zaloReminders). */
+export function planAllows(plan, key) {
+  return !!PLANS[plan]?.[key]
+}
+
 /**
- * Tạo lỗi giới hạn gói với thông điệp dễ hiểu.
+ * Tạo lỗi giới hạn gói với thông điệp dễ hiểu, kèm chỉ dẫn nâng cấp.
  */
 export function planLimitError({ feature, limit, plan = 'FREE', upgrade = 'Plus hoặc Pro' }) {
   const limitText = limit === Infinity ? 'không giới hạn' : limit
+  const planName = PLANS[plan]?.name || plan
   return ApiError.badRequest(
-    `Bạn đã đạt giới hạn ${limitText} ${feature} của gói Miễn phí. Nâng cấp lên gói ${upgrade} để mở rộng giới hạn.`
+    `Bạn đã dùng hết ${limitText} ${feature} của gói ${planName}. Nâng cấp lên gói ${upgrade} để mở rộng giới hạn.`
   )
 }
 
-export default { PLANS, getUserPlan, planLimit, planLimitError }
+export default {
+  PLANS,
+  PLAN_ORDER,
+  CYCLES,
+  PRODUCT_IDS,
+  getUserPlan,
+  planLimit,
+  planAllows,
+  planLimitError,
+  planCatalog,
+  planPrice,
+  cycleDays,
+}

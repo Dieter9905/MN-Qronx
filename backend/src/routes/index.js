@@ -9,6 +9,7 @@ import deviceRoutes from './deviceRoutes.js'
 import dashboardRoutes from './dashboardRoutes.js'
 import adminRoutes from './adminRoutes.js'
 import planRoutes from './planRoutes.js'
+import billingRoutes from './billingRoutes.js'
 import rewardRoutes from './rewardRoutes.js'
 import aiRoutes from './aiRoutes.js'
 import supportRoutes from './supportRoutes.js'
@@ -17,6 +18,16 @@ import supportRoutes from './supportRoutes.js'
 // import adminRoutes from './adminRoutes.js'
 
 const router = Router()
+
+// ── Móc "việc định kỳ" gắn từ server.js ─────────────────────
+// Health check là endpoint được dịch vụ keep-alive gọi đều đặn, nên đây là chỗ
+// tốt nhất để đánh thức các việc định kỳ sau khi máy chủ ngủ (Render free không
+// chạy cron trong lúc ngủ). Không gắn móc thì /health vẫn chạy y như cũ.
+let healthHook = null
+
+export function onHealthPing(fn) {
+  healthHook = typeof fn === 'function' ? fn : null
+}
 
 // ── Health check ───────────────────────────────────────────
 /**
@@ -47,6 +58,13 @@ const router = Router()
  *                       example: ok
  */
 router.get('/health', (req, res) => {
+  if (healthHook) {
+    try {
+      healthHook()
+    } catch (err) {
+      console.error('[Health] Lỗi việc định kỳ:', err.message)
+    }
+  }
   success(res, 200, 'Server đang hoạt động', { status: 'ok' })
 })
 
@@ -60,6 +78,7 @@ router.use('/devices',       deviceRoutes)
 router.use('/dashboard',     dashboardRoutes)
 router.use('/admin',         adminRoutes)
 router.use('/plans',         planRoutes)
+router.use('/billing',       billingRoutes)
 router.use('/rewards',        rewardRoutes)
 router.use('/ai',             aiRoutes)
 router.use('/support',        supportRoutes)

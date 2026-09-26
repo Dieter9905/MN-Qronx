@@ -105,60 +105,70 @@ export const PLAN_NAMES = {
 }
 
 // Giới hạn nhắc nhở mỗi công việc theo gói (backend ép buộc tương ứng)
-export const PLAN_REMINDER_LIMIT = { FREE: 2, PLUS: 5, PRO: 5 }
+export const PLAN_REMINDER_LIMIT = { FREE: 3, PLUS: 5, PRO: 5 }
 
-// Thông tin gói dùng cho trang giá (Pricing) & trang nâng cấp (Billing)
+// Kỳ thanh toán – giá theo năm = 10 tháng (tặng 2 tháng)
+export const BILLING_CYCLES = [
+  { id: 'MONTHLY', label: 'Theo tháng', short: 'tháng' },
+  { id: 'YEARLY', label: 'Theo năm', short: 'năm', note: 'Tặng 2 tháng' },
+]
+
+// Thông tin gói dùng cho trang giá (Pricing) & trang nâng cấp (Billing).
+// Đây là bản DỰ PHÒNG khi không gọi được API /billing/products (mạng lỗi) —
+// nguồn duy nhất vẫn là backend/src/utils/planLimits.js, nên khi đổi giá hay
+// đổi giới hạn thì sửa ở đó trước rồi cập nhật lại đây.
 export const PLANS = [
   {
     id: 'FREE',
     label: 'Miễn phí',
-    tagline: 'Bắt đầu quản lý công việc cơ bản',
-    price: '0đ',
-    period: 'mãi mãi',
+    tagline: 'Đủ để tạo thói quen nhắc việc mỗi ngày',
+    priceMonthly: 0,
+    priceYearly: 0,
     gradient: 'from-slate-500 to-slate-600',
     features: [
-      'Tối đa 10 công việc đang mở',
-      '2 nhắc nhở mỗi công việc',
-      '5 danh mục',
-      '5 việc con mỗi công việc',
-      '1 thiết bị đồng bộ',
-      'Âm thanh báo thức cơ bản',
+      '50 công việc đang mở',
+      'Nhắc nhở & công việc lặp lại hằng ngày/tuần/tháng',
+      '10 danh mục, 20 việc con mỗi công việc',
+      '2 thiết bị đồng bộ',
+      'Trợ lý AI: 5 lần mỗi ngày',
     ],
+    limits: { activeTasks: 50, aiDailyLimit: 5, devices: 2, repeatTasks: true },
   },
   {
     id: 'PLUS',
     label: 'Plus',
-    tagline: 'Cho người quản lý nhiều công việc',
-    price: '49.000đ',
-    period: '/tháng',
+    tagline: 'Cho người quản lý nhiều công việc mỗi ngày',
+    priceMonthly: 39000,
+    priceYearly: 390000,
     gradient: 'from-blue-500 to-cyan-500',
     popular: true,
     features: [
-      '100 công việc đang mở',
-      '5 nhắc nhở mỗi công việc',
-      '20 danh mục',
-      'Công việc lặp lại',
-      '50 việc con mỗi công việc',
-      '3 thiết bị đồng bộ',
+      'Không giới hạn công việc đang mở',
+      '5 nhắc nhở mỗi công việc, không giới hạn danh mục & việc con',
+      '5 thiết bị đồng bộ',
+      'Trợ lý AI: 50 lần mỗi ngày',
+      'Toàn bộ âm thanh báo thức có sẵn',
     ],
+    limits: { activeTasks: null, aiDailyLimit: 50, devices: 5, repeatTasks: true },
   },
   {
     id: 'PRO',
     label: 'Pro',
-    tagline: 'Toàn bộ sức mạnh MN-Qronx',
-    price: '99.000đ',
-    period: '/tháng',
+    tagline: 'Toàn bộ sức mạnh MN-Qronx, không giới hạn',
+    priceMonthly: 79000,
+    priceYearly: 790000,
     gradient: 'from-violet-500 to-fuchsia-500',
     ai: true,
     features: [
-      'Trợ lý AI: tạo việc bằng lời, tách bước, gợi ý thứ tự làm',
-      'Không giới hạn công việc đang mở',
-      '5 nhắc nhở mỗi công việc',
-      'Không giới hạn danh mục & việc con',
-      'Công việc lặp lại',
+      'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
       'Không giới hạn thiết bị đồng bộ',
-      'Toàn bộ âm thanh báo thức',
+      'Trợ lý AI không giới hạn + AI lập kế hoạch tuần',
+      'Đồng bộ hai chiều Google Calendar',
+      'Nhắc nhở qua Zalo khi không mở app',
+      'Báo cáo năng suất & xuất dữ liệu',
+      'Âm thanh báo thức tùy chỉnh',
     ],
+    limits: { activeTasks: null, aiDailyLimit: null, devices: null, repeatTasks: true },
   },
 ]
 

@@ -1,12 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Check, Crown, Rocket, Sparkle, ArrowRight } from '@phosphor-icons/react'
+import { Check, Crown, Rocket, Sparkle, ArrowRight, ShieldCheck } from '@phosphor-icons/react'
 import Button from '../../components/common/Button'
 import { useAuth } from '../../context/AuthContext'
-import { useToast } from '../../components/common/Toast'
-import { upgradePlan } from '../../services/planService'
 import { Logo } from '../../components/Logo'
-import { PLANS, PLAN_NAMES, PLAN_BADGE } from '../../lib/constants'
+import { formatVnd } from '../../lib/format'
+import { PLANS as FALLBACK_PLANS, PLAN_NAMES, PLAN_BADGE, BILLING_CYCLES } from '../../lib/constants'
+import { getProducts } from '../../services/billingService'
 
 const PLAN_ICON = { FREE: Sparkle, PLUS: Rocket, PRO: Crown }
 const PLAN_ICON_COLOR = {
@@ -16,31 +16,38 @@ const PLAN_ICON_COLOR = {
 }
 
 export default function PricingPage() {
-  const { user, refresh } = useAuth()
-  const toast = useToast()
+  const { user } = useAuth()
   const navigate = useNavigate()
-  const [busy, setBusy] = useState(null)
+  const [plans, setPlans] = useState(FALLBACK_PLANS)
+  const [cycle, setCycle] = useState('MONTHLY')
+  const [trialDays, setTrialDays] = useState(7)
   const current = user?.plan || 'FREE'
 
-  const doUpgrade = async (planId) => {
+  // Bảng giá lấy từ máy chủ (nguồn duy nhất) — không gọi được thì dùng bản dự phòng
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const res = await getProducts()
+      if (!cancelled && res.success && res.data?.plans?.length) {
+        setPlans(res.data.plans)
+        if (res.data.payments?.trialDays !== undefined) setTrialDays(res.data.payments.trialDays)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const open = (planId) => {
     if (!user) {
       navigate('/register')
       return
     }
-    setBusy(planId)
-    const res = await upgradePlan(planId)
-    setBusy(null)
-    if (!res.success) {
-      toast.error(res.message)
-      return
-    }
-    await refresh()
-    toast.success(`Chúc mừng! Bạn đang dùng gói ${PLAN_NAMES[planId]} 🎉`)
+    navigate('/app/billing', { state: { plan: planId, cycle } })
   }
 
   return (
     <div className="min-h-dvh bg-white text-navy-900 dark:bg-navy-950 dark:text-white">
-      {/* Thanh trên */}
       <header className="sticky top-0 z-30 border-b border-navy-100 bg-white/90 backdrop-blur dark:border-white/10 dark:bg-navy-950/90">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link to="/" aria-label="MN-Qronx – Trang chủ">
@@ -71,11 +78,9 @@ export default function PricingPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
-        {/* Hero */}
-        <div className="pt-16 pb-12 text-center">
+        <div className="pt-16 pb-10 text-center">
           <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-blue-600 ring-1 ring-blue-100 dark:bg-white/5 dark:text-cyan-300 dark:ring-white/10">
-            <Crown size={14} weight="fill" />
-            Bảng giá MN-Qronx
+            <Crown size={14} weight="fill" /> Bảng giá MN-Qronx
           </span>
           <h1 className="mt-5 text-4xl font-extrabold tracking-tight sm:text-5xl">
             Chọn gói phù hợp{' '}
@@ -84,16 +89,35 @@ export default function PricingPage() {
             </span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-slate-500 dark:text-slate-400">
-            Bắt đầu miễn phí, nâng cấp khi cần thêm công việc, nhắc nhở và tính năng nâng cao.
-            Hủy bất kỳ lúc nào – không ràng buộc.
+            Bắt đầu miễn phí — đủ để nhắc việc mỗi ngày, kể cả công việc lặp lại. Nâng cấp khi bạn cần thêm
+            {' '}{trialDays} ngày dùng thử Pro miễn phí, huỷ bất kỳ lúc nào.
           </p>
+
+          <div className="mt-6 inline-flex rounded-xl bg-navy-100 p-1 dark:bg-white/10">
+            {BILLING_CYCLES.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setCycle(c.id)}
+                className={`rounded-lg px-4 py-2 text-sm font-extrabold transition ${
+                  cycle === c.id
+                    ? 'bg-white text-navy-900 shadow-sm dark:bg-slate-700 dark:text-white'
+                    : 'text-navy-500 hover:text-navy-800 dark:text-slate-300 dark:hover:text-white'
+                }`}
+              >
+                {c.label}
+                {c.note && <span className="ml-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">{c.note}</span>}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Cards */}
         <div className="grid gap-6 md:grid-cols-3">
-          {PLANS.map((p) => {
-            const Icon = PLAN_ICON[p.id]
-            const isCurrent = current === p.id
+          {plans.map((p) => {
+            const Icon = PLAN_ICON[p.id] || Sparkle
+            const isCurrent = Boolean(user) && current === p.id
+            const price = cycle === 'YEARLY' ? p.priceYearly : p.priceMonthly
+            const isFree = p.id === 'FREE'
             return (
               <div
                 key={p.id}
@@ -113,14 +137,23 @@ export default function PricingPage() {
                 <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${PLAN_ICON_COLOR[p.id]}`}>
                   <Icon size={24} weight="fill" />
                 </span>
-                <h2 className="mt-4 text-2xl font-extrabold">{p.label}</h2>
+                <h2 className="mt-4 text-2xl font-extrabold">{p.label || PLAN_NAMES[p.id]}</h2>
                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{p.tagline}</p>
                 <p className="mt-5 flex items-baseline gap-1.5">
-                  <span className="text-4xl font-extrabold tracking-tight">{p.price}</span>
-                  <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">{p.period}</span>
+                  <span className="text-4xl font-extrabold tracking-tight">{isFree ? '0đ' : formatVnd(price)}</span>
+                  {!isFree && (
+                    <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                      /{cycle === 'YEARLY' ? 'năm' : 'tháng'}
+                    </span>
+                  )}
                 </p>
+                {!isFree && cycle === 'YEARLY' && (
+                  <p className="mt-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                    ≈ {formatVnd(Math.round(price / 12))}/tháng — tiết kiệm 2 tháng
+                  </p>
+                )}
                 <ul className="mt-6 flex-1 space-y-3">
-                  {p.features.map((f) => (
+                  {(p.features || []).map((f) => (
                     <li key={f} className="flex items-start gap-3 text-sm text-navy-600 dark:text-slate-300">
                       <span className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
                         <Check size={11} weight="bold" />
@@ -134,31 +167,19 @@ export default function PricingPage() {
                     <Button variant="secondary" fullWidth disabled>
                       Gói hiện tại ✓
                     </Button>
-                  ) : p.id === 'FREE' ? (
-                    <Button
-                      variant="secondary"
-                      fullWidth
-                      onClick={() => navigate(user ? '/app' : '/register')}
-                      icon={user ? undefined : Sparkle}
-                    >
+                  ) : isFree ? (
+                    <Button variant="secondary" fullWidth onClick={() => navigate(user ? '/app' : '/register')} icon={user ? undefined : Sparkle}>
                       {user ? 'Mở ứng dụng' : 'Bắt đầu miễn phí'}
                     </Button>
-                  ) : user ? (
+                  ) : (
                     <Button
                       variant={p.popular ? 'gradient' : 'primary'}
                       fullWidth
-                      icon={Crown}
-                      loading={busy === p.id}
-                      onClick={() => doUpgrade(p.id)}
+                      icon={user ? Crown : ArrowRight}
+                      onClick={() => open(p.id)}
                     >
-                      Nâng cấp {p.label}
+                      {user ? `Nâng cấp ${p.label || PLAN_NAMES[p.id]}` : `Đăng ký để dùng ${p.label || PLAN_NAMES[p.id]}`}
                     </Button>
-                  ) : (
-                    <Link to="/register" className="block">
-                      <Button variant={p.popular ? 'gradient' : 'primary'} fullWidth icon={ArrowRight}>
-                        Đăng ký để dùng {p.label}
-                      </Button>
-                    </Link>
                   )}
                 </div>
               </div>
@@ -166,10 +187,40 @@ export default function PricingPage() {
           })}
         </div>
 
+        <div className="mt-12 grid gap-5 sm:grid-cols-3">
+          <Assurance
+            icon={ShieldCheck}
+            title="Thanh toán an toàn"
+            text="Chuyển khoản ngân hàng qua mã VietQR, đúng số tiền và nội dung là gói được kích hoạt."
+          />
+          <Assurance
+            icon={Sparkle}
+            title="Thử trước khi trả tiền"
+            text={`${trialDays} ngày dùng thử gói Pro, không cần thẻ, không tự động trừ tiền.`}
+          />
+          <Assurance
+            icon={Crown}
+            title="Không ràng buộc"
+            text="Gói theo kỳ 30 ngày hoặc 1 năm. Hết kỳ không gia hạn thì tự về gói Miễn phí, dữ liệu vẫn còn."
+          />
+        </div>
+
         <p className="mt-10 text-center text-sm text-slate-500 dark:text-slate-400">
-          💡 Bản nâng cấp mô phỏng phục vụ demo – gói được kích hoạt ngay sau khi bấm nút. Thanh toán thật sẽ được kết nối sau.
+          Trả theo năm để được tặng 2 tháng, hoặc nhắn cho chúng tôi nếu bạn cần hoá đơn cho công ty.
         </p>
       </main>
+    </div>
+  )
+}
+
+function Assurance({ icon: Icon, title, text }) {
+  return (
+    <div className="rounded-2xl bg-navy-50 p-5 ring-1 ring-navy-100 dark:bg-white/[0.04] dark:ring-white/10">
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm dark:bg-white/10 dark:text-cyan-300">
+        <Icon size={20} weight="fill" />
+      </span>
+      <p className="mt-3 text-sm font-extrabold text-navy-900 dark:text-white">{title}</p>
+      <p className="mt-1 text-sm text-navy-500 dark:text-slate-400">{text}</p>
     </div>
   )
 }

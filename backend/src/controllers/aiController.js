@@ -1,6 +1,6 @@
 import * as aiService from '../services/aiService.js'
+import * as aiQuotaService from '../services/aiQuotaService.js'
 import ApiError from '../utils/ApiError.js'
-import { getUserPlan } from '../utils/planLimits.js'
 import { success } from '../dto/response/apiResponse.js'
 
 // Lỗi của dịch vụ AI riêng (self-hosted) → HTTP status đúng bản chất.
@@ -17,7 +17,10 @@ const AI_ERROR_STATUS = {
 /**
  * POST /api/v1/ai/parse-tasks
  * Gửi đoạn văn tự nhiên tới AI riêng (AI_INFER_URL) → danh sách công việc (đã sanitize).
- * Chỉ dành cho gói PRO.
+ *
+ * Mọi gói đều dùng được, giới hạn số lượt mỗi ngày theo gói (xem aiQuotaService).
+ * Lượt chỉ bị trừ KHI AI trả kết quả thành công, nên lỗi mạng không làm người
+ * dùng mất lượt.
  */
 export async function parseTasks(req, res, next) {
   try {
@@ -26,13 +29,11 @@ export async function parseTasks(req, res, next) {
       throw ApiError.badRequest('Vui lòng nhập nội dung công việc')
     }
 
-    const plan = await getUserPlan(req.user.id)
-    if (plan !== 'PRO') {
-      throw ApiError.forbidden('Tính năng AI chỉ dành cho gói Pro')
-    }
+    await aiQuotaService.assertQuota(req.user.id)
 
     const tasks = await aiService.parseTasks(String(text))
-    success(res, 200, 'Phân tích thành công', { tasks })
+    const quota = await aiQuotaService.consumeQuota(req.user.id)
+    success(res, 200, 'Phân tích thành công', { tasks, quota })
   } catch (err) {
     const status = AI_ERROR_STATUS[err.code]
     if (status) {
@@ -43,4 +44,13 @@ export async function parseTasks(req, res, next) {
   }
 }
 
-export default { parseTasks }
+/**
+ * GET /api/v1/ai/quota
+ * Số lượt trợ lý AI còn lại hôm nay (để hiển thị trong khung chat).
+ */
+export async function getQuota(req, res) {
+  const quota = await aiQuotaService.getQuota(req.user.id)
+  success(res, 200, 'Thao tác thành công', quota)
+}
+
+export default { parseTasks, getQuota }

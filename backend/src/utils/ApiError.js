@@ -36,4 +36,8 @@ export default class ApiError extends Error {
   static internal(message = 'Lỗi hệ thống') {
     return new ApiError(500, message)
   }
+
+  static tooManyRequests(message = 'Bạn đã dùng quá số lần cho phép') {
+    return new ApiError(429, message)
+  }
 }

@@ -1,7 +1,5 @@
 import { Router } from 'express'
-import { body } from 'express-validator'
 import auth from '../middleware/auth.js'
-import validate from '../middleware/validate.js'
 import * as planController from '../controllers/planController.js'
 
 const router = Router()
@@ -20,35 +18,7 @@ const router = Router()
  */
 router.get('/me', auth, planController.getMyPlan)
 
-/**
- * @swagger
- * /plans/upgrade:
- *   put:
- *     tags: [Plans]
- *     summary: Nâng cấp gói (mô phỏng thanh toán)
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [plan]
- *             properties:
- *               plan: { type: string, enum: [PLUS, PRO] }
- *     responses:
- *       200:
- *         description: Nâng cấp thành công
- */
-router.put(
-  '/upgrade',
-  auth,
-  body('plan')
-    .trim()
-    .isIn(['PLUS', 'PRO']).withMessage('Chỉ có thể nâng cấp lên gói PLUS hoặc PRO'),
-  validate,
-  planController.upgrade,
-)
+// PUT /plans/upgrade (nâng cấp mô phỏng) đã bị gỡ: xem /api/v1/billing/*
+// để mua gói bằng chuyển khoản hoặc Play Billing.
 
 export default router

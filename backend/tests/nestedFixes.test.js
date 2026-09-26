@@ -297,9 +297,11 @@ describe('AI phân tích câu', () => {
     }
   })
 
-  it('gói không phải Pro → 403', async () => {
-    await prisma.user.update({ where: { email }, data: { plan: 'FREE' } })
+  it('gói Free vẫn dùng được AI (chỉ giới hạn số lượt mỗi ngày)', async () => {
+    await prisma.user.update({ where: { email }, data: { plan: 'FREE', planExpiresAt: null } })
     const res = await api('POST', '/ai/parse-tasks', { token, body: { text: 'Họp team 9h' } })
-    expect(res.status).toBe(403)
+    // Không còn bị chặn 403 vì gói: chỉ hết lượt mới trả 429
+    expect(res.status).not.toBe(403)
+    expect(res.status).not.toBe(429)
   })
 })

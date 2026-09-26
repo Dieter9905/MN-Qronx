@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import prisma from '../config/prisma.js'
 import ApiError from '../utils/ApiError.js'
-import { computePlanDates } from '../utils/planDates.js'
+import { applyPlanChange } from './billingService.js'
 import { startOfDay } from '../utils/dateUtils.js'
 
 // ─── Kinh tế điểm ─────────────────────────────────────────
@@ -195,34 +195,39 @@ export async function claimReward(userId, tierId) {
     throw ApiError.badRequest(`Chưa đủ điểm (cần ${tier.points} điểm, hiện có ${user.points})`)
   }
 
-  const dates = computePlanDates({
-    currentPlan: user.plan,
-    currentStartedAt: user.planStartedAt,
-    currentExpiresAt: user.planExpiresAt,
-    newPlan: tier.plan,
-    days: tier.days,
-  })
-
-  await prisma.$transaction([
-    prisma.user.update({
+  // Trừ điểm + ghi lịch sử quyền lợi trong cùng transaction. Đi qua
+  // applyPlanChange để gói đổi bằng điểm cũng có dòng Subscription, ngày hết hạn
+  // và quy tắc cộng dồn y hệt gói mua bằng tiền.
+  const result = await prisma.$transaction(async (tx) => {
+    await tx.user.update({
       where: { userId },
-      data: { points: { decrement: tier.points }, plan: tier.plan, ...dates },
-    }),
-    prisma.pointTransaction.create({
+      data: { points: { decrement: tier.points } },
+    })
+    await tx.pointTransaction.create({
       data: {
         userId,
         amount: -tier.points,
         reason: 'REDEEM_REWARD',
         note: `Đổi: ${tier.name}`,
       },
-    }),
-  ])
+    })
+    return applyPlanChange({
+      userId,
+      plan: tier.plan,
+      cycle: 'MONTHLY',
+      provider: 'REWARD',
+      providerRef: tier.id,
+      note: `Đổi điểm: ${tier.name}`,
+      days: tier.days,
+      client: tx,
+    })
+  })
 
   return {
     tier,
-    plan: tier.plan,
-    planStartedAt: dates.planStartedAt,
-    planExpiresAt: dates.planExpiresAt,
+    plan: result.user.plan,
+    planStartedAt: result.user.planStartedAt,
+    planExpiresAt: result.user.planExpiresAt,
     remainingPoints: user.points - tier.points,
   }
 }

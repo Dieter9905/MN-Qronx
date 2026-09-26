@@ -10,6 +10,14 @@ import {
 } from '../dto/request/adminValidation.js'
 import * as adminController from '../controllers/adminController.js'
 import * as supportController from '../controllers/supportController.js'
+import * as billingController from '../controllers/billingController.js'
+import {
+  orderListValidation,
+  orderCodeValidation,
+  confirmOrderValidation,
+  attachTransferValidation,
+  bankSettingsValidation,
+} from '../dto/request/billingValidation.js'
 import {
   conversationListValidation,
   conversationIdValidation,
@@ -184,6 +192,62 @@ router.put('/users/:userId/plan', userIdValidation, planChangeValidation, valida
  *         description: Không tìm thấy người dùng
  */
 router.delete('/users/:userId', userIdValidation, validate, adminController.deleteUser)
+
+// ── Đối soát thanh toán ────────────────────────────────────
+
+/** Danh sách đơn mua gói (lọc theo trạng thái / mã đơn / email) */
+router.get('/orders', orderListValidation, validate, billingController.adminListOrders)
+
+/** Xác nhận đã nhận tiền → kích hoạt gói cho người dùng */
+router.post(
+  '/orders/:orderCode/confirm',
+  orderCodeValidation,
+  confirmOrderValidation,
+  validate,
+  billingController.adminConfirmOrder
+)
+
+/** Huỷ đơn chưa thanh toán */
+router.post(
+  '/orders/:orderCode/cancel',
+  orderCodeValidation,
+  validate,
+  billingController.adminCancelOrder
+)
+
+/**
+ * Gán tay một giao dịch ngân hàng đã vào tài khoản nhưng chưa khớp đơn nào
+ * (khách chuyển thiếu, sai nội dung) → kích hoạt gói cho đúng đơn đó.
+ */
+router.post(
+  '/billing/transfers/:eventId/attach',
+  attachTransferValidation,
+  validate,
+  billingController.adminAttachTransfer
+)
+
+/**
+ * Cài đặt nhận tiền: tài khoản ngân hàng (ACB…), mã xác thực webhook và URL
+ * để dán vào SePay/Casso. Đặt trong app nên đổi là ăn liền, không cần deploy.
+ */
+router.get('/billing/settings', billingController.adminGetBillingSetup)
+
+/** Lưu tài khoản nhận tiền */
+router.put(
+  '/billing/settings',
+  bankSettingsValidation,
+  validate,
+  billingController.adminSaveBillingSettings
+)
+
+/** Sinh mã xác thực webhook mới (mã cũ hết hiệu lực ngay) */
+router.post('/billing/settings/rotate-secret', billingController.adminRotateWebhookSecret)
+
+/** Kiểm tra kết nối API ngân hàng (gọi thật, chỉ đọc, không kích hoạt gói) */
+router.post('/billing/test-connection', billingController.adminTestBankConnection)
+
+/** Đồng bộ ngay: kéo giao dịch từ API ngân hàng rồi kích hoạt gói */
+router.post('/billing/sync', billingController.adminSyncBankNow)
 
 // ── CSKH: hội thoại hỗ trợ với người dùng ──────────────────
 

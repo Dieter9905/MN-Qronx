@@ -1,12 +1,22 @@
 import app from './app.js'
 import './schedulers/reminderScheduler.js'
+import { runBankSyncIfDue } from './schedulers/bankSyncScheduler.js'
+import { onHealthPing } from './routes/index.js'
 import config from './config/index.js'
+
+// Mỗi lần có người gọi /health (dịch vụ keep-alive gọi đều đặn), kiểm tra xem đã
+// đến kỳ đồng bộ giao dịch ngân hàng chưa. Nhờ vậy máy chủ ngủ trên gói free vẫn
+// đối soát được thanh toán ngay sau khi tỉnh, không phải chờ cron.
 
 // ── Start server ───────────────────────────────────────────
 const server = app.listen(config.port, () => {
   console.log(`[TaskAlarm] Server đang chạy trên port ${config.port} (${config.nodeEnv})`)
   console.log(`[TaskAlarm] Swagger UI: http://localhost:${config.port}/docs`)
-console.log(`[TaskAlarm] Reminder Scheduler đã khởi động (mỗi 1 phút)`)
+  console.log(`[TaskAlarm] Reminder Scheduler đã khởi động (mỗi 1 phút)`)
+})
+
+onHealthPing(() => {
+  runBankSyncIfDue().catch((err) => console.error('[BankSync] Lỗi khi kiểm tra theo nhịp health:', err.message))
 })
 
 // ── Graceful shutdown ──────────────────────────────────────

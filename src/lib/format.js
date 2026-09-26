@@ -9,6 +9,17 @@ export const VI_MONTHS = [
 
 export const pad = (n) => String(n).padStart(2, '0')
 
+/**
+ * Số tiền theo kiểu Việt Nam: 39000 → "39.000đ".
+ * @param {number} amount
+ * @param {{ suffix?: string }} [opts] suffix mặc định 'đ'
+ * @returns {string}
+ */
+export function formatVnd(amount, { suffix = 'đ' } = {}) {
+  if (amount === null || amount === undefined || Number.isNaN(Number(amount))) return '—'
+  return `${Number(amount).toLocaleString('vi-VN')}${suffix}`
+}
+
 export function setTime(date, hour, minute = 0, second = 0) {
   const d = new Date(date)
   d.setHours(hour, minute, second, 0)

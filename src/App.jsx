@@ -33,6 +33,7 @@ import AdminShell from './components/layout/AdminShell'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminUsersPage from './pages/admin/AdminUsersPage'
 import AdminSupportPage from './pages/admin/AdminSupportPage'
+import AdminOrdersPage from './pages/admin/AdminOrdersPage'
 import SupportPage from './pages/user/SupportPage'
 import NotFoundPage from './pages/NotFoundPage'
 
@@ -125,6 +126,7 @@ export default function App() {
           <Route index element={<AdminDashboardPage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="support" element={<AdminSupportPage />} />
+          <Route path="orders" element={<AdminOrdersPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

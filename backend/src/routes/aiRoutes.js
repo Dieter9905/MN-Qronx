@@ -26,6 +26,20 @@ const router = Router()
  *       200:
  *         description: Danh sách công việc
  */
+/**
+ * @swagger
+ * /ai/quota:
+ *   get:
+ *     tags: [AI]
+ *     summary: Số lượt trợ lý AI còn lại hôm nay theo gói
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Hạn mức AI trong ngày
+ */
+router.get('/quota', auth, aiController.getQuota)
+
 router.post('/parse-tasks', auth, aiController.parseTasks)
 
 export default router

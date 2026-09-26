@@ -21,6 +21,13 @@ const parseLimit = (value) => {
   return n
 }
 
+/** Số nguyên không âm; để trống hoặc sai định dạng thì dùng giá trị mặc định. */
+const parseIntOr = (value, fallback) => {
+  if (value === undefined || String(value).trim() === '') return fallback
+  const n = Number(value)
+  return Number.isInteger(n) && n >= 0 ? n : fallback
+}
+
 const config = {
   port: parseInt(process.env.PORT, 10) || 8080,
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -92,6 +99,47 @@ const config = {
     projectId: process.env.FCM_PROJECT_ID || '',
     privateKey: process.env.FCM_PRIVATE_KEY || '',
     clientEmail: process.env.FCM_CLIENT_EMAIL || '',
+  },
+
+  // ─── Thanh toán (xem docs/billing.md) ───────────────────
+  // Web: chuyển khoản ngân hàng qua VietQR, Casso/Sepay báo về webhook.
+  // App Android: Google Play Billing (bắt buộc theo chính sách Play cho gói số).
+  billing: {
+    bank: {
+      // BIN hoặc mã viết tắt của ngân hàng, vd 970436 (Vietcombank) hoặc VCB
+      id: process.env.BANK_ID || '',
+      account: process.env.BANK_ACCOUNT || '',
+      owner: process.env.BANK_ACCOUNT_NAME || '',
+      template: process.env.VIETQR_TEMPLATE || 'compact2',
+    },
+    orderTtlHours: parseIntOr(process.env.ORDER_TTL_HOURS, 48),
+    // Số ngày dùng thử Pro miễn phí; đặt 0 để tắt hẳn chương trình dùng thử
+    trialDays: parseIntOr(process.env.TRIAL_DAYS, 7),
+    // Bí mật dùng để xác thực webhook ngân hàng (bắt buộc nếu dùng webhook).
+    // Có thể đặt ngay trong app (Quản trị → Đơn hàng → Cài đặt nhận tiền) —
+    // giá trị trong app được ưu tiên hơn biến môi trường này.
+    webhookSecret: process.env.BILLING_WEBHOOK_SECRET || '',
+    // Địa chỉ công khai của API, dùng để hiện đúng URL webhook cho admin.
+    // Bỏ trống thì tự suy ra từ request (đúng cả khi đổi tên miền).
+    publicApiUrl: (process.env.PUBLIC_API_URL || '').replace(/\/+$/, ''),
+
+    // ─── Đọc giao dịch bằng API ngân hàng (xem bankApiService.js) ───
+    // Đặt được ngay trong app (Quản trị → Đơn hàng → Cài đặt nhận tiền); giá trị
+    // trong app được ưu tiên, các biến dưới đây chỉ là giá trị dự phòng.
+    bankApi: {
+      provider: (process.env.BANK_API_PROVIDER || '').toUpperCase(), // SEPAY | ACB
+      baseUrl: process.env.BANK_API_BASE_URL || '',
+      token: process.env.BANK_API_TOKEN || '', // SePay API token
+      clientId: process.env.BANK_API_CLIENT_ID || '', // ACB ONE CONNECT
+      clientSecret: process.env.BANK_API_CLIENT_SECRET || '',
+      tokenUrl: process.env.BANK_API_TOKEN_URL || '',
+      historyPath: process.env.BANK_API_HISTORY_PATH || '',
+      // Đường dẫn tạo QR động của ngân hàng; trống = hệ thống tự sinh mã VietQR
+      qrPath: process.env.BANK_API_QR_PATH || '',
+      account: process.env.BANK_API_ACCOUNT || '',
+      syncIntervalMinutes: parseIntOr(process.env.BANK_SYNC_INTERVAL_MINUTES, 5),
+    },
+    supportEmail: process.env.SUPPORT_EMAIL || 'support@mn-qronx.id.vn',
   },
 
   // AI riêng của MN-Qronx (self-hosted inference server, xem thư mục ai/ ở root).

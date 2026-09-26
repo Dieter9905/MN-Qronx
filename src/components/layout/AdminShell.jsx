@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { ChartBar, UsersThree, SignOut, House, ShieldCheck, Headset } from '@phosphor-icons/react'
+import { ChartBar, UsersThree, SignOut, House, ShieldCheck, Headset, Receipt } from '@phosphor-icons/react'
 import SupportBadge from './SupportBadge'
 import { LogoText } from '../Logo'
 import { useAuth } from '../../context/AuthContext'
@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 const ADMIN_NAV = [
   { to: '/admin', label: 'Dashboard hệ thống', icon: ChartBar, end: true },
   { to: '/admin/users', label: 'Quản lý người dùng', icon: UsersThree, end: false },
+  { to: '/admin/orders', label: 'Đơn hàng & thanh toán', icon: Receipt, end: false },
   { to: '/admin/support', label: 'Hỗ trợ khách hàng', icon: Headset, end: false },
 ]
 
