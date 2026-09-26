@@ -35,6 +35,7 @@ import { ConfirmDialog } from '../../components/common/Modal'
 import { ALARM_SOUNDS, DEFAULT_SNOOZE_OPTIONS, PLATFORM } from '../../lib/constants'
 import { relativeTime } from '../../lib/format'
 import { startAlarmSound, stopAlarmSound } from '../../context/AlarmContext'
+import { pushStatus, enablePush, disablePush, syncPushSubscription } from '../../lib/push'
 
 const TABS = [
   { value: 'notifications', label: 'Thông báo' },
@@ -53,6 +54,36 @@ export default function SettingsPage() {
   const [removing, setRemoving] = useState(false)
   const [customSounds, setCustomSounds] = useState([])
   const [uploading, setUploading] = useState(false)
+  // Web Push: bật lên thì nhắc nhở vẫn kêu khi người dùng đóng trình duyệt
+  const [push, setPush] = useState({ supported: false, permission: 'default', subscribed: false })
+  const [pushBusy, setPushBusy] = useState(false)
+
+  useEffect(() => {
+    let alive = true
+    pushStatus().then((s) => {
+      if (alive) setPush(s)
+    })
+    // Đã cho quyền rồi thì tự đăng ký lại subscription (endpoint có thể đã đổi
+    // từ lần mở trước) để máy chủ không gửi vào địa chỉ cũ.
+    syncPushSubscription()
+      .then(() => pushStatus())
+      .then((s) => {
+        if (alive) setPush(s)
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  const togglePush = async (next) => {
+    if (pushBusy) return
+    setPushBusy(true)
+    const res = next ? await enablePush() : await disablePush()
+    setPush(await pushStatus())
+    setPushBusy(false)
+    if (res.success) toast.success(res.message)
+    else toast.error(res.message)
+  }
   const fileInputRef = useRef(null)
   const plan = user?.plan || 'FREE'
   const isPaid = plan === 'PLUS' || plan === 'PRO'
@@ -370,6 +401,25 @@ export default function SettingsPage() {
               checked={settings.vibrationEnabled}
               onChange={(v) => saveSettings({ vibrationEnabled: v }, v ? 'Đã bật rung' : 'Đã tắt rung')}
             />
+          </div>
+
+          <div className="px-1 py-2">
+            <Toggle
+              label="Nhắc khi đóng trình duyệt"
+              description="Thông báo đẩy (Web Push): máy chủ gửi tận nơi nên chuông vẫn kêu dù bạn đã đóng tab — bật cho từng máy bạn muốn."
+              checked={push.subscribed && push.permission === 'granted'}
+              onChange={togglePush}
+            />
+            {push.supported && push.permission === 'denied' && (
+              <p className="mt-1.5 text-xs font-semibold text-rose-500">
+                Trình duyệt đang chặn thông báo của trang này — mở cài đặt trình duyệt, cho phép rồi tắt/bật lại.
+              </p>
+            )}
+            {!push.supported && (
+              <p className="mt-1.5 text-xs text-navy-400 dark:text-slate-500">
+                Trình duyệt này chưa hỗ trợ Web Push — thử Chrome, Edge hoặc Safari.
+              </p>
+            )}
           </div>
         </section>
       ) : (

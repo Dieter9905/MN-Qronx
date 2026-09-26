@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import * as authService from '../services/authService'
+import { syncPushSubscription } from '../lib/push'
 
 const AuthContext = createContext(null)
 
@@ -20,6 +21,22 @@ export function AuthProvider({ children }) {
   // (web service gói free ngủ sau 15 phút) người dùng sẽ nhìn màn hình
   // "đang khôi phục phiên" hàng chục giây — đúng lỗi "đăng nhập load lâu".
   const [user, setUser] = useState(() => applyEffectivePlan(authService.currentUser()))
+
+  // Có người dùng đăng nhập thì đảm bảo subscription Web Push còn sống (endpoint
+  // có thể đã đổi từ lần mở trước) — nhờ vậy máy chủ vẫn gửi nhắc nhở được khi
+  // họ đóng trình duyệt. Âm thầm, không chặn luồng đăng nhập.
+  useEffect(() => {
+    if (!user) return undefined
+    let alive = true
+    const sync = async () => {
+      if (!alive) return
+      await syncPushSubscription()
+    }
+    sync().catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [user])
   const [initializing, setInitializing] = useState(() => !authService.currentUser())
 
   // Xác thực lại phiên ở chế độ ngầm (không chặn giao diện).

@@ -147,6 +147,7 @@ model User {
   categories             Category[]
   tasks                  Task[]
   devices                Device[]
+  webPushSubscriptions   WebPushSubscription[]
   customSounds           CustomSound[]
   notificationSetting    NotificationSetting?
   refreshTokens          RefreshToken[]
@@ -322,6 +323,37 @@ model Device {
 
   @@index([userId, isActive], map: "ix_devices_user_id")
   @@map("devices")
+}
+
+// ─── Web Push cho PWA ─────────────────────────────────────
+// Đăng ký từ trình duyệt: có dòng này thì báo thức/chỉ báo vẫn kêu khi người
+// dùng ĐÓNG tab — thứ trước đây làm app nhắc việc im lặng nên không bán được.
+model WebPushSubscription {
+  subscriptionId Int      @id @default(autoincrement()) @map("subscription_id")
+  userId         Int      @map("user_id")
+  // Endpoint của trình duyệt (Chrome/Firefox cấp) — khoá chống trùng
+  endpoint       String   @unique @db.VarChar(500)
+  p256dh         String   @db.VarChar(200)
+  auth           String   @db.VarChar(100)
+  userAgent      String?  @db.VarChar(300)
+  createdAt      DateTime @default(now()) @map("created_at")
+  // Ghi lại khi gửi thành công để biết subscription còn sống không
+  lastUsedAt     DateTime? @map("last_used_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("web_push_subscriptions")
+}
+
+// Cấu hình hệ thống dạng khoá/giá trị (VAPID, cờ bật/tắt…) — lưu trong DB để
+// không phải cấu hình biến môi trường mỗi khi đổi máy hay redeploy.
+model AppSetting {
+  key       String   @id @db.VarChar(60)
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
 }
 
 model NotificationLog {

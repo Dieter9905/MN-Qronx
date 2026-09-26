@@ -12,6 +12,26 @@ export const registerDeviceValidation = [
 ]
 
 // ─── Device ID Param ───────────────────────────────────
+// ─── Web Push (PWA) ──────────────────────────────────────
+export const pushSubscribeValidation = [
+  body('endpoint')
+    .notEmpty().withMessage('Endpoint không được để trống')
+    .isString().withMessage('Endpoint phải là chuỗi')
+    .isLength({ max: 500 }).withMessage('Endpoint tối đa 500 ký tự'),
+  body('keys.p256dh')
+    .notEmpty().withMessage('Thiếu khoá p256dh')
+    .isString().withMessage('p256dh phải là chuỗi'),
+  body('keys.auth')
+    .notEmpty().withMessage('Thiếu khoá auth')
+    .isString().withMessage('auth phải là chuỗi'),
+]
+
+export const pushUnsubscribeValidation = [
+  body('endpoint')
+    .notEmpty().withMessage('Endpoint không được để trống')
+    .isString().withMessage('Endpoint phải là chuỗi'),
+]
+
 export const deviceIdValidation = [
   param('deviceId')
     .isInt({ min: 1 }).withMessage('Device ID không hợp lệ'),

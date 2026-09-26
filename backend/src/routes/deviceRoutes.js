@@ -6,6 +6,8 @@ import {
   deviceIdValidation,
   updateSettingsValidation,
   logQueryValidation,
+  pushSubscribeValidation,
+  pushUnsubscribeValidation,
 } from '../dto/request/deviceValidation.js'
 import * as deviceController from '../controllers/deviceController.js'
 
@@ -56,6 +58,28 @@ router.get(
   logQueryValidation,
   validate,
   deviceController.getLogs,
+)
+
+// ── Web Push (PWA) ────────────────────────────────────────
+// Đăng ký subscription để nhắc nhở vẫn kêu khi người dùng đóng trình duyệt.
+router.get('/push/key', auth, deviceController.getPushKey)
+
+router.get('/push', auth, deviceController.getPushStatus)
+
+router.post(
+  '/push',
+  auth,
+  pushSubscribeValidation,
+  validate,
+  deviceController.subscribePush,
+)
+
+router.post(
+  '/push/unsubscribe',
+  auth,
+  pushUnsubscribeValidation,
+  validate,
+  deviceController.unsubscribePush,
 )
 
 export default router

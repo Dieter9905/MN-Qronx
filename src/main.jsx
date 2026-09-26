@@ -17,3 +17,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </React.StrictMode>
 )
+
+// Đăng ký service worker: nhờ nó mà thông báo (push) vẫn hiện khi người dùng
+// ĐÓNG tab, và app mở được khi mất mạng. Bỏ qua khi trình duyệt không hỗ trợ.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((err) => {
+      console.warn('[SW] Không đăng ký được service worker:', err.message)
+    })
+  })
+}
