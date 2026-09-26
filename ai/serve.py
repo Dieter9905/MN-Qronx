@@ -6,6 +6,7 @@
 Chạy:  uvicorn serve:app --host 0.0.0.0 --port 8000   (thư mục ai/)
 API :  GET /health · POST /parse {text} → {tasks, model}
 """
+import calendar
 import json
 import os
 import re
@@ -143,6 +144,9 @@ _REL_RX = [
 # Không nhận "mon"/"thu"/"sat" lẻ (bỏ dấu: "mon an"→thứ 2, "thu duc"→thứ 5,
 # "ap sat"→thứ 7) — vẫn giữ dạng đầy đủ và "thu 5"/"thứ 5" như cũ
 _WD_RX = [
+    # Bộ sinh nhãn dùng "thứ 1" cho thứ Hai — thiếu alias này thì "thứ 1" không
+    # được nhận là ngày nào và dính lại trong tiêu đề.
+    (r"thứ\s*(?:1|01|nhất|nhat)|thu\s*(?:1|01|nhat)|monday", 0),
     (r"thứ\s*2|thu\s*2|thứ hai|thu hai|monday", 0),
     (r"thứ\s*3|thu\s*3|thứ ba|thu ba|tuesday|\btue\b", 1),
     (r"thứ\s*4|thu\s*4|thứ tư|thu tu|wednesday|\bwed\b", 2),
@@ -156,11 +160,35 @@ _CAT = {"hoc tap": "Học tập", "on tap": "Học tập", "study": "Học tập
         "ca nhan": "Cá nhân", "personal": "Cá nhân",
         "suc khoe": "Sức khỏe", "health": "Sức khỏe", "gym": "Sức khỏe",
         "tap gym": "Sức khỏe", "the duc": "Sức khỏe", "chay bo": "Sức khỏe",
-        "thuoc": "Sức khỏe", "doc sach": "Cá nhân", "sach": "Cá nhân"}
-_PRI = [("khan cap", "URGENT"), ("urgent", "URGENT"),
+        "thuoc": "Sức khỏe", "doc sach": "Cá nhân", "sach": "Cá nhân",
+        # Tên việc thật của người dùng: thiếu nhóm này thì đa số việc không có
+        # danh mục dù rất dễ suy ra (phải khớp theo biên từ — xem _word_in).
+        "gui email": "Công việc", "email": "Công việc", "bao gia": "Công việc",
+        "review": "Công việc", "bao cao": "Công việc", "goi dien": "Công việc",
+        "khach hang": "Công việc", "standup": "Công việc", "hop team": "Công việc",
+        # Tên việc tiếng Anh (bộ sinh nhãn có cả nhánh EN, người dùng cũng gõ)
+        "team meeting": "Công việc", "meeting": "Công việc",
+        "quotation": "Công việc", "english": "Học tập",
+        "go running": "Sức khỏe", "running": "Sức khỏe", "medicine": "Sức khỏe",
+        "read a book": "Cá nhân", "book": "Cá nhân",
+        "electricity": "Cá nhân", "bill": "Cá nhân",
+        "buy milk": "Cá nhân", "milk": "Cá nhân",
+        "sieu thi": "Cá nhân", "tien dien": "Cá nhân", "dong tien": "Cá nhân",
+        "mua sua": "Cá nhân", "don nha": "Cá nhân",
+        "kham rang": "Sức khỏe", "yoga": "Sức khỏe", "boi": "Sức khỏe",
+        "bai tap": "Học tập", "vat ly": "Học tập", "tieng anh": "Học tập",
+        "do an": "Học tập", "nop bao cao": "Công việc"}
+
+
+def _word_in(key, text):
+    """Khớp cả cụm theo BIÊN TỪ: "hop" không được khớp bên trong "shopping"."""
+    return re.search(rf"(?<!\w){re.escape(key)}(?!\w)", text) is not None
+_PRI = [("not urgent", "LOW"), ("not important", "LOW"),
+        ("khan cap", "URGENT"), ("urgent", "URGENT"),
         ("quan trong", "HIGH"), ("important", "HIGH"),
         ("uu tien cao", "HIGH"),
         ("trung binh", "MEDIUM"), ("medium", "MEDIUM"),
+        ("binh thuong", "MEDIUM"),
         ("thap", "LOW"), ("low", "LOW"), ("chua gap", "LOW")]
 _REP = [("hang ngay", "DAILY"), ("moi ngay", "DAILY"), ("daily", "DAILY"),
         ("hang tuan", "WEEKLY"), ("moi tuan", "WEEKLY"), ("weekly", "WEEKLY"),
@@ -268,40 +296,101 @@ def _extract_date(clause, now):
     for pat, off in _REL_RX:
         m = re.search(pat, clause, re.I)
         if m:
-            return now.date() + timedelta(days=off), m.group(0)
+            # Nuốt luôn từ chỉ buổi đứng ngay trước ("sáng mai", "chiều nay"):
+            # không nuốt thì tiêu đề còn "Tập gym sáng" vì span ngày chỉ là "mai".
+            # CHỈ làm với dạng trần (mai/nay/today/tomorrow) — "sáng mai" là cụm cố
+            # định, còn "tối ngày kia" thì chữ "tối" thuộc TIÊU ĐỀ ("Ăn tối"), nuốt
+            # luôn sẽ biến "Ăn tối" thành "Ăn" (11 tiêu đề sai).
+            sp = m.group(0)
+            if sp.lower() in ("mai", "nay", "today", "tomorrow"):
+                head = re.search(r"(?:sáng|sang|trưa|trua|chiều|chieu|tối|toi|đêm|dem)\s+$",
+                                 clause[:m.start()], re.I)
+                if head:
+                    sp = clause[head.start():m.end()]
+            return now.date() + timedelta(days=off), sp
     for pat, wd in _WD_RX:
         m = re.search(pat, clause, re.I)
         if m:
             d = now.date()
             delta = (wd - d.weekday()) % 7 or 7
             return d + timedelta(days=delta), m.group(0)
-    m = re.search(r"ngày\s*(\d{1,2})|ngay\s*(\d{1,2})", clause, re.I)
+    base_d = now.date()
+    m = _DMY_RX.search(clause)
     if m:
-        return now.date().replace(day=int(m.group(1) or m.group(2))), m.group(0)
+        d, mo, y = int(m.group(1)), int(m.group(3)), m.group(4)
+        if 1 <= mo <= 12 and 1 <= d <= 31:
+            yy = base_d.year if not y else (int(y) + 2000 if int(y) < 100 else int(y))
+            for cand in (yy, yy + 1):
+                if d > calendar.monthrange(cand, mo)[1]:
+                    continue
+                got = base_d.replace(year=cand, month=mo, day=d)
+                # Có năm: tôn trọng đúng năm người dùng gõ. Không có năm mà ngày
+                # đó đã qua: hiểu là năm sau (giống quy ước "ngày 13" đã qua thì
+                # hiểu là tháng sau) để hạn không rơi vào quá khứ.
+                if y or got >= base_d:
+                    return got, m.group(0)
+    # "ngày N" — nhưng KHÔNG được lấy số của GIỜ: "Họp team hằng ngày 8h" từng
+    # khớp "ngày 8" ⇒ hạn rơi vào ngày 8 của tháng và tiêu đề còn "Họp team hằng h".
+    m = re.search(r"ngày\s*(\d{1,2})(?![hH\d])|ngay\s*(\d{1,2})(?![hH\d])", clause, re.I)
+    if m:
+        d = int(m.group(1) or m.group(2))
+        if not 1 <= d <= 31:
+            return None, None
+        base = now.date()
+        year, month = base.year, base.month
+        # "ngày 13" nói khi đã qua ngày 13 → hiểu là 13 của tháng sau. Không dồn
+        # thì hạn nằm ở quá khứ, backend từ chối (dueAt phải lớn hơn hiện tại)
+        # và người dùng mất công việc vừa nhập.
+        if d < base.day:
+            month += 1
+            if month > 12:
+                month, year = 1, year + 1
+        last_day = calendar.monthrange(year, month)[1]
+        return base.replace(year=year, month=month, day=min(d, last_day)), m.group(0)
     return None, None
 
 
 def _extract_reminder(clause):
     n = _norm(clause)
+    # "báo thức đúng giờ" = nhắc ĐÚNG lúc đến hạn (offset 0). Bộ sinh nhãn dùng
+    # đúng cụm này cho mốc 0 phút; không nhận ra thì cụm chữ dính vào tiêu đề và
+    # công việc mất nhắc nhở.
+    m0 = re.search(r"(?:bao thuc|nhac)\s+(?:dung gio|dung luc|khi den han|den gio)", n)
+    if m0:
+        return 0, clause[m0.start():m0.end()], m0.start(), m0.end()
     m = re.search(r"nhac.*?(\d+)\s*(phut|tieng|gio|hour|minute)", n)
-    if not m:
-        m = re.search(r"remind.*?(\d+)\s*(min|hour)", n)
-    if not m:
-        return None, None, -1, -1
-    v = int(m.group(1))
-    off = -v * 60 if m.group(2) in ("tieng", "gio", "hour", "hr") else -v
-    # map span ngược về chuỗi gốc (độ dài tương đương sau bỏ dấu)
-    return off, clause[m.start():m.end()], m.start(), m.end()
+    if m:
+        v = int(m.group(1))
+        off = -v * 60 if m.group(2) in ("tieng", "gio", "hour", "hr") else -v
+        # map span ngược về chuỗi gốc (độ dài tương đương sau bỏ dấu)
+        return off, clause[m.start():m.end()], m.start(), m.end()
+    # Tiếng Anh: "remind me 30 minutes before" / "remind 1 hour before" /
+    # "remind me on time". Phải lấy TRỌN cụm (kể cả "before"/"on time") làm span:
+    # bản trước khớp tới "min" nên phần còn lại dính vào tiêu đề ("…on utes before").
+    m = re.search(
+        r"\b(?:remind|reminder)(?:\s+me)?"
+        r"(?:\s+(\d+)\s*(minutes?|mins?|hours?|hrs?))?"
+        r"(?:\s+(?:before|prior|earlier|in advance|on time|ahead))?", n)
+    if m:
+        v = int(m.group(1)) if m.group(1) else 0
+        off = -v * 60 if (m.group(2) or "").startswith(("hour", "hr")) else -v
+        return off, clause[m.start():m.end()], m.start(), m.end()
+    return None, None, -1, -1
 
 
 def _clean_title(clause, spans):
     s = clause
-    for sp in spans:
+    # Span DÀI bỏ trước. Cụm nhắc chứa luôn con số của nó ("nhắc trước 1 giờ") nên
+    # nếu bỏ span giờ "1 giờ" trước thì chuỗi không còn khớp cụm nhắc và tiêu đề
+    # giữ lại chữ "nhắc trước" / "remind before" (từng gặp: "Gửi email báo giá
+    # nhắc trước", "Dinner remind before").
+    for sp in sorted(spans, key=lambda x: -len(x or "")):
         if sp and len(sp) > 1:
             # Span ngắn (vd "mai", "CN") phải khớp nguyên từ — tránh lẹm vào "email"
             pat = rf"\b{re.escape(sp)}\b" if len(sp) <= 4 else re.escape(sp)
             s = re.sub(pat, " ", s, flags=re.I)
-    s = re.sub(r"\b(vào lúc|vao luc|vào|vao|tại|tai|lúc|luc|at)\b", " ", s, flags=re.I)
+    s = re.sub(r"\b(vào lúc|vao luc|vào ngày|vao ngay|vào|vao|tại|tai|lúc|luc|at|on)\b",
+               " ", s, flags=re.I)
     # Ngày còn sót — "ngày 23/9", "ngày 26"
     s = re.sub(r"\bngày\s*\d{1,2}\s*[/-]\s*\d{1,2}(?:\s*[/-]\s*\d{2,4})?\b", " ", s, flags=re.I)
     s = re.sub(r"\bngày\s+\d{1,2}\b", " ", s, flags=re.I)
@@ -325,7 +414,11 @@ def _clean_title(clause, spans):
         s = re.sub(r"^(?:có|co)\s+", "", s, flags=re.I).strip()
         if s == prev:
             break
-    s = re.sub(r"\b(khẩn cấp|khan cap|quan trọng|important|trung bình|thấp|thap|urgent|high|medium|low|hàng ngày|hang ngay|hàng tuần|hang tuan|hàng tháng|hang thang|daily|weekly|monthly)\b",
+    # Ưu tiên / lặp lại / kiểu nhắc — phải bỏ khỏi tiêu đề. "chưa gấp", "bình
+    # thường", "báo thức đúng giờ" có trong bộ sinh nhãn nên chắc chắn gặp.
+    # "hằng ngày" (hằng) là cách viết người dùng rất hay dùng — thiếu thì tiêu đề
+    # giữ lại "hằng ngày" dù repeatType đã đúng là DAILY.
+    s = re.sub(r"\b(not urgent|not important|not before|khẩn cấp|khan cap|quan trọng|quan trong|important|trung bình|trung binh|binh thuong|bình thường|binh thuong|chưa gấp|chua gap|thấp|thap|urgent|high|medium|low|hàng ngày|hằng ngày|hang ngay|hàng tuần|hằng tuần|hang tuan|hàng tháng|hằng tháng|hang thang|daily(?!\s+standup)|weekly|monthly|báo thức đúng giờ|bao thuc dung gio|báo thức|bao thuc|đúng giờ|dung gio|mỗi việc|moi viec|mỗi cái|moi cai|tất cả|tat ca|mọi việc|moi viec)\b",
                " ", s, flags=re.I)
     # Cụm "ưu tiên cao/thấp…" đã đọc vào priority → bỏ hẳn khỏi tiêu đề
     s = re.sub(r"\b(?:ưu tiên|uu tien)\s+(?:cao|thấp|thap|trung bình|trung binh|khẩn cấp|khan cap|urgent|high|low)\b",
@@ -353,6 +446,65 @@ _SEP_RES = [re.compile(r","),
             # "…8h30 và …9h" — hai vế cùng có giờ → tách; "An, Lan và Bình
             # lúc 9h" không tách vì vế trái chưa có giờ (guard trong _split_clauses)
             re.compile(r"\s+(?:và|va)\s+", re.I)]
+# Ngày của câu trước chỉ được "mang sang" câu KHÔNG nêu ngày khi câu trước nói
+# bằng từ ngữ tương đối gần ("Sáng mai 7h đi chợ…, trưa 12h họp" → cùng ngày
+# mai). Thứ trong tuần / "ngày kia" / ngày số thì KHÔNG mang: "Buy milk today…
+# Gym at 6am" là 6h hôm nay, không phải 6h thứ Năm nêu ở câu trước (nhãn cũng
+# vậy) — bản trước mang tất nên 3/254 việc lệch ngày, có việc lệch 6 ngày.
+_CARRY_RX = re.compile(
+    r"hôm nay|hom nay|tối nay|to nay|sáng nay|sang nay|trưa nay|trua nay"
+    r"|chiều nay|chieu nay|đêm nay|dem nay|ngày mai|ngay mai|sáng mai|sang mai"
+    r"|trưa mai|trua mai|chiều mai|chieu mai|\btoday\b|\btomorrow\b"
+    r"|(?<![\wà-ỹ])mai(?![\wà-ỹ])",
+    re.I)
+# Cụm sau dấu ngắt chỉ còn là lời nhắc cho việc vừa nêu ("…, nhắc trước 1 giờ")
+_REMINDER_ONLY = re.compile(r"^\s*(?:nhắc|nhac|remind)\b", re.I)
+# Chỉ thị áp cho MỌI việc trong đoạn ("nhắc trước 30 phút mỗi việc")
+_GLOBAL_RX = re.compile(r"mỗi|moi|từng|tung|tất cả|tat ca|mọi|each|every|all", re.I)
+# Câu ngữ cảnh ngày ở ĐẦU đoạn ("Hôm nay là thứ Năm, ngày 08/01/2026" /
+# "Today is Friday, 07/24/2026") — chỉ là ngữ cảnh, không phải công việc
+_CTX_SENT_RX = re.compile(
+    r"^\s*(?:hôm nay|hom nay|today)\s+(?:là|la|is)\b[^.?!]{0,45}?\d{1,2}\s*[/-]\s*\d{1,2}\s*[/-]\s*\d{2,4}\s*$",
+    re.I)
+_CTX_EN_RX = re.compile(r"^\s*today\b", re.I)
+_NUM_DATE_RX = re.compile(r"(\d{1,2})\s*[/-]\s*(\d{1,2})\s*[/-]\s*(\d{2,4})")
+# "05/10", "5-10", "05/10/2026": người Việt viết NGÀY/THÁNG (ngược mm/dd của
+# tiếng Anh). Bản trước chỉ hiểu khi có chữ "ngày" đứng ngay trước, nên
+# "họp khách 05/10 9h" rơi về hôm nay/ngày mai — lệch cả tuần mà người dùng
+# không hề thấy cảnh báo (câu tiếng Anh không bao giờ dùng ngày số nên đọc theo
+# kiểu Việt Nam là an toàn).
+# Không nhận khoảng thời lượng ("5-10 phút", "trước 2-3 tiếng") làm ngày.
+_DMY_RX = re.compile(
+    r"(?<![\w/])(?:ngày\s*|ngay\s*)?(\d{1,2})\s*([/-])\s*(\d{1,2})"
+    r"(?:\s*[/-]\s*(\d{2,4}))?(?![\d/])"
+    r"(?!\s*(?:phút|phut|tiếng|tieng|giờ|gio|ngày|ngay|tuần|tuan|tháng|thang)\b)",
+    re.I)
+
+
+def _ctx_anchor(clause):
+    """Mốc neo ngày lấy từ câu ngữ cảnh ở đầu đoạn, None nếu câu không phải
+    ngữ cảnh ngày.
+
+    Dataset (và cả model lúc train) đều tính ngày tương đối từ mốc này, nên
+    parser luật phải dùng CÙNG mốc. Trước đây parser bỏ hẳn câu đó rồi lấy
+    `datetime.now()`, vì thế mọi mốc 'hôm nay/ngày kia/thứ 3' lệch hẳn so với
+    nhãn và không có cách nào đo đúng độ chính xác ngày (due_day 4,3 %).
+    """
+    if not _CTX_SENT_RX.match(clause):
+        return None
+    m = _NUM_DATE_RX.search(clause)
+    if not m:
+        return None
+    a, b, y = (int(x) for x in m.groups())
+    if y < 100:
+        y += 2000
+    # Tiếng Anh ghi mm/dd, tiếng Việt ghi dd/mm
+    day, month = (b, a) if _CTX_EN_RX.match(clause) else (a, b)
+    try:
+        # 00:05 để 'hôm nay lúc 10h' không bị luật dồn-quá-khứ đẩy sang ngày mai
+        return datetime(y, month, day, 0, 5, tzinfo=VN_TZ)
+    except ValueError:
+        return None
 
 
 def _find_seps(text):
@@ -372,6 +524,11 @@ def _split_clauses(text):
             continue
         nxt = _find_seps(rest)
         head = rest[:nxt[0][0]] if nxt else rest
+        # "Đóng tiền điện 20h, nhắc trước 1 giờ": phần sau dấu phẩy là nhắc nhở chứ
+        # không phải việc mới — tách ra sẽ sinh việc rác tên "Nhắc trước" và việc
+        # gốc mất nhắc nhở. Vẫn tách khi là chỉ thị chung ("… mỗi việc").
+        if _REMINDER_ONLY.match(head) and not _GLOBAL_RX.search(head):
+            continue
         if _HAS_CLOCK.search(head) or _TASK_START.match(rest.strip()):
             chunks.append(left.strip())
             pos = end
@@ -379,9 +536,31 @@ def _split_clauses(text):
     return [c for c in chunks if c]
 
 
-def rule_parse(text):
-    now = datetime.now(VN_TZ)
+def _drop_words(norm_text, words):
+    """Bỏ các từ của tiêu đề khỏi câu đã chuẩn hoá (theo thứ tự, mỗi từ một lần).
+
+    Dùng để soi phần CÒN LẠI của câu: chữ nằm trong tên việc ("Daily standup")
+    không được tính là chỉ thị lặp lại, còn chữ thật sự nói về lặp lại thì còn lại.
+    """
+    if not words:
+        return norm_text
+    out, i = [], 0
+    for w in norm_text.split():
+        if i < len(words) and w == words[i]:
+            i += 1
+            continue
+        out.append(w)
+    return " ".join(out)
+
+
+def rule_parse(text, now=None):
     clauses = [c.strip() for c in re.split(r"[.;!?]+\n*|\n+", text) if c.strip()]
+    # Câu ngữ cảnh ngày ở đầu: vừa không phải công việc (nếu không sẽ thành
+    # việc rác "Is Friday"), vừa là MỐC NEO cho mọi ngày tương đối phía sau.
+    if clauses and _CTX_SENT_RX.match(clauses[0]):
+        now = now or _ctx_anchor(clauses[0])
+        clauses = clauses[1:]
+    now = now or datetime.now(VN_TZ)
     # Ngoài dấu kết thúc câu, tách thêm theo dấu phẩy / "sau đó" / "rồi"…
     # ("…lên trường lúc 7h…, trưa đi ăn lúc 12h sau đó chiều 2h…" → 3 việc)
     clauses = [x for c in clauses for x in _split_clauses(c)]
@@ -394,14 +573,29 @@ def rule_parse(text):
         # từ toàn cục, và con số chỉ thuộc về cụm nhắc (không phải giờ riêng)
         time_in_reminder = (t is not None and r is not None
                             and rpos >= 0 and tpos >= 0 and rpos <= tpos < rend)
-        if r is not None and (t is None or time_in_reminder) and re.search(
-                r"mỗi|moi|từng|tung|tất cả|tat ca|mọi|each|every|all", c, re.I):
+        if r is not None and (t is None or time_in_reminder) and _GLOBAL_RX.search(c):
             glob_off = r if glob_off is None else glob_off
             infos.append(None)
         else:
+            if time_in_reminder:
+                # Con số nằm TRONG cụm nhắc là THỜI LƯỢNG nhắc, không phải giờ
+                # đến hạn: "Gửi email báo giá, nhắc trước 1 giờ" từng cho hạn
+                # 01:00 (và tiêu đề còn chữ "nhắc trước").
+                t, tm = None, None
             infos.append((c, t, tm, r, rm))
     tasks = []
-    carry = None  # ngày đã biết ở câu trước ("Sáng mai 7h…, trưa 12h…" → cùng ngày mai)
+    # Ngày đã biết ở câu trước. Chỉ được mang sang câu KHÔNG nêu ngày khi:
+    #   (a) câu trước nói bằng từ tương đối gần — "Sáng mai 7h đi chợ…, trưa
+    #       12h họp" → cùng ngày mai; hoặc
+    #   (b) câu này NHẮC LẠI đúng tiêu đề đó — "Đi siêu thị thứ 5 7h15. Đi siêu
+    #       thị lúc 9h" → cùng ngày (bộ sinh nhãn cũng gán ngày của việc trước).
+    # Thứ trong tuần / "ngày kia" / ngày số nêu ở câu trước KHÔNG mang sang việc
+    # khác: "Buy milk today… Gym at 6am" là 6h hôm nay, không phải 6h thứ Năm
+    # nhắc ở giữa đoạn (bản cũ mang tất ⇒ 3/254 việc lệch ngày, có việc lệch 6 ngày).
+    carry = None     # ngày NÊU RÕ ở câu trước
+    carry_near = False   # ngày đó có phải từ tương đối gần không
+    prev_title = None    # tiêu đề việc trước (để nhận ra câu nhắc lại)
+    prev_day = None      # NGÀY THỰC của việc trước (dù câu đó không nêu ngày)
     carry_h = None   # giờ đã resolve ở câu trước (dùng để quyết định kế thừa buổi)
     carry_ph = None  # buổi của câu trước ("…8h30 và …9h" → 9h = 21:00)
     for info in infos:
@@ -409,8 +603,16 @@ def rule_parse(text):
             continue
         c, t, tm, r, rm = info
         day, dm = _extract_date(c, now)
+        title = _clean_title(c, [tm, dm, rm])
         if day is not None:
-            carry = day
+            carry, carry_near = day, bool(_CARRY_RX.search(c))
+        repeat_title = bool(title) and title == prev_title
+        # Ngày dùng cho câu này: ngày nêu rõ > ngày tương đối gần của câu trước >
+        # NGÀY THỰC của việc trước khi câu này nhắc lại đúng tiêu đề đó. Không có
+        # nhánh thứ ba thì "Đọc sách thứ 6 tối 10h. Đọc sách lúc 11h tối" lấy hạn
+        # của câu nêu ngày từ tận đầu đoạn (lệch 7 ngày).
+        use_day = (day or (carry if carry_near else None)
+                   or (prev_day if repeat_title else None))
         hh = t[0] if t else None
         due = None
         if t:
@@ -420,7 +622,7 @@ def rule_parse(text):
             if (dm is None and t[3] is None and carry_ph in ("trua", "toi", "dem", "khuya")
                     and 1 <= hh <= 11 and carry_h is not None and hh + 12 >= carry_h):
                 hh += 12
-            d = day or carry or now.date()
+            d = use_day or now.date()
             if t[2]:
                 d += timedelta(days=1)
             # defensive: validate hour/minute
@@ -431,12 +633,15 @@ def rule_parse(text):
         else:
             # Không có giờ lẫn ngày → vẫn phải có thời hạn (backend bắt buộc):
             # mặc định 18:00 ngày kế thừa / hôm nay
-            d = carry or now.date()
+            d = use_day or now.date()
             due = datetime(d.year, d.month, d.day, 18, 0, tzinfo=VN_TZ)
-        # Câu KHÔNG tự nêu ngày mà giờ đã lùi qua quá khứ → dời sang hôm sau
-        # ("sau đó 9h" gõ lúc 17h → 9h ngày mai), nếu không backend từ chối
-        # và việc bị mất lúc bấm tạo
-        if dm is None and due and due <= now:
+        # Giờ đã lùi qua quá khứ mà câu chỉ nêu ngày TƯƠNG ĐỐI ("hôm nay 8h",
+        # "sáng nay 8h", "today 9:15am") → dời sang hôm sau ("sau đó 9h" gõ lúc
+        # 17h → 9h ngày mai). Bản trước chỉ dồn khi câu KHÔNG nêu ngày, nên mọi
+        # câu "hôm nay …" trả hạn quá khứ; backend từ chối (dueAt phải lớn hơn
+        # hiện tại) ⇒ người dùng mất việc vừa nhập. Chỉ tôn trọng quá khứ khi
+        # người dùng gõ ngày đủ năm ("05/09/2025").
+        if due and due <= now and not (dm and _NUM_DATE_RX.search(dm)):
             due += timedelta(days=1)
         # Cập nhật mang ngày/buỗi cho câu sau
         if day is not None:
@@ -452,11 +657,16 @@ def rule_parse(text):
             rems = [{"remindAt": (due + timedelta(minutes=off)).isoformat()}]
         n = _norm(c)
         pri = next((p for k, p in _PRI if k in n), "MEDIUM")
-        rep = next((p for k, p in _REP if k in n), "NONE")
-        cat = next((v for k, v in _CAT.items() if k in n), None)
-        title = _clean_title(c, [tm, dm, rm])
+        # Soi chỉ dấu LẶP trên câu ĐÃ BỎ từ của tiêu đề: "Họp daily standup …
+        # hàng tháng" phải là MONTHLY, không phải DAILY vì chữ "daily" trong tên
+        # việc (trước đây 26/254 việc bị đổi thành lặp hàng ngày — và với gói FREE
+        # "không tạo được việc lặp lại" thì việc đó còn bị backend từ chối).
+        n_body = _drop_words(n, _norm(title).split()) if title else n
+        rep = next((p for k, p in _REP if k in n_body), "NONE")
+        cat = next((v for k, v in _CAT.items() if _word_in(k, n)), None)
         if not title:
             continue
+        prev_title, prev_day = title, (due.date() if due else None)
         tasks.append({"title": title, "description": "", "dueAt": due.isoformat() if due else None,
                       "priority": pri, "repeatType": rep, "repeatDays": [],
                       "reminders": rems, "categoryName": cat})
@@ -553,3 +763,13 @@ try:
         return {"tasks": tasks, "model": MODEL_VERSION + "-rulebased"}
 except ImportError:  # thiếu fastapi khi chỉ train
     app = None
+
+
+if __name__ == "__main__":
+    # Chạy khi phát triển: `python serve.py` (đúng như ai/README.md mục 2).
+    # Khi deploy thì dùng `uvicorn serve:app --host 0.0.0.0 --port $PORT`.
+    if app is None:
+        raise SystemExit("Thiếu fastapi/uvicorn — cài: pip install fastapi uvicorn")
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", "8000")))

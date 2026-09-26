@@ -11,6 +11,15 @@ import calendar
 import json
 import os
 import random
+import sys
+
+# Console Windows mặc định là cp1252 → in tiếng Việt sẽ UnicodeEncodeError.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError):
+            pass
 
 WD_VN = ["thứ Hai", "thứ Ba", "thứ Tư", "thứ Năm",
          "thứ Sáu", "thứ Bảy", "Chủ nhật"]
@@ -156,14 +165,17 @@ def gen_task(rng, anchor):
     anchor_wd = _dt.date(ay, am, ad).weekday()
     day_off, date_ph, wd_iso, rep = 0, "", None, "NONE"
     if kind == "rel":
-        off, ph = rng.choice([(0, "hôm nay"), (1, "ngày mai"),
-                              (2, "ngày kia"), (0, "tối nay")])
+        off, ph = rng.choice([(0, "hôm nay"), (1, "ngày mai"), (2, "ngày kia")])
         day_off, date_ph = off, ph
     elif kind == "weekday":
         wd = rng.randint(0, 6)
         delta = (wd - anchor_wd) % 7 or 7
         day_off = delta
-        date_ph = "Chủ nhật" if wd == 6 else f"thứ {wd + 1}"
+        # wd là chỉ số Python (0 = thứ Hai). Tiếng Việt đếm "thứ 2" = thứ Hai …
+        # "thứ 7" = thứ Bảy, nên phải là wd + 2. Bản cũ ghi wd + 1 ⇒ câu nói
+        # "thứ 4" nhưng nhãn lại rơi vào Thứ Năm: 55/71 việc có nêu tên thứ trong
+        # eval.jsonl lệch đúng +1 ngày, và model học luôn ánh xạ sai đó.
+        date_ph = "Chủ nhật" if wd == 6 else f"thứ {wd + 2}"
         if rng.random() < 0.35:  # lặp hàng tuần theo đúng thứ đó
             rep, wd_iso = "WEEKLY", [wd + 1]
     elif kind == "monthday":
@@ -181,9 +193,21 @@ def gen_task(rng, anchor):
     # --- giờ ---
     slot = rng.choices(["morning", "noon", "afternoon", "evening"],
                        weights=[0.3, 0.15, 0.3, 0.25])[0]
+    # Việc mà chính TÊN đã nói buổi phải có giờ đúng buổi đó: bản cũ ghép "Ăn tối"
+    # với 07:00 (nhãn "ăn tối lúc 7 giờ sáng") trong khi parser đọc chữ "tối" trong
+    # tên thành buổi tối 19:00 ⇒ 5 ca lệch giờ mà câu nào cũng đúng.
+    if "tối" in title and slot != "evening":
+        slot = "evening"
+    elif "trưa" in title and slot != "noon":
+        slot = "noon"
     h = {"morning": rng.randint(5, 10), "noon": rng.randint(11, 13),
          "afternoon": rng.randint(14, 17), "evening": rng.randint(18, 22)}[slot]
     mi = rng.choice([0, 0, 0, 15, 30, 45])
+    # "tối nay" chỉ hợp khi giờ THẬT SỰ buổi tối. Bản cũ ghép "tối nay" với giờ
+    # buổi sáng ("Đọc sách tối nay lúc 8h45" nhưng nhãn 08:45) ⇒ câu nói buổi
+    # tối mà nhãn buổi sáng, parser đọc đúng theo câu lại bị tính là sai.
+    if kind == "rel" and date_ph == "hôm nay" and slot == "evening" and rng.random() < 0.4:
+        date_ph = "tối nay"
     tstr = f"{h}h" + (f"{mi:02d}" if mi else "")
     if slot == "morning" and rng.random() < 0.5:
         tstr = f"sáng {tstr}"
@@ -201,7 +225,7 @@ def gen_task(rng, anchor):
     no_due = (kind == "none" and rng.random() < 0.25)  # mẫu không hạn → dạy dueAt null
     if no_due:
         tstr = ""  # bỏ giờ khỏi câu để nhãn nhất quán
-        due = None
+        due = None  # và bỏ luôn cụm nhắc (nhắc mà không có hạn là vô nghĩa)
     else:
         # có ngày → ngày đó giờ đó; không ngày → hôm nay (anchor) giờ đó
         due = (base.year, base.month, base.day, h, mi)
@@ -209,6 +233,8 @@ def gen_task(rng, anchor):
     # --- ưu tiên / nhắc / lặp ---
     prio_ph, prio = pick(PRIOS, rng)
     rem_ph, rem_off = pick(REMINDERS, rng)
+    if no_due:
+        rem_ph, rem_off = None, None
     if rep == "NONE" and rng.random() < 0.08:
         rep = "DAILY"
 
@@ -268,12 +294,31 @@ def gen_sample(rng):
             if n > 1 and rng.random() < 0.15 and tasks and tasks[-1]["dueAt"]:
                 import datetime as _dt2
                 dup = dict(tasks[-1])
-                dd = _dt2.datetime.fromisoformat(dup["dueAt"]) + \
-                    _dt2.timedelta(hours=2)
+                due0 = _dt2.datetime.fromisoformat(dup["dueAt"])
+                # Luôn Ở TRONG CÙNG NGÀY: bản cũ cộng 2h nên 22h → 0h hôm sau (nhãn
+                # lệch ngày, mà câu chỉ ghi "lúc 12h" nên đọc ra 12h trưa), và
+                # chuỗi dup nối tiếp nhau còn đẩy xa hơn nữa.
+                h_dup = min(due0.hour + 2, 22)
+                if h_dup == due0.hour:  # 22h rồi thì lùi lại 1h cho khác giờ
+                    h_dup = max(due0.hour - 1, 5)
+                dd = due0.replace(hour=h_dup)
+                # Câu chỉ nói "lúc 9h" nên nhãn phải là 9h00: bản cũ giữ nguyên
+                # phút của việc trước rồi +2h (7h15 → nhãn 9h15, lệch 15 phút so
+                # với chính câu đó) ⇒ model bị dạy đoán bừa phút.
                 h12 = dd.hour % 12 or 12
-                s = f"{dup['title']} lúc {h12}h{' tối' if dd.hour >= 18 else ''}"
+                # Buổi phải nói ra: 14h mà ghi "lúc 2h" thì đọc là 02:00 (lệch 12
+                # giờ so với nhãn).
+                mark = " tối" if dd.hour >= 18 else (" chiều" if dd.hour >= 13 else "")
+                s = f"{dup['title']} lúc {h12}h{mark}"
                 dup["dueAt"] = dd.isoformat()
                 dup["reminders"] = []
+                # Câu chỉ nhắc lại TIÊU ĐỀ + giờ, không hề nói ưu tiên hay lặp lại ⇒
+                # nhãn phải để mặc định; bản cũ chép nguyên của việc trước nên model
+                # học cách bịa "quan trọng"/"hàng ngày" từ câu bên cạnh (9 ca lệch
+                # ưu tiên + 4 ca lệch lặp lại trong eval).
+                dup["priority"] = "MEDIUM"
+                dup["repeatType"] = "NONE"
+                dup["repeatDays"] = []
                 t = dup
         sents.append(s)
         tasks.append(t)
@@ -298,8 +343,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--train", default="data/train.jsonl")
     ap.add_argument("--eval", default="data/eval.jsonl")
-    ap.add_argument("--n-train", type=int, default=620)
-    ap.add_argument("--n-eval", type=int, default=100)
+    # Mặc định = đúng bộ đang commit trong data/ (620/100 là con số của bản cũ,
+    # gọi không tham số vẫn ra bộ 800/120 như README ghi)
+    ap.add_argument("--n-train", type=int, default=800)
+    ap.add_argument("--n-eval", type=int, default=120)
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
 

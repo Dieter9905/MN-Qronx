@@ -58,15 +58,34 @@ AI_INFER_URL=http://localhost:8000
 
 ## 3. Thu thập data
 
-`data/train.jsonl` (620 mẫu) + `data/eval.jsonl` (100 mẫu) đã sinh sẵn bằng
+`data/train.jsonl` (800 mẫu) + `data/eval.jsonl` (120 mẫu) đã sinh sẵn bằng
 `generate_data.py` — mỗi mẫu có mốc `Hôm nay là ...` để model học tính ngày
 tương đối, nhãn tính từ slot nên luôn đúng (đã fuzz 5000 mẫu: 0 lỗi giờ,
-0 due quá khứ). Sinh lại khi cần:
+0 due quá khứ). Sinh lại ĐÚNG bộ đang commit (đổi tham số là ra bộ khác):
 
 ```bash
 cd ai
-python generate_data.py --n-train 1000 --n-eval 150 --seed 7
+PYTHONUTF8=1 python generate_data.py --train data/train.jsonl --eval data/eval.jsonl \
+    --n-train 800 --n-eval 120 --seed 42
 ```
+
+### Lỗi nhãn đã sửa (đừng "sửa lại" thành bản cũ)
+
+Bộ nhãn từng mâu thuẫn với chính câu chữ, làm điểm đo thấp oan cho parser:
+
+| Lỗi trong bộ sinh | Hậu quả |
+|---|---|
+| `f"thứ {wd + 1}"` (wd là chỉ số Python 0=T2) | câu nói "thứ 4" nhưng nhãn là Thứ Năm: 55/71 việc nêu tên thứ trong `eval.jsonl` lệch **+1 ngày**, và model học luôn ánh xạ sai |
+| Câu "khó" lặp tiêu đề: nhãn = việc trước +2h nhưng giữ nguyên **phút** | câu chỉ nói "lúc 9h" mà nhãn 9h15 ⇒ dạy model đoán bừa phút |
+| Câu lặp tiêu đề còn +2h vắt qua nửa đêm | nhãn sang **ngày hôm sau** trong khi câu không nói ngày |
+| Câu lặp tiêu đề chép cả `priority`/`repeatType` của việc trước | nhãn "quan trọng"/"hàng ngày" mà câu không hề nói (9 ca lệch ưu tiên, 4 ca lệch lặp lại) |
+| `"tối nay"` ghép với giờ buổi sáng | câu nói buổi tối, nhãn 08:45 |
+| Tên việc "Ăn tối"/"Ăn trưa" ghép với slot sáng | "ăn tối lúc 7 giờ sáng" trong khi parser đọc chữ "tối" trong tên thành 19:00 |
+
+Còn **một nguồn nhiễu cố ý**: `if rng.random() < 0.15: cat = None` xoá danh mục
+ngẫu nhiên 15 % số việc dù tên việc nói rất rõ ("Đi siêu thị" → Cá nhân). Vì vậy
+`categoryName` chỉ đạt ~87 % dù parser suy luận đúng: muốn con số phản ánh đúng
+chất lượng thì bỏ dòng đó (hoặc chấm `None` là "không tính").
 
 Template chỉ dạy được mẫu câu đã biết — sau này bổ sung log thật của người
 dùng (câu nào AI đoán sai) vào `data/` để model khôn dần.
@@ -227,8 +246,8 @@ một bên làm hết.
 # Chấm checkpoint ngay trên máy (đúng prompt lúc train, KHÔNG bị service lùi về luật)
 python evaluate.py --ckpt checkpoints/v3 --test data/eval.jsonl
 
-# Chấm cái đang phục vụ thật qua HTTP
-python evaluate.py --url http://localhost:8000 --test data/eval.jsonl --strip-date
+# Chấm cái đang phục vụ thật qua HTTP (KHÔNG --strip-date: xem "Hai cái bẫy")
+python evaluate.py --url http://localhost:8000 --test data/eval.jsonl
 ```
 
 Chấm từng field: JSON đọc được, số việc, title, dueAt (ngày + giờ), priority,
@@ -236,12 +255,15 @@ repeat, reminder, category.
 
 Hai cái bẫy của harness (đã xử lý trong `evaluate.py`):
 
-- Chế độ `--url` **phải** kèm `--strip-date`. `data/eval.jsonl` có `input` mở đầu
-  bằng câu tổng hợp "Hôm nay là …, ngày dd/mm/yyyy."; `serve.model_parse` lại
-  chèn thêm ngữ cảnh ngày hiện tại lên trên ⇒ model nhận **hai** ngữ cảnh ngày
-  (lúc train không có), còn parser luật tách câu theo dấu chấm nên biến câu đó
-  thành một **việc ảo** tiêu đề "Là thứ Năm ngày 08/01/2026". Vì cổng
-  `--min-task-count` so số việc, cổng không bao giờ đạt dù model tốt.
+- Chế độ `--url` **KHÔNG** được kèm `--strip-date`. `data/eval.jsonl` có `input`
+  mở đầu bằng câu tổng hợp "Hôm nay là …, ngày dd/mm/yyyy." và **mỗi mẫu một mốc
+  khác nhau** (trải từ 01/2026 đến 11/2026); nhãn `dueAt` là ngày tuyệt đối tính
+  từ mốc đó. Bỏ câu mốc đi thì parser lấy ngày thật của máy ⇒ mọi so sánh ngày
+  đều trượt và `due_day` chỉ còn ~4 % (con số vô nghĩa, từng che mất việc parser
+  vứt bỏ thông tin ngày). Parser luật đọc đúng câu mốc đó (`serve._ctx_anchor`)
+  và không biến nó thành việc ảo (nhờ `_CTX_SENT_RX`), nên cổng
+  `--min-task-count` đạt bình thường. Chỉ dùng `--strip-date` khi muốn kiểm tra
+  riêng phần chữ (title/priority/category).
 - `--max-new` mặc định 500: output 3-5 việc cần ~350-450 token, cắt ở 256 làm
   JSON luôn hỏng dù model sinh ngoặc đúng.
 

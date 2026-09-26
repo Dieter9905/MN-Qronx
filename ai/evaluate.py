@@ -12,13 +12,20 @@ So sánh output với kỳ vọng trong file test JSONL:
   title (exact, lowercase) · dueAt ngày · dueAt giờ · priority ·
   repeatType · reminder (số lượng) · categoryName
 
-LƯU Ý về hai cái bẫy đã từng làm sai kết quả:
+LƯU Ý về mấy cái bẫy đã từng làm sai kết quả:
 - File test có `input` mở đầu bằng câu tổng hợp "Hôm nay là thứ Năm, ngày
   08/01/2026." Lúc TRAIN, model nhận đúng chuỗi đó (kèm tiền tố "parse: ").
-  Vì vậy chế độ --ckpt dùng y nguyên obj["input"]; còn chế độ --url phải bỏ câu
-  đó đi (--strip-date) vì service tự chèn ngữ cảnh ngày hiện tại lên trên, nếu
-  không model nhận HAI ngữ cảnh ngày và parser luật còn tạo ra một việc ảo mang
-  tiêu đề "Là thứ Năm ngày 08/01/2026" ⇒ cổng --min-task-count không bao giờ đạt.
+  Vì vậy chế độ --ckpt dùng y nguyên obj["input"].
+- Mốc "hôm nay" của MỖI MẪU một khác (trải từ 01/2026 đến 11/2026), còn nhãn
+  dueAt là ngày tuyệt đối tính từ mốc đó. Chế độ --url vì thế BẮT BUỘC để
+  parser đọc câu ngữ cảnh đó làm mốc neo (serve._ctx_anchor); nếu bỏ câu đi
+  (--strip-date) thì parser lấy ngày thật của máy ⇒ mọi so sánh ngày tuyệt đối
+  đều trượt và due_day chỉ còn ~4 % — con số vô nghĩa, từng che mất việc parser
+  vứt bỏ thông tin ngày mà dataset đã cung cấp. Chỉ dùng --strip-date khi muốn
+  kiểm tra riêng phần chữ (title/priority/category).
+- Chế độ --url còn phải tránh để parser luật biến câu ngữ cảnh thành việc ảo
+  tiêu đề "Là thứ Năm ngày 08/01/2026" ⇒ cổng --min-task-count không bao giờ đạt
+  (đã xử lý trong serve.py bằng _CTX_SENT_RX).
 - Output JSON 3-5 việc cần ~350-450 token; cắt ở 256 token làm JSON luôn hỏng
   dù model sinh ngoặc đúng. Vì thế có --max-new và mặc định 600.
 - Giải mã ảnh hưởng lớn hơn tưởng: greedy cho model v6 sinh vòng lặp lặp hoặc
@@ -29,12 +36,23 @@ LƯU Ý về hai cái bẫy đã từng làm sai kết quả:
 import argparse
 import json
 import re
+import sys
 import urllib.request
 from datetime import datetime
 
+# Console Windows mặc định là cp1252 → in tiếng Việt sẽ UnicodeEncodeError.
+# Đặt lại stdout/stderr sang UTF-8 để `python evaluate.py …` chạy được trên Windows.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError):
+            pass
+
 PREFIX = "parse: "
 _DATE_SENT_RX = re.compile(
-    r"^\s*(Hôm nay|Hom nay)\s+là\s+[^.]*?ngày\s+\d{1,2}/\d{1,2}/\d{4}\s*\.\s*",
+    r"^\s*(?:(?:Hôm nay|Hom nay)\s+là\s+[^.]*?ngày\s+\d{1,2}/\d{1,2}/\d{4}"
+    r"|(?:Today|today)\s+is\s+[^.]*?\d{1,2}/\d{1,2}/\d{4})\s*\.\s*",
     re.I)
 
 
@@ -220,9 +238,11 @@ def main():
             ]:
                 totals[key][1] += 1
                 totals[key][0] += bool(ok)
-        if len(samples) < 10:
-            samples.append({"input": obj["input"][:300], "exp": exp,
-                            "got": got, "raw": raw[:600]})
+        # Dump ĐỦ mẫu: bản trước chỉ lưu 10 mẫu đầu, nên khi phân tích lỗi người
+        # đọc tưởng đã xem hết mà thực ra bỏ qua 110/120 mẫu (mọi kết luận "còn
+        # lại lỗi gì" đều dựa trên 8 % dữ liệu).
+        samples.append({"input": obj["input"][:300], "exp": exp,
+                        "got": got, "raw": raw[:600]})
         if args.ckpt and n % 10 == 0:
             print(f"  ... {n}/{len(rows)} mẫu | JSON hỏng {fails}", flush=True)
 

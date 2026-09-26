@@ -10,8 +10,17 @@ VD:  python train.py --train data/train.jsonl --eval data/eval.jsonl --out check
 import argparse
 import json
 import random
+import sys
 
 import numpy as np
+
+# Console Windows mặc định là cp1252 → in tiếng Việt sẽ UnicodeEncodeError.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError):
+            pass
 
 PREFIX = "parse: "
 SRC_LEN, TGT_LEN = 320, 768  # câu dài 4-5 việc JSON ~600 token
