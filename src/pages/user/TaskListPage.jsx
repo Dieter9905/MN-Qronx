@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MagnifyingGlass, Plus, Funnel, X, ArrowLeft, ArrowRight, CaretDown } from '@phosphor-icons/react'
-import { getTasks, completeTask } from '../../services/taskService'
+import { MagnifyingGlass, Plus, Funnel, X, ArrowLeft, ArrowRight, CaretDown, Trash, ArrowUUpLeft } from '@phosphor-icons/react'
+import { getTasks, completeTask, getTrash, restoreTask, emptyTrash } from '../../services/taskService'
 import { getCategories } from '../../services/categoryService'
 import { useToast } from '../../components/common/Toast'
 import { Skeleton, EmptyState } from '../../components/common/Feedback'
@@ -41,6 +41,11 @@ export default function TaskListPage() {
   const [loading, setLoading] = useState(true)
   const [categories, setCategories] = useState([])
   const [filterOpen, setFilterOpen] = useState(false)
+  // Thùng rác: xoá là đưa vào đây nên người dùng không sợ mất dữ liệu
+  const [trashOpen, setTrashOpen] = useState(false)
+  const [trash, setTrash] = useState(null)
+  const [trashLoading, setTrashLoading] = useState(false)
+  const [trashBusy, setTrashBusy] = useState(false)
 
   const loadCategories = async () => {
     const res = await getCategories({ isActive: true })
@@ -95,6 +100,47 @@ export default function TaskListPage() {
 
   const clearFilters = () => {
     setFilters({ status: '', priority: '', categoryId: '', keyword: '', range: '', sort: 'dueAsc' })
+  }
+
+  const loadTrash = async () => {
+    setTrashLoading(true)
+    const res = await getTrash({ page: 1, pageSize: 20 })
+    if (res.success) setTrash(res.data)
+    else toast.error(res.message)
+    setTrashLoading(false)
+  }
+
+  const openTrash = async () => {
+    if (trashOpen) {
+      setTrashOpen(false)
+      return
+    }
+    setTrashOpen(true)
+    await loadTrash()
+  }
+
+  const restore = async (id) => {
+    const res = await restoreTask(id)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    toast.success('Đã khôi phục công việc')
+    await loadTrash()
+    load()
+  }
+
+  const purgeAll = async () => {
+    if (trashBusy) return
+    setTrashBusy(true)
+    const res = await emptyTrash()
+    setTrashBusy(false)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    toast.success(res.message || 'Đã xoá sạch thùng rác')
+    await loadTrash()
   }
 
   const toggleComplete = async (task) => {
@@ -162,6 +208,22 @@ export default function TaskListPage() {
                 </span>
               )}
             </button>
+            <button
+              type="button"
+              onClick={openTrash}
+              aria-pressed={trashOpen}
+              className={`flex h-11 cursor-pointer items-center gap-2 rounded-xl px-4 text-sm font-semibold ring-1 ring-inset transition ${
+                trashOpen
+                  ? 'bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:ring-rose-800/50'
+                  : 'bg-navy-50 text-navy-700 ring-navy-100 hover:bg-navy-100 dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600 dark:hover:bg-slate-600'
+              }`}
+            >
+              <Trash size={17} weight="bold" />
+              <span className="hidden sm:inline">Thùng rác</span>
+              {trash?.total > 0 && (
+                <span className="rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white">{trash.total}</span>
+              )}
+            </button>
           </div>
         </div>
 
@@ -220,6 +282,63 @@ export default function TaskListPage() {
           </div>
         )}
       </div>
+
+      {trashOpen && (
+        <section className="card animate-slide-down p-4 sm:p-5 dark:bg-slate-800">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-navy-100 pb-3 dark:border-slate-700">
+            <div>
+              <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
+                <Trash size={18} weight="fill" className="text-rose-500" />
+                Thùng rác
+              </h2>
+              <p className="mt-0.5 text-xs text-navy-400 dark:text-slate-500">
+                Việc xoá được giữ 30 ngày rồi mới xoá thật — khôi phục được bất cứ lúc nào.
+              </p>
+            </div>
+            {trash?.total > 0 && (
+              <Button variant="secondary" size="sm" icon={Trash} loading={trashBusy} onClick={purgeAll}>
+                Xoá sạch ({trash.total})
+              </Button>
+            )}
+          </div>
+
+          {trashLoading ? (
+            <div className="mt-3 space-y-2.5">
+              {[0, 1].map((i) => (
+                <Skeleton key={i} className="h-16" />
+              ))}
+            </div>
+          ) : !trash || trash.items.length === 0 ? (
+            <p className="mt-4 text-sm font-medium text-navy-400 dark:text-slate-500">
+              Thùng rác trống — không có việc nào cần khôi phục.
+            </p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {trash.items.map((t) => (
+                <li
+                  key={t.id ?? t.taskId}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-navy-50/70 p-3.5 dark:bg-slate-900/50"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-bold text-navy-900 dark:text-white">{t.title}</span>
+                    <span className="block text-xs text-navy-400 dark:text-slate-500">
+                      {t.category?.categoryName || 'Không danh mục'} · đang chờ xoá vĩnh viễn
+                    </span>
+                  </span>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={ArrowUUpLeft}
+                    onClick={() => restore(t.id ?? t.taskId)}
+                  >
+                    Khôi phục
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       {/* Danh sách */}
       {loading ? (

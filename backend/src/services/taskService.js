@@ -193,15 +193,33 @@ export async function deleteTask(userId, taskId) {
   const task = await taskRepo.findById(taskId, userId)
   if (!task) throw ApiError.notFound('Không tìm thấy công việc')
 
-  // ERD-R-18: Không xóa khi đã có notification log
-  const hasLogs = await taskRepo.hasNotificationLogs(taskId)
-  if (hasLogs) {
-    throw ApiError.badRequest(
-      'Không thể xóa công việc đã phát sinh thông báo. Hãy hủy thay vì xóa.'
-    )
-  }
+  // Thùng rác thay cho xoá thật: dữ liệu, việc con và lịch sử thông báo đều
+  // giữ nguyên nên KHÔNG CÒN cấm xoá việc đã từng nhắc — người dùng không sợ
+  // mất gì. Chỉ nhắc nhở TƯƠNG LAI bị huỷ để không báo cho việc đã đưa đi.
+  await taskRepo.cancelRemindersByTask(taskId)
+  return taskRepo.softDelete(taskId)
+}
 
-  return taskRepo.deleteTask(taskId)
+// ─── Thùng rác ─────────────────────────────────────────────────
+
+/** Danh sách việc đã xoá (giữ 30 ngày, sort mới nhất trước). */
+export async function listTrash(userId, query = {}) {
+  const { skip, take, page, pageSize } = parsePagination(query)
+  const { items, total } = await taskRepo.listTrash(userId, { skip, take })
+  return { items, pagination: paginationMeta(total, page, pageSize) }
+}
+
+/** Khôi phục một việc từ thùng rác (đồng thời bật lại nhắc tương lai). */
+export async function restoreTask(userId, taskId) {
+  const task = await taskRepo.restore(taskId, userId)
+  if (!task) throw ApiError.notFound('Không tìm thấy việc trong thùng rác')
+  return task
+}
+
+/** Xoá sạch thùng rác — không hoàn tác được, trả về số việc đã xoá. */
+export async function emptyTrash(userId) {
+  const removed = await taskRepo.emptyTrash(userId)
+  return { removed }
 }
 
 // ─── Complete + Repeat Logic ────────────────────────────

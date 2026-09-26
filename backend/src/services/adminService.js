@@ -15,13 +15,15 @@ export async function getDashboard() {
     await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { isActive: true } }),
-      prisma.task.count(),
+      // Việc trong thùng rác không tính vào thống kê của admin
+      prisma.task.count({ where: { deletedAt: null } }),
       prisma.notificationLog.count({
         where: { sentAt: { gte: todayStart } },
       }),
       prisma.notificationLog.count(),
       prisma.task.groupBy({
         by: ['status'],
+        where: { deletedAt: null },
         _count: true,
       }),
     ])

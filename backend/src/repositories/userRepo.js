@@ -76,7 +76,7 @@ async function updatePassword(userId, passwordHash) {
  * Count tasks by user and optional status filter.
  */
 async function countTasks(userId, where = {}) {
-  return prisma.task.count({ where: { userId, ...where } })
+  return prisma.task.count({ where: { userId, ...where, deletedAt: null } })
 }
 
 /**

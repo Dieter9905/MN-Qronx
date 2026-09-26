@@ -146,9 +146,25 @@ export async function updateTask(id, payload = {}) {
   return getTask(id)
 }
 
-// DELETE /api/v1/tasks/{id}
+// DELETE /api/v1/tasks/{id} — đưa vào thùng rác (xoá mềm, giữ 30 ngày)
 export async function deleteTask(id) {
   return api('DELETE', `/tasks/${id}`)
+}
+
+// ─── Thùng rác ─────────────────────────────────────────
+
+export async function getTrash(params = {}) {
+  const res = await api('GET', '/tasks/trash', { query: params })
+  // Chuẩn hoá như list thường để giao diện dùng chung một kiểu đối tượng
+  return toPagedTaskList(res)
+}
+
+export async function restoreTask(id) {
+  return api('POST', `/tasks/${id}/restore`)
+}
+
+export async function emptyTrash() {
+  return api('DELETE', '/tasks/trash')
 }
 
 // POST /api/v1/tasks/{id}/complete

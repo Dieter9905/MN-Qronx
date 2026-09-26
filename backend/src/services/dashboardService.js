@@ -13,6 +13,8 @@ export async function getDashboard(userId) {
       prisma.task.count({
         where: {
           userId,
+          // Việc đã đưa vào thùng rác không được tính/hiện ở dashboard
+          deletedAt: null,
           dueAt: { gte: todayStart, lte: todayEnd },
           status: { in: ['TODO', 'IN_PROGRESS'] },
         },
@@ -20,16 +22,20 @@ export async function getDashboard(userId) {
       prisma.task.count({
         where: {
           userId,
+          // Việc đã đưa vào thùng rác không được tính/hiện ở dashboard
+          deletedAt: null,
           dueAt: { lt: now },
           status: { in: ['TODO', 'IN_PROGRESS'] },
         },
       }),
       prisma.task.count({
-        where: { userId, status: 'COMPLETED' },
+        where: { userId, status: 'COMPLETED', deletedAt: null },
       }),
       prisma.task.count({
         where: {
           userId,
+          // Việc đã đưa vào thùng rác không được tính/hiện ở dashboard
+          deletedAt: null,
           dueAt: { gt: now },
           status: { in: ['TODO', 'IN_PROGRESS'] },
         },
@@ -37,6 +43,8 @@ export async function getDashboard(userId) {
       prisma.task.findMany({
         where: {
           userId,
+          // Việc đã đưa vào thùng rác không được tính/hiện ở dashboard
+          deletedAt: null,
           dueAt: { gte: todayStart, lte: todayEnd },
           status: { in: ['TODO', 'IN_PROGRESS'] },
         },
@@ -50,6 +58,8 @@ export async function getDashboard(userId) {
       prisma.task.findMany({
         where: {
           userId,
+          // Việc đã đưa vào thùng rác không được tính/hiện ở dashboard
+          deletedAt: null,
           dueAt: { lt: now },
           status: { in: ['TODO', 'IN_PROGRESS'] },
         },

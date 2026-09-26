@@ -42,7 +42,32 @@ export const updateTask = catchAsync(async (req, res) => {
 export const deleteTask = catchAsync(async (req, res) => {
   const taskId = parseInt(req.params.taskId)
   await taskService.deleteTask(req.user.id, taskId)
-  success(res, 200, 'Xóa công việc thành công')
+  success(res, 200, 'Đã chuyển vào thùng rác — khôi phục được trong 30 ngày')
+})
+
+/**
+ * GET /api/v1/tasks/trash
+ */
+export const getTrash = catchAsync(async (req, res) => {
+  const data = await taskService.listTrash(req.user.id, req.query)
+  success(res, 200, 'Thao tác thành công', data)
+})
+
+/**
+ * POST /api/v1/tasks/:taskId/restore
+ */
+export const restoreTask = catchAsync(async (req, res) => {
+  const taskId = parseInt(req.params.taskId)
+  const task = await taskService.restoreTask(req.user.id, taskId)
+  success(res, 200, 'Đã khôi phục công việc', task)
+})
+
+/**
+ * DELETE /api/v1/tasks/trash
+ */
+export const emptyTrash = catchAsync(async (req, res) => {
+  const data = await taskService.emptyTrash(req.user.id)
+  success(res, 200, `Đã xoá vĩnh viễn ${data.removed} công việc`, data)
 })
 
 /**

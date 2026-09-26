@@ -8,9 +8,9 @@ async function getStats() {
   const [totalUsers, totalTasks, activeTasks, notificationsToday] =
     await Promise.all([
       prisma.user.count(),
-      prisma.task.count(),
+      prisma.task.count({ where: { deletedAt: null } }),
       prisma.task.count({
-        where: { status: { in: ['TODO', 'IN_PROGRESS'] } },
+        where: { status: { in: ['TODO', 'IN_PROGRESS'] }, deletedAt: null },
       }),
       prisma.notificationLog.count({
         where: {

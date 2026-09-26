@@ -69,7 +69,7 @@ async function toggleActive(categoryId, isActive) {
  * Count tasks in a category.
  */
 async function countTasks(categoryId) {
-  return prisma.task.count({ where: { categoryId } })
+  return prisma.task.count({ where: { categoryId, deletedAt: null } })
 }
 
 /**

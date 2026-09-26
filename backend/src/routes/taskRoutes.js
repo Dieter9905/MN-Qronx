@@ -130,6 +130,11 @@ router.post(
  *       404:
  *         description: Không tìm thấy
  */
+// Thùng rác — khai báo TRƯỚC /:taskId để GET /tasks/trash không bị bắt nhầm là id
+router.get('/trash', auth, taskController.getTrash)
+router.delete('/trash', auth, taskController.emptyTrash)
+router.post('/:taskId/restore', auth, taskController.restoreTask)
+
 router.get('/:taskId', auth, taskController.getTaskById)
 
 /**

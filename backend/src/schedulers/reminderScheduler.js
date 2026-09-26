@@ -3,15 +3,37 @@ import prisma from '../config/prisma.js'
 import { sendFcmNotification } from '../notifications/fcmSender.js'
 import { downgradeExpiredPlans } from '../utils/planLimits.js'
 import { pushToUser } from '../services/pushService.js'
+import taskRepo from '../repositories/taskRepo.js'
 
 // ─── Reminder Scheduler ────────────────────────────────
 // Chạy mỗi 1 phút: quét DB tìm reminder SCHEDULED đã đến hạn
 
 const TASK = '*/1 * * * *' // Mỗi 1 phút
 
+// Thùng rác giữ việc 30 ngày rồi mới xoá thật — mỗi ngày dọn một lần là đủ
+const TRASH_KEEP_DAYS = 30
+const PURGE_EVERY_MS = 24 * 60 * 60_000
+let lastPurgeAt = 0
+
+async function purgeTrashIfDue() {
+  if (Date.now() - lastPurgeAt < PURGE_EVERY_MS) return
+  lastPurgeAt = Date.now()
+  try {
+    const removed = await taskRepo.purgeExpired(TRASH_KEEP_DAYS)
+    if (removed > 0) {
+      console.log(`[Scheduler] Đã xoá vĩnh viễn ${removed} việc ở thùng rác quá ${TRASH_KEEP_DAYS} ngày`)
+    }
+  } catch (err) {
+    console.error('[Scheduler] Lỗi dọn thùng rác:', err.message)
+  }
+}
+
 cron.schedule(TASK, async () => {
   const now = new Date()
   console.log(`[Scheduler] Quét reminders lúc ${now.toISOString()}`)
+
+  // Dọn thùng rác: việc đã xoá quá 30 ngày thì xoá thật
+  purgeTrashIfDue()
 
   // Tự động hạ gói trả phí đã quá hạn xuống FREE
   try {
