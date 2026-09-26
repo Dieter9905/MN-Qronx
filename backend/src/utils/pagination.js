@@ -1,5 +1,8 @@
 const DEFAULT_PAGE_SIZE = 20
-const MAX_PAGE_SIZE = 100
+// 200 để khớp với nhu cầu thật của app: lịch tháng, lệnh trong chat AI và
+// thống kê thông báo của admin đều xin một cửa sổ lớn trong 1 request. Trước đây
+// trần là 100 nên các chỗ đó bị cắt âm thầm (lịch thiếu việc, admin ra biểu đồ 0).
+const MAX_PAGE_SIZE = 200
 
 /**
  * Parse pagination query params and return Prisma-compatible skip/take

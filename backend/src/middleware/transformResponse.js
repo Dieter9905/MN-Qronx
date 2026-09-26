@@ -46,8 +46,29 @@ function isTaskListResponse(data) {
   return data && typeof data === 'object' && 'items' in data && Array.isArray(data.items)
 }
 
+/** Các đoạn đường dẫn sau /api/v1, đã bỏ query string (vd: ['tasks','12','subtasks']). */
+function pathSegmentsOf(urlpath) {
+  const segments = urlpath.split('?')[0].split('/').filter(Boolean)
+  const apiIndex = segments.indexOf('api')
+  return apiIndex >= 0 ? segments.slice(apiIndex + 2) : segments
+}
+
 function transformData(data, urlpath) {
   if (!data || typeof data !== 'object') return data
+
+  const segments = pathSegmentsOf(urlpath)
+
+  // ── Việc con / nhắc nhở NẰM TRONG công việc (/tasks/:id/subtasks|reminders) ──
+  // Phải xử lý TRƯỚC nhánh "một công việc": cả subtask lẫn reminder đều có
+  // trường `taskId`, nên trước đây chúng bị transformTask biến thành một công
+  // việc rỗng (id = taskId, mất `content`) — thêm việc con xong bấm tích là báo
+  // "Không tìm thấy việc con", còn nhắc nhở vừa thêm thì mất nội dung.
+  if (segments[0] === 'tasks' && segments[2] === 'subtasks') {
+    return Array.isArray(data) ? data.map(transformSubtask) : transformSubtask(data)
+  }
+  if (segments[0] === 'tasks' && segments[2] === 'reminders') {
+    return Array.isArray(data) ? data.map(transformReminder) : transformReminder(data)
+  }
 
   // ── Category list ──
   if (matchPath(urlpath, CATEGORY_PATHS) && Array.isArray(data)) {

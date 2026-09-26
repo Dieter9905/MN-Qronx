@@ -45,7 +45,9 @@ export const logQueryValidation = [
   query('page')
     .optional()
     .isInt({ min: 1 }).withMessage('Page phải là số nguyên >= 1'),
+  // Trần phải khớp MAX_PAGE_SIZE của phân trang (200) — trước đây để 100 nên
+  // /devices/logs?pageSize=200 (thống kê thông báo của admin) luôn trả 400.
   query('pageSize')
     .optional()
-    .isInt({ min: 1, max: 100 }).withMessage('PageSize phải từ 1 đến 100'),
+    .isInt({ min: 1, max: 200 }).withMessage('PageSize phải từ 1 đến 200'),
 ]

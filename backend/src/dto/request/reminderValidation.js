@@ -19,6 +19,13 @@ export const updateReminderValidation = [
     .isISO8601().withMessage('Thời điểm nhắc nhở phải là định dạng ISO-8601'),
 ]
 
+// Xoá nhắc nhở: chỉ có tham số đường dẫn, KHÔNG được đòi body.remindAt như
+// updateReminderValidation (đòi thì DELETE luôn trả 400 "Thiếu thông tin").
+export const deleteReminderValidation = [
+  param('taskId').isInt({ min: 1 }).withMessage('ID công việc không hợp lệ'),
+  param('reminderId').isInt({ min: 1 }).withMessage('ID nhắc nhở không hợp lệ'),
+]
+
 export const reminderIdParamValidation = [
   param('reminderId').isInt({ min: 1 }).withMessage('ID nhắc nhở không hợp lệ'),
 ]

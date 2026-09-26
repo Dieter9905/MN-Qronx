@@ -85,43 +85,46 @@ export const taskIdParamValidation = [
     .isInt({ min: 1 }).withMessage('ID công việc không hợp lệ'),
 ]
 
+// Bộ lọc danh sách công việc. Dùng optional({ values: 'falsy' }) để chuỗi rỗng
+// (`?status=`, `?sort=`) được coi như không truyền — app cũ và app mobile có thể
+// gửi chuỗi rỗng, nếu chặn thì danh sách sẽ trắng tay.
 export const getTasksValidation = [
   query('status')
-    .optional()
+    .optional({ values: 'falsy' })
     .isIn(['TODO', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'])
     .withMessage('Trạng thái không hợp lệ'),
 
   query('priority')
-    .optional()
+    .optional({ values: 'falsy' })
     .isIn(['LOW', 'MEDIUM', 'HIGH', 'URGENT'])
     .withMessage('Mức ưu tiên không hợp lệ'),
 
   query('categoryId')
-    .optional()
+    .optional({ values: 'falsy' })
     .isInt({ min: 1 }).withMessage('ID danh mục không hợp lệ'),
 
   query('keyword')
-    .optional()
+    .optional({ values: 'falsy' })
     .isString().withMessage('Từ khóa phải là chuỗi'),
 
   query('dueFrom')
-    .optional()
+    .optional({ values: 'falsy' })
     .isISO8601().withMessage('dueFrom phải là định dạng ISO-8601'),
 
   query('dueTo')
-    .optional()
+    .optional({ values: 'falsy' })
     .isISO8601().withMessage('dueTo phải là định dạng ISO-8601'),
 
   query('sort')
-    .optional()
+    .optional({ values: 'falsy' })
     .isIn(['dueAsc', 'dueDesc', 'priorityDesc'])
     .withMessage('Sort không hợp lệ'),
 
   query('page')
-    .optional()
+    .optional({ values: 'falsy' })
     .isInt({ min: 1 }).withMessage('Page phải là số nguyên dương'),
 
   query('pageSize')
-    .optional()
-    .isInt({ min: 1, max: 100 }).withMessage('PageSize phải từ 1-100'),
+    .optional({ values: 'falsy' })
+    .isInt({ min: 1, max: 200 }).withMessage('PageSize phải từ 1-200'),
 ]

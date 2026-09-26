@@ -61,7 +61,12 @@ export async function getSettings(userId) {
 
 // ─── Update Notification Settings ──────────────────────
 
-export async function updateSettings(userId, data) {
+// Chỉ 3 trường này được ghi. Nếu đưa thẳng body vào Prisma thì một khoá lạ
+// (client cũ, gõ sai tên trường) làm Prisma ném "Unknown argument" → 500
+// "Lỗi hệ thống" và màn Cài đặt đứng im.
+const ALLOWED_SETTING_FIELDS = ['alarmSound', 'defaultSnoozeMinutes', 'vibrationEnabled']
+
+export async function updateSettings(userId, data = {}) {
   // Âm thanh báo thức nâng cao / tùy chỉnh chỉ dành cho gói cao hơn
   if (data.alarmSound) {
     const plan = await getUserPlan(userId)
@@ -85,12 +90,17 @@ export async function updateSettings(userId, data) {
     }
   }
 
+  const patch = Object.fromEntries(
+    Object.entries(data).filter(([key, value]) => ALLOWED_SETTING_FIELDS.includes(key) && value !== undefined)
+  )
+
   const setting = await deviceRepo.findSetting(userId)
   if (!setting) {
     // Auto-create then update
     await deviceRepo.createSetting(userId)
   }
-  return deviceRepo.updateSetting(userId, data)
+  if (!Object.keys(patch).length) return deviceRepo.findSetting(userId)
+  return deviceRepo.updateSetting(userId, patch)
 }
 
 // ─── Get Notification Logs ─────────────────────────────

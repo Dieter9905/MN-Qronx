@@ -3,10 +3,39 @@ import auth from '../middleware/auth.js'
 import validate from '../middleware/validate.js'
 import * as taskValidation from '../dto/request/taskValidation.js'
 import * as taskController from '../controllers/taskController.js'
+import * as reminderController from '../controllers/reminderController.js'
+import {
+  taskReminderParamValidation,
+  createReminderValidation,
+  updateReminderValidation,
+  deleteReminderValidation,
+} from '../dto/request/reminderValidation.js'
 import subtaskRoutes from './subtaskRoutes.js'
 import reminderRoutes from './reminderRoutes.js'
 
 const router = Router()
+
+// ── Nhắc nhở của một công việc ─────────────────────────────
+// Khai báo Ở ĐÂY (chứ không trong reminderRoutes) vì reminderRoutes còn được
+// gắn ở /reminders — thêm vào đó thì POST /reminders (thiếu taskId) sẽ lọt vào
+// controller và lỗi khó hiểu. Trước đây 4 route này bị thiếu hẳn nên thêm/sửa/xoá
+// nhắc nhở từ màn chi tiết công việc luôn trả 404 và bị nuốt im lặng.
+router.get('/:taskId/reminders', auth, taskReminderParamValidation, validate, reminderController.getByTask)
+router.post('/:taskId/reminders', auth, createReminderValidation, validate, reminderController.createReminder)
+router.put(
+  '/:taskId/reminders/:reminderId',
+  auth,
+  updateReminderValidation,
+  validate,
+  reminderController.updateReminder,
+)
+router.delete(
+  '/:taskId/reminders/:reminderId',
+  auth,
+  deleteReminderValidation,
+  validate,
+  reminderController.deleteReminder,
+)
 
 // Nested routes
 router.use('/:taskId/subtasks', subtaskRoutes)
@@ -53,7 +82,7 @@ router.use('/:taskId/reminders', reminderRoutes)
  *       200:
  *         description: Danh sách tasks
  */
-router.get('/', auth, taskController.getTasks)
+router.get('/', auth, taskValidation.getTasksValidation, validate, taskController.getTasks)
 
 /**
  * @swagger

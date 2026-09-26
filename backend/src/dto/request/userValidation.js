@@ -6,9 +6,12 @@ export const updateProfileValidation = [
     .notEmpty().withMessage('Họ tên không được để trống')
     .isLength({ max: 150 }).withMessage('Họ tên không quá 150 ký tự'),
 
+  // Bỏ trống được, nhưng đã nhập thì phải ra dáng số điện thoại (trước đây chỉ
+  // giới hạn độ dài nên "abc" vẫn lưu vào hồ sơ)
   body('phoneNumber')
-    .optional()
-    .isLength({ max: 20 }).withMessage('Số điện thoại không quá 20 ký tự'),
+    .optional({ values: 'falsy' })
+    .isLength({ max: 20 }).withMessage('Số điện thoại không quá 20 ký tự')
+    .matches(/^[0-9+().\s-]{8,20}$/).withMessage('Số điện thoại không hợp lệ'),
 
   body('avatarUrl')
     .optional()
