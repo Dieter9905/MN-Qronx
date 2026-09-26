@@ -13,6 +13,7 @@ import billingRoutes from './billingRoutes.js'
 import rewardRoutes from './rewardRoutes.js'
 import aiRoutes from './aiRoutes.js'
 import supportRoutes from './supportRoutes.js'
+import calendarRoutes from './calendarRoutes.js'
 // import notificationRoutes from './notificationRoutes.js'
 // import dashboardRoutes from './dashboardRoutes.js'
 // import adminRoutes from './adminRoutes.js'
@@ -82,5 +83,7 @@ router.use('/billing',       billingRoutes)
 router.use('/rewards',        rewardRoutes)
 router.use('/ai',             aiRoutes)
 router.use('/support',        supportRoutes)
+// Feed .ics công khai — app lịch (Google/Outlook) đọc bằng URL có khoá, không cần token
+router.use('/calendar',       calendarRoutes)
 
 export default router

@@ -148,6 +148,10 @@ model User {
   tasks                  Task[]
   devices                Device[]
   webPushSubscriptions   WebPushSubscription[]
+  // Khóa riêng cho tệp lịch .ics — app lịch (Google/Outlook) đọc bằng URL có
+  // khóa này chứ không được mang mật khẩu, nên khóa phải làng riêng và xoay được
+  icsKey                 String?  @db.VarChar(64) @map("ics_key")
+  @@index([icsKey], map: "ix_app_users_ics_key")
   customSounds           CustomSound[]
   notificationSetting    NotificationSetting?
   refreshTokens          RefreshToken[]

@@ -5,6 +5,7 @@ import * as userValidation from '../dto/request/userValidation.js'
 import * as userController from '../controllers/userController.js'
 import * as customSoundValidation from '../dto/request/customSoundValidation.js'
 import * as customSoundController from '../controllers/customSoundController.js'
+import * as calendarIcsController from '../controllers/calendarIcsController.js'
 
 const router = Router()
 
@@ -114,6 +115,10 @@ router.get('/stats', auth, userController.getStats)
  *         description: Danh sách activity
  */
 router.get('/activity', auth, userController.getRecentActivity)
+
+// ── Lịch .ics: dán vào Google Calendar / Outlook một lần là tự đồng bộ ──
+router.get('/ics', auth, calendarIcsController.getMyIcs)
+router.post('/ics/rotate', auth, calendarIcsController.rotateMyIcs)
 
 // ── Âm thanh báo thức tùy chỉnh (import MP3 – Plus/Pro) ──
 router.get('/sounds', auth, customSoundController.listSounds)

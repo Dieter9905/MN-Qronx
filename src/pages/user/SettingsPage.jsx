@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom'
 import {
   Bell,
   BellRinging,
+  CalendarBlank,
+  Copy,
+  ArrowClockwise,
+  DownloadSimple,
   Devices,
   Play,
   UserCircle,
@@ -36,10 +40,12 @@ import { ALARM_SOUNDS, DEFAULT_SNOOZE_OPTIONS, PLATFORM } from '../../lib/consta
 import { relativeTime } from '../../lib/format'
 import { startAlarmSound, stopAlarmSound } from '../../context/AlarmContext'
 import { pushStatus, enablePush, disablePush, syncPushSubscription } from '../../lib/push'
+import { getMyIcsUrl, rotateIcsUrl } from '../../services/calendarService'
 
 const TABS = [
-  { value: 'notifications', label: 'Thông báo' },
-  { value: 'devices', label: 'Thiết bị' },
+  { value: 'notifications', label: 'Thông báo', Icon: Bell },
+  { value: 'devices', label: 'Thiết bị', Icon: Devices },
+  { value: 'calendar', label: 'Lịch', Icon: CalendarBlank },
 ]
 
 export default function SettingsPage() {
@@ -57,6 +63,9 @@ export default function SettingsPage() {
   // Web Push: bật lên thì nhắc nhở vẫn kêu khi người dùng đóng trình duyệt
   const [push, setPush] = useState({ supported: false, permission: 'default', subscribed: false })
   const [pushBusy, setPushBusy] = useState(false)
+  // URL lịch .ics để dán vào Google Calendar / Outlook
+  const [icsUrl, setIcsUrl] = useState('')
+  const [icsBusy, setIcsBusy] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -94,9 +103,14 @@ export default function SettingsPage() {
   }
 
   const load = async () => {
-    const [sRes, dRes] = await Promise.all([getNotificationSettings(), getDevices()])
+    const [sRes, dRes, iRes] = await Promise.all([
+      getNotificationSettings(),
+      getDevices(),
+      getMyIcsUrl().catch(() => null),
+    ])
     if (sRes.success) setSettings(sRes.data)
     if (dRes.success) setDevices(dRes.data)
+    if (iRes?.success) setIcsUrl(iRes.data?.url || '')
     setLoading(false)
     loadCustomSounds()
   }
@@ -239,6 +253,27 @@ export default function SettingsPage() {
 
   const platformIcon = (platform) => (platform === 'WEB' ? Monitor : DeviceMobile)
 
+  const copyIcsUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(icsUrl)
+      toast.success('Đã copy link lịch')
+    } catch {
+      toast.error('Không copy được, bạn chép tay giúp mình nhé')
+    }
+  }
+
+  const doRotateIcs = async () => {
+    setIcsBusy(true)
+    const res = await rotateIcsUrl()
+    setIcsBusy(false)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    setIcsUrl(res.data?.url || '')
+    toast.success('Đã tạo khoá mới — link cũ đã ngừng hoạt động. Nhớ thêm lại link mới vào app lịch nhé!')
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-5 animate-fade-in">
       <div>
@@ -260,13 +295,13 @@ export default function SettingsPage() {
               tab === t.value ? 'bg-navy-900 text-white dark:bg-blue-600' : 'text-navy-500 hover:text-navy-800 dark:text-slate-400 dark:hover:text-white'
             }`}
           >
-            {t.value === 'notifications' ? <Bell size={17} weight="bold" /> : <Devices size={17} weight="bold" />}
+            {t.Icon && <t.Icon size={17} weight="bold" />}
             {t.label}
           </button>
         ))}
       </div>
 
-      {tab === 'notifications' ? (
+      {tab === 'notifications' && (
         <section className="card space-y-2 p-5 sm:p-6 dark:bg-slate-800">
           <div className="flex items-center justify-between gap-3 border-b border-navy-100 pb-4">
             <div>
@@ -422,7 +457,9 @@ export default function SettingsPage() {
             )}
           </div>
         </section>
-      ) : (
+      )}
+
+      {tab === 'devices' && (
         <section className="card p-5 sm:p-6 dark:bg-slate-800">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-navy-100 pb-4">
             <div>
@@ -473,6 +510,61 @@ export default function SettingsPage() {
               })}
             </ul>
           )}
+        </section>
+      )}
+
+      {tab === 'calendar' && (
+        <section className="card space-y-4 p-5 sm:p-6 dark:bg-slate-800">
+          <div className="border-b border-navy-100 pb-4">
+            <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
+              <CalendarBlank size={19} weight="fill" className="text-emerald-500 dark:text-emerald-400" />
+              Đồng bộ lịch (.ics)
+            </h2>
+            <p className="mt-0.5 text-xs text-navy-400 dark:text-slate-500">
+              Dán link vào Google Calendar hoặc Outlook một lần — việc của bạn tự xuất hiện ở đó và app lịch tự làm mới.
+            </p>
+          </div>
+
+          <div className="px-1 py-1">
+            <label className="mb-1.5 block text-sm font-semibold text-navy-800 dark:text-white">Link lịch của bạn</label>
+            <div className="flex gap-2">
+              <input
+                readOnly
+                value={icsUrl}
+                onFocus={(e) => e.target.select()}
+                placeholder="Đang tạo link…"
+                aria-label="Link lịch .ics"
+                className="h-11 min-w-0 flex-1 truncate rounded-xl bg-navy-50 px-3.5 font-mono text-xs text-navy-700 ring-1 ring-navy-100 focus:outline-none dark:bg-slate-900/50 dark:text-slate-300 dark:ring-slate-700"
+              />
+              <Button variant="secondary" icon={Copy} onClick={copyIcsUrl} disabled={!icsUrl}>
+                Copy
+              </Button>
+            </div>
+            <p className="mt-1.5 text-xs text-navy-400 dark:text-slate-500">
+              Google Calendar: <b>Cài đặt → Thêm lịch → Từ URL</b>. Outlook: <b>Thêm lịch → Đăng ký từ web</b>.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 px-1">
+            <a
+              href={`${icsUrl}${icsUrl ? '.ics' : ''}`}
+              target="_blank"
+              rel="noreferrer"
+              className={`inline-flex cursor-pointer items-center gap-2 rounded-xl bg-navy-900 px-4 py-2.5 text-sm font-bold text-white transition hover:opacity-90 dark:bg-blue-600 ${!icsUrl ? 'pointer-events-none opacity-50' : ''}`}
+            >
+              <DownloadSimple size={16} weight="bold" />
+              Tải tệp .ics
+            </a>
+            <Button variant="secondary" icon={ArrowClockwise} loading={icsBusy} disabled={!icsUrl} onClick={doRotateIcs}>
+              Tạo lại khoá
+            </Button>
+          </div>
+
+          <div className="rounded-xl bg-amber-50/70 px-3 py-2.5 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/20 dark:ring-amber-800/50">
+            <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+              Ai có link này cũng xem được việc của bạn — đừng chia sẻ công khai. Nghi link bị lộ thì bấm “Tạo lại khoá”, link cũ ngừng hoạt động ngay.
+            </p>
+          </div>
         </section>
       )}
 
