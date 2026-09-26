@@ -122,6 +122,8 @@ model User {
   pointTransactions      PointTransaction[]
   invitesSent            Invitation[]            @relation("InviterInvitations")
   invitesReceived        Invitation[]            @relation("InviteeInvitation")
+  supportConversation    SupportConversation?
+  supportMessages        SupportMessage[]        @relation("SupportAuthor")
 
   @@index([roleId])
   @@index([referrerId])
@@ -344,4 +346,70 @@ model RefreshToken {
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+// ─── CSKH: hội thoại hỗ trợ giữa người dùng và admin ────────
+
+enum SupportStatus {
+  OPEN
+  RESOLVED
+}
+
+enum SupportSender {
+  USER
+  ADMIN
+}
+
+model SupportConversation {
+  supportConversationId Int           @id @default(autoincrement()) @map("support_conversation_id")
+  userId                Int           @unique @map("user_id")
+  status                SupportStatus @default(OPEN)
+  lastMessagePreview    String?       @db.VarChar(160) @map("last_message_preview")
+  lastMessageAt         DateTime      @default(now()) @map("last_message_at")
+  unreadForAdmin        Int           @default(0) @map("unread_for_admin")
+  unreadForUser         Int           @default(0) @map("unread_for_user")
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+
+  user     User             @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  messages SupportMessage[]
+
+  @@index([lastMessageAt], map: "ix_support_conversations_last_message")
+  @@index([unreadForAdmin], map: "ix_support_conversations_unread_admin")
+  @@map("support_conversations")
+}
+
+model SupportMessage {
+  supportMessageId Int           @id @default(autoincrement()) @map("support_message_id")
+  conversationId   Int           @map("conversation_id")
+  senderRole       SupportSender @map("sender_role")
+  authorId         Int?          @map("author_id")
+  body             String        @db.Text
+  readByUserAt     DateTime?     @map("read_by_user_at")
+  readByAdminAt    DateTime?     @map("read_by_admin_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  conversation SupportConversation @relation(fields: [conversationId], references: [supportConversationId], onDelete: Cascade)
+  author       User?               @relation("SupportAuthor", fields: [authorId], references: [userId], onDelete: SetNull)
+  attachments  SupportAttachment[]
+
+  @@index([conversationId, createdAt], map: "ix_support_messages_conversation")
+  @@map("support_messages")
+}
+
+/// Ảnh khách hàng/admin gửi kèm trong hội thoại hỗ trợ.
+/// Lưu thẳng trong DB (giống custom_sounds) để không phụ thuộc dịch vụ lưu file
+/// bên ngoài — client nén ảnh trước khi gửi, server kiểm tra lại dung lượng.
+model SupportAttachment {
+  supportAttachmentId Int      @id @default(autoincrement()) @map("support_attachment_id")
+  messageId           Int      @map("message_id")
+  mimeType            String   @db.VarChar(80) @map("mime_type")
+  sizeBytes           Int      @default(0) @map("size_bytes")
+  data                Bytes
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  message SupportMessage @relation(fields: [messageId], references: [supportMessageId], onDelete: Cascade)
+
+  @@index([messageId], map: "ix_support_attachments_message")
+  @@map("support_attachments")
 }

@@ -9,6 +9,13 @@ import {
   planChangeValidation,
 } from '../dto/request/adminValidation.js'
 import * as adminController from '../controllers/adminController.js'
+import * as supportController from '../controllers/supportController.js'
+import {
+  conversationListValidation,
+  conversationIdValidation,
+  conversationStatusValidation,
+  sendMessageValidation,
+} from '../dto/request/supportValidation.js'
 
 const router = Router()
 
@@ -177,5 +184,51 @@ router.put('/users/:userId/plan', userIdValidation, planChangeValidation, valida
  *         description: Không tìm thấy người dùng
  */
 router.delete('/users/:userId', userIdValidation, validate, adminController.deleteUser)
+
+// ── CSKH: hội thoại hỗ trợ với người dùng ──────────────────
+
+/** Số tin nhắn chưa trả lời (huy hiệu trên menu quản trị) */
+router.get('/support/unread', supportController.adminUnread)
+
+/** Danh sách hội thoại hỗ trợ (lọc theo chưa đọc / trạng thái / từ khoá) */
+router.get(
+  '/support/conversations',
+  conversationListValidation,
+  validate,
+  supportController.adminListConversations
+)
+
+/** Xem một hội thoại kèm toàn bộ tin nhắn */
+router.get(
+  '/support/conversations/:conversationId',
+  conversationIdValidation,
+  validate,
+  supportController.adminGetConversation
+)
+
+/** Admin trả lời người dùng (kèm tối đa 3 ảnh) */
+router.post(
+  '/support/conversations/:conversationId/messages',
+  conversationIdValidation,
+  sendMessageValidation,
+  validate,
+  supportController.adminReply
+)
+
+/** Đánh dấu hội thoại đã đọc */
+router.post(
+  '/support/conversations/:conversationId/read',
+  conversationIdValidation,
+  validate,
+  supportController.adminMarkRead
+)
+
+/** Chuyển trạng thái Chờ xử lý / Đã xong */
+router.put(
+  '/support/conversations/:conversationId/status',
+  conversationStatusValidation,
+  validate,
+  supportController.adminSetStatus
+)
 
 export default router

@@ -79,7 +79,26 @@ export function makeToken(userId, role = 'USER') {
 
 // ─── DB helpers ────────────────────────────────────────
 
+/**
+ * GET thô (không parse JSON) — dùng cho endpoint trả nhị phân như ảnh đính kèm
+ * trong hội thoại hỗ trợ, nơi cần cả status, content-type và bytes thật.
+ */
+export async function rawGet(path, token) {
+  const res = await fetch(`${BASE()}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+  const buffer = Buffer.from(await res.arrayBuffer())
+  return { status: res.status, contentType: res.headers.get('content-type'), buffer }
+}
+
+// ─── DB helpers ────────────────────────────────────────
+
 export async function cleanup() {
+  // Hội thoại hỗ trợ: chỉ xoá của tài khoản test, KHÔNG đụng dữ liệu thật
+  // (tin nhắn + ảnh tự xoá theo khoá ngoại)
+  await prisma.supportConversation.deleteMany({
+    where: { user: { email: { endsWith: '@example.com' } } },
+  })
   await prisma.notificationLog.deleteMany()
   await prisma.notificationSetting.deleteMany()
   await prisma.device.deleteMany()
