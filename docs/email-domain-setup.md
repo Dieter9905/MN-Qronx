@@ -59,6 +59,15 @@ npm run mail:check       # đối chiếu SPF/DKIM/ownership trong DNS với yê
 `SandboxMode` — Mailjet kiểm tra key + sender + payload nhưng **không gửi thật và không
 trừ hạn mức**, nên chạy được bất cứ lúc nào.
 
+Đọc kết quả theo bảng sau (lần chạy 26/09/2026 gặp đúng dòng đầu — key trong
+`backend/.env` đã cũ, phải dán lại cả key **và** secret):
+
+| Dòng trong `mail:status` | Nghĩa |
+|---|---|
+| `❌ Mailjet từ chối — HTTP 401 · API key authentication/authorization failure` | Key/secret trong `.env` đã bị xoay → dán lại **cả hai** từ Mailjet → API Keys (nút copy, đừng gõ tay) |
+| `❌ ... mj-0001 ... temporarily blocked` | Tài khoản bị khoá — xem Bước 8 |
+| `✅ Mailjet nhận payload` + `còn 10 thư` | Đang chạy trong hạn mức tạm — xin gỡ, xem "Gỡ hẳn giới hạn 10 thư/giờ" |
+
 ### App tự chặn khi hết hạn mức
 
 `emailService` đếm số thư đã gửi trong **giờ hiện tại** và **ngày hiện tại** từ chính
@@ -78,11 +87,78 @@ thống kê của Mailjet cập nhật trễ vài giây.
 Hết hạn mức trong app thì lỗi là `MailjetQuotaError` (`code: quota-exceeded`, HTTP 429),
 `authService` sẽ trả mã xác nhận trong response như khi không gửi được thư.
 
-### Khi nào xin Mailjet gỡ giới hạn
+### Gỡ hẳn giới hạn 10 thư/giờ — không có nút nào bấm được trong dashboard
 
-Sau vài ngày gửi đều trong hạn mức (thư vào Inbox, không bounce), trả lời lại ticket
-[#4264560](https://app.mailjet.com/support/ticket/4264560) để xin đánh giá lại —
-dùng lại mẫu ở Bước 8, thay phần mô tả lỗi bằng dữ liệu gửi thực tế.
+Banner *"A temporary global sending limit of 10 emails per hour is currently applied to
+your account"* là **chế độ Test Mode của Mailjet**, áp ở **tầng tài khoản** — không phải
+hạn mức gói Free (Free = 6.000 thư/tháng · **200 thư/ngày**).
+
+| Cách làm | Kết quả |
+|---|---|
+| Bấm **Upgrade** trên dashboard | ❌ Mailjet ghi rõ: *"Upgrading to a different plan will not remove this sending limit, it can only be lifted once your account information is verified"* |
+| Ngồi chờ | ❌ Không tự hết — chỉ gỡ sau khi có người xét duyệt |
+| Xoá key / tạo key mới | ❌ Vô tác dụng — đây là hạn mức **tài khoản**, không phải hạn mức key |
+| **Trả lời chính email Mailjet gửi kèm thông báo giới hạn** | ✅ Đường nhanh nhất — Mailjet nói xét trong **1 ngày làm việc** |
+| Mở ticket hỗ trợ với đủ thông tin họ yêu cầu | ✅ Dùng khi không tìm thấy email đó |
+| Tài khoản mới: gửi lành mạnh **≥ 1 tuần** rồi xin xét lại | ✅ Đường chậm, cho tài khoản vừa tạo |
+
+Nguồn: Mailjet Help Center — *Blocked or Limited Account: Reasons and How to Restore Full
+Functionality* → mục **Account in Test Mode** và **New Accounts**.
+
+Còn một biến thể khác cũng cho ra đúng banner này: **vượt ngưỡng gửi** (Acceptable Use
+Policy) → Mailjet phong ấn **7 ngày**, hết 7 ngày mà tái phạm thì gia hạn thêm 7 ngày.
+Phân biệt bằng lịch sử ticket: đã từng bị `mj-0001` + được gỡ = Test Mode; chưa từng bị
+khoá mà tự dưng bị giới hạn = vượt ngưỡng.
+
+#### Thông tin Mailjet luôn hỏi (soạn sẵn trong 1 lần)
+
+1. Loại thư gửi: **Transactional** (mã xác nhận đăng ký, đặt lại mật khẩu) — không phải marketing.
+2. Sản lượng dự kiến: **≤ 200 thư/ngày** (trần gói Free); thực tế hiện tại vài chục thư/tháng.
+3. Danh sách người nhận đến từ đâu: người dùng **tự đăng ký** trên <https://mn-qronx.id.vn> — không mua, không nhập khẩu danh sách.
+4. URL liên quan: <https://mn-qronx.id.vn> · <https://www.mn-qronx.id.vn>
+5. Uy tín đã thể hiện: tên miền riêng đã xác thực (SPF + DKIM + DMARC), sender `no-reply@mn-qronx.id.vn` đang `Active`, mỗi người dùng chỉ nhận **1 thư cho mỗi lần yêu cầu**.
+
+#### Thư mẫu xin gỡ hạn mức (dán vào ticket [#4264560](https://app.mailjet.com/support/ticket/4264560))
+
+```
+Hello Mailjet Support,
+
+Our account shows the banner "A temporary global sending limit of 10 emails per hour is
+currently applied to your account". We would like this limit removed.
+
+About our sending:
+- Email type: transactional only (signup verification codes, password resets).
+  We send no marketing campaigns, and we never buy or import contact lists.
+- Volume: well under 200 emails/day. Recipients are only users of our own app who opt
+  in by registering at https://mn-qronx.id.vn — one email per user request.
+- Sending domain mn-qronx.id.vn: ownership verified, SPF and DKIM both OK, DMARC
+  published. Sender no-reply@mn-qronx.id.vn shows as Active.
+- Sending practices: OTP emails are plain text + HTML, no tracking, no shortened links;
+  the app refuses to send more than 10 emails per hour and 10 per day while this
+  temporary limit applies.
+- Production API: https://taskalarm-api.onrender.com · frontend https://mn-qronx.id.vn
+
+Could you please review our account information and lift the temporary sending limit?
+Please let us know if you need anything else (business details, sample emails, or the
+signup flow).
+
+Best regards,
+To Van Minh Nhat — MN-Qronx
+```
+
+#### ⚠️ Sau khi Mailjet gỡ giới hạn, phải TẮT chặn trong app
+
+App tự chặn ở **10 thư/giờ** + **10 thư/ngày** và **không tự biết** Mailjet đã gỡ — để
+nguyên thì tài khoản vẫn chỉ gửi được 10 thư/ngày dù Mailjet đã cho 200:
+
+```env
+MAIL_HOURLY_LIMIT=0    # tắt kiểm tra cửa sổ giờ
+MAIL_DAILY_LIMIT=0     # tắt kiểm tra cửa sổ ngày (hoặc =200 theo trần gói Free)
+```
+
+Sửa ở **cả** `backend/.env` (local) và Render → **taskalarm-api** → Environment.
+Xác nhận bằng `cd backend && npm run mail:status` — dòng hạn mức phải ghi
+*"không kiểm soát ngày"*.
 
 ---
 
