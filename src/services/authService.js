@@ -2,6 +2,7 @@ import api, { getAccessToken, getRefreshToken, API_BASE_URL } from './apiClient'
 import { getSession, setSession, clearSession } from './session'
 import { clearQueryCache } from '../lib/useCachedQuery'
 import { clearChatMessages } from '../lib/chatHistory'
+import { clearAttachmentCache } from './supportService'
 
 // Chuẩn hoá user trả về từ backend (có thể là {userId,...} hoặc {id,...})
 // về shape frontend quen dùng: { id, fullName, email, phoneNumber, avatarUrl, role, isActive, createdAt }
@@ -70,6 +71,8 @@ export async function logout() {
   clearQueryCache()
   // và cả lịch sử hội thoại với Trợ lý AI (có thể chứa tên công việc riêng tư)
   clearChatMessages()
+  // Ảnh trong hội thoại hỗ trợ đang giữ dưới dạng blob URL — thu hồi luôn
+  clearAttachmentCache()
   if (token) {
     try {
       await fetch(`${API_BASE_URL}/auth/logout`, {

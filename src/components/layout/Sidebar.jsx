@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Logo } from '../Logo'
 import { NAV_GROUPS } from './NavItems'
+import SupportBadge from './SupportBadge'
 import { useLanguage } from '../../context/LanguageContext'
 import { app } from '../../i18n/app'
 
@@ -117,6 +118,7 @@ export default function Sidebar() {
                               ].join(' ')}
                             />
                             {t[item.labelKey]}
+                            {item.labelKey === 'support' && <SupportBadge className="ml-auto" />}
                             {item.pro && !isActive && (
                               <span className="ml-auto rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-1.5 py-px text-[9px] font-extrabold uppercase tracking-wide text-white">
                                 Pro

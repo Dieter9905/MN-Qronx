@@ -7,6 +7,7 @@ import {
   Gear,
   Brain,
   Gift,
+  Headset,
 } from '@phosphor-icons/react'
 
 // labelKey → tra trong i18n/app.js (app[lang][labelKey]) để đa ngôn ngữ
@@ -33,7 +34,11 @@ export const NAV_GROUPS = [
   },
   {
     labelKey: 'otherGroup',
-    items: [{ to: '/app/settings', labelKey: 'settings', icon: Gear }],
+    items: [
+      // CSKH: chat trực tiếp với admin, huy hiệu chưa đọc nằm ở Sidebar.jsx
+      { to: '/app/support', labelKey: 'support', icon: Headset },
+      { to: '/app/settings', labelKey: 'settings', icon: Gear },
+    ],
   },
 ]
 
