@@ -324,7 +324,7 @@ function HeroVisual({ cardRef, mousePos }) {
           <span className="h-2.5 w-2.5 rounded-full bg-amber-400 transition-transform hover:scale-125" />
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 transition-transform hover:scale-125" />
           <span className="ml-2 flex-1 rounded-md bg-navy-50 px-3 py-1 text-[11px] font-medium text-navy-400 dark:bg-slate-700 dark:text-slate-400">
-            app.mn-qronx.com
+            app.mn-qronx.id.vn
           </span>
         </div>
         {/* Dashboard mini */}
@@ -740,8 +740,8 @@ function Footer() {
           <div>
             <p className="text-sm font-bold uppercase tracking-wider text-navy-400 dark:text-slate-500">{t.footerContact}</p>
             <ul className="mt-3 space-y-2 text-sm font-medium text-navy-600 dark:text-slate-300">
-              <li>Email: support@mn-qronx.com</li>
-              <li>Web: www.mn-qronx.com</li>
+              <li>Email: support@mn-qronx.id.vn</li>
+              <li>Web: www.mn-qronx.id.vn</li>
               <li className="flex items-center gap-1.5 transition-colors hover:text-blue-600 dark:hover:text-blue-400">
                 <House size={15} weight="bold" className="text-brand-purple" /> {t.footerProject}
               </li>

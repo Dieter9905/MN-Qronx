@@ -35,7 +35,7 @@ export default function AuthLayout({ children, title, subtitle }) {
               ))}
             </ul>
           </div>
-          <p className="text-xs text-navy-400">© 2026 MN-Qronx · www.mn-qronx.com</p>
+          <p className="text-xs text-navy-400">© 2026 MN-Qronx · www.mn-qronx.id.vn</p>
         </div>
       </aside>
 
