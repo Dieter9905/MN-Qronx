@@ -51,6 +51,13 @@ services:
         sync: false
       - key: SMTP_PASS
         sync: false
+      # Resend – đường gửi dự phòng qua HTTPS khi Mailjet bị khoá ở mức tài khoản
+      # (xem docs/email-domain-setup.md, mục Resend). Bỏ trống cũng không sao:
+      # MAIL_TRANSPORT=auto sẽ tự bỏ qua và đi tiếp Mailjet API → SMTP.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM
+        sync: false
       # AI riêng (self-hosted, xem thư mục ai/). Trỏ AI_INFER_URL tới URL
       # của inference server (VD https://mn-qronx-ai.onrender.com).
       # Thiếu URL → backend báo AI_NETWORK, app tự fallback về parser cục bộ.

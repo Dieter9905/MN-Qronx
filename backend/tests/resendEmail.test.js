@@ -16,6 +16,8 @@ const ORIGINAL_KEY = config.resend.apiKey
 const ORIGINAL_FROM = config.resend.from
 const ORIGINAL_TRANSPORT = config.mail.transport
 const ORIGINAL_MAILJET_KEY = config.mail.apiKey
+const ORIGINAL_HOURLY_LIMIT = config.mail.hourlyLimit
+const ORIGINAL_DAILY_LIMIT = config.mail.dailyLimit
 
 // Giả lập phản hồi thành công của Resend: POST /emails → { id }
 const okResponse = (id = '49a3999c-0ce1-4ea6-ab68-afcd6dc2e794') => ({
@@ -35,6 +37,9 @@ beforeEach(() => {
   // vitest.config.js ép MAIL_TRANSPORT=api cho mọi file test (để kiểm tra nhánh
   // Mailjet), nên ở đây phải trả về 'auto' mới thấy được thứ tự ưu tiên thật.
   config.mail.transport = 'auto'
+  // Môi trường test tắt sẵn hạn mức; từng test bật lại khi cần kiểm tra.
+  config.mail.hourlyLimit = 0
+  config.mail.dailyLimit = 0
 })
 
 afterEach(() => {
@@ -43,6 +48,8 @@ afterEach(() => {
   config.resend.from = ORIGINAL_FROM
   config.mail.transport = ORIGINAL_TRANSPORT
   config.mail.apiKey = ORIGINAL_MAILJET_KEY
+  config.mail.hourlyLimit = ORIGINAL_HOURLY_LIMIT
+  config.mail.dailyLimit = ORIGINAL_DAILY_LIMIT
 })
 
 describe('formatResendAddress', () => {
@@ -175,5 +182,44 @@ describe('sendEmail qua Resend', () => {
       expect(err).toBeInstanceOf(ResendSendError)
       expect(err.message).toMatch(/Không kết nối được Resend API/)
     })
+  })
+})
+
+// Phản hồi giả của GET /v3/REST/statcounters (Mailjet đã gửi `sent` thư trong cửa sổ)
+const statsResponse = (sent) => ({
+  ok: true,
+  status: 200,
+  text: async () => JSON.stringify({ Count: 1, Total: 1, Data: [{ MessageSentCount: sent, Total: sent }] }),
+})
+
+describe('hạn mức Mailjet và đường Resend', () => {
+  it('hết hạn mức Mailjet nhưng đi Resend → vẫn gửi được, không hỏi Mailjet', async () => {
+    config.mail.hourlyLimit = 5
+    config.mail.dailyLimit = 5
+    const fetchMock = vi.fn(async () => okResponse())
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await sendEmail({ to: 'a@example.com', subject: 's', text: 't' })
+
+    expect(result).toMatchObject({ sent: true, via: 'resend' })
+    // Chỉ có 1 request duy nhất: không được gọi statcounters của Mailjet
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual(['https://api.resend.com/emails'])
+  })
+
+  it('đi đường Mailjet API thì hạn mức vẫn chặn TRƯỚC khi gửi', async () => {
+    config.mail.transport = 'api'
+    config.mail.hourlyLimit = 5
+    config.mail.dailyLimit = 5
+    const fetchMock = vi.fn(async () => statsResponse(10))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(sendEmail({ to: 'a@example.com', subject: 's', text: 't' })).rejects.toMatchObject({
+      name: 'MailjetQuotaError',
+    })
+
+    const urls = fetchMock.mock.calls.map(([url]) => String(url))
+    expect(urls.length).toBeGreaterThan(0)
+    expect(urls.every((u) => u.includes('/statcounters'))).toBe(true)
+    expect(urls.some((u) => u.includes('api.mailjet.com/v3.1/send'))).toBe(false)
   })
 })
