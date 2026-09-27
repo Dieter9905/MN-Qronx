@@ -8,7 +8,7 @@
  *  3. Offline: giữ trang mở được khi mất mạng — app shell lưu lại, tài sản tĩnh
  *     dùng lại bản đã cache, API thì KHÔNG BAO GIỜ cache để không hiện dữ liệu cũ.
  */
-const VERSION = 'mnq-shell-v1'
+const VERSION = 'mnq-shell-v2'
 const SHELL = ['/index.html']
 
 self.addEventListener('install', (event) => {
@@ -105,8 +105,9 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Tài sản tĩnh (JS/CSS/icon đã băm theo tên): cache trước, thiếu thì tải rồi lưu
-  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icons/') || /\.(?:svg|png|json|webmanifest|css|js)$/.test(url.pathname)) {
+  // Tài sản đã băm theo tên (Vite đổi tên mỗi lần build) → cache trước cho nhanh.
+  // Bản cũ không bao giờ đổi nội dung nên không sợ hiện code cũ.
+  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icons/')) {
     event.respondWith(
       caches.match(request).then(
         (cached) =>
@@ -119,6 +120,26 @@ self.addEventListener('fetch', (event) => {
             return response
           })
       )
+    )
+    return
+  }
+
+  // Mọi file tĩnh còn lại (favicon, manifest.json, và file nguồn khi chạy dev) đều
+  // có TÊN CỐ ĐỊNH nhưng NỘI DUNG ĐỔI được → phải hỏi mạng trước. Trước đây nhánh
+  // này cũng "cache trước" nên sau mỗi lần sửa code, trình duyệt vẫn chạy bản cũ vô
+  // thời hạn (gặp thật: sửa `taskService.js` mà web báo thiếu hàm cũ), và mọi bản
+  // deploy đều không cập nhật được manifest/favicon. Chỉ mất mạng mới dùng bản lưu.
+  if (/\.(?:svg|png|json|webmanifest|css|js|html)$/.test(url.pathname)) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone()
+            caches.open(VERSION).then((cache) => cache.put(request, copy)).catch(() => {})
+          }
+          return response
+        })
+        .catch(() => caches.match(request).then((cached) => cached || Response.error()))
     )
   }
 })
