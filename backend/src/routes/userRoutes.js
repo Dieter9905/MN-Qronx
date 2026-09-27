@@ -151,6 +151,10 @@ router.get('/family', auth, familyController.getFamily)
 router.post('/family/members', auth, familyController.inviteMember)
 router.delete('/family/members/:memberId', auth, familyController.removeMember)
 router.post('/family/leave', auth, familyController.leaveFamily)
+// "Cả nhà hôm nay": chủ gói nhìn tiến độ người trong nhà (chỉ gói FAMILY còn hạn).
+router.get('/family/board', auth, familyController.getBoard)
+// Người trong nhà tự quyết định có cho chủ gói xem tiến độ của mình hay không.
+router.put('/family/progress', auth, familyController.setProgress)
 
 // ── Việc người khác nhờ tôi làm (giao việc là quyền lợi gói Pro của NGƯỜI GIAO) ──
 // Người NHẬN không cần gói trả phí — có thêm người nhận là có thêm khách dùng app.

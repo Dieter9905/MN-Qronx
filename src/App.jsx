@@ -23,6 +23,7 @@ import RewardsPage from './pages/user/RewardsPage'
 import ReportsPage from './pages/user/ReportsPage'
 import PlannerPage from './pages/user/PlannerPage'
 import AssignedPage from './pages/user/AssignedPage'
+import FamilyPage from './pages/user/FamilyPage'
 import TaskListPage from './pages/user/TaskListPage'
 import TaskDetailPage from './pages/user/TaskDetailPage'
 import TaskFormPage from './pages/user/TaskFormPage'
@@ -115,6 +116,7 @@ export default function App() {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="planner" element={<PlannerPage />} />
           <Route path="assigned" element={<AssignedPage />} />
+          <Route path="family" element={<FamilyPage />} />
           <Route path="support" element={<SupportPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="change-password" element={<ChangePasswordPage />} />

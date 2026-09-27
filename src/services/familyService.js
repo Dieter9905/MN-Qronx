@@ -24,3 +24,16 @@ export async function removeMember(memberId) {
 export async function leaveFamily() {
   return api('POST', '/me/family/leave')
 }
+
+/**
+ * Bảng "Cả nhà hôm nay" — CHỈ chủ gói gọi được (các vai khác nhận lỗi và bỏ qua).
+ * Trả số liệu từng người, tổng cả nhà, và tên vài việc quá hạn lâu nhất.
+ */
+export async function getFamilyBoard() {
+  return api('GET', '/me/family/board')
+}
+
+/** Người trong nhà bật/tắt việc cho chủ gói xem tiến độ của mình. */
+export async function setProgressSharing(shared) {
+  return api('PUT', '/me/family/progress', { body: { shared } })
+}

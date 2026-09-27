@@ -188,6 +188,31 @@ form mời + nút gỡ, người trong nhà thấy mình dùng chung của ai v�
 `backend/src/services/familyService.js`, `controllers/familyController.js`, 4 đường
 `/me/family`.
 
+### “Cả nhà hôm nay” — thứ khiến gói 199.000đ khác gói 79.000đ
+
+Ba chỗ ngồi là lý do để MUA gói gia đình, nhưng không phải lý do để Ở LẠI trả
+199.000đ mỗi tháng: sau tháng đầu, khách chỉ còn thấy mình trả gấp 2,5 lần gói Pro
+thường. Trang `/app/family` là phần chỉ chủ gói có — cả nhà đang tới đâu: hôm nay ai
+xong bao nhiêu việc, 7 ngày qua được bao nhiêu, ai đang có việc quá hạn, và **tên tối
+đa 3 việc quá hạn lâu nhất** của từng người (việc trễ 5 phút không phải thứ cần nhắc;
+việc bỏ quên 5 ngày mới là). Số liệu do `familyService.getFamilyBoard()` tính bằng
+**một hàm duy nhất** (`progressOf`) cho cả chủ gói lẫn từng thành viên — hai chỗ đếm
+hai kiểu là cách chắc chắn nhất để màn hình nói dối khách. Ngày tính theo giờ Việt
+Nam, giống mọi báo cáo khác.
+
+**Quyền riêng tư là một phần của tính năng, không phải phần phụ.** Người trong nhà
+thấy rõ mình đang chia sẻ gì (nêu đúng những con số chủ gói nhìn thấy, kèm câu “không
+ai đọc được nội dung công việc của bạn”) và **tắt được bất cứ lúc nào** bằng
+`family_members.share_progress` (`PUT /me/family/progress`). Tắt là máy chủ **không
+trả số liệu nữa** — che ở giao diện thì dữ liệu của người ta vẫn rời máy chủ, và người
+chỉ tắt để thấy yên tâm sẽ phát hiện ra ngay khi hỏi. Bảng của chủ gói khi đó ghi rõ
+“Không chia sẻ tiến độ” và tổng cả nhà không tính người đó.
+
+Lý do phải làm đúng chỗ này: bị nhìn trộm việc riêng mà không biết là cách chắc chắn
+nhất để người trong nhà rời gói — mà mất một người là mất luôn cả gói 199.000đ, đắt
+hơn nhiều so với việc để họ tắt chia sẻ. Cố ý KHÔNG cho chủ gói xem nội dung/mô tả
+công việc, và KHÔNG cho chủ gói sửa việc của người khác.
+
 > Khi mở bán app Android, Play Console phải tạo thêm `mnq_family_monthly` và
 > `mnq_family_yearly` (xen vào `PRODUCT_IDS`).
 

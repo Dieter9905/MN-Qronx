@@ -33,3 +33,23 @@ export const leaveFamily = catchAsync(async (req, res) => {
   const data = await familyService.leaveFamily(req.user.id)
   success(res, 200, 'Bạn đã rời gói Pro Gia đình', data)
 })
+
+// ── "Cả nhà hôm nay" ─────────────────────────────────────────
+
+/** Bảng tiến độ — CHỈ chủ gói. Gọi bằng tài khoản khác thì service trả lỗi rõ ràng. */
+export const getBoard = catchAsync(async (req, res) => {
+  const data = await familyService.getFamilyBoard(req.user.id)
+  success(res, 200, 'Thao tác thành công', data)
+})
+
+/** Người trong nhà bật/tắt việc cho chủ gói xem tiến độ của mình. */
+export const setProgress = catchAsync(async (req, res) => {
+  const shared = req.body?.shared !== false
+  const data = await familyService.setProgressSharing(req.user.id, shared)
+  success(
+    res,
+    200,
+    data.shared ? 'Chủ gói sẽ thấy tiến độ của bạn' : 'Đã tắt chia sẻ tiến độ — chủ gói không thấy số liệu của bạn nữa',
+    data,
+  )
+})

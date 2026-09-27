@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Check,
   Crown,
@@ -18,6 +18,8 @@ import {
   Warning,
   UsersThree,
   EnvelopeSimple,
+  Eye,
+  EyeSlash,
 } from '@phosphor-icons/react'
 import Button from '../../components/common/Button'
 import { useAuth } from '../../context/AuthContext'
@@ -188,6 +190,22 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
             </>
           )}
         </div>
+        {/* Chủ gói xem được tiến độ của người này ở mục Cả nhà — phải nói ngay ở
+            đây, không thì khách phát hiện ra sau và thấy như bị theo dõi. */}
+        <p className="mt-3 flex items-start gap-2 text-xs font-semibold text-navy-500 dark:text-slate-400">
+          {family?.progressShared === false ? (
+            <>
+              <EyeSlash size={14} weight="fill" className="mt-0.5 shrink-0 text-navy-400" />
+              Bạn đã tắt chia sẻ tiến độ — chủ gói không thấy số liệu công việc của bạn.
+            </>
+          ) : (
+            <>
+              <Eye size={14} weight="fill" className="mt-0.5 shrink-0 text-fuchsia-500" />
+              Chủ gói thấy được tiến độ công việc của bạn (số việc xong, việc quá hạn — không đọc được nội dung).
+              Bật/tắt ở mục <Link to="/app/family" className="font-extrabold underline">Cả nhà</Link>.
+            </>
+          )}
+        </p>
         <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">
           Rời gói không xoá dữ liệu nào của bạn — chỉ là trở lại gói Miễn phí, và bạn vẫn mua được gói riêng
           bất cứ lúc nào.
@@ -208,8 +226,7 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
             Đang dùng {members.length + 1}/{family?.maxSeats || 4} tài khoản
             {expiresAt && <> · hết hạn {formatDate(expiresAt)}</>}
           </p>
-        </div>
-        <p className="mt-2 text-sm text-navy-600 dark:text-slate-300">
+        </div>          <p className="mt-2 text-sm text-navy-600 dark:text-slate-300">
           Người bạn mời <b>không cần trả tiền</b> — họ dùng quyền lợi Pro y hệt bạn với việc và chuông nhắc của
           riêng mình, và vẫn là tài khoản độc lập nên việc của bạn vẫn riêng của bạn.
         </p>
@@ -299,6 +316,16 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
               quyền Pro kể từ giây đó.
             </p>
           )}
+        </div>
+
+        {/* Bảng tiến độ cả nhà là lý do gói này đáng 199.000đ thay vì 79.000đ —
+            để ngay cạnh phần mời người, không giấu vào menu. */}
+        <div className="mt-4">
+          <Link to="/app/family">
+            <Button variant="secondary" icon={UsersThree}>
+              Xem cả nhà đang tới đâu
+            </Button>
+          </Link>
         </div>
       </section>
     )

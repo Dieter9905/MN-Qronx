@@ -1,6 +1,7 @@
 import prisma from '../config/prisma.js'
 import ApiError from '../utils/ApiError.js'
 import { MAX_FAMILY_SEATS, isPlanExpired } from '../utils/planLimits.js'
+import { startOfDay, addDays } from '../utils/dateUtils.js'
 
 // Xuất lại để giao diện/test không phải biết gói này định nghĩa ở đâu.
 export { MAX_FAMILY_SEATS }
@@ -25,6 +26,9 @@ export { MAX_FAMILY_SEATS }
 
 /** Quyền lợi của một chỗ ngồi: Pro (vật chất hoá) + subscription provider=FAMILY. */
 const SEAT_PLAN = 'PRO'
+
+/** Đang có một lượt đồng bộ chạy hay không (chốt chặn trong tiến trình). */
+let syncing = false
 
 /** Người mua gói: chỉ chủ gói FAMILY còn hạn mới được thao tác với ghế. */
 async function loadActiveOwner(userId) {
@@ -55,10 +59,6 @@ async function grantSeat(owner, member) {
   const now = new Date()
   const seatStart = member.plan === SEAT_PLAN ? new Date(member.planStartedAt || now) : now
 
-  await prisma.subscription.updateMany({
-    where: { userId: member.userId, provider: 'FAMILY', status: 'ACTIVE' },
-    data: { status: 'CANCELLED', cancelledAt: now },
-  })
   await prisma.user.update({
     where: { userId: member.userId },
     data: {
@@ -67,21 +67,42 @@ async function grantSeat(owner, member) {
       planExpiresAt: owner.planExpiresAt,
     },
   })
-  await prisma.subscription.create({
-    data: {
-      userId: member.userId,
-      plan: SEAT_PLAN,
-      cycle: 'MONTHLY',
-      // Khác provider với các đơn trả tiền thật: báo cáo doanh thu không được phép
-      // đếm một chỗ ngồi là một khách đã trả tiền.
-      provider: 'FAMILY',
-      status: 'ACTIVE',
-      providerRef: `family:${owner.userId}`,
-      startedAt: seatStart,
-      expiresAt: owner.planExpiresAt,
-      note: `Chỗ trong gói Pro Gia đình của ${owner.email}`,
-    },
+
+  // Gia hạn = SỬA dòng ghế đang có, không tạo dòng mới: nếu tạo mới thì mỗi lần
+  // chủ gia hạn lại đóng một dòng rồi mở một dòng, và hai lượt đồng bộ chạy sát
+  // nhau có thể để lại hai ghế cùng ACTIVE cho một người.
+  const existing = await prisma.subscription.findFirst({
+    where: { userId: member.userId, provider: 'FAMILY', status: 'ACTIVE' },
+    orderBy: { subscriptionId: 'desc' },
   })
+  if (existing) {
+    await prisma.subscription.update({
+      where: { subscriptionId: existing.subscriptionId },
+      data: {
+        plan: SEAT_PLAN,
+        expiresAt: owner.planExpiresAt,
+        startedAt: seatStart,
+        providerRef: `family:${owner.userId}`,
+        note: `Chỗ trong gói Pro Gia đình của ${owner.email}`,
+      },
+    })
+  } else {
+    await prisma.subscription.create({
+      data: {
+        userId: member.userId,
+        plan: SEAT_PLAN,
+        cycle: 'MONTHLY',
+        // Khác provider với các đơn trả tiền thật: báo cáo doanh thu không được phép
+        // đếm một chỗ ngồi là một khách đã trả tiền.
+        provider: 'FAMILY',
+        status: 'ACTIVE',
+        providerRef: `family:${owner.userId}`,
+        startedAt: seatStart,
+        expiresAt: owner.planExpiresAt,
+        note: `Chỗ trong gói Pro Gia đình của ${owner.email}`,
+      },
+    })
+  }
   return true
 }
 
@@ -112,8 +133,10 @@ async function revokeSeat(memberId) {
       data: { alarmSound: 'classic' },
     })
   }
-  await prisma.subscription.update({
-    where: { subscriptionId: seat.subscriptionId },
+  // updateMany thay vì update: hai lượt đồng bộ chạy sát nhau (cron + nhịp /health)
+  // cùng thấy dòng ghế này, lượt sau không được ném lỗi vì lượt trước đã đóng nó.
+  await prisma.subscription.updateMany({
+    where: { subscriptionId: seat.subscriptionId, status: 'ACTIVE' },
     data: { status: 'CANCELLED', cancelledAt: new Date() },
   })
   return true
@@ -137,6 +160,20 @@ async function notify(userId, payload) {
  * @returns {Promise<{scanned:number, granted:number, revoked:number, ended:number}>}
  */
 export async function syncFamilySeats({ now = new Date() } = {}) {
+  // Chốt chặn trong tiến trình: cron mỗi phút và nhịp /health gọi cùng hàm này,
+  // nên hai lượt quét có thể chồng nhau trên CÙNG dữ liệu (đã xảy ra thật: một
+  // lượt xoá dòng thành viên, lượt kia ném lỗi "No record was found for a delete").
+  if (syncing) return { scanned: 0, granted: 0, revoked: 0, ended: 0, skipped: true }
+  syncing = true
+  try {
+    return await runFamilySync(now)
+  } finally {
+    syncing = false
+  }
+}
+
+/** Một lượt quét thật sự — tách ra để phần chốt chặn ở trên luôn nhả khoá. */
+async function runFamilySync(now) {
   const rows = await prisma.familyMember.findMany({
     include: {
       owner: { select: { userId: true, fullName: true, email: true, plan: true, planExpiresAt: true } },
@@ -154,7 +191,9 @@ export async function syncFamilySeats({ now = new Date() } = {}) {
 
     if (!ownerActive) {
       const dropped = await revokeSeat(row.memberId)
-      await prisma.familyMember.delete({ where: { familyMemberId: row.familyMemberId } })
+      // deleteMany thay vì delete: cùng lý do — lượt đồng bộ khác có thể đã xoá dòng
+      // này rồi, và "không còn gì để xoá" là kết quả ĐÚNG, không phải lỗi.
+      await prisma.familyMember.deleteMany({ where: { familyMemberId: row.familyMemberId } })
       if (dropped) {
         state.revoked += 1
         await notify(row.memberId, {
@@ -396,6 +435,8 @@ export async function listFamily(userId) {
             new Date(membership.owner.planExpiresAt) > new Date(),
         }
       : null,
+    // Người trong nhà thấy được chủ gói có đang xem tiến độ của mình hay không
+    progressShared: membership ? membership.shareProgress : null,
     members: owned.map((row) => ({
       familyMemberId: row.familyMemberId,
       userId: row.member.userId,
@@ -409,11 +450,147 @@ export async function listFamily(userId) {
   }
 }
 
+// ─── "Cả nhà hôm nay" — chủ gói nhìn tiến độ người trong nhà ─
+
+/** Trạng thái còn phải làm. Việc đã xong/huỷ không bao giờ tính là quá hạn. */
+const OPEN_STATUSES = ['TODO', 'IN_PROGRESS']
+
+/**
+ * Số liệu của MỘT tài khoản. Một hàm duy nhất cho chủ gói lẫn từng thành viên:
+ * hai chỗ đếm hai kiểu là cách chắc chắn nhất để màn hình "cả nhà" nói dối.
+ *
+ * Ngày tính theo giờ Việt Nam (dateUtils.startOfDay) — "hôm nay" của khách không
+ * phải "hôm nay" của máy chủ UTC.
+ */
+async function progressOf(userId, now) {
+  const today = startOfDay(now)
+  const weekStart = startOfDay(addDays(now, -6))
+
+  const [doneToday, doneWeek, open, overdue, worst] = await Promise.all([
+    prisma.task.count({
+      where: { userId, deletedAt: null, status: 'COMPLETED', completedAt: { gte: today } },
+    }),
+    prisma.task.count({
+      where: { userId, deletedAt: null, status: 'COMPLETED', completedAt: { gte: weekStart } },
+    }),
+    prisma.task.count({
+      where: { userId, deletedAt: null, status: { in: OPEN_STATUSES } },
+    }),
+    prisma.task.count({
+      where: { userId, deletedAt: null, status: { in: OPEN_STATUSES }, dueAt: { lt: now } },
+    }),
+    // Việc quá hạn LÂU NHẤT trước — đây mới là thứ cần nhắc, không phải việc trễ 5 phút
+    prisma.task.findMany({
+      where: { userId, deletedAt: null, status: { in: OPEN_STATUSES }, dueAt: { lt: now } },
+      orderBy: { dueAt: 'asc' },
+      take: 3,
+      select: { taskId: true, title: true, dueAt: true },
+    }),
+  ])
+
+  return { doneToday, doneWeek, open, overdue, worst }
+}
+
+/**
+ * Bảng "Cả nhà hôm nay" — CHỈ chủ gói xem được.
+ *
+ * Vì sao là quyền lợi riêng của gói gia đình chứ không phải một trang cho mọi
+ * người: người trả tiền cho cả nhà cần một lý do để trả 199.000đ thay vì 79.000đ,
+ * mà lý do bền nhất là thấy được cả nhà đang tiến bộ tới đâu. Người trong nhà
+ * luôn tắt được phần chia sẻ này (`shareProgress`) và biết rõ là đang bật.
+ */
+export async function getFamilyBoard(ownerId, { now = new Date() } = {}) {
+  const owner = await prisma.user.findUnique({
+    where: { userId: ownerId },
+    select: { userId: true, fullName: true, avatarUrl: true, plan: true, planExpiresAt: true, email: true },
+  })
+  if (!owner) throw ApiError.notFound('Không tìm thấy người dùng')
+
+  if (owner.plan !== 'FAMILY' || isPlanExpired(owner)) {
+    // Người trong nhà gõ đúng địa chỉ này là chuyện thường (menu ai cũng thấy).
+    // Nói cho họ biết trang của họ dùng để làm gì, thay vì đọc câu bán gói.
+    const membership = await prisma.familyMember.findFirst({
+      where: { memberId: ownerId },
+      select: { familyMemberId: true },
+    })
+    throw ApiError.badRequest(
+      membership
+        ? 'Bảng "Cả nhà" chỉ chủ gói (người trả tiền) xem được. Bạn đang dùng chỗ trong gói của người khác — mục Cả nhà của bạn dùng để bật/tắt chia sẻ tiến độ.'
+        : 'Bảng "Cả nhà" là quyền lợi của gói Pro Gia đình. Mua gói để cả nhà dùng chung và thấy cả nhà đang tới đâu.',
+    )
+  }
+
+  const rows = await prisma.familyMember.findMany({
+    where: { ownerId },
+    orderBy: { createdAt: 'asc' },
+    include: {
+      member: { select: { userId: true, fullName: true, avatarUrl: true, email: true } },
+    },
+  })
+
+  const meProfile = await prisma.user.findUnique({
+    where: { userId: ownerId },
+    select: { userId: true, fullName: true, avatarUrl: true },
+  })
+  const me = { ...(await progressOf(ownerId, now)), ...meProfile, shared: true }
+
+  const members = []
+  for (const row of rows) {
+    const person = {
+      userId: row.member.userId,
+      fullName: row.member.fullName,
+      email: row.member.email,
+      avatarUrl: row.member.avatarUrl,
+      joinedAt: row.createdAt,
+      note: row.note,
+    }
+    // Không chia sẻ thì KHÔNG trả số liệu — che ở giao diện là chưa đủ, dữ liệu
+    // của người ta không được rời máy chủ.
+    members.push(
+      row.shareProgress ? { ...person, shared: true, ...(await progressOf(row.member.userId, now)) } : { ...person, shared: false },
+    )
+  }
+
+  const shared = members.filter((m) => m.shared)
+  const totals = [me, ...shared].reduce(
+    (acc, p) => ({
+      doneToday: acc.doneToday + p.doneToday,
+      doneWeek: acc.doneWeek + p.doneWeek,
+      open: acc.open + p.open,
+      overdue: acc.overdue + p.overdue,
+    }),
+    { doneToday: 0, doneWeek: 0, open: 0, overdue: 0 },
+  )
+
+  return {
+    me,
+    members,
+    totals,
+    hiddenCount: members.length - shared.length,
+    expiresAt: owner.planExpiresAt,
+    maxSeats: MAX_FAMILY_SEATS,
+  }
+}
+
+/** Người trong nhà tự quyết định có cho chủ gói xem tiến độ của mình hay không. */
+export async function setProgressSharing(userId, shared) {
+  const row = await prisma.familyMember.findFirst({ where: { memberId: userId } })
+  if (!row) throw ApiError.badRequest('Bạn không nằm trong gói Pro Gia đình nào')
+
+  const updated = await prisma.familyMember.update({
+    where: { familyMemberId: row.familyMemberId },
+    data: { shareProgress: Boolean(shared) },
+  })
+  return { shared: updated.shareProgress }
+}
+
 export default {
   inviteMember,
   removeMember,
   leaveFamily,
   listFamily,
+  getFamilyBoard,
+  setProgressSharing,
   syncFamilySeats,
   seatsLeft,
   MAX_FAMILY_SEATS,

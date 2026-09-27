@@ -377,6 +377,11 @@ model FamilyMember {
   // nhận hai gói và không biết gói nào hết hạn trước.
   memberId       Int       @unique @map("member_id")
   note           String?   @db.VarChar(255)
+  // Chủ gói có xem được tiến độ công việc của người này không (mục "Cả nhà").
+  // Mặc định BẬT vì đó là toàn bộ giá trị của gói gia đình, nhưng người trong nhà
+  // luôn tắt được — bị nhìn trộm việc riêng mà không biết là cách chắc chắn nhất
+  // để họ rời nhà, còn tắt được thì họ ở lại và tự quyết định.
+  shareProgress  Boolean   @default(true) @map("share_progress")
   createdAt      DateTime  @default(now()) @map("created_at")
 
   owner  User @relation("FamilyOwner", fields: [ownerId], references: [userId], onDelete: Cascade)

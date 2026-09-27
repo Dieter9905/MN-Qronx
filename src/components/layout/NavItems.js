@@ -11,6 +11,7 @@ import {
   Gift,
   Headset,
   Users,
+  UsersThree,
 } from '@phosphor-icons/react'
 
 // labelKey → tra trong i18n/app.js (app[lang][labelKey]) để đa ngôn ngữ
@@ -24,6 +25,9 @@ export const NAV_GROUPS = [
       // Việc được giao: KHÔNG đánh dấu pro — người được nhờ không cần gói trả phí,
       // và mục menu này chính là chỗ để khách thấy tính năng giao việc đang chạy.
       { to: '/app/assigned', labelKey: 'assigned', icon: Users },
+      // "Cả nhà": bảng tiến độ là quyền lợi riêng của chủ gói Pro Gia đình, người
+      // trong nhà vào đây để bật/tắt chia sẻ, người chưa có gói thấy lời mời mua.
+      { to: '/app/family', labelKey: 'family', icon: UsersThree, pro: true },
       // Kế hoạch tuần + Báo cáo năng suất: chỉ Pro (trang tự hiện khung nâng cấp cho gói khác)
       { to: '/app/planner', labelKey: 'planner', icon: CalendarCheck, pro: true },
       { to: '/app/reports', labelKey: 'reports', icon: ChartBar, pro: true },

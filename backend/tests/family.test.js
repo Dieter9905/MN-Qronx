@@ -53,6 +53,19 @@ function invite(owner, email, note) {
   return api('POST', '/me/family/members', { token: owner.token, body: { email, note } })
 }
 
+/**
+ * Gọi đồng bộ ghế và CHẮC CHẮN có một lượt thật sự chạy: máy chủ test cũng có cron
+ * gọi cùng hàm mỗi phút, lượt của mình có thể bị bỏ qua vì đang có lượt khác.
+ */
+async function syncSeats(attempts = 6) {
+  for (let i = 0; i < attempts; i += 1) {
+    const state = await syncFamilySeats()
+    if (!state.skipped) return state
+    await new Promise((resolve) => setTimeout(resolve, 300))
+  }
+  return { scanned: 0, granted: 0, revoked: 0, ended: 0, skipped: true }
+}
+
 // ─── Cổng gói ────────────────────────────────────────────────
 
 describe('Gói Pro Gia đình — chỉ chủ gói mới được mời', () => {
@@ -238,10 +251,25 @@ describe('Gói Pro Gia đình — gỡ thành viên và quyền lợi đi theo h
       data: { plan: 'FREE', planExpiresAt: null },
     })
 
-    const state = await syncFamilySeats()
-    expect(state.revoked).toBeGreaterThan(0)
-    expect(await prisma.familyMember.count({ where: { ownerId: owner.userId } })).toBe(0)
+    // Máy chủ test cũng có cron gọi đúng hàm này mỗi phút, nên lượt của mình có thể
+    // bị bỏ qua (đang có lượt khác chạy). Thứ phải đúng là TRẠNG THÁI CUỐI, không
+    // phải lượt nào làm — gọi lại vài lần cho tới khi dữ liệu yên.
+    let rows = -1
+    for (let i = 0; i < 6; i += 1) {
+      await syncSeats(3)
+      rows = await prisma.familyMember.count({ where: { ownerId: owner.userId } })
+      if (rows === 0) break
+      await new Promise((resolve) => setTimeout(resolve, 400))
+    }
+
+    expect(rows).toBe(0)
     expect((await prisma.user.findUnique({ where: { userId: mate.userId } })).plan).toBe('FREE')
+    // Ghế cũng phải đóng, không chỉ mất quyền trên giấy
+    const seat = await prisma.subscription.findFirst({
+      where: { userId: mate.userId, provider: 'FAMILY' },
+      orderBy: { subscriptionId: 'desc' },
+    })
+    expect(seat.status).toBe('CANCELLED')
   })
 
   it('chủ gia hạn → người trong nhà kéo theo đúng hạn mới', async () => {
@@ -252,7 +280,7 @@ describe('Gói Pro Gia đình — gỡ thành viên và quyền lợi đi theo h
     const later = new Date(Date.now() + 90 * 86400_000)
     await prisma.user.update({ where: { userId: owner.userId }, data: { planExpiresAt: later } })
 
-    await syncFamilySeats()
+    await syncSeats()
 
     const row = await prisma.user.findUnique({ where: { userId: mate.userId } })
     expect(row.plan).toBe('PRO')
@@ -275,6 +303,114 @@ describe('Gói Pro Gia đình — gỡ thành viên và quyền lợi đi theo h
     expect(res.status).toBe(400)
     expect(res.data.message).toContain('gia đình')
     expect(await prisma.paymentOrder.count({ where: { userId: mate.userId } })).toBe(0)
+  })
+})
+
+// ─── "Cả nhà hôm nay" — chủ gói nhìn tiến độ người trong nhà ──
+
+describe('Gói Pro Gia đình — bảng tiến độ cả nhà', () => {
+  let owner
+  let mate
+  let outsider
+
+  async function makeTaskFor(person, title, extra = {}) {
+    const res = await api('POST', '/tasks', {
+      token: person.token,
+      body: {
+        title,
+        dueAt: new Date(Date.now() + 3 * 3600_000).toISOString(),
+        ...extra,
+      },
+    })
+    expect(res.status, `tạo việc thất bại: ${res.data?.message}`).toBe(201)
+    return res.data.data.id
+  }
+
+  beforeAll(async () => {
+    owner = await newUser('fam_board_owner', 'FAMILY')
+    mate = await newUser('fam_board_mate')
+    outsider = await newUser('fam_board_outsider')
+    expect((await invite(owner, mate.email)).status).toBe(201)
+
+    // Người trong nhà: 1 việc xong HÔM NAY + 1 việc quá hạn đã lâu
+    const doneId = await makeTaskFor(mate, 'Việc đã xong của người trong nhà')
+    const markDone = await api('POST', `/tasks/${doneId}/complete`, { token: mate.token })
+    expect(markDone.status).toBe(200)
+    // Việc quá hạn KHÔNG tạo được qua API (dueAt phải ở tương lai) — mà quá hạn
+    // thật thì cũng chỉ có một cách: thời gian trôi qua. Dựng thẳng trong DB.
+    await prisma.task.create({
+      data: {
+        userId: mate.userId,
+        title: 'Việc quá hạn lâu nhất',
+        dueAt: new Date(Date.now() - 5 * 86400_000),
+        status: 'TODO',
+      },
+    })
+
+    // Chủ gói cũng có việc xong hôm nay — tổng "cả nhà" phải tính cả chủ gói
+    const ownerTask = await makeTaskFor(owner, 'Việc của chủ gói')
+    const ownerDone = await api('POST', `/tasks/${ownerTask}/complete`, { token: owner.token })
+    expect(ownerDone.status).toBe(200)
+    // Hook này tạo 3 tài khoản qua HTTP nên cần nhiều hơn 10 giây mặc định
+  }, 120_000)
+
+  it('chủ gói thấy số liệu THẬT của người trong nhà, và tổng tính cả mình', async () => {
+    const res = await api('GET', '/me/family/board', { token: owner.token })
+    expect(res.status).toBe(200)
+
+    const person = res.data.data.members.find((m) => m.userId === mate.userId)
+    expect(person.shared).toBe(true)
+    expect(person.doneToday).toBeGreaterThanOrEqual(1)
+    expect(person.overdue).toBeGreaterThanOrEqual(1)
+    // Việc quá hạn LÂU NHẤT phải lên đầu — đây mới là thứ cần nhắc
+    expect(person.worst[0].title).toBe('Việc quá hạn lâu nhất')
+
+    expect(res.data.data.me.userId).toBe(owner.userId)
+    expect(res.data.data.totals.doneToday).toBeGreaterThanOrEqual(2)
+    expect(res.data.data.totals.overdue).toBeGreaterThanOrEqual(1)
+    expect(res.data.data.hiddenCount).toBe(0)
+  })
+
+  it('người trong nhà KHÔNG xem được bảng của chủ gói', async () => {
+    const res = await api('GET', '/me/family/board', { token: mate.token })
+    expect(res.status).toBe(400)
+    expect(res.data.message).toContain('chủ gói')
+  })
+
+  it('người ngoài gói gia đình cũng không, kèm chỉ dẫn mua gói', async () => {
+    const res = await api('GET', '/me/family/board', { token: outsider.token })
+    expect(res.status).toBe(400)
+    expect(res.data.message).toContain('Pro Gia đình')
+  })
+
+  it('người trong nhà tắt chia sẻ → máy chủ KHÔNG trả số liệu của họ nữa', async () => {
+    const off = await api('PUT', '/me/family/progress', { token: mate.token, body: { shared: false } })
+    expect(off.status).toBe(200)
+    expect(off.data.data.shared).toBe(false)
+
+    const res = await api('GET', '/me/family/board', { token: owner.token })
+    const person = res.data.data.members.find((m) => m.userId === mate.userId)
+    expect(person.shared).toBe(false)
+    // Che ở giao diện là chưa đủ: số liệu của người ta không được rời máy chủ
+    expect(person.doneToday).toBeUndefined()
+    expect(person.worst).toBeUndefined()
+    expect(res.data.data.hiddenCount).toBe(1)
+    // Tổng cả nhà cũng không tính người đã tắt chia sẻ
+    expect(res.data.data.totals.doneToday).toBe(1)
+
+    // Chính người đó phải thấy rõ trạng thái của mình
+    const mine = await api('GET', '/me/family', { token: mate.token })
+    expect(mine.data.data.progressShared).toBe(false)
+
+    const on = await api('PUT', '/me/family/progress', { token: mate.token, body: { shared: true } })
+    expect(on.status).toBe(200)
+    expect(on.data.data.shared).toBe(true)
+  })
+
+  it('người không ở trong nhà nào thì không có gì để chia sẻ', async () => {
+    const res = await api('PUT', '/me/family/progress', { token: outsider.token, body: { shared: true } })
+    expect(res.status).toBe(400)
+    expect(res.data.message).toContain('Pro Gia đình')
   })
 })
 
