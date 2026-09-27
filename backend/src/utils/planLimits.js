@@ -44,6 +44,8 @@ export const PLANS = {
     nagReminders: false,
     reports: false,
     planner: false,
+    // Giao việc cho người khác: quyền lợi chỉ Pro có — xem services/taskShareService.js
+    taskSharing: false,
     aiDailyLimit: 5,
     alarmSounds: ['classic', 'digital', 'DEFAULT', 'URGENT'],
     priceMonthly: 0,
@@ -70,6 +72,7 @@ export const PLANS = {
     nagReminders: false,
     reports: false,
     planner: false,
+    taskSharing: false,
     aiDailyLimit: 50,
     alarmSounds: ['classic', 'digital', 'bell', 'morning', 'DEFAULT', 'URGENT'],
     priceMonthly: 39000,
@@ -98,6 +101,11 @@ export const PLANS = {
     reports: true,
     // Kế hoạch tuần — xem backend/src/services/plannerService.js
     planner: true,
+    // Giao việc cho người khác — xem backend/src/services/taskShareService.js.
+    // Đây là quyền lợi bán được nhất của Pro vì Free/Plus KHÔNG có cách nào khác
+    // để có: mọi thứ khác đều là "một mình bạn làm tốt hơn", còn cái này mở ra
+    // việc trước đây không làm được.
+    taskSharing: true,
     aiDailyLimit: Infinity,
     alarmSounds: ['classic', 'digital', 'bell', 'morning', 'gentle', 'DEFAULT', 'URGENT'],
     priceMonthly: 79000,
@@ -109,6 +117,7 @@ export const PLANS = {
       'Báo cáo năng suất 7/30/90 ngày: việc xong đúng hạn, giờ nào bạn làm tốt nhất, việc đang bị bỏ quên lâu nhất — xuất Excel/PDF',
       'Kế hoạch tuần: app tự xếp việc nào làm ngày nào và cảnh báo trước khi tuần bị quá tải',
       'Báo cáo tuần gửi email sáng thứ 2: tuần rồi làm được gì, tuần này có gì chờ (không cần mở app)',
+      'Nhờ người khác làm: giao một công việc cho người thân/đồng nghiệp (tối đa 5 người mỗi việc), họ vẫn nhận chuông nhắc, bạn nhận thông báo khi họ xong',
       'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
       'Không giới hạn thiết bị đồng bộ',
       'Trợ lý AI không giới hạn',
@@ -147,6 +156,7 @@ export function planCatalog() {
       nagReminders: plan.nagReminders,
       reports: plan.reports,
       planner: plan.planner,
+      taskSharing: plan.taskSharing,
     },
   }))
 }

@@ -179,6 +179,7 @@ export const PLANS = [
       'Báo cáo năng suất 7/30/90 ngày kèm xuất Excel/PDF',
       'Kế hoạch tuần: tự xếp việc vào từng ngày, cảnh báo khi tuần quá tải',
       'Báo cáo tuần gửi email sáng thứ 2 (tắt được bất cứ lúc nào)',
+      'Nhờ người khác làm: giao việc cho người thân/đồng nghiệp, họ vẫn nhận chuông nhắc và bạn biết ngay khi họ xong',
       'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
       'Không giới hạn thiết bị đồng bộ',
       'Trợ lý AI không giới hạn',
@@ -193,6 +194,7 @@ export const PLANS = [
       nagReminders: true,
       reports: true,
       planner: true,
+      taskSharing: true,
     },
   },
 ]

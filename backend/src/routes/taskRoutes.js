@@ -4,6 +4,7 @@ import validate from '../middleware/validate.js'
 import * as taskValidation from '../dto/request/taskValidation.js'
 import * as taskController from '../controllers/taskController.js'
 import * as reminderController from '../controllers/reminderController.js'
+import * as shareController from '../controllers/taskShareController.js'
 import {
   taskReminderParamValidation,
   createReminderValidation,
@@ -36,6 +37,15 @@ router.delete(
   validate,
   reminderController.deleteReminder,
 )
+
+// ── Giao việc cho người khác (gói Pro) ────────────────────
+// Đặt cùng chỗ với nhắc nhở của một công việc vì cũng là dữ liệu con của công
+// việc. Không tách thành file route riêng: file riêng mà gắn ở /tasks thì phải
+// khai báo TRƯỚC router.get('/:taskId'), quên một lần là /tasks/12/shares bị hiểu
+// thành taskId = "12/shares" và trả 400 khó hiểu.
+router.get('/:taskId/shares', auth, shareController.getShares)
+router.post('/:taskId/shares', auth, shareController.shareTask)
+router.delete('/:taskId/shares/:shareId', auth, shareController.revokeShare)
 
 // Nested routes
 router.use('/:taskId/subtasks', subtaskRoutes)

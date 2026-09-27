@@ -21,7 +21,7 @@ còn phải làm để bán được gói trong app Android trên Google Play.
 |---|---|---|---|
 | Miễn phí | 0đ | 0đ | 50 việc đang mở, **có công việc lặp lại**, 3 nhắc/việc, 2 thiết bị, AI 5 lần/ngày |
 | Plus | 39.000đ | 390.000đ | Không giới hạn việc/danh mục/việc con, 5 thiết bị, AI 50 lần/ngày |
-| Pro | 79.000đ | 790.000đ | **Nhắc dai tới khi xác nhận**, **báo cáo năng suất + xuất Excel/PDF**, **kế hoạch tuần**, **báo cáo tuần qua email**, không giới hạn AI/thiết bị, toàn bộ âm thanh + âm thanh riêng |
+| Pro | 79.000đ | 790.000đ | **Nhắc dai tới khi xác nhận**, **báo cáo năng suất + xuất Excel/PDF**, **kế hoạch tuần**, **báo cáo tuần qua email**, **nhờ người khác làm**, không giới hạn AI/thiết bị, toàn bộ âm thanh + âm thanh riêng |
 
 **Điểm bán riêng của Pro: “nhắc dai tới khi bạn xác nhận”.** Free/Plus chuông kêu
 một lần, bỏ qua là quên; Pro thì việc chưa xong sẽ kêu lại theo chu kỳ người dùng
@@ -80,6 +80,30 @@ số khách Pro vượt ~10 người, **phải** xin Mailjet gỡ giới hạn h
 > `/health` cùng gọi hàm gửi, máy chủ Render ngủ nên cron có thể không chạy). Khách
 tắt/mở trong **Cài đặt → Thông báo** (`PUT /me/weekly-report`) — thiếu đường tắt thì
 thư tuần thành thư rác.
+
+**Điểm bán thứ năm: “nhờ người khác làm” — quyền lợi Pro duy nhất Free/Plus KHÔNG
+thể có bằng cách nào khác.** Bốn tính năng trên đều là “một mình bạn làm tốt hơn”:
+khách không trả tiền vẫn tự làm được, chỉ chậm hơn. Giao việc thì khác — muốn nhờ
+người thân/đồng nghiệp làm hộ thì buộc phải trả tiền. Ở trang chi tiết công việc,
+chủ việc nhập email người được nhờ (kèm lời nhắn), tối đa **5 người mỗi việc**. Người
+được nhờ **không cần gói trả phí**: họ thấy việc trong mục **Việc được giao**, vẫn
+nhận chuông nhắc như việc của chính mình, và bấm “Xong phần của tôi” — chủ việc nhận
+thông báo ngay.
+
+Hai lan can được giữ chặt, vì đây là tính năng duy nhất cho người khác động vào dữ
+liệu của khách: (1) **người được giao không sửa/xoá được việc và không đọc được danh
+sách người được giao** — mọi truy vấn cũ vẫn khoá theo `tasks.user_id`, nên không có
+đường nào để họ thấy việc khác của chủ; (2) **báo xong phần mình KHÔNG làm việc của
+chủ tự hoàn thành** — việc chỉ xong khi chủ bấm Xong, nếu không thì “nhờ người khác”
+thành “giao quyền quyết định cho người khác”. Việc lặp lại giữ nguyên người được giao
+cho kỳ sau (giống cách giữ chế độ nhắc dai), trạng thái xong đặt lại từ đầu.
+
+Vì sao đây cũng là kênh tăng trưởng: mỗi lần một khách Pro nhờ ai đó, người đó phải
+có tài khoản MN-Qronx (dùng miễn phí) và sẽ thấy việc kèm chuông — đường có thêm
+người dùng mà không tốn tiền quảng cáo. Nhờ vậy mục **Việc được giao** cố ý KHÔNG
+đánh dấu Pro trong menu, và cuối trang có câu dẫn sang bảng giá cho người muốn nhờ
+lại người khác. Mã ở `backend/src/services/taskShareService.js`,
+`controllers/taskShareController.js`, bảng `task_shares`.
 
 **Chỉ ghi vào bảng này thứ khách đang dùng được.** Thứ chưa làm xong nằm ở
 `PLANS[...].upcoming` (trang giá hiện kèm nhãn “Sắp có”), hiện chỉ còn: đồng bộ **hai

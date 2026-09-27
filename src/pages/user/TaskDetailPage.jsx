@@ -16,6 +16,10 @@ import {
   CalendarCheck,
   ListChecks,
   Alarm,
+  Users,
+  LockSimple,
+  PaperPlaneTilt,
+  SealCheck,
 } from '@phosphor-icons/react'
 import {
   getTask,
@@ -26,7 +30,10 @@ import {
   addSubtask,
   toggleSubtask,
   deleteSubtask,
+  shareTask,
+  revokeTaskShare,
 } from '../../services/taskService'
+import { useAuth } from '../../context/AuthContext'
 import { addReminder, removeReminder } from '../../services/reminderService'
 import { useToast } from '../../components/common/Toast'
 import { PageLoader, EmptyState } from '../../components/common/Feedback'
@@ -48,6 +55,13 @@ export default function TaskDetailPage() {
   const [busy, setBusy] = useState(false)
   const [subtaskInput, setSubtaskInput] = useState('')
   const [reminderTime, setReminderTime] = useState('')
+  // Giao việc cho người khác (gói Pro)
+  const { user } = useAuth()
+  const isPro = user?.plan === 'PRO'
+  const [shareEmail, setShareEmail] = useState('')
+  const [shareNote, setShareNote] = useState('')
+  const [shareBusy, setShareBusy] = useState(false)
+  const [shareHint, setShareHint] = useState(null)
 
   const load = async () => {
     const res = await getTask(id)
@@ -167,6 +181,48 @@ export default function TaskDetailPage() {
       return
     }
     toast.success('Đã xóa nhắc nhở')
+    load()
+  }
+
+  // ── Giao việc cho người khác (Pro) ────────────────────────
+  // Danh sách người được giao nằm ngay trong task (task.assignees) nên sau mỗi lần
+  // giao/thu hồi chỉ cần load() lại — không có hai nguồn dữ liệu để lệch nhau.
+  const assignees = task.assignees || []
+  const doneCount = assignees.filter((s) => s.doneAt).length
+
+  const onShare = async (e) => {
+    e.preventDefault()
+    const email = shareEmail.trim()
+    if (!email) {
+      toast.error('Nhập email người bạn muốn nhờ')
+      return
+    }
+    setShareBusy(true)
+    const res = await shareTask(task.id, { email, note: shareNote.trim() || undefined })
+    setShareBusy(false)
+    if (!res.success) {
+      // Chưa có tài khoản: giữ nguyên email đã gõ và nói rõ bước tiếp theo, thay vì
+      // chỉ báo lỗi rồi bắt khách gõ lại từ đầu.
+      if (res.errors?.needInvite) setShareHint(res.message)
+      toast.error(res.message)
+      return
+    }
+    toast.success(res.message)
+    setShareEmail('')
+    setShareNote('')
+    setShareHint(null)
+    load()
+  }
+
+  const onRevokeShare = async (share) => {
+    setShareBusy(true)
+    const res = await revokeTaskShare(task.id, share.shareId)
+    setShareBusy(false)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    toast.success('Đã thu hồi việc đã giao')
     load()
   }
 
@@ -385,6 +441,131 @@ export default function TaskDetailPage() {
           </div>
         )}
         {closed && <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">Công việc đã đóng – không thể thêm nhắc nhở mới.</p>}
+      </section>
+
+      {/* Nhờ người khác làm (Pro) */}
+      <section className="card p-5 sm:p-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
+            <Users size={19} weight="fill" className="text-violet-600 dark:text-violet-400" />
+            Nhờ người khác làm
+          </h2>
+          <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-bold text-violet-700 ring-1 ring-inset ring-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:ring-violet-700">
+            PRO
+          </span>
+          {assignees.length > 0 && (
+            <span className="rounded-full bg-navy-100 px-2 py-0.5 text-xs font-bold text-navy-500 dark:bg-slate-700 dark:text-slate-400">
+              {doneCount}/{assignees.length} đã xong
+            </span>
+          )}
+        </div>
+        <p className="mt-2 text-xs text-navy-500 dark:text-slate-400">
+          Người bạn nhờ <strong>không cần trả phí</strong>. Họ vẫn nhận chuông nhắc như việc của
+          chính mình, còn bạn nhận thông báo ngay khi họ báo xong.
+        </p>
+
+        {!isPro ? (
+          <div className="mt-3 rounded-xl bg-navy-50 p-3 ring-1 ring-inset ring-navy-100 dark:bg-slate-700/60 dark:ring-slate-600">
+            <p className="flex items-start gap-2 text-xs font-medium text-navy-500 dark:text-slate-300">
+              <LockSimple size={15} className="mt-0.5 shrink-0" />
+              <span>
+                Gói hiện tại chỉ làm được việc của một mình bạn. Nâng cấp Pro để nhờ người thân
+                hoặc đồng nghiệp làm — và biết ngay khi họ xong.{' '}
+                <Link to="/app/billing" className="font-bold underline">
+                  Nâng cấp Pro
+                </Link>
+              </span>
+            </p>
+          </div>
+        ) : (
+          <>
+            {assignees.length > 0 && (
+              <ul className="mt-3 space-y-2">
+                {assignees.map((s) => (
+                  <li
+                    key={s.shareId}
+                    className="flex items-center gap-3 rounded-xl bg-navy-50/70 px-3.5 py-2.5 dark:bg-slate-900/50"
+                  >
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                        s.doneAt
+                          ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
+                          : 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400'
+                      }`}
+                    >
+                      {s.doneAt ? <SealCheck size={17} weight="bold" /> : <Users size={17} weight="bold" />}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-navy-800 dark:text-slate-200">
+                        {s.assignee?.fullName || 'Người được giao'}
+                      </p>
+                      <p className="truncate text-xs text-navy-400 dark:text-slate-500">
+                        {s.doneAt
+                          ? `Đã báo xong ${formatDateTime(s.doneAt)}`
+                          : s.assignee?.email || 'Chưa báo xong'}
+                        {s.note ? ` · “${s.note}”` : ''}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onRevokeShare(s)}
+                      disabled={shareBusy}
+                      aria-label={`Thu hồi việc đã giao cho ${s.assignee?.fullName || ''}`}
+                      className="cursor-pointer rounded-md p-1.5 text-navy-300 transition hover:bg-rose-50 hover:text-rose-500 disabled:opacity-50 dark:hover:bg-rose-900/30"
+                    >
+                      <X size={16} weight="bold" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {!closed && assignees.length < 5 && (
+              <form onSubmit={onShare} className="mt-4 space-y-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    type="email"
+                    value={shareEmail}
+                    onChange={(e) => {
+                      setShareEmail(e.target.value)
+                      setShareHint(null)
+                    }}
+                    placeholder="Email người bạn muốn nhờ…"
+                    aria-label="Email người được giao việc"
+                    className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3.5 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 transition placeholder:text-navy-300 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600 dark:placeholder:text-slate-400 dark:focus:bg-slate-600"
+                  />
+                  <input
+                    type="text"
+                    value={shareNote}
+                    onChange={(e) => setShareNote(e.target.value)}
+                    maxLength={255}
+                    placeholder="Lời nhắn (không bắt buộc)"
+                    aria-label="Lời nhắn kèm theo"
+                    className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3.5 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 transition placeholder:text-navy-300 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600 dark:placeholder:text-slate-400 dark:focus:bg-slate-600"
+                  />
+                  <Button type="submit" variant="secondary" icon={PaperPlaneTilt} loading={shareBusy}>
+                    Giao việc
+                  </Button>
+                </div>
+                {shareHint && (
+                  <p className="rounded-xl bg-amber-50 p-2.5 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:ring-amber-800">
+                    {shareHint}
+                  </p>
+                )}
+              </form>
+            )}
+            {closed && (
+              <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">
+                Công việc đã kết thúc nên không giao thêm được.
+              </p>
+            )}
+            {!closed && assignees.length >= 5 && (
+              <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">
+                Một việc chỉ giao được cho tối đa 5 người.
+              </p>
+            )}
+          </>
+        )}
       </section>
 
       <ConfirmDialog

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Check, Bell, Repeat, Clock } from '@phosphor-icons/react'
+import { Check, Bell, Repeat, Clock, UserPlus } from '@phosphor-icons/react'
 import { StatusBadge, PriorityBadge, CategoryBadge } from './common/Badge'
 import { formatTime, formatRelativeDay, effectiveStatus } from '../lib/format'
 import { repeatSummary } from '../lib/constants'
@@ -71,6 +71,18 @@ export default function TaskItem({ task, onToggleComplete, compact = false, onBe
               aria-label={`Lặp lại: ${repeatSummary(task.repeatType, task.repeatDays)}`}
             >
               <Repeat size={14} weight="bold" />
+            </span>
+          )}
+          {/* Nhờ người khác làm (Pro): thấy ngay trong danh sách là việc này không
+              chỉ nằm ở đầu bạn — không có nhãn thì rất dễ tưởng mình đang làm một mình. */}
+          {task.shareCount > 0 && (
+            <span
+              title={`Đã giao cho ${task.shareCount} người`}
+              className="inline-flex shrink-0 items-center gap-0.5 text-violet-400"
+              aria-label={`Đã giao cho ${task.shareCount} người`}
+            >
+              <UserPlus size={14} weight="bold" />
+              {task.shareCount > 1 ? task.shareCount : ''}
             </span>
           )}
         </div>

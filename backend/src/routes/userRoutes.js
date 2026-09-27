@@ -6,6 +6,7 @@ import * as userController from '../controllers/userController.js'
 import * as customSoundValidation from '../dto/request/customSoundValidation.js'
 import * as customSoundController from '../controllers/customSoundController.js'
 import * as calendarIcsController from '../controllers/calendarIcsController.js'
+import * as shareController from '../controllers/taskShareController.js'
 
 const router = Router()
 
@@ -139,6 +140,11 @@ router.get('/activity', auth, userController.getRecentActivity)
  *         description: Trạng thái mới
  */
 router.put('/weekly-report', auth, userController.setWeeklyReport)
+
+// ── Việc người khác nhờ tôi làm (giao việc là quyền lợi gói Pro của NGƯỜI GIAO) ──
+// Người NHẬN không cần gói trả phí — có thêm người nhận là có thêm khách dùng app.
+router.get('/assigned', auth, shareController.getAssigned)
+router.put('/assigned/:taskId', auth, shareController.setAssignedDone)
 
 // ── Lịch .ics: dán vào Google Calendar / Outlook một lần là tự đồng bộ ──
 router.get('/ics', auth, calendarIcsController.getMyIcs)

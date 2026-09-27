@@ -25,6 +25,12 @@ export async function cleanupTestData() {
   await prisma.passwordResetRequest.deleteMany({ where: testUser })
   await prisma.reminder.deleteMany({ where: testUserTask })
   await prisma.subtask.deleteMany({ where: testUserTask })
+  // Giao việc (Pro): share trỏ tới CẢ việc lẫn hai tài khoản, nên xoá theo cả hai
+  // chiều — xoá mỗi chiều sẽ sót dòng mồ côi khi một bên là tài khoản test còn bên
+  // kia là tài khoản thật.
+  await prisma.taskShare.deleteMany({ where: { task: { user: testUserEmail } } })
+  await prisma.taskShare.deleteMany({ where: { assignee: testUserEmail } })
+  await prisma.taskShare.deleteMany({ where: { sharedBy: testUserEmail } })
   await prisma.task.deleteMany({ where: testUser })
   await prisma.category.deleteMany({ where: testUser })
   await prisma.pointTransaction.deleteMany({ where: testUser })

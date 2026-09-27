@@ -161,6 +161,9 @@ model User {
   notificationSetting    NotificationSetting?
   refreshTokens          RefreshToken[]
   pointTransactions      PointTransaction[]
+  // Giao việc (Pro): assignedShares = việc người khác nhờ tôi, sharedTasks = việc tôi nhờ người khác
+  assignedShares         TaskShare[]             @relation("TaskShareAssignee")
+  sharedTasks            TaskShare[]             @relation("TaskShareSharedBy")
   invitesSent            Invitation[]            @relation("InviterInvitations")
   invitesReceived        Invitation[]            @relation("InviteeInvitation")
   supportConversation    SupportConversation?
@@ -286,6 +289,8 @@ model Task {
   childTasks   Task[]      @relation("TaskRepetition")
   subtasks     Subtask[]
   reminders    Reminder[]
+  // Giao việc cho người khác (Pro) — xem model TaskShare
+  shares       TaskShare[]
 
   @@index([userId, dueAt], map: "ix_tasks_user_due")
   @@index([userId, status], map: "ix_tasks_user_status")
@@ -308,6 +313,39 @@ model Subtask {
 
   @@index([taskId, displayOrder], map: "ix_subtasks_task_order")
   @@map("subtasks")
+}
+
+// Giao việc cho người khác (gói Pro): chủ việc nhờ một tài khoản MN-Qronx khác
+// làm hộ. Một dòng = "việc này giao cho người này".
+//
+// Tách khỏi Task vì hai lý do: (1) một việc có thể giao cho nhiều người, (2) NGƯỜI
+// ĐƯỢC GIAO không được quyền sửa/xoá việc — họ chỉ đánh dấu xong phần của mình
+// (doneAt). Nhờ vậy mọi truy vấn cũ vẫn khoá theo tasks.user_id như cũ, không có
+// đường nào để người khác nhìn thấy hay sửa việc không phải của mình.
+//
+// Khối thùng rác: purgeExpired xoá cứng việc quá 30 ngày nên phải xoá share trước
+// (kèm onDelete: Cascade cho an toàn).
+model TaskShare {
+  shareId    Int       @id @default(autoincrement()) @map("share_id")
+  taskId     Int       @map("task_id")
+  assigneeId Int       @map("assignee_id")
+  sharedById Int       @map("shared_by_id")
+  // Lời nhắn kèm theo ("em gửi chị bản báo cáo nhé") — hiện cùng việc cho người nhận
+  note       String?   @db.VarChar(255)
+  // Người được giao bấm "Xong phần của tôi". KHÁC trạng thái của việc: việc chỉ
+  // hoàn thành khi CHỦ VIỆC bấm xong.
+  doneAt     DateTime? @map("done_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  task     Task @relation(fields: [taskId], references: [taskId], onDelete: Cascade)
+  assignee User @relation("TaskShareAssignee", fields: [assigneeId], references: [userId], onDelete: Cascade)
+  sharedBy User @relation("TaskShareSharedBy", fields: [sharedById], references: [userId], onDelete: Cascade)
+
+  @@unique([taskId, assigneeId], map: "ux_task_shares_task_assignee")
+  @@index([assigneeId, doneAt], map: "ix_task_shares_assignee")
+  @@index([sharedById], map: "ix_task_shares_shared_by")
+  @@map("task_shares")
 }
 
 model Reminder {

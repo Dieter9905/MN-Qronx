@@ -14,6 +14,8 @@ import {
   transformTask,
   transformSubtask,
   transformReminder,
+  transformTaskShare,
+  transformAssignedTask,
   transformDevice,
   transformNotificationSetting,
   transformNotificationLog,
@@ -68,6 +70,29 @@ function transformData(data, urlpath) {
   }
   if (segments[0] === 'tasks' && segments[2] === 'reminders') {
     return Array.isArray(data) ? data.map(transformReminder) : transformReminder(data)
+  }
+  // Cùng lý do với việc con/nhắc nhở ở trên: mỗi dòng giao việc đều có `taskId`,
+  // nên nếu rơi vào nhánh "một công việc" thì transformTask biến nó thành một công
+  // việc rỗng và mất hết tên người được giao.
+  if (segments[0] === 'tasks' && segments[2] === 'shares') {
+    // POST (giao việc) và DELETE (thu hồi) trả về KÈM cả công việc đã cập nhật để
+    // giao diện vẽ lại khối "người được giao" ngay, không phải gọi thêm một lượt.
+    if (data.task && data.task.taskId) {
+      return {
+        ...data,
+        task: transformTask(data.task),
+        ...(data.share ? { share: transformTaskShare(data.share) } : {}),
+      }
+    }
+    return Array.isArray(data) ? data.map(transformTaskShare) : transformTaskShare(data)
+  }
+
+  // ── Việc người khác nhờ tôi làm (/me/assigned) ──
+  // Không khớp TASK_PATHS nên phải xử lý riêng; trả thẳng dạng đã sẵn dùng.
+  if (segments[0] === 'me' && segments[1] === 'assigned') {
+    if (Array.isArray(data)) return data.map(transformAssignedTask)
+    // PUT /me/assigned/:taskId chỉ trả { taskId, doneAt } — không có gì để chuyển
+    return data
   }
 
   // ── Category list ──

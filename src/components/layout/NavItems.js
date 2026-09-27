@@ -10,6 +10,7 @@ import {
   Brain,
   Gift,
   Headset,
+  Users,
 } from '@phosphor-icons/react'
 
 // labelKey → tra trong i18n/app.js (app[lang][labelKey]) để đa ngôn ngữ
@@ -20,6 +21,9 @@ export const NAV_GROUPS = [
       { to: '/app', labelKey: 'dashboard', icon: House, end: true },
       { to: '/app/tasks', labelKey: 'tasks', icon: ListChecks },
       { to: '/app/calendar', labelKey: 'calendar', icon: CalendarBlank },
+      // Việc được giao: KHÔNG đánh dấu pro — người được nhờ không cần gói trả phí,
+      // và mục menu này chính là chỗ để khách thấy tính năng giao việc đang chạy.
+      { to: '/app/assigned', labelKey: 'assigned', icon: Users },
       // Kế hoạch tuần + Báo cáo năng suất: chỉ Pro (trang tự hiện khung nâng cấp cho gói khác)
       { to: '/app/planner', labelKey: 'planner', icon: CalendarCheck, pro: true },
       { to: '/app/reports', labelKey: 'reports', icon: ChartBar, pro: true },

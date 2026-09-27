@@ -226,6 +226,62 @@ export async function deleteSubtask(taskId, subtaskId) {
   return api('DELETE', `/tasks/${taskId}/subtasks/${subtaskId}`)
 }
 
+// ── Giao việc cho người khác (gói Pro) ──────────────────────
+// Giao việc nằm ở trang CHI TIẾT công việc chứ không ở form tạo mới: nhờ người khác
+// làm là quyết định đưa ra sau khi đã có việc, không phải lúc gõ tiêu đề.
+
+// POST /api/v1/tasks/:id/shares — nhờ một người (theo email) làm việc này
+export async function shareTask(id, { email, note } = {}) {
+  const res = await api('POST', `/tasks/${id}/shares`, { body: { email, note } })
+  if (res.success) res.data = { ...res.data, task: toTask(res.data?.task) }
+  return res
+}
+
+// GET /api/v1/tasks/:id/shares — danh sách người được giao của một việc
+export async function getTaskShares(id) {
+  return api('GET', `/tasks/${id}/shares`)
+}
+
+// DELETE /api/v1/tasks/:id/shares/:shareId — thu hồi việc đã giao
+export async function revokeTaskShare(id, shareId) {
+  const res = await api('DELETE', `/tasks/${id}/shares/${shareId}`)
+  if (res.success) res.data = { ...res.data, task: toTask(res.data?.task) }
+  return res
+}
+
+// GET /api/v1/me/assigned — việc NGƯỜI KHÁC nhờ tôi làm
+export async function getAssignedTasks() {
+  const res = await api('GET', '/me/assigned')
+  if (res.success) res.data = (res.data || []).map(toAssignedTask)
+  return res
+}
+
+// PUT /api/v1/me/assigned/:taskId — báo xong (hoặc bỏ báo xong) phần của tôi
+export async function setAssignedDone(taskId, done = true) {
+  return api('PUT', `/me/assigned/${taskId}`, { body: { done } })
+}
+
+function toAssignedTask(item) {
+  if (!item) return item
+  return {
+    shareId: item.shareId,
+    taskId: item.taskId,
+    title: item.title,
+    description: item.description || '',
+    priority: item.priority,
+    dueAt: item.dueAt,
+    dueOverdue: !!item.dueOverdue,
+    note: item.note || '',
+    doneAt: item.doneAt || null,
+    isDone: !!item.doneAt,
+    closed: !!item.completed,
+    category: item.category || null,
+    nextReminderAt: item.nextReminderAt || null,
+    assignedBy: item.assignedBy || null,
+    assignedAt: item.assignedAt,
+  }
+}
+
 // GET /api/v1/dashboard
 export async function getDashboard() {
   const res = await api('GET', '/dashboard')

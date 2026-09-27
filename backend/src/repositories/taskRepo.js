@@ -9,7 +9,13 @@ async function findById(taskId, userId, { includeDeleted = false } = {}) {
       category: { select: { categoryId: true, categoryName: true, colorCode: true } },
       subtasks: { orderBy: { displayOrder: 'asc' } },
       reminders: { orderBy: { remindAt: 'asc' } },
-      _count: { select: { subtasks: true, reminders: true } },
+      // Người được giao việc (gói Pro) — cần cả khi sinh việc lặp kế tiếp để giữ
+      // nguyên danh sách người được giao, giống cách giữ chế độ nhắc dai.
+      shares: {
+        orderBy: { createdAt: 'asc' },
+        include: { assignee: { select: { userId: true, fullName: true, email: true, avatarUrl: true } } },
+      },
+      _count: { select: { subtasks: true, reminders: true, shares: true } },
     },
   })
 }
@@ -26,7 +32,7 @@ async function findByUser(userId, where, orderBy, skip, take) {
       take,
       include: {
         category: { select: { categoryId: true, categoryName: true, colorCode: true } },
-        _count: { select: { subtasks: true, reminders: true } },
+        _count: { select: { subtasks: true, reminders: true, shares: true } },
       },
     }),
     prisma.task.count({ where: aliveWhere }),
@@ -138,6 +144,9 @@ async function emptyTrash(userId) {
   await prisma.$transaction([
     prisma.reminder.deleteMany({ where: { taskId: { in: ids } } }),
     prisma.subtask.deleteMany({ where: { taskId: { in: ids } } }),
+    // Người được giao cũng phải mất theo — nếu không, xoá vĩnh viễn sẽ vướng khoá
+    // ngoại, và "việc được giao" còn lại dòng trỏ vào việc không tồn tại.
+    prisma.taskShare.deleteMany({ where: { taskId: { in: ids } } }),
     prisma.task.deleteMany({ where: { taskId: { in: ids } } }),
   ])
   return ids.length
@@ -157,6 +166,9 @@ async function purgeExpired(days = 30) {
   await prisma.$transaction([
     prisma.reminder.deleteMany({ where: { taskId: { in: ids } } }),
     prisma.subtask.deleteMany({ where: { taskId: { in: ids } } }),
+    // Người được giao cũng phải mất theo — nếu không, xoá vĩnh viễn sẽ vướng khoá
+    // ngoại, và "việc được giao" còn lại dòng trỏ vào việc không tồn tại.
+    prisma.taskShare.deleteMany({ where: { taskId: { in: ids } } }),
     prisma.task.deleteMany({ where: { taskId: { in: ids } } }),
   ])
   return ids.length

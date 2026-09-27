@@ -2,6 +2,7 @@ import prisma from '../config/prisma.js'
 import { sendFcmNotification } from '../notifications/fcmSender.js'
 import { pushToUser } from './pushService.js'
 import { nextNagPlan, nagNotificationText } from './nagService.js'
+import { reminderTargetsForTask } from './taskShareService.js'
 
 /**
  * Gửi MỘT nhắc nhở đã đến hạn và quyết định có nhắc lại hay không.
@@ -84,6 +85,31 @@ export async function dispatchReminder(reminder) {
     console.log(
       `[Reminder] Nhắc dai: việc ${task.taskId} sẽ kêu lại sau ${nag.every} phút (lần ${nag.count})`
     )
+  }
+
+  // 6. Người ĐƯỢC GIAO việc cũng phải nghe chuông (gói Pro của chủ việc). Không
+  // có bước này thì "nhờ người khác làm" chỉ là một dòng ghi chú: người nhận
+  // không bao giờ biết tới lúc họ tự mở app.
+  //
+  // Cố ý CHỈ gửi Web Push cho người nhận, không ghi notificationLog: nhật ký
+  // thông báo gắn với thiết bị để trang "Lịch sử thông báo" của CHỦ việc hiển
+  // thị; ghi vào đó là báo sai người đã được nhắc. Người đã báo xong phần mình
+  // (doneAt) thì thôi nhắc — họ đã làm xong việc của họ.
+  // Ai nhận chuông là luật nằm ở taskShareService.reminderTargetsForTask (hàm
+  // thuần, test được) — ở đây chỉ gửi cho những người đó, trừ chủ việc vì đã gửi.
+  for (const assigneeId of reminderTargetsForTask(task, userId)) {
+    if (assigneeId === userId) continue
+    try {
+      await pushToUser(assigneeId, {
+        title: `👥 Việc bạn được nhờ: ${task.title}`,
+        body: 'Bạn được nhờ làm việc này. Bấm để xem chi tiết.',
+        taskId: task.taskId,
+        reminderId: reminder.reminderId,
+        url: '/app/assigned',
+      })
+    } catch (err) {
+      console.error(`[Reminder] Không nhắc được người được giao ${assigneeId}:`, err.message)
+    }
   }
 
   return { sent, nagged: Boolean(nag) }

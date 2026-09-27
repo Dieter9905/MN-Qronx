@@ -276,6 +276,21 @@ export async function complete(userId, taskId) {
         },
       })
 
+      // Việc lặp lại giữ luôn người được giao: "đổ rác hằng tuần" giao cho con
+      // thì tuần sau vẫn là việc của con, không phải giao lại từ đầu mỗi tuần.
+      // doneAt để trống vì đây là kỳ MỚI — kỳ trước đã xong rồi.
+      const oldShares = task.shares || []
+      if (oldShares.length) {
+        await tx.taskShare.createMany({
+          data: oldShares.map((s) => ({
+            taskId: nextTask.taskId,
+            assigneeId: s.assigneeId,
+            sharedById: s.sharedById,
+            note: s.note,
+          })),
+        })
+      }
+
       // Copy reminders sang task mới (giữ nguyên khoảng cách với dueAt)
       const oldReminders = task.reminders
       if (oldReminders.length) {

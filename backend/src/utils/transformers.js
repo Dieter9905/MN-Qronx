@@ -82,6 +82,65 @@ export function transformReminder(rem) {
   }
 }
 
+// ─── Giao việc cho người khác (Pro) ────────────────────
+
+/**
+ * Một dòng "việc này giao cho người này" (nhìn từ phía chủ việc).
+ * Cố ý KHÔNG trả email của người nhận ra ngoài danh sách công khai — chỉ dùng để
+ * hiển thị lại cho chính chủ việc, người đã tự nhập email đó.
+ */
+export function transformTaskShare(share) {
+  if (!share) return null
+  return {
+    shareId: share.shareId,
+    taskId: share.taskId,
+    note: share.note || '',
+    doneAt: share.doneAt || null,
+    createdAt: share.createdAt,
+    assignee: share.assignee
+      ? {
+          id: share.assignee.userId,
+          fullName: share.assignee.fullName,
+          email: share.assignee.email,
+          avatarUrl: share.assignee.avatarUrl || null,
+        }
+      : null,
+  }
+}
+
+/**
+ * Một việc NGƯỜI KHÁC nhờ tôi làm (nhìn từ phía người nhận).
+ * Trả kèm đủ thông tin để hiển thị việc mà không phải mở /tasks/:id — người được
+ * giao không có quyền xem chi tiết việc của chủ qua đường đó.
+ */
+export function transformAssignedTask(share) {
+  if (!share || !share.task) return null
+  const t = share.task
+  return {
+    shareId: share.shareId,
+    taskId: share.taskId,
+    title: t.title,
+    description: t.description || '',
+    priority: t.priority,
+    status: t.status,
+    dueAt: t.dueAt,
+    dueOverdue: t.dueAt ? new Date(t.dueAt).getTime() < Date.now() : false,
+    note: share.note || '',
+    doneAt: share.doneAt || null,
+    completed: t.status === 'COMPLETED' || t.status === 'CANCELLED',
+    category: t.category ? transformCategory(t.category) : null,
+    nextReminderAt: t.reminders?.[0]?.remindAt || null,
+    assignedBy: share.sharedBy
+      ? {
+          id: share.sharedBy.userId,
+          fullName: share.sharedBy.fullName,
+          avatarUrl: share.sharedBy.avatarUrl || null,
+        }
+      : null,
+    assignedAt: share.createdAt,
+  }
+}
+
 // ─── Task (enriched) ───────────────────────────────────
 
 export function transformTask(task) {
@@ -106,6 +165,10 @@ export function transformTask(task) {
     category: task.category ? transformCategory(task.category) : null,
     subtasks: Array.isArray(task.subtasks) ? task.subtasks.map(transformSubtask) : [],
     reminders: Array.isArray(task.reminders) ? task.reminders.map(transformReminder) : [],
+    // Người được giao việc (Pro). shareCount có cả trong danh sách (nhờ _count) để
+    // trang Công việc hiện được nhãn "đã giao cho N người" mà không tốn thêm query.
+    assignees: Array.isArray(task.shares) ? task.shares.map(transformTaskShare) : [],
+    shareCount: task._count?.shares ?? (Array.isArray(task.shares) ? task.shares.length : 0),
   }
 }
 

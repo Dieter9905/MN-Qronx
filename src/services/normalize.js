@@ -34,7 +34,31 @@ export function toReminder(rem) {
     remindAt: rem.remindAt,
     status: rem.status,
     snoozeCount: rem.snoozeCount ?? 0,
+    // Số lần chuông đã kêu lại trong chế độ nhắc dai. Thiếu dòng này thì trang chi
+    // tiết không bao giờ hiện được "đã nhắc lại N lần vì việc chưa xong" — tính
+    // năng chạy đúng ở máy chủ mà khách không thấy gì.
+    nagCount: rem.nagCount ?? 0,
     createdAt: rem.createdAt,
+  }
+}
+
+/** Một người được giao việc (gói Pro). */
+export function toTaskShare(share) {
+  if (!share) return null
+  return {
+    shareId: share.shareId,
+    taskId: share.taskId,
+    note: share.note || '',
+    doneAt: share.doneAt || null,
+    createdAt: share.createdAt,
+    assignee: share.assignee
+      ? {
+          id: share.assignee.id ?? share.assignee.userId,
+          fullName: share.assignee.fullName,
+          email: share.assignee.email,
+          avatarUrl: share.assignee.avatarUrl || null,
+        }
+      : null,
   }
 }
 
@@ -46,6 +70,10 @@ export function toTask(task) {
       task.status !== 'CANCELLED' &&
       task.dueAt &&
       new Date(task.dueAt) < new Date())
+  // Hàm này là DANH SÁCH TRẮNG: trường nào không kể tên ở đây thì giao diện không
+  // bao giờ thấy, dù máy chủ trả về đúng. Đã sập bẫy hai lần (nagEveryMinutes và
+  // nagCount) nên khi máy chủ thêm trường mới cho công việc, phải thêm cả ở đây.
+  const assignees = Array.isArray(task.assignees) ? task.assignees.map(toTaskShare) : []
   return {
     id: task.id ?? task.taskId,
     userId: task.userId,
@@ -64,6 +92,14 @@ export function toTask(task) {
     category: toCategory(task.category),
     subtasks: Array.isArray(task.subtasks) ? task.subtasks.map(toSubtask) : [],
     reminders: Array.isArray(task.reminders) ? task.reminders.map(toReminder) : [],
+    // "Nhắc dai" (Pro): việc chưa xong thì chuông kêu lại mỗi N phút
+    nagEveryMinutes: task.nagEveryMinutes ?? null,
+    // Người được giao việc (Pro) + số người, để trang chi tiết và danh sách hiển thị.
+    // Danh sách công việc trả dữ liệu THÔ (tên cột Prisma, chỉ có `_count.shares`)
+    // còn trang chi tiết trả dữ liệu đã chuyển đổi (`shareCount`) — phải đọc cả hai,
+    // nếu không thì nhãn "đã giao cho N người" không bao giờ hiện trong danh sách.
+    assignees,
+    shareCount: task.shareCount ?? task._count?.shares ?? assignees.length,
   }
 }
 

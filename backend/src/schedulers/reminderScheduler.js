@@ -59,6 +59,9 @@ cron.schedule(TASK, async () => {
                 devices: { where: { isActive: true } },
               },
             },
+            // Người được giao việc (gói Pro): lấy sẵn ở đây để dispatchReminder
+            // nhắc luôn cho họ, không phải truy vấn thêm cho từng nhắc nhở.
+            shares: { where: { doneAt: null }, select: { assigneeId: true, doneAt: true } },
           },
         },
       },
