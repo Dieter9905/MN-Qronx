@@ -146,6 +146,14 @@ export async function updateTask(id, payload = {}) {
   return getTask(id)
 }
 
+// PUT /api/v1/tasks/{id} — chỉ đổi HẠN của công việc.
+// Không dùng updateTask() cho việc này: hàm đó gửi kèm categoryId/priority/title,
+// nên chỉ truyền { dueAt } là danh mục bị xoá và các trường khác bị ghi đè.
+// Dùng khi khách dời hạn ngay trên Kế hoạch tuần.
+export async function rescheduleTask(id, dueAt) {
+  return api('PUT', `/tasks/${id}`, { body: { dueAt } })
+}
+
 // DELETE /api/v1/tasks/{id} — đưa vào thùng rác (xoá mềm, giữ 30 ngày)
 export async function deleteTask(id) {
   return api('DELETE', `/tasks/${id}`)

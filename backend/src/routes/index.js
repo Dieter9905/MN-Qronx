@@ -8,6 +8,7 @@ import reminderRoutes from './reminderRoutes.js'
 import deviceRoutes from './deviceRoutes.js'
 import dashboardRoutes from './dashboardRoutes.js'
 import reportRoutes from './reportRoutes.js'
+import plannerRoutes from './plannerRoutes.js'
 import adminRoutes from './adminRoutes.js'
 import planRoutes from './planRoutes.js'
 import billingRoutes from './billingRoutes.js'
@@ -79,6 +80,7 @@ router.use('/reminders',     reminderRoutes)
 router.use('/devices',       deviceRoutes)
 router.use('/dashboard',     dashboardRoutes)
 router.use('/reports',       reportRoutes)
+router.use('/planner',       plannerRoutes)
 router.use('/admin',         adminRoutes)
 router.use('/plans',         planRoutes)
 router.use('/billing',       billingRoutes)

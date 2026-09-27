@@ -2,6 +2,7 @@ import {
   House,
   ListChecks,
   CalendarBlank,
+  CalendarCheck,
   ChartBar,
   FolderSimple,
   Bell,
@@ -19,7 +20,8 @@ export const NAV_GROUPS = [
       { to: '/app', labelKey: 'dashboard', icon: House, end: true },
       { to: '/app/tasks', labelKey: 'tasks', icon: ListChecks },
       { to: '/app/calendar', labelKey: 'calendar', icon: CalendarBlank },
-      // Báo cáo năng suất: chỉ Pro xem được (trang tự hiện khung nâng cấp cho gói khác)
+      // Kế hoạch tuần + Báo cáo năng suất: chỉ Pro (trang tự hiện khung nâng cấp cho gói khác)
+      { to: '/app/planner', labelKey: 'planner', icon: CalendarCheck, pro: true },
       { to: '/app/reports', labelKey: 'reports', icon: ChartBar, pro: true },
     ],
   },

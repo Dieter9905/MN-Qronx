@@ -400,7 +400,7 @@ export default function ReportsPage() {
             <Clock size={19} weight="fill" className="text-violet-600 dark:text-violet-400" />
             Bạn làm việc tốt nhất vào lúc nào
           </h2>
-          {totals?.goldenHour === null || totals?.goldenCount === 0 ? (
+          {totals?.goldenHour == null || totals?.goldenCount === 0 ? (
             <p className="mt-3 text-sm text-navy-500 dark:text-slate-400">
               Chưa đủ dữ liệu để tìm ra giờ vàng của bạn.
             </p>

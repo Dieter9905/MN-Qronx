@@ -177,15 +177,13 @@ export const PLANS = [
     features: [
       'Nhắc dai tới khi bạn xác nhận: việc quan trọng chưa xong thì chuông kêu lại',
       'Báo cáo năng suất 7/30/90 ngày kèm xuất Excel/PDF',
+      'Kế hoạch tuần: tự xếp việc vào từng ngày, cảnh báo khi tuần quá tải',
       'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
       'Không giới hạn thiết bị đồng bộ',
       'Trợ lý AI không giới hạn',
       'Toàn bộ âm thanh báo thức, kể cả âm thanh riêng bạn tải lên',
     ],
-    upcoming: [
-      'AI xếp cả tuần thành kế hoạch kèm các bước làm',
-      'Đồng bộ hai chiều Google Calendar (hiện đã có chiều app → lịch)',
-    ],
+    upcoming: ['Đồng bộ hai chiều Google Calendar (hiện đã có chiều app → lịch)'],
     limits: {
       activeTasks: null,
       aiDailyLimit: null,
@@ -193,6 +191,7 @@ export const PLANS = [
       repeatTasks: true,
       nagReminders: true,
       reports: true,
+      planner: true,
     },
   },
 ]

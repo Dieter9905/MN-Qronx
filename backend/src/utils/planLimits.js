@@ -8,8 +8,9 @@ const PAID_PLANS = ['PLUS', 'PRO']
 //   • FREE đủ rộng cho thói quen cơ bản — kể cả công việc LẶP LẠI, vì app nhắc
 //     việc mà không cho lặp thì người dùng bỏ app chứ không nâng cấp.
 //   • Tiền thu ở chỗ cảm nhận được giá trị: nhắc dai tới khi xác nhận (chỉ Pro),
-//     báo cáo năng suất + xuất Excel/PDF (chỉ Pro), hạn mức AI, thiết bị, âm thanh
-//     riêng, hỗ trợ ưu tiên. KHÔNG bán thứ chưa làm — xem `upcoming` trong từng gói.
+//     báo cáo năng suất + xuất Excel/PDF (chỉ Pro), kế hoạch tuần (chỉ Pro), hạn mức
+//     AI, thiết bị, âm thanh riêng, hỗ trợ ưu tiên. KHÔNG bán thứ chưa làm — xem
+//     `upcoming` trong từng gói.
 //   • Nhắc qua Zalo OA đã bỏ khỏi danh sách bán: ai đã cài app trên điện thoại thì
 //     thông báo đẩy hiện thẳng trên màn hình, Zalo chỉ còn là kênh dự phòng cho
 //     người không cài app (và một số máy chặn thông báo nền) — để sau, khi có nhu cầu thật.
@@ -42,6 +43,7 @@ export const PLANS = {
     repeatTasks: true,
     nagReminders: false,
     reports: false,
+    planner: false,
     aiDailyLimit: 5,
     alarmSounds: ['classic', 'digital', 'DEFAULT', 'URGENT'],
     priceMonthly: 0,
@@ -67,6 +69,7 @@ export const PLANS = {
     repeatTasks: true,
     nagReminders: false,
     reports: false,
+    planner: false,
     aiDailyLimit: 50,
     alarmSounds: ['classic', 'digital', 'bell', 'morning', 'DEFAULT', 'URGENT'],
     priceMonthly: 39000,
@@ -93,6 +96,8 @@ export const PLANS = {
     nagReminders: true,
     // Báo cáo năng suất + xuất Excel/PDF — xem backend/src/services/reportService.js
     reports: true,
+    // Kế hoạch tuần — xem backend/src/services/plannerService.js
+    planner: true,
     aiDailyLimit: Infinity,
     alarmSounds: ['classic', 'digital', 'bell', 'morning', 'gentle', 'DEFAULT', 'URGENT'],
     priceMonthly: 79000,
@@ -102,15 +107,17 @@ export const PLANS = {
     features: [
       'Nhắc dai tới khi bạn xác nhận: việc Khẩn cấp/Cao chưa xong thì chuông kêu lại (bạn chọn 1–30 phút một lần)',
       'Báo cáo năng suất 7/30/90 ngày: việc xong đúng hạn, giờ nào bạn làm tốt nhất, việc đang bị bỏ quên lâu nhất — xuất Excel/PDF',
+      'Kế hoạch tuần: app tự xếp việc nào làm ngày nào và cảnh báo trước khi tuần bị quá tải',
       'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
       'Không giới hạn thiết bị đồng bộ',
       'Trợ lý AI không giới hạn',
       'Toàn bộ âm thanh báo thức, kể cả âm thanh riêng bạn tải lên',
     ],
-    upcoming: [
-      'AI xếp cả tuần thành kế hoạch kèm các bước làm',
-      'Đồng bộ hai chiều Google Calendar (hiện đã có chiều app → lịch)',
-    ],
+    // Không còn "AI xếp cả tuần": dịch vụ AI của MN-Qronx là model phân tích câu
+    // thành công việc (thư mục ai/), không phải LLM biết lập kế hoạch — hứa thứ đó
+    // là hứa suông. Kế hoạch tuần nay xếp bằng luật (plannerService.js): chạy ngay,
+    // không tốn lượt, và không bao giờ bịa ra việc không có thật.
+    upcoming: ['Đồng bộ hai chiều Google Calendar (hiện đã có chiều app → lịch)'],
   },
 }
 
@@ -138,6 +145,7 @@ export function planCatalog() {
       repeatTasks: plan.repeatTasks,
       nagReminders: plan.nagReminders,
       reports: plan.reports,
+      planner: plan.planner,
     },
   }))
 }

@@ -21,7 +21,7 @@ còn phải làm để bán được gói trong app Android trên Google Play.
 |---|---|---|---|
 | Miễn phí | 0đ | 0đ | 50 việc đang mở, **có công việc lặp lại**, 3 nhắc/việc, 2 thiết bị, AI 5 lần/ngày |
 | Plus | 39.000đ | 390.000đ | Không giới hạn việc/danh mục/việc con, 5 thiết bị, AI 50 lần/ngày |
-| Pro | 79.000đ | 790.000đ | **Nhắc dai tới khi xác nhận**, **báo cáo năng suất + xuất Excel/PDF**, không giới hạn AI/thiết bị, toàn bộ âm thanh + âm thanh riêng |
+| Pro | 79.000đ | 790.000đ | **Nhắc dai tới khi xác nhận**, **báo cáo năng suất + xuất Excel/PDF**, **kế hoạch tuần**, không giới hạn AI/thiết bị, toàn bộ âm thanh + âm thanh riêng |
 
 **Điểm bán riêng của Pro: “nhắc dai tới khi bạn xác nhận”.** Free/Plus chuông kêu
 một lần, bỏ qua là quên; Pro thì việc chưa xong sẽ kêu lại theo chu kỳ người dùng
@@ -44,10 +44,26 @@ Luật và số liệu nằm ở `backend/src/services/reportService.js` — **m
 tính theo giờ Việt Nam**, giao diện không tự đếm lại (hai nơi tính hai kiểu là cách
 chắc chắn nhất để khách nhìn thấy hai con số khác nhau).
 
+**Điểm bán thứ ba: “kế hoạch tuần” — trả lời câu hỏi hôm nay làm gì.** Danh sách
+công việc chỉ nói *có những việc gì*; trang `/app/planner` (chỉ Pro) xếp việc đang
+mở vào 7 ngày: quá hạn lên ngày đầu (lâu nhất trước), việc còn lại nằm đúng ngày đến
+hạn, cùng ngày thì ưu tiên cao trước. Khách chọn sức mình mỗi ngày (3/5/8/10 việc).
+Điểm quan trọng nhất — và cũng là chỗ khác biệt với mọi app khác: **app nói thật khi
+tuần bị quá tải** (“bạn có 33 việc nhưng chỉ đủ chỗ cho 21, giữ nhịp này thì 26 việc
+sẽ trễ”), kèm nút dời hạn một chạm. Giấu đi là để khách tự phát hiện ra lúc đã trễ
+việc thật. Có luôn gợi ý đặt việc trọng tâm vào **giờ vàng** (tính từ dữ liệu thật của
+chính khách). Luật ở `backend/src/services/plannerService.js`.
+
+> **Quyết định (27/09/2026): bỏ mục “AI xếp cả tuần” khỏi danh sách.** Dịch vụ AI của
+> MN-Qronx (thư mục `ai/`, `POST /parse`) là model phân tích câu thành công việc —
+> không phải LLM biết lập kế hoạch. Hứa “AI xếp kế hoạch” là hứa suông. Kế hoạch tuần
+> nay xếp bằng **luật**: chạy ngay, không tốn lượt AI, và không bao giờ bịa ra công
+> việc không có thật — điều tối quan trọng với một app nhắc việc. Phần “gợi ý các bước
+> làm” cho một việc lớn đã có sẵn trong Trợ lý AI.
+
 **Chỉ ghi vào bảng này thứ khách đang dùng được.** Thứ chưa làm xong nằm ở
-`PLANS[...].upcoming` (trang giá hiện kèm nhãn “Sắp có”), hiện gồm: AI xếp kế hoạch
-tuần, đồng bộ **hai chiều** Google Calendar (một chiều app → lịch đã có sẵn cho mọi
-gói qua file .ics).
+`PLANS[...].upcoming` (trang giá hiện kèm nhãn “Sắp có”), hiện chỉ còn: đồng bộ **hai
+chiều** Google Calendar (một chiều app → lịch đã có sẵn cho mọi gói qua file .ics).
 
 > **Quyết định (27/09/2026): bỏ “nhắc qua Zalo OA” khỏi danh sách bán.** Người đã cài
 > app trên điện thoại thì thông báo đẩy hiện thẳng trên màn hình, không cần Zalo.
