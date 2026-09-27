@@ -4,6 +4,7 @@ import { calculateNextDueDate, serializeRepeatDays } from '../utils/dateUtils.js
 import { parsePagination, paginationMeta } from '../utils/pagination.js'
 import ApiError from '../utils/ApiError.js'
 import { PLANS, getUserPlan, planLimit, planLimitError } from '../utils/planLimits.js'
+import { parseNagEveryMinutes, assertNagAllowed } from './nagService.js'
 
 
 // ─── Find All (List + Filter + Sort + Paginate) ─────────
@@ -67,6 +68,10 @@ export async function create(userId, taskData) {
     )
   }
 
+  // "Nhắc dai" (Pro): chuông kêu lại tới khi việc được xác nhận là xong
+  const nagEveryMinutes = parseNagEveryMinutes(taskData.nagEveryMinutes)
+  assertNagAllowed(plan, nagEveryMinutes)
+
   // Gói FREE: giới hạn số nhắc nhở mỗi công việc
   const maxReminders = planLimit(plan, 'remindersPerTask')
   if (reminders?.length > maxReminders) {
@@ -105,6 +110,7 @@ export async function create(userId, taskData) {
         dueAt: new Date(dueAt),
         repeatType: repeatType || 'NONE',
         repeatDays: repeatType === 'WEEKLY' ? serializeRepeatDays(repeatDays) : null,
+        nagEveryMinutes,
       },
     })
 
@@ -174,6 +180,11 @@ export async function update(userId, taskId, data) {
     updateData.dueAt = newDue
   }
   if (data.priority !== undefined) updateData.priority = data.priority
+  if (data.nagEveryMinutes !== undefined) {
+    const nag = parseNagEveryMinutes(data.nagEveryMinutes)
+    assertNagAllowed(await getUserPlan(userId), nag)
+    updateData.nagEveryMinutes = nag
+  }
   if (data.repeatType !== undefined) {
     updateData.repeatType = data.repeatType
     // Không lặp → xoá luôn danh sách ngày cũ
@@ -258,6 +269,8 @@ export async function complete(userId, taskId) {
           priority: task.priority,
           repeatType: task.repeatType,
           repeatDays: task.repeatDays,
+          // Việc lặp lại giữ luôn chế độ nhắc dai: lần sau cũng phải nhắc tới khi xong
+          nagEveryMinutes: task.nagEveryMinutes,
           dueAt: nextDueAt,
           parentTaskId: taskId,
         },

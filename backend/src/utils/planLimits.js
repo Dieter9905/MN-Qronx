@@ -7,8 +7,9 @@ const PAID_PLANS = ['PLUS', 'PRO']
 // Nguyên tắc đóng gói (xem docs/billing.md):
 //   • FREE đủ rộng cho thói quen cơ bản — kể cả công việc LẶP LẠI, vì app nhắc
 //     việc mà không cho lặp thì người dùng bỏ app chứ không nâng cấp.
-//   • Tiền thu ở chỗ cảm nhận được giá trị: hạn mức AI, thiết bị, âm thanh riêng,
-//     hỗ trợ ưu tiên. KHÔNG bán thứ chưa làm — xem `upcoming` trong từng gói.
+//   • Tiền thu ở chỗ cảm nhận được giá trị: nhắc dai tới khi xác nhận (chỉ Pro),
+//     hạn mức AI, thiết bị, âm thanh riêng, hỗ trợ ưu tiên. KHÔNG bán thứ chưa làm —
+//     xem `upcoming` trong từng gói.
 //   • Nhắc qua Zalo OA đã bỏ khỏi danh sách bán: ai đã cài app trên điện thoại thì
 //     thông báo đẩy hiện thẳng trên màn hình, Zalo chỉ còn là kênh dự phòng cho
 //     người không cài app (và một số máy chặn thông báo nền) — để sau, khi có nhu cầu thật.
@@ -39,6 +40,7 @@ export const PLANS = {
     subtasksPerTask: 20,
     devices: 2,
     repeatTasks: true,
+    nagReminders: false,
     aiDailyLimit: 5,
     alarmSounds: ['classic', 'digital', 'DEFAULT', 'URGENT'],
     priceMonthly: 0,
@@ -62,6 +64,7 @@ export const PLANS = {
     subtasksPerTask: Infinity,
     devices: 5,
     repeatTasks: true,
+    nagReminders: false,
     aiDailyLimit: 50,
     alarmSounds: ['classic', 'digital', 'bell', 'morning', 'DEFAULT', 'URGENT'],
     priceMonthly: 39000,
@@ -84,6 +87,8 @@ export const PLANS = {
     subtasksPerTask: Infinity,
     devices: Infinity,
     repeatTasks: true,
+    // "Nhắc dai": lý do trả tiền rõ nhất của Pro — xem backend/src/services/nagService.js
+    nagReminders: true,
     aiDailyLimit: Infinity,
     alarmSounds: ['classic', 'digital', 'bell', 'morning', 'gentle', 'DEFAULT', 'URGENT'],
     priceMonthly: 79000,
@@ -91,6 +96,7 @@ export const PLANS = {
     // Chỉ ghi những gì khách ĐANG dùng được. Thứ chưa làm thì để ở `upcoming`
     // (trang giá hiện kèm nhãn “Sắp có”) — bán thứ chưa có là mất khách oan.
     features: [
+      'Nhắc dai tới khi bạn xác nhận: việc Khẩn cấp/Cao chưa xong thì chuông kêu lại (bạn chọn 1–30 phút một lần)',
       'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
       'Không giới hạn thiết bị đồng bộ',
       'Trợ lý AI không giới hạn',
@@ -126,9 +132,7 @@ export function planCatalog() {
       devices: finiteOrNull(plan.devices),
       aiDailyLimit: finiteOrNull(plan.aiDailyLimit),
       repeatTasks: plan.repeatTasks,
-      calendarSync: plan.calendarSync,
-      zaloReminders: plan.zaloReminders,
-      exportReports: plan.exportReports,
+      nagReminders: plan.nagReminders,
     },
   }))
 }

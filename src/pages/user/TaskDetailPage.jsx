@@ -15,6 +15,7 @@ import {
   X,
   CalendarCheck,
   ListChecks,
+  Alarm,
 } from '@phosphor-icons/react'
 import {
   getTask,
@@ -197,6 +198,11 @@ export default function TaskDetailPage() {
                   <Repeat size={16} weight="bold" /> Lặp lại: {repeatSummary(task.repeatType, task.repeatDays)}
                 </span>
               )}
+              {task.nagEveryMinutes ? (
+                <span className="inline-flex items-center gap-1.5 font-bold text-rose-600 dark:text-rose-400">
+                  <Alarm size={16} weight="bold" /> Nhắc dai mỗi {task.nagEveryMinutes} phút tới khi xong
+                </span>
+              ) : null}
             </p>
             {isOverdue(task) && (
               <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-200">
@@ -345,6 +351,7 @@ export default function TaskDetailPage() {
                   <p className="text-sm font-semibold text-navy-800 dark:text-slate-200">{formatDateTime(r.remindAt)}</p>
                   <p className="text-xs text-navy-400 dark:text-slate-500">
                     {r.status === 'SCHEDULED' ? 'Sẽ báo thức đúng giờ' : r.status === 'CANCELLED' ? 'Đã bị hủy' : r.status === 'DISMISSED' ? 'Đã tắt' : 'Đã kích hoạt'}
+                    {r.nagCount > 0 ? ` · đã nhắc lại ${r.nagCount} lần vì việc chưa xong` : ''}
                     {r.snoozeCount > 0 && ` · Đã hoãn ${r.snoozeCount} lần`}
                   </p>
                 </div>

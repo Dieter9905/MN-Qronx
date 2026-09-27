@@ -9,6 +9,8 @@ import {
   ListChecks,
   FolderSimple,
   Check,
+  Alarm,
+  LockSimple,
 } from '@phosphor-icons/react'
 import { Field, Input, Textarea, Select, SegmentedControl } from '../../components/common/Inputs'
 import Button from '../../components/common/Button'
@@ -18,7 +20,14 @@ import Modal from '../../components/common/Modal'
 import { useToast } from '../../components/common/Toast'
 import { PageLoader } from '../../components/common/Feedback'
 import { useAuth } from '../../context/AuthContext'
-import { PRIORITY, REPEAT_TYPE_LIST, WEEKDAYS, PLAN_REMINDER_LIMIT, CATEGORY_COLORS } from '../../lib/constants'
+import {
+  PRIORITY,
+  REPEAT_TYPE_LIST,
+  WEEKDAYS,
+  PLAN_REMINDER_LIMIT,
+  CATEGORY_COLORS,
+  NAG_INTERVALS,
+} from '../../lib/constants'
 import { ColorPicker } from '../../components/common/Inputs'
 import { toDate, addMinutes, setTime } from '../../lib/format'
 
@@ -45,6 +54,8 @@ export default function TaskFormPage() {
   const plan = user?.plan || 'FREE'
   const reminderLimit = PLAN_REMINDER_LIMIT[plan] || 5
   const canRepeat = plan === 'PLUS' || plan === 'PRO'
+  // "Nhắc dai" chỉ gói Pro — đây là điểm khác biệt rõ nhất của Pro (xem docs/billing.md)
+  const canNag = plan === 'PRO'
 
   const [loading, setLoading] = useState(isEdit)
   const [categories, setCategories] = useState([])
@@ -60,6 +71,7 @@ export default function TaskFormPage() {
     repeatType: 'NONE',
     repeatDays: [],
     reminders: [],
+    nagEveryMinutes: null,
     subtasks: [],
   })
   const [origDueAt, setOrigDueAt] = useState(null)
@@ -97,6 +109,7 @@ export default function TaskFormPage() {
         reminders: t.reminders
           .filter((r) => r.status === 'SCHEDULED')
           .map((r) => ({ id: r.id, remindAt: toLocalInputValue(r.remindAt) })),
+        nagEveryMinutes: t.nagEveryMinutes ?? null,
         subtasks: t.subtasks.map((s) => ({ id: s.id, content: s.content })),
       })
       setOrigDueAt(t.dueAt)
@@ -228,6 +241,7 @@ export default function TaskFormPage() {
               : []
           : [],
       reminders: form.reminders.filter((r) => r.remindAt).map((r) => ({ id: r.id, remindAt: new Date(r.remindAt).toISOString() })),
+      nagEveryMinutes: canNag ? form.nagEveryMinutes : null,
       subtasks: form.subtasks.filter((s) => s.content.trim()).map((s) => ({ id: s.id, content: s.content.trim() })),
     }
     const res = isEdit ? await updateTask(id, payload) : await createTask(payload)
@@ -440,6 +454,66 @@ export default function TaskFormPage() {
             <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">
               Chưa có nhắc nhở – MN-Qronx sẽ không báo thức cho công việc này.
             </p>
+          )}
+        </section>
+
+        {/* Nhắc dai (gói Pro) */}
+        <section className="card p-5 sm:p-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
+              <Alarm size={19} weight="fill" className="text-rose-500 dark:text-rose-400" />
+              Nhắc dai tới khi xong
+            </h2>
+            <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-bold text-violet-700 ring-1 ring-inset ring-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:ring-violet-700">
+              PRO
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-navy-500 dark:text-slate-400">
+            Việc chưa xong thì chuông tự kêu lại (tối đa 10 lần). Bấm “Xong” là thôi nhắc —
+            dành cho việc không được phép quên.
+          </p>
+
+          {canNag ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => set('nagEveryMinutes')(null)}
+                className={`cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 ring-inset transition ${
+                  form.nagEveryMinutes === null
+                    ? 'bg-navy-800 text-white ring-navy-800 dark:bg-slate-200 dark:text-slate-900 dark:ring-slate-200'
+                    : 'bg-navy-50 text-navy-700 ring-navy-100 hover:bg-blue-50 hover:text-blue-700 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600'
+                }`}
+              >
+                Tắt
+              </button>
+              {NAG_INTERVALS.map((o) => (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => set('nagEveryMinutes')(o.value)}
+                  className={`cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 ring-inset transition ${
+                    form.nagEveryMinutes === o.value
+                      ? 'bg-rose-600 text-white ring-rose-600'
+                      : 'bg-navy-50 text-navy-700 ring-navy-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600'
+                  }`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-3 rounded-xl bg-navy-50 p-3 ring-1 ring-inset ring-navy-100 dark:bg-slate-700/60 dark:ring-slate-600">
+              <p className="flex items-start gap-2 text-xs font-medium text-navy-500 dark:text-slate-300">
+                <LockSimple size={15} className="mt-0.5 shrink-0" />
+                <span>
+                  Gói hiện tại chỉ nhắc một lần. Nâng cấp Pro để chuông nhắc lại tới khi bạn
+                  xác nhận xong.{' '}
+                  <Link to="/app/billing" className="font-bold underline">
+                    Nâng cấp Pro
+                  </Link>
+                </span>
+              </p>
+            </div>
           )}
         </section>
 

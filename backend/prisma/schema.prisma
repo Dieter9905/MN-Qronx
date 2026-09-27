@@ -264,6 +264,10 @@ model Task {
   // Ngày trong tuần cho lặp Hằng tuần (ISO 8601: 1=Thứ 2 … 7=Chủ nhật), chuỗi "1,3,5"
   repeatDays    String?      @db.VarChar(20) @map("repeat_days")
   completedAt   DateTime?    @map("completed_at")
+  // "Nhắc dai" (gói Pro): việc chưa xong thì chuông kêu lại mỗi N phút cho tới
+  // khi người dùng bấm Xong. null = tắt. Đây là lý do trả tiền rõ nhất của Pro:
+  // "nhắc là nhớ", chứ không phải nhắc một lần rồi thôi.
+  nagEveryMinutes Int?       @map("nag_every_minutes")
   // Thùng rác: xoá là ĐẶT ngày này chứ không xoá dòng — còn giữ được 30 ngày
   // để khôi phục (người dùng không sợ mất dữ liệu). Mọi truy vấn đều lọc
   // deletedAt = null để việc trong thùng rác không hiện ở list/dashboard.
@@ -307,6 +311,8 @@ model Reminder {
   remindAt    DateTime       @map("remind_at")
   status      ReminderStatus @default(SCHEDULED)
   snoozeCount Int            @default(0) @map("snooze_count")
+  // Số lần đã nhắc lại trong chế độ nhắc dai — dừng khi việc xong hoặc hết trần
+  nagCount    Int            @default(0) @map("nag_count")
   createdAt   DateTime       @default(now()) @map("created_at")
   updatedAt   DateTime       @updatedAt @map("updated_at")
 

@@ -97,6 +97,17 @@ export const DEFAULT_SNOOZE_OPTIONS = [5, 10, 15, 30]
 export const MAX_REMINDERS_PER_TASK = 5
 export const MAX_SNOOZE_COUNT = 3
 
+// "Nhắc dai" (gói Pro): chu kỳ nhắc lại, tính bằng phút.
+// Nguồn thật là backend/src/services/nagService.js (NAG_INTERVALS).
+export const NAG_INTERVALS = [
+  { value: 1, label: '1 phút' },
+  { value: 2, label: '2 phút' },
+  { value: 5, label: '5 phút' },
+  { value: 10, label: '10 phút' },
+  { value: 15, label: '15 phút' },
+  { value: 30, label: '30 phút' },
+]
+
 // ─── Gói dịch vụ (FREE / PLUS / PRO) ─────────────────────
 export const PLAN_NAMES = {
   FREE: 'Miễn phí',
@@ -164,6 +175,7 @@ export const PLANS = [
     // Chỉ liệt kê thứ khách ĐANG dùng được. Chưa làm thì để ở `upcoming` và
     // trang giá hiện kèm nhãn “Sắp có” — đừng bán thứ chưa có.
     features: [
+      'Nhắc dai tới khi bạn xác nhận: việc quan trọng chưa xong thì chuông kêu lại',
       'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
       'Không giới hạn thiết bị đồng bộ',
       'Trợ lý AI không giới hạn',
@@ -174,7 +186,7 @@ export const PLANS = [
       'Báo cáo năng suất và xuất Excel/PDF',
       'Đồng bộ hai chiều Google Calendar (hiện đã có chiều app → lịch)',
     ],
-    limits: { activeTasks: null, aiDailyLimit: null, devices: null, repeatTasks: true },
+    limits: { activeTasks: null, aiDailyLimit: null, devices: null, repeatTasks: true, nagReminders: true },
   },
 ]
 

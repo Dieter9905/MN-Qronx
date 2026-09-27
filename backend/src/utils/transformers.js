@@ -76,6 +76,8 @@ export function transformReminder(rem) {
     remindAt: rem.remindAt,
     status: rem.status,
     snoozeCount: rem.snoozeCount,
+    // Số lần chuông đã kêu lại trong chế độ nhắc dai (gói Pro)
+    nagCount: rem.nagCount ?? 0,
     createdAt: rem.createdAt,
   }
 }
@@ -98,6 +100,8 @@ export function transformTask(task) {
     repeatDays: parseRepeatDays(task.repeatDays),
     completedAt: task.completedAt || null,
     createdAt: task.createdAt,
+    // "Nhắc dai" (Pro): việc chưa xong thì chuông kêu lại mỗi N phút
+    nagEveryMinutes: task.nagEveryMinutes ?? null,
     overdue: task.overdue ?? false,
     category: task.category ? transformCategory(task.category) : null,
     subtasks: Array.isArray(task.subtasks) ? task.subtasks.map(transformSubtask) : [],
