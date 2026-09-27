@@ -113,6 +113,28 @@ describe('GET /billing/products', () => {
     expect(free.limits.repeatTasks).toBe(true)
     expect(free.limits.aiDailyLimit).toBe(5)
   })
+
+  it('chỉ bán thứ đã làm: việc chưa xong nằm ở danh sách “Sắp có”', async () => {
+    const res = await api('GET', '/billing/products')
+    const pro = res.data.data.plans.find((p) => p.id === 'PRO')
+
+    // Nhắc qua Zalo đã bỏ khỏi danh sách bán (điện thoại đã có thông báo đẩy)
+    expect(pro.features.join(' ')).not.toMatch(/zalo/i)
+    // Đồng bộ hai chiều chưa làm → không được nằm trong danh sách đang bán
+    expect(pro.features.join(' ')).not.toMatch(/hai chiều/i)
+    expect(pro.features.join(' ')).toMatch(/Trợ lý AI không giới hạn/i)
+
+    // Việc chưa làm phải được nói rõ là sắp có
+    expect(pro.upcoming.length).toBeGreaterThan(0)
+    expect(pro.upcoming.join(' ')).toMatch(/hai chiều/i)
+    expect(pro.upcoming.join(' ')).not.toMatch(/zalo/i)
+
+    // Cái đã làm thật cho MỌI gói thì ghi cho mọi gói, không hứa riêng gói trả phí
+    const free = res.data.data.plans.find((p) => p.id === 'FREE')
+    expect(free.features.join(' ')).toMatch(/đóng trình duyệt/i)
+    expect(free.features.join(' ')).toMatch(/Google Calendar/i)
+    expect(free.upcoming).toEqual([])
+  })
 })
 
 // ─── Tạo đơn ────────────────────────────────────────────────

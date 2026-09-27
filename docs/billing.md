@@ -21,7 +21,18 @@ còn phải làm để bán được gói trong app Android trên Google Play.
 |---|---|---|---|
 | Miễn phí | 0đ | 0đ | 50 việc đang mở, **có công việc lặp lại**, 3 nhắc/việc, 2 thiết bị, AI 5 lần/ngày |
 | Plus | 39.000đ | 390.000đ | Không giới hạn việc/danh mục/việc con, 5 thiết bị, AI 50 lần/ngày |
-| Pro | 79.000đ | 790.000đ | Không giới hạn AI + đồng bộ Google Calendar + nhắc qua Zalo + báo cáo và xuất dữ liệu + âm thanh riêng |
+| Pro | 79.000đ | 790.000đ | Không giới hạn AI, không giới hạn thiết bị, toàn bộ âm thanh + âm thanh riêng |
+
+**Chỉ ghi vào bảng này thứ khách đang dùng được.** Thứ chưa làm xong nằm ở
+`PLANS[...].upcoming` (trang giá hiện kèm nhãn “Sắp có”), hiện gồm: AI xếp kế hoạch
+tuần, báo cáo + xuất Excel/PDF, đồng bộ **hai chiều** Google Calendar (một chiều
+app → lịch đã có sẵn cho mọi gói qua file .ics).
+
+> **Quyết định (27/09/2026): bỏ “nhắc qua Zalo OA” khỏi danh sách bán.** Người đã cài
+> app trên điện thoại thì thông báo đẩy hiện thẳng trên màn hình, không cần Zalo.
+> Zalo chỉ còn giá trị như **kênh dự phòng** cho người không cài app (hoặc máy chặn
+> thông báo nền) — để lại trong danh sách làm sau, khi có nhu cầu thật; tiền thu ở
+> chỗ khác (hạn mức AI, thiết bị, âm thanh riêng, hỗ trợ ưu tiên).
 
 Trả theo năm = 10 tháng (tặng 2 tháng). Giá nằm trong `PLANS[...].priceMonthly` /
 `priceYearly`, mã sản phẩm cho Play ở `PRODUCT_IDS` — **Play Console phải tạo sản

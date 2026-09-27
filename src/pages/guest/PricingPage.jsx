@@ -152,7 +152,7 @@ export default function PricingPage() {
                     ≈ {formatVnd(Math.round(price / 12))}/tháng — tiết kiệm 2 tháng
                   </p>
                 )}
-                <ul className="mt-6 flex-1 space-y-3">
+                <ul className="mt-6 space-y-3">
                   {(p.features || []).map((f) => (
                     <li key={f} className="flex items-start gap-3 text-sm text-navy-600 dark:text-slate-300">
                       <span className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
@@ -162,6 +162,22 @@ export default function PricingPage() {
                     </li>
                   ))}
                 </ul>
+
+                {/* Thứ chưa làm xong thì để riêng và nói thẳng là “Sắp có”: khách
+                    biết mình mua gì, còn hơn mua rồi mới phát hiện chưa có. */}
+                {(p.upcoming || []).length > 0 && (
+                  <ul className="mt-3 space-y-2 border-t border-dashed border-navy-100 pt-3 dark:border-slate-700">
+                    {p.upcoming.map((f) => (
+                      <li key={f} className="flex items-start gap-2.5 text-sm text-navy-400 dark:text-slate-500">
+                        <span className="mt-0.5 shrink-0 rounded-full bg-amber-100 px-2 py-[1px] text-[10px] font-extrabold uppercase tracking-wide text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                          Sắp có
+                        </span>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex-1" />
                 <div className="mt-7">
                   {isCurrent ? (
                     <Button variant="secondary" fullWidth disabled>

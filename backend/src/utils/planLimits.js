@@ -7,8 +7,11 @@ const PAID_PLANS = ['PLUS', 'PRO']
 // Nguyên tắc đóng gói (xem docs/billing.md):
 //   • FREE đủ rộng cho thói quen cơ bản — kể cả công việc LẶP LẠI, vì app nhắc
 //     việc mà không cho lặp thì người dùng bỏ app chứ không nâng cấp.
-//   • Tiền thu ở chỗ cảm nhận được giá trị: hạn mức AI, đồng bộ lịch, nhắc qua
-//     Zalo, báo cáo, thiết bị, âm thanh riêng.
+//   • Tiền thu ở chỗ cảm nhận được giá trị: hạn mức AI, thiết bị, âm thanh riêng,
+//     hỗ trợ ưu tiên. KHÔNG bán thứ chưa làm — xem `upcoming` trong từng gói.
+//   • Nhắc qua Zalo OA đã bỏ khỏi danh sách bán: ai đã cài app trên điện thoại thì
+//     thông báo đẩy hiện thẳng trên màn hình, Zalo chỉ còn là kênh dự phòng cho
+//     người không cài app (và một số máy chặn thông báo nền) — để sau, khi có nhu cầu thật.
 //   • Giá để ở đây là NGUỒN DUY NHẤT cho cả web (VietQR) và app Android (Play
 //     Billing) — Play Console phải tạo sản phẩm trùng đúng giá và đúng mã.
 export const PLAN_ORDER = { FREE: 0, PLUS: 1, PRO: 2 }
@@ -37,9 +40,6 @@ export const PLANS = {
     devices: 2,
     repeatTasks: true,
     aiDailyLimit: 5,
-    calendarSync: false,
-    zaloReminders: false,
-    exportReports: false,
     alarmSounds: ['classic', 'digital', 'DEFAULT', 'URGENT'],
     priceMonthly: 0,
     priceYearly: 0,
@@ -49,6 +49,8 @@ export const PLANS = {
       '10 danh mục, 20 việc con mỗi công việc',
       '2 thiết bị đồng bộ',
       'Trợ lý AI: 5 lần mỗi ngày',
+      'Nhắc đúng giờ kể cả khi đã đóng trình duyệt',
+      'Xuất việc sang Google Calendar / Outlook',
     ],
   },
   PLUS: {
@@ -61,9 +63,6 @@ export const PLANS = {
     devices: 5,
     repeatTasks: true,
     aiDailyLimit: 50,
-    calendarSync: false,
-    zaloReminders: false,
-    exportReports: false,
     alarmSounds: ['classic', 'digital', 'bell', 'morning', 'DEFAULT', 'URGENT'],
     priceMonthly: 39000,
     priceYearly: 390000,
@@ -86,20 +85,21 @@ export const PLANS = {
     devices: Infinity,
     repeatTasks: true,
     aiDailyLimit: Infinity,
-    calendarSync: true,
-    zaloReminders: true,
-    exportReports: true,
     alarmSounds: ['classic', 'digital', 'bell', 'morning', 'gentle', 'DEFAULT', 'URGENT'],
     priceMonthly: 79000,
     priceYearly: 790000,
+    // Chỉ ghi những gì khách ĐANG dùng được. Thứ chưa làm thì để ở `upcoming`
+    // (trang giá hiện kèm nhãn “Sắp có”) — bán thứ chưa có là mất khách oan.
     features: [
       'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
       'Không giới hạn thiết bị đồng bộ',
-      'Trợ lý AI không giới hạn + AI lập kế hoạch tuần',
-      'Đồng bộ hai chiều Google Calendar',
-      'Nhắc nhở qua Zalo khi không mở app',
-      'Báo cáo năng suất & xuất dữ liệu',
-      'Âm thanh báo thức tùy chỉnh',
+      'Trợ lý AI không giới hạn',
+      'Toàn bộ âm thanh báo thức, kể cả âm thanh riêng bạn tải lên',
+    ],
+    upcoming: [
+      'AI xếp cả tuần thành kế hoạch kèm các bước làm',
+      'Báo cáo năng suất và xuất Excel/PDF',
+      'Đồng bộ hai chiều Google Calendar (hiện đã có chiều app → lịch)',
     ],
   },
 }
@@ -111,6 +111,7 @@ export function planCatalog() {
     name: plan.name,
     tagline: plan.tagline,
     features: plan.features,
+    upcoming: plan.upcoming || [],
     priceMonthly: plan.priceMonthly,
     priceYearly: plan.priceYearly,
     productIds: {

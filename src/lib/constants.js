@@ -131,6 +131,8 @@ export const PLANS = [
       '10 danh mục, 20 việc con mỗi công việc',
       '2 thiết bị đồng bộ',
       'Trợ lý AI: 5 lần mỗi ngày',
+      'Nhắc đúng giờ kể cả khi đã đóng trình duyệt',
+      'Xuất việc sang Google Calendar / Outlook',
     ],
     limits: { activeTasks: 50, aiDailyLimit: 5, devices: 2, repeatTasks: true },
   },
@@ -159,14 +161,18 @@ export const PLANS = [
     priceYearly: 790000,
     gradient: 'from-violet-500 to-fuchsia-500',
     ai: true,
+    // Chỉ liệt kê thứ khách ĐANG dùng được. Chưa làm thì để ở `upcoming` và
+    // trang giá hiện kèm nhãn “Sắp có” — đừng bán thứ chưa có.
     features: [
       'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
       'Không giới hạn thiết bị đồng bộ',
-      'Trợ lý AI không giới hạn + AI lập kế hoạch tuần',
-      'Đồng bộ hai chiều Google Calendar',
-      'Nhắc nhở qua Zalo khi không mở app',
-      'Báo cáo năng suất & xuất dữ liệu',
-      'Âm thanh báo thức tùy chỉnh',
+      'Trợ lý AI không giới hạn',
+      'Toàn bộ âm thanh báo thức, kể cả âm thanh riêng bạn tải lên',
+    ],
+    upcoming: [
+      'AI xếp cả tuần thành kế hoạch kèm các bước làm',
+      'Báo cáo năng suất và xuất Excel/PDF',
+      'Đồng bộ hai chiều Google Calendar (hiện đã có chiều app → lịch)',
     ],
     limits: { activeTasks: null, aiDailyLimit: null, devices: null, repeatTasks: true },
   },
