@@ -7,6 +7,7 @@ import * as customSoundValidation from '../dto/request/customSoundValidation.js'
 import * as customSoundController from '../controllers/customSoundController.js'
 import * as calendarIcsController from '../controllers/calendarIcsController.js'
 import * as shareController from '../controllers/taskShareController.js'
+import * as familyController from '../controllers/familyController.js'
 
 const router = Router()
 
@@ -143,6 +144,13 @@ router.put('/weekly-report', auth, userController.setWeeklyReport)
 // Gửi thử ngay cho CHÍNH người gọi: thư tuần chỉ đi mỗi thứ 2 nên không có cách nào
 // khác để xem trước nội dung thư đang gửi cho khách trả tiền.
 router.post('/weekly-report/test', auth, userController.sendTestWeeklyReport)
+
+// ── Gói Pro Gia đình: một khách trả tiền, tới 4 tài khoản cùng dùng quyền Pro ──
+// Cả chủ gói lẫn người trong nhà đều gọi GET này rồi tự phân vai ở giao diện.
+router.get('/family', auth, familyController.getFamily)
+router.post('/family/members', auth, familyController.inviteMember)
+router.delete('/family/members/:memberId', auth, familyController.removeMember)
+router.post('/family/leave', auth, familyController.leaveFamily)
 
 // ── Việc người khác nhờ tôi làm (giao việc là quyền lợi gói Pro của NGƯỜI GIAO) ──
 // Người NHẬN không cần gói trả phí — có thêm người nhận là có thêm khách dùng app.

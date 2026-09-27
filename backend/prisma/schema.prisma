@@ -66,6 +66,9 @@ enum Plan {
   FREE
   PLUS
   PRO
+  // Pro Gia đình: mua một lần, dùng chung cho tới 4 tài khoản (chủ gói + 3 người).
+  // Cùng quyền lợi với PRO — người trong nhà không cần mua thêm gói riêng.
+  FAMILY
 }
 
 // ─── Thanh toán & quyền lợi theo gói ───────────────────────
@@ -77,6 +80,9 @@ enum BillingProvider {
   ADMIN    // admin tặng/đổi gói thủ công
   TRIAL    // dùng thử 7 ngày
   REWARD   // đổi điểm lấy ngày dùng gói
+  // Chỗ ngồi trong gói gia đình của người khác: KHÔNG phải tiền khách trả, nên phải
+  // tách khỏi các provider ở trên để báo cáo doanh thu không đếm nhầm thành khách trả tiền.
+  FAMILY
 }
 
 enum BillingCycle {
@@ -168,6 +174,9 @@ model User {
   // Giao việc (Pro): assignedShares = việc người khác nhờ tôi, sharedTasks = việc tôi nhờ người khác
   assignedShares         TaskShare[]             @relation("TaskShareAssignee")
   sharedTasks            TaskShare[]             @relation("TaskShareSharedBy")
+  // Gói Pro Gia đình: ownedFamilyMembers = những người tôi cho dùng ké, familyMembership = chỗ của tôi trong nhà người khác
+  ownedFamilyMembers     FamilyMember[]          @relation("FamilyOwner")
+  familyMembership       FamilyMember?           @relation("FamilyMemberUser")
   invitesSent            Invitation[]            @relation("InviterInvitations")
   invitesReceived        Invitation[]            @relation("InviteeInvitation")
   supportConversation    SupportConversation?
@@ -350,6 +359,32 @@ model TaskShare {
   @@index([assigneeId, doneAt], map: "ix_task_shares_assignee")
   @@index([sharedById], map: "ix_task_shares_shared_by")
   @@map("task_shares")
+}
+
+// ─── Gói Pro Gia đình ────────────────────────────────────────
+// Một khách trả tiền cho cả nhà: chủ gói mua FAMILY và kéo tối đa 3 người nữa
+// dùng chung (tổng 4 tài khoản có quyền Pro).
+//
+// Quyền lợi của người trong nhà được VẬT CHẤT HOÁ trên chính `users.plan = PRO`
+// (cùng Subscription.provider = FAMILY) thay vì tính lại ở mỗi chỗ đọc gói — mỗi
+// nơi tự suy ra "có được dùng Pro không" là cách chắc chắn để chỗ này cho qua,
+// chỗ kia chặn. Cột/`planExpiresAt` của người trong nhà luôn lấy theo chủ gói nên
+// khi chủ hết hạn thì cả nhà cùng hết (scheduler đồng bộ mỗi phút).
+model FamilyMember {
+  familyMemberId Int       @id @default(autoincrement()) @map("family_member_id")
+  ownerId        Int       @map("owner_id")
+  // Một người chỉ nằm trong đúng một nhà (@@unique bên dưới) — tránh cùng lúc
+  // nhận hai gói và không biết gói nào hết hạn trước.
+  memberId       Int       @unique @map("member_id")
+  note           String?   @db.VarChar(255)
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  owner  User @relation("FamilyOwner", fields: [ownerId], references: [userId], onDelete: Cascade)
+  member User @relation("FamilyMemberUser", fields: [memberId], references: [userId], onDelete: Cascade)
+
+  @@unique([ownerId, memberId], map: "ux_family_members_owner_member")
+  @@index([ownerId], map: "ix_family_members_owner")
+  @@map("family_members")
 }
 
 model Reminder {

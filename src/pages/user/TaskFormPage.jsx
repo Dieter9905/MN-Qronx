@@ -27,6 +27,8 @@ import {
   PLAN_REMINDER_LIMIT,
   CATEGORY_COLORS,
   NAG_INTERVALS,
+  isProPlan,
+  isPaidPlan,
 } from '../../lib/constants'
 import { ColorPicker } from '../../components/common/Inputs'
 import { toDate, addMinutes, setTime } from '../../lib/format'
@@ -53,9 +55,9 @@ export default function TaskFormPage() {
   const { user } = useAuth()
   const plan = user?.plan || 'FREE'
   const reminderLimit = PLAN_REMINDER_LIMIT[plan] || 5
-  const canRepeat = plan === 'PLUS' || plan === 'PRO'
+  const canRepeat = isPaidPlan(plan)
   // "Nhắc dai" chỉ gói Pro — đây là điểm khác biệt rõ nhất của Pro (xem docs/billing.md)
-  const canNag = plan === 'PRO'
+  const canNag = isProPlan(plan)
 
   const [loading, setLoading] = useState(isEdit)
   const [categories, setCategories] = useState([])

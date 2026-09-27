@@ -16,12 +16,20 @@ import {
   Receipt,
   Brain,
   Warning,
+  UsersThree,
+  EnvelopeSimple,
 } from '@phosphor-icons/react'
 import Button from '../../components/common/Button'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
 import { formatDate, formatVnd } from '../../lib/format'
-import { PLANS as FALLBACK_PLANS, PLAN_NAMES, BILLING_CYCLES } from '../../lib/constants'
+import { PLANS as FALLBACK_PLANS, PLAN_NAMES, BILLING_CYCLES, isPaidPlan, isProPlan } from '../../lib/constants'
+import {
+  getFamily,
+  inviteMember,
+  removeMember,
+  leaveFamily,
+} from '../../services/familyService'
 import {
   getProducts,
   getMyBilling,
@@ -32,13 +40,15 @@ import {
   startTrial,
 } from '../../services/billingService'
 
-const PLAN_ICON = { FREE: Sparkle, PLUS: Rocket, PRO: Crown }
+const PLAN_ICON = { FREE: Sparkle, PLUS: Rocket, PRO: Crown, FAMILY: Crown }
 const PLAN_ICON_COLOR = {
   FREE: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
   PLUS: 'bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300',
   PRO: 'bg-violet-50 text-violet-600 dark:bg-violet-900/40 dark:text-violet-300',
+  FAMILY: 'bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-900/40 dark:text-fuchsia-300',
 }
-const RANK = { FREE: 0, PLUS: 1, PRO: 2 }
+// Thang bậc gói: cao hơn thì là "nâng cấp", thấp hơn/ngang thì là "gia hạn".
+const RANK = { FREE: 0, PLUS: 1, PRO: 2, FAMILY: 3 }
 
 const ORDER_STATUS = {
   PENDING: { label: 'Chờ thanh toán', cls: 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:ring-amber-800/50' },
@@ -82,6 +92,241 @@ function useCountdown(expiresAt) {
   return left
 }
 
+// ─── Gói Pro Gia đình ────────────────────────────────────────
+/**
+ * Khối "Gói gia đình" — CÙNG một khối cho cả ba vai:
+ *   • người chưa có nhà → thấy mức giá và nút mua;
+ *   • chủ gói           → thấy danh sách chỗ trống, form mời và nút gỡ;
+ *   • người trong nhà    → thấy mình dùng chung của ai và nút rời đi.
+ * Một khối, ba nội dung: không có chuyện hai màn hình nói hai chuyện khác nhau
+ * về cùng một gói.
+ */
+function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
+  const toast = useToast()
+  const [email, setEmail] = useState('')
+  const [note, setNote] = useState('')
+  const [inviting, setInviting] = useState(false)
+  const [confirmLeave, setConfirmLeave] = useState(false)
+  const [confirmRemove, setConfirmRemove] = useState(null)
+
+  // Chủ gói: khi API hỏng thì vẫn vào được khối này nhờ gói FAMILY trên máy —
+  // server tự chặn nếu thật sự không có quyền mời.
+  const isOwner = !isSeat && (Boolean(family?.ownerActive) || current === 'FAMILY')
+  const members = family?.members || []
+  const left = family ? (family.seatsLeft ?? 0) : 3
+  const expiresAt = isSeat ? family?.owner?.expiresAt : family?.expiresAt
+
+  const invite = async () => {
+    const clean = email.trim()
+    if (!clean) return
+    setInviting(true)
+    const res = await inviteMember({ email: clean, note: note.trim() })
+    setInviting(false)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    setEmail('')
+    setNote('')
+    toast.success(res.message)
+    onChanged()
+  }
+
+  const drop = async (memberId) => {
+    const res = await removeMember(memberId)
+    setConfirmRemove(null)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    toast.success(res.message)
+    onChanged()
+  }
+
+  const leave = async () => {
+    const res = await leaveFamily()
+    setConfirmLeave(false)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    toast.success(res.message)
+    onChanged()
+  }
+
+  // ── Người trong nhà: biết mình dùng chung của ai, và rời đi được ──
+  if (isSeat) {
+    return (
+      <section className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
+        <p className="inline-flex items-center gap-2 text-sm font-extrabold text-navy-900 dark:text-white">
+          <UsersThree size={18} weight="fill" className="text-fuchsia-500" /> Gói Pro Gia đình
+        </p>
+        <p className="mt-3 text-sm text-navy-600 dark:text-slate-300">
+          Bạn đang dùng chung gói Pro Gia đình của <b>{family?.owner?.fullName || 'người thân'}</b>
+          {expiresAt && (
+            <>
+              {' '}
+              — gói còn hiệu lực tới <b>{formatDate(expiresAt)}</b>
+            </>
+          )}
+          . Mọi quyền lợi Pro (nhắc dai, báo cáo năng suất, kế hoạch tuần, nhờ người khác làm) đều dùng
+          được như bạn tự trả tiền.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {!confirmLeave ? (
+            <Button variant="secondary" icon={UsersThree} onClick={() => setConfirmLeave(true)}>
+              Rời gói gia đình
+            </Button>
+          ) : (
+            <>
+              <Button icon={Check} onClick={leave}>
+                Chắc chắn — rời gói
+              </Button>
+              <Button variant="ghost" onClick={() => setConfirmLeave(false)}>
+                Để ở lại
+              </Button>
+            </>
+          )}
+        </div>
+        <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">
+          Rời gói không xoá dữ liệu nào của bạn — chỉ là trở lại gói Miễn phí, và bạn vẫn mua được gói riêng
+          bất cứ lúc nào.
+        </p>
+      </section>
+    )
+  }
+
+  // ── Chủ gói: mời, xem chỗ trống, gỡ ──
+  if (isOwner) {
+    return (
+      <section className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="inline-flex items-center gap-2 text-sm font-extrabold text-navy-900 dark:text-white">
+            <UsersThree size={18} weight="fill" className="text-fuchsia-500" /> Gói Pro Gia đình
+          </p>
+          <p className="text-xs font-extrabold text-navy-500 dark:text-slate-400">
+            Đang dùng {members.length + 1}/{family?.maxSeats || 4} tài khoản
+            {expiresAt && <> · hết hạn {formatDate(expiresAt)}</>}
+          </p>
+        </div>
+        <p className="mt-2 text-sm text-navy-600 dark:text-slate-300">
+          Người bạn mời <b>không cần trả tiền</b> — họ dùng quyền lợi Pro y hệt bạn với việc và chuông nhắc của
+          riêng mình, và vẫn là tài khoản độc lập nên việc của bạn vẫn riêng của bạn.
+        </p>
+
+        {/* Danh sách người trong nhà */}
+        <ul className="mt-4 space-y-2">
+          <li className="flex items-center justify-between gap-3 rounded-xl bg-fuchsia-50 px-3 py-2.5 ring-1 ring-fuchsia-100 dark:bg-fuchsia-900/20 dark:ring-fuchsia-900/40">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-extrabold text-navy-900 dark:text-white">Bạn (chủ gói)</p>
+              <p className="truncate text-xs text-navy-500 dark:text-slate-400">Người trả tiền cho cả nhà</p>
+            </div>
+          </li>
+          {members.map((m) => (
+            <li
+              key={m.userId}
+              className="flex items-center justify-between gap-3 rounded-xl bg-navy-50 px-3 py-2.5 ring-1 ring-navy-100 dark:bg-slate-900/50 dark:ring-slate-700"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-extrabold text-navy-900 dark:text-white">{m.fullName}</p>
+                <p className="truncate text-xs text-navy-500 dark:text-slate-400">
+                  {m.email} · tham gia {formatDate(m.joinedAt)}
+                </p>
+              </div>
+              {confirmRemove === m.userId ? (
+                <div className="flex shrink-0 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => drop(m.userId)}
+                    className="rounded-lg bg-rose-600 px-2.5 py-1 text-xs font-extrabold text-white"
+                  >
+                    Gỡ thật
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmRemove(null)}
+                    className="rounded-lg px-2 py-1 text-xs font-extrabold text-navy-500 hover:text-navy-800 dark:text-slate-400 dark:hover:text-white"
+                  >
+                    Huỷ
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmRemove(m.userId)}
+                  className="shrink-0 text-xs font-extrabold text-rose-600 hover:underline dark:text-rose-400"
+                >
+                  Gỡ
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+
+        {/* Form mời */}
+        <div className="mt-4 rounded-xl bg-navy-50 p-3 ring-1 ring-navy-100 dark:bg-slate-900/50 dark:ring-slate-700">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-navy-500 dark:text-slate-400">
+            Thêm người thân (tối đa {left} chỗ còn trống)
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={left <= 0 || inviting}
+              placeholder="email của người bạn muốn mời"
+              className="min-w-[220px] flex-1 rounded-xl border-0 bg-white px-3 py-2 text-sm font-semibold text-navy-900 ring-1 ring-navy-100 focus:ring-2 focus:ring-fuchsia-400 disabled:opacity-60 dark:bg-slate-800 dark:text-white dark:ring-slate-700"
+            />
+            <input
+              type="text"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              disabled={left <= 0 || inviting}
+              placeholder="lời nhắn (không bắt buộc)"
+              className="min-w-[160px] flex-1 rounded-xl border-0 bg-white px-3 py-2 text-sm font-semibold text-navy-900 ring-1 ring-navy-100 focus:ring-2 focus:ring-fuchsia-400 disabled:opacity-60 dark:bg-slate-800 dark:text-white dark:ring-slate-700"
+            />
+            <Button icon={EnvelopeSimple} loading={inviting} disabled={left <= 0 || !email.trim()} onClick={invite}>
+              Thêm vào nhà
+            </Button>
+          </div>
+          {left <= 0 ? (
+            <p className="mt-2 text-xs font-bold text-amber-600 dark:text-amber-400">
+              Nhà đã đủ {family?.maxSeats || 4} tài khoản. Gỡ một người đi rồi mời người khác.
+            </p>
+          ) : (
+            <p className="mt-2 text-xs text-navy-500 dark:text-slate-400">
+              Người được mời cần ĐÃ có tài khoản MN-Qronx (dùng miễn phí). Họ nhận thông báo ngay và dùng được
+              quyền Pro kể từ giây đó.
+            </p>
+          )}
+        </div>
+      </section>
+    )
+  }
+
+  // ── Chưa có nhà: bán gói ──
+  return (
+    <section className="rounded-2xl bg-gradient-to-br from-fuchsia-600 via-pink-600 to-violet-600 p-5 text-white shadow-card">
+      <p className="inline-flex items-center gap-2 text-sm font-extrabold">
+        <UsersThree size={18} weight="fill" /> Gói Pro Gia đình — 199.000đ/tháng cho cả nhà
+      </p>
+      <p className="mt-2 text-sm text-white/85">
+        Mua một lần, dùng chung tới <b>4 tài khoản</b>: mỗi người vẫn là một tài khoản riêng với việc, nhắc nhở và
+        báo cáo của chính mình, nhưng tất cả đều có quyền lợi Pro (nhắc dai, báo cáo năng suất, kế hoạch tuần,
+        báo cáo gửi email, nhờ người khác làm). So với 4 gói Pro lẻ là 316.000đ, cả nhà tiết kiệm 117.000đ mỗi tháng.
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Button variant="light" icon={Crown} loading={busy === 'FAMILY'} onClick={() => onBuy('FAMILY')}>
+          Mua cho cả nhà
+        </Button>
+        <span className="inline-flex items-center rounded-xl bg-white/15 px-3 py-2 text-xs font-bold ring-1 ring-inset ring-white/25">
+          Trả theo năm 1.990.000đ — tặng 2 tháng
+        </span>
+      </div>
+    </section>
+  )
+}
+
 /** Trang gói: xem hạn mức, dùng thử, mua/gia hạn bằng chuyển khoản VietQR. */
 export default function BillingPage() {
   const { user, refresh } = useAuth()
@@ -95,14 +340,18 @@ export default function BillingPage() {
   const [cycle, setCycle] = useState('MONTHLY')
   const [busy, setBusy] = useState(null)
   const [checkout, setCheckout] = useState(null) // { order, payment }
+  // Gói Pro Gia đình: chủ gói mời/gỡ người, người trong nhà xem mình dùng chung của ai
+  const [family, setFamily] = useState(null)
   const [paymentState, setPaymentState] = useState('PENDING')
   // Nút “Tôi đã chuyển”: đang kiểm tra, và lời nhắc sau khi kiểm tra xong
   const [checking, setChecking] = useState(false)
   const [checkNote, setCheckNote] = useState('')
 
   const current = overview?.plan || user?.plan || 'FREE'
-  const paid = current === 'PLUS' || current === 'PRO'
+  const paid = isPaidPlan(current)
   const days = paid ? daysRemaining(overview?.planExpiresAt) : null
+  // Đang dùng một chỗ trong nhà người khác: không có gì để họ "gia hạn" hay "nâng cấp"
+  const isSeat = family?.role === 'MEMBER'
 
   const plans = useMemo(
     () =>
@@ -118,11 +367,12 @@ export default function BillingPage() {
   )
 
   const load = async () => {
-    const [productsRes, mineRes] = await Promise.all([getProducts(), getMyBilling()])
+    const [productsRes, mineRes, familyRes] = await Promise.all([getProducts(), getMyBilling(), getFamily()])
     if (productsRes.success && productsRes.data?.plans?.length) {
       setCatalog(productsRes.data.plans)
     }
     if (mineRes.success) setOverview(mineRes.data)
+    if (familyRes.success) setFamily(familyRes.data)
     setLoading(false)
   }
 
@@ -136,7 +386,7 @@ export default function BillingPage() {
   useEffect(() => {
     const wanted = location.state?.plan
     if (!wanted || preselected.current || loading) return
-    if (wanted !== 'PLUS' && wanted !== 'PRO') return
+    if (!isPaidPlan(wanted)) return
     preselected.current = true
     if (location.state?.cycle) setCycle(location.state.cycle)
     buy(wanted)
@@ -268,7 +518,7 @@ export default function BillingPage() {
       <section
         className={`relative overflow-hidden rounded-2xl p-6 shadow-card sm:p-7 ${
           paid
-            ? current === 'PRO'
+            ? isProPlan(current)
               ? 'bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 text-white'
               : 'bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 text-white'
             : 'bg-gradient-to-br from-slate-700 via-slate-600 to-slate-500 text-white'
@@ -289,6 +539,11 @@ export default function BillingPage() {
                 {overview?.subscription?.provider === 'TRIAL' && (
                   <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-extrabold ring-1 ring-inset ring-white/40">
                     Đang dùng thử
+                  </span>
+                )}
+                {isSeat && (
+                  <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-extrabold ring-1 ring-inset ring-white/40">
+                    Dùng chung của {family?.owner?.fullName || 'người thân'}
                   </span>
                 )}
               </div>
@@ -333,14 +588,20 @@ export default function BillingPage() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {current !== 'PRO' && (
-                <Button variant="light" icon={Crown} onClick={() => buy('PRO')} loading={busy === 'PRO'}>
-                  Nâng cấp lên Pro
-                </Button>
+              {/* Người trong nhà không tự gia hạn/nâng cấp được — để hai nút này ở đó
+                  là mời họ bấm vào một lỗi. Quản lý gói nằm ở khối "Gói gia đình". */}
+              {!isSeat && (
+                <>
+                  {!isProPlan(current) && (
+                    <Button variant="light" icon={Crown} onClick={() => buy('PRO')} loading={busy === 'PRO'}>
+                      Nâng cấp lên Pro
+                    </Button>
+                  )}
+                  <Button variant="light" icon={ArrowClockwise} onClick={() => buy(current)} loading={busy === current}>
+                    Gia hạn thêm {cycle === 'YEARLY' ? '1 năm' : '30 ngày'}
+                  </Button>
+                </>
               )}
-              <Button variant="light" icon={ArrowClockwise} onClick={() => buy(current)} loading={busy === current}>
-                Gia hạn thêm {cycle === 'YEARLY' ? '1 năm' : '30 ngày'}
-              </Button>
             </div>
           </div>
         ) : (
@@ -356,6 +617,16 @@ export default function BillingPage() {
           </div>
         )}
       </section>
+
+      {/* ── Gói Pro Gia đình: một người trả tiền, tới 4 tài khoản cùng dùng ── */}
+      <FamilyCard
+        family={family}
+        current={current}
+        isSeat={isSeat}
+        onChanged={load}
+        onBuy={buy}
+        busy={busy}
+      />
 
       {/* ── Hạn mức AI hôm nay ── */}
       {aiUsage && (
@@ -409,8 +680,8 @@ export default function BillingPage() {
         </div>
       </div>
 
-      {/* ── Danh sách gói ── */}
-      <div className="grid gap-5 md:grid-cols-3">
+      {/* ── Danh sách gói ── (4 gói → 2 cột trên tablet, 4 cột trên màn rộng) */}
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {plans.map((p) => {
           const Icon = PLAN_ICON[p.id] || Sparkle
           const isCurrent = current === p.id

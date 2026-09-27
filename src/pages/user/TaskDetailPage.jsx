@@ -41,7 +41,7 @@ import Button from '../../components/common/Button'
 import { StatusBadge, PriorityBadge, CategoryBadge } from '../../components/common/Badge'
 import { ConfirmDialog } from '../../components/common/Modal'
 import { formatDateTime, formatRelativeDay, formatTime, effectiveStatus, isOverdue } from '../../lib/format'
-import { repeatSummary } from '../../lib/constants'
+import { repeatSummary, isProPlan } from '../../lib/constants'
 
 export default function TaskDetailPage() {
   const { id } = useParams()
@@ -57,7 +57,7 @@ export default function TaskDetailPage() {
   const [reminderTime, setReminderTime] = useState('')
   // Giao việc cho người khác (gói Pro)
   const { user } = useAuth()
-  const isPro = user?.plan === 'PRO'
+  const isPro = isProPlan(user?.plan)
   const [shareEmail, setShareEmail] = useState('')
   const [shareNote, setShareNote] = useState('')
   const [shareBusy, setShareBusy] = useState(false)

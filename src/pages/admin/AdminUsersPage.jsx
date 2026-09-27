@@ -277,6 +277,7 @@ export default function AdminUsersPage() {
                               <option value="FREE">Miễn phí</option>
                               <option value="PLUS">Plus</option>
                               <option value="PRO">Pro</option>
+                              <option value="FAMILY">Pro Gia đình</option>
                             </select>
                             <span className={`inline-flex items-center rounded-full px-2 py-px text-[10px] font-extrabold ring-1 ring-inset ${PLAN_BADGE[u.plan || 'FREE']}`}>
                               {PLAN_NAMES[u.plan || 'FREE']}

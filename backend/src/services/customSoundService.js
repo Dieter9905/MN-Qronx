@@ -1,7 +1,7 @@
 import customSoundRepo from '../repositories/customSoundRepo.js'
 import deviceRepo from '../repositories/deviceRepo.js'
 import ApiError from '../utils/ApiError.js'
-import { getUserPlan } from '../utils/planLimits.js'
+import { getUserPlan, PAID_PLANS } from '../utils/planLimits.js'
 
 export const MAX_CUSTOM_SOUNDS = 10
 export const MAX_FILE_BYTES = 3 * 1024 * 1024 // 3 MB
@@ -20,9 +20,9 @@ export async function listSounds(userId) {
  */
 export async function importSound(userId, payload) {
   const plan = await getUserPlan(userId)
-  if (!['PLUS', 'PRO'].includes(plan)) {
+  if (!PAID_PLANS.includes(plan)) {
     throw ApiError.badRequest(
-      'Nhập âm thanh báo thức MP3 riêng chỉ dành cho gói Plus và Pro. Nâng cấp gói để sử dụng tính năng này.'
+      'Nhập âm thanh báo thức MP3 riêng chỉ dành cho gói trả phí (Plus, Pro, Pro Gia đình). Nâng cấp gói để sử dụng tính năng này.'
     )
   }
 

@@ -1,7 +1,19 @@
 import prisma from '../config/prisma.js'
 import ApiError from './ApiError.js'
 
-const PAID_PLANS = ['PLUS', 'PRO']
+// Gói trả phí — xuất khẩu để chỗ khác không phải chép lại danh sách (chép lại là
+// chỗ này nhớ thêm FAMILY, chỗ kia quên).
+export const PAID_PLANS = ['PLUS', 'PRO', 'FAMILY']
+
+// Nhóm "quyền lợi Pro" (FAMILY mua cho cả nhà nhưng quyền lợi y hệt PRO — mọi
+// chỗ kiểm tra "có được dùng tính năng Pro không" phải cho qua cả FAMILY, nếu không
+// người trả tiền cho cả nhà lại là người không dùng được gì).
+export const PRO_PLANS = ['PRO', 'FAMILY']
+
+/** Gói có toàn bộ quyền lợi Pro không? (PRO hoặc FAMILY) */
+export function planIsPro(plan) {
+  return PRO_PLANS.includes(plan)
+}
 
 // ─── Cấu hình gói ───────────────────────────────────────────
 // Nguyên tắc đóng gói (xem docs/billing.md):
@@ -16,7 +28,9 @@ const PAID_PLANS = ['PLUS', 'PRO']
 //     người không cài app (và một số máy chặn thông báo nền) — để sau, khi có nhu cầu thật.
 //   • Giá để ở đây là NGUỒN DUY NHẤT cho cả web (VietQR) và app Android (Play
 //     Billing) — Play Console phải tạo sản phẩm trùng đúng giá và đúng mã.
-export const PLAN_ORDER = { FREE: 0, PLUS: 1, PRO: 2 }
+// FAMILY cao hơn PRO: mua Pro Gia đình khi đang có Pro là nâng cấp (cộng thêm kỳ
+// từ hạn hiện tại), còn mua Pro khi đang FAMILY thì không — người đó cần giữ nhà.
+export const PLAN_ORDER = { FREE: 0, PLUS: 1, PRO: 2, FAMILY: 3 }
 
 export const CYCLES = {
   MONTHLY: { days: 30, label: 'tháng' },
@@ -29,6 +43,8 @@ export const PRODUCT_IDS = {
   'PLUS:YEARLY': 'mnq_plus_yearly',
   'PRO:MONTHLY': 'mnq_pro_monthly',
   'PRO:YEARLY': 'mnq_pro_yearly',
+  'FAMILY:MONTHLY': 'mnq_family_monthly',
+  'FAMILY:YEARLY': 'mnq_family_yearly',
 }
 
 export const PLANS = {
@@ -131,6 +147,28 @@ export const PLANS = {
   },
 }
 
+/** Trần số tài khoản trong một nhà: chủ gói + 3 người. */
+export const MAX_FAMILY_SEATS = 4
+
+// Gói Pro Gia đình được DỰNG TỪ gói Pro thay vì chép tay: quyền lợi, hạn mức,
+// danh sách "sắp có" đều lấy đúng bản Pro nên hai gói không bao giờ lệch nhau.
+// Chỉ phần bán hàng (tên, giá, quyền lợi riêng của gia đình) là đặt lại ở đây.
+PLANS.FAMILY = {
+  ...PLANS.PRO,
+  name: 'Pro Gia đình',
+  tagline: 'Cả nhà cùng trả một khoản, mỗi người đều có quyền lợi Pro',
+  // Giá = 10 tháng (tặng 2 tháng), cùng công thức với Plus/Pro.
+  // 199.000đ cho 4 người ≈ 50.000/người: rẻ hơn mua 4 gói Pro lẻ (316.000đ),
+  // nhưng một khách trả nhiều hơn 2,5 lần gói Pro thường.
+  priceMonthly: 199000,
+  priceYearly: 1990000,
+  seats: MAX_FAMILY_SEATS,
+  features: [
+    `Dùng chung cho tối đa ${MAX_FAMILY_SEATS} tài khoản trong nhà: mỗi người vẫn là một tài khoản riêng với việc, nhắc nhở và báo cáo của chính mình`,
+    ...PLANS.PRO.features,
+  ],
+}
+
 /** Bảng giá công khai (dùng cho trang giá, trang thanh toán và app Android). */
 export function planCatalog() {
   return Object.entries(PLANS).map(([id, plan]) => ({
@@ -157,6 +195,8 @@ export function planCatalog() {
       reports: plan.reports,
       planner: plan.planner,
       taskSharing: plan.taskSharing,
+      // Số tài khoản dùng chung gói (1 với gói thường, 4 với Pro Gia đình)
+      seats: plan.seats || 1,
     },
   }))
 }
@@ -290,11 +330,15 @@ export function planLimitError({ feature, limit, plan = 'FREE', upgrade = 'Plus 
 export default {
   PLANS,
   PLAN_ORDER,
+  PAID_PLANS,
+  PRO_PLANS,
+  MAX_FAMILY_SEATS,
   CYCLES,
   PRODUCT_IDS,
   getUserPlan,
   planLimit,
   planAllows,
+  planIsPro,
   planLimitError,
   planCatalog,
   planPrice,

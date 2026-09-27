@@ -22,11 +22,11 @@ import {
   detectScheduleWarnings,
   generateSmartBreakdown,
 } from '../../services/aiService'
-import { PRIORITY } from '../../lib/constants'
+import { PRIORITY, isProPlan } from '../../lib/constants'
 
 export default function AiAssistantPage() {
   const { user } = useAuth()
-  const isPro = user?.plan === 'PRO'
+  const isPro = isProPlan(user?.plan)
   const toast = useToast()
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)

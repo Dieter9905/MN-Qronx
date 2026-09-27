@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import prisma from '../config/prisma.js'
 import ApiError from '../utils/ApiError.js'
 import { applyPlanChange } from './billingService.js'
+import { isPlanExpired } from '../utils/planLimits.js'
 import { startOfDay } from '../utils/dateUtils.js'
 
 // ─── Kinh tế điểm ─────────────────────────────────────────
@@ -195,6 +196,11 @@ export async function claimReward(userId, tierId) {
     throw ApiError.badRequest(`Chưa đủ điểm (cần ${tier.points} điểm, hiện có ${user.points})`)
   }
 
+  // Chủ gói Pro Gia đình đổi điểm: KHÔNG được hạ xuống PLUS/PRO — applyPlanChange
+  // sẽ viết thẳng users.plan và khi đó scheduler coi nhà đã hết hạn, gỡ hết người
+  // trong nhà. Đổi điểm cho họ đúng nghĩa là "gia hạn nhà thêm N ngày".
+  const keepFamily = user.plan === 'FAMILY' && !isPlanExpired(user)
+
   // Trừ điểm + ghi lịch sử quyền lợi trong cùng transaction. Đi qua
   // applyPlanChange để gói đổi bằng điểm cũng có dòng Subscription, ngày hết hạn
   // và quy tắc cộng dồn y hệt gói mua bằng tiền.
@@ -213,7 +219,7 @@ export async function claimReward(userId, tierId) {
     })
     return applyPlanChange({
       userId,
-      plan: tier.plan,
+      plan: keepFamily ? 'FAMILY' : tier.plan,
       cycle: 'MONTHLY',
       provider: 'REWARD',
       providerRef: tier.id,

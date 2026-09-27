@@ -21,7 +21,7 @@ import {
   Lock,
 } from '@phosphor-icons/react'
 import { useAuth } from '../../context/AuthContext'
-import { PLAN_NAMES, PLAN_BADGE } from '../../lib/constants'
+import { PLAN_NAMES, PLAN_BADGE, isProPlan, isPaidPlan } from '../../lib/constants'
 import {
   getNotificationSettings,
   updateNotificationSettings,
@@ -70,7 +70,7 @@ export default function SettingsPage() {
   const [icsBusy, setIcsBusy] = useState(false)
   // Báo cáo tuần qua email (gói Pro). Mặc định bật — khách phải tự tắt được, nếu
   // không thì thư tuần thành thư rác trong mắt họ.
-  const isPro = user?.plan === 'PRO'
+  const isPro = isProPlan(user?.plan)
   const [weeklyReport, setWeeklyReportOn] = useState(user?.weeklyReportEnabled !== false)
   const [weeklyReportBusy, setWeeklyReportBusy] = useState(false)
 
@@ -137,7 +137,7 @@ export default function SettingsPage() {
   }
   const fileInputRef = useRef(null)
   const plan = user?.plan || 'FREE'
-  const isPaid = plan === 'PLUS' || plan === 'PRO'
+  const isPaid = isPaidPlan(plan)
 
   const loadCustomSounds = async () => {
     const res = await getCustomSounds()

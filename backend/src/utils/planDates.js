@@ -1,3 +1,5 @@
+import { PAID_PLANS } from './planLimits.js'
+
 /**
  * Tính ngày bắt đầu / hết hạn khi đổi gói (mô phỏng đăng ký 30 ngày/kỳ).
  *
@@ -22,8 +24,7 @@ export function computePlanDates({ currentPlan, currentStartedAt, currentExpires
     return { planStartedAt: null, planExpiresAt: null }
   }
 
-  const paid = ['PLUS', 'PRO']
-  if (!paid.includes(newPlan)) {
+  if (!PAID_PLANS.includes(newPlan)) {
     return { planStartedAt: null, planExpiresAt: null }
   }
 

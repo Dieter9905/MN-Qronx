@@ -22,7 +22,7 @@ import { useToast } from '../../components/common/Toast'
 import { useAuth } from '../../context/AuthContext'
 import { useCachedQuery } from '../../lib/useCachedQuery'
 import { getReport, exportReport, downloadCsv } from '../../services/reportService'
-import { PRIORITY } from '../../lib/constants'
+import { PRIORITY, isProPlan } from '../../lib/constants'
 import { formatDate } from '../../lib/format'
 
 // ─── Báo cáo năng suất (gói Pro) ────────────────────────────
@@ -223,7 +223,7 @@ export default function ReportsPage() {
   const [days, setDays] = useState(30)
   const [exporting, setExporting] = useState(false)
 
-  const isPro = user?.plan === 'PRO'
+  const isPro = isProPlan(user?.plan)
 
   // Với gói chưa có quyền thì không gọi API (server cũng sẽ từ chối) — tránh vừa
   // hiện khung khoá vừa hiện thông báo lỗi đỏ.

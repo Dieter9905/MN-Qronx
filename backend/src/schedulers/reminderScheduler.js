@@ -1,6 +1,7 @@
 import cron from 'node-cron'
 import prisma from '../config/prisma.js'
 import { downgradeExpiredPlans } from '../utils/planLimits.js'
+import { syncFamilySeats } from '../services/familyService.js'
 import { dispatchReminder } from '../services/reminderDispatchService.js'
 import taskRepo from '../repositories/taskRepo.js'
 
@@ -33,6 +34,21 @@ cron.schedule(TASK, async () => {
 
   // Dọn thùng rác: việc đã xoá quá 30 ngày thì xoá thật
   purgeTrashIfDue()
+
+  // Đồng bộ quyền lợi Pro của người trong nhà theo chủ gói: mọi đường cấp gói
+  // (mua, admin tặng, đổi điểm, dùng thử) đều đi qua đây trong vòng 1 phút, nên
+  // không phải vá từng đường. Chạy trước hay sau khi hạ gói đều được — service
+  // tự kiểm hạn của chủ gói chứ không tin vào việc nó đã được hạ hay chưa.
+  try {
+    const family = await syncFamilySeats()
+    if (family.revoked > 0 || family.granted > 0) {
+      console.log(
+        `[Scheduler] Gói gia đình: ${family.granted} chỗ được cấp/làm mới, ${family.revoked} chỗ bị thu hồi, ${family.ended} nhà kết thúc`,
+      )
+    }
+  } catch (err) {
+    console.error('[Scheduler] Lỗi đồng bộ gói gia đình:', err.message)
+  }
 
   // Tự động hạ gói trả phí đã quá hạn xuống FREE
   try {

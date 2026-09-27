@@ -22,6 +22,7 @@ còn phải làm để bán được gói trong app Android trên Google Play.
 | Miễn phí | 0đ | 0đ | 50 việc đang mở, **có công việc lặp lại**, 3 nhắc/việc, 2 thiết bị, AI 5 lần/ngày |
 | Plus | 39.000đ | 390.000đ | Không giới hạn việc/danh mục/việc con, 5 thiết bị, AI 50 lần/ngày |
 | Pro | 79.000đ | 790.000đ | **Nhắc dai tới khi xác nhận**, **báo cáo năng suất + xuất Excel/PDF**, **kế hoạch tuần**, **báo cáo tuần qua email**, **nhờ người khác làm**, không giới hạn AI/thiết bị, toàn bộ âm thanh + âm thanh riêng |
+| Pro Gia đình | 199.000đ | 1.990.000đ | **Toàn bộ quyền lợi Pro cho tới 4 tài khoản** trong nhà — mỗi người vẫn là một tài khoản riêng, trả một lần cho cả nhà |
 
 **Điểm bán riêng của Pro: “nhắc dai tới khi bạn xác nhận”.** Free/Plus chuông kêu
 một lần, bỏ qua là quên; Pro thì việc chưa xong sẽ kêu lại theo chu kỳ người dùng
@@ -133,6 +134,62 @@ người dùng mà không tốn tiền quảng cáo. Nhờ vậy mục **Việc 
 đánh dấu Pro trong menu, và cuối trang có câu dẫn sang bảng giá cho người muốn nhờ
 lại người khác. Mã ở `backend/src/services/taskShareService.js`,
 `controllers/taskShareController.js`, bảng `task_shares`.
+
+### Gói Pro Gia đình: tăng TIỀN MỖI KHÁCH, không chỉ tăng số khách
+
+Năm điểm bán trên đều bán cho **một người**: doanh thu chỉ tăng khi có thêm khách
+mới. Gói Pro Gia đình là gói đầu tiên nâng được mức trả của một khách lên
+**199.000đ/tháng** (1.990.000đ/năm = 10 tháng) thay vì 79.000đ, và nhờ mỗi khách
+mời thêm **3 người** dùng app miễn phí — mỗi người trong nhà là một tài khoản thật,
+việc thật, chuông thật, nên cũng là người có thể trả tiền sau này. So với 4 gói Pro
+lẻ (316.000đ) thì cả nhà rẻ hơn, nhưng một khách trả nhiều hơn 2,5 lần gói Pro thường.
+
+**Quyền lợi bằng nhau, không phải bản “Pro rút gọn”.** `PLANS.FAMILY` được **dựng
+từ `PLANS.PRO`** (`spread` thay vì chép tay) nên hạn mức, âm thanh, nhắc dai, báo
+cáo, kế hoạch tuần, giao việc… không bao giờ lệch giữa hai gói — có test bắt chuyện
+này (`plans[FAMILY].limits === plans[PRO].limits`). Quyền lợi riêng của gói này là
+**thêm người**, không phải bớt quyền nào.
+
+**Người trong nhà được “vật chất hoá” là gói PRO.** Đây là quyết định kỹ thuật quan
+nhất của tính năng: `users.plan = PRO` + một dòng `subscriptions` với
+`provider = FAMILY` (nguồn quyền lợi), thay vì để mỗi chỗ kiểm tra gói tự suy ra
+“người này có được dùng Pro không”. Nhờ vậy **mọi cổng quyền lợi cũ chạy đúng mà
+không sửa một dòng nào** (nếu không thì chủ nhà — người trả tiền — lại là người
+không mở được báo cáo, kế hoạch tuần, nhắc dai), và cũng không có chỗ nào tính
+khác chỗ nào. `provider = FAMILY` riêng một giá trị để **báo cáo doanh thu không
+bao giờ đếm một chỗ ngồi là một khách đã trả tiền**.
+
+**Sống theo chủ.** Bảng `family_members` (`owner_id` + `member_id` unique — một
+người chỉ nằm trong một nhà), quyền hạn của người trong nhà luôn lấy theo hạn của
+chủ: `familyService.syncFamilySeats()` chạy mỗi phút cùng nhịp hạ gói hết hạn
+(`schedulers/reminderScheduler.js`), nên:
+
+- chủ **gia hạn** → cả nhà được kéo theo hạn mới trong vòng 1 phút, không cần vá
+  từng đường cấp gói (mua, admin tặng, đổi điểm, dùng thử);
+- chủ **hết hạn** → ghế bị thu hồi **và dòng thành viên bị xoá**. Khi chủ mua lại
+  phải **mời lại** — tự bật quyền cho người đã muốn rời đi là điều không ai mong đợi;
+- người trong nhà **không mua gói riêng** được (`createOrder` trả 400 kèm cách
+  làm đúng), vì `applyPlanChange` sẽ đóng luôn dòng ghế và để hai nguồn quyền lợi
+  đánh nhau.
+
+**Người trong nhà không bị mời bấm vào một lỗi:** dòng `provider = FAMILY` bị loại
+khỏi thư nhắc “Gia hạn ngay” (`sendRenewalReminders`) và bảng “sắp hết hạn trong 7
+gày” của admin (`listExpiringSoon`) — họ không tự gia hạn được, người duy nhất cần
+nhắc là chủ gói, mà chủ gói đã có dòng riêng rồi.
+
+**Không cướp khách đang trả tiền:** không mời được người đang có gói trả phí, không
+mời được người đang là chủ một nhà khác, và người đã ở nhà khác thì không nhận thêm
+chỗ. Chủ nhà đổi điểm lấy thưởng được cộng thẳng vào FAMILY chứ không hạ xuống PRO
+(`rewardService.claimReward`) — nếu không thì một lần đổi điểm làm cả nhà mất quyền.
+
+Giao diện: khối **“Gói gia đình”** ở trang Gói (`/app/billing`) dùng CÙNG một khối
+cho cả ba vai — người chưa có nhà thấy giá và nút mua, chủ gói thấy danh sách chỗ +
+form mời + nút gỡ, người trong nhà thấy mình dùng chung của ai và nút rời đi. Mã ở
+`backend/src/services/familyService.js`, `controllers/familyController.js`, 4 đường
+`/me/family`.
+
+> Khi mở bán app Android, Play Console phải tạo thêm `mnq_family_monthly` và
+> `mnq_family_yearly` (xen vào `PRODUCT_IDS`).
 
 **Chỉ ghi vào bảng này thứ khách đang dùng được.** Thứ chưa làm xong nằm ở
 `PLANS[...].upcoming` (trang giá hiện kèm nhãn “Sắp có”), hiện chỉ còn: đồng bộ **hai

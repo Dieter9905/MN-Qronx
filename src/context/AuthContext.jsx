@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import * as authService from '../services/authService'
 import { syncPushSubscription } from '../lib/push'
+import { isPaidPlan } from '../lib/constants'
 
 const AuthContext = createContext(null)
 
@@ -8,7 +9,7 @@ const AuthContext = createContext(null)
 // để mọi giới hạn Plus/Pro trên giao diện ngừng ngay lập tức.
 function applyEffectivePlan(u) {
   if (!u) return u
-  const paid = u.plan === 'PLUS' || u.plan === 'PRO'
+  const paid = isPaidPlan(u.plan)
   if (paid && u.planExpiresAt && new Date(u.planExpiresAt) <= new Date()) {
     return { ...u, plan: 'FREE' }
   }

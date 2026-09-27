@@ -20,7 +20,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useCachedQuery } from '../../lib/useCachedQuery'
 import { getWeekPlan } from '../../services/plannerService'
 import { completeTask, rescheduleTask } from '../../services/taskService'
-import { PRIORITY } from '../../lib/constants'
+import { PRIORITY, isProPlan } from '../../lib/constants'
 import { addDays, setTime } from '../../lib/format'
 
 // ─── Kế hoạch tuần (gói Pro) ────────────────────────────────
@@ -127,7 +127,7 @@ export default function PlannerPage() {
   const [capacity, setCapacity] = useState(5)
   const [busyId, setBusyId] = useState(null)
 
-  const isPro = user?.plan === 'PRO'
+  const isPro = isProPlan(user?.plan)
 
   // Gói chưa có quyền thì không gọi API (server cũng từ chối) — tránh vừa hiện
   // khung khoá vừa hiện thông báo lỗi đỏ.

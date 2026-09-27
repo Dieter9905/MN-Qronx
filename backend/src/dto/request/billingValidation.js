@@ -4,7 +4,7 @@ import { body, param, query } from 'express-validator'
 export const createOrderValidation = [
   body('plan')
     .trim()
-    .isIn(['PLUS', 'PRO']).withMessage('Chỉ có thể mua gói PLUS hoặc PRO'),
+    .isIn(['PLUS', 'PRO', 'FAMILY']).withMessage('Chỉ có thể mua gói Plus, Pro hoặc Pro Gia đình'),
   body('cycle')
     .optional({ values: 'falsy' })
     .trim()

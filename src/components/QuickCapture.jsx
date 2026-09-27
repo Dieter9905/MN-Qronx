@@ -4,6 +4,7 @@ import { Plus, X, Lightning, CalendarBlank, Brain, Clock, Tag, Repeat, CheckCirc
 import { useLanguage } from '../context/LanguageContext'
 import { useToast } from './common/Toast'
 import { useAuth } from '../context/AuthContext'
+import { isProPlan } from '../lib/constants'
 import { createTask } from '../services/taskService'
 import { getCategories } from '../services/categoryService'
 import { parseNaturalLanguageTasks, suggestTaskBreakdown, fetchAIParseTasks } from '../services/aiService'
@@ -16,7 +17,7 @@ export default function QuickCapture({ onClose, onCreated }) {
   const t = app_text[lang]
   const toast = useToast()
   const { user } = useAuth()
-  const isPro = user?.plan === 'PRO'
+  const isPro = isProPlan(user?.plan)
 
   const [mode, setMode] = useState(isPro ? 'ai' : 'form') // 'ai' (Pro only) or 'form'
   const [inputText, setInputText] = useState('')
