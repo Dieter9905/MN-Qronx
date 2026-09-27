@@ -8,8 +8,8 @@ const PAID_PLANS = ['PLUS', 'PRO']
 //   • FREE đủ rộng cho thói quen cơ bản — kể cả công việc LẶP LẠI, vì app nhắc
 //     việc mà không cho lặp thì người dùng bỏ app chứ không nâng cấp.
 //   • Tiền thu ở chỗ cảm nhận được giá trị: nhắc dai tới khi xác nhận (chỉ Pro),
-//     hạn mức AI, thiết bị, âm thanh riêng, hỗ trợ ưu tiên. KHÔNG bán thứ chưa làm —
-//     xem `upcoming` trong từng gói.
+//     báo cáo năng suất + xuất Excel/PDF (chỉ Pro), hạn mức AI, thiết bị, âm thanh
+//     riêng, hỗ trợ ưu tiên. KHÔNG bán thứ chưa làm — xem `upcoming` trong từng gói.
 //   • Nhắc qua Zalo OA đã bỏ khỏi danh sách bán: ai đã cài app trên điện thoại thì
 //     thông báo đẩy hiện thẳng trên màn hình, Zalo chỉ còn là kênh dự phòng cho
 //     người không cài app (và một số máy chặn thông báo nền) — để sau, khi có nhu cầu thật.
@@ -41,6 +41,7 @@ export const PLANS = {
     devices: 2,
     repeatTasks: true,
     nagReminders: false,
+    reports: false,
     aiDailyLimit: 5,
     alarmSounds: ['classic', 'digital', 'DEFAULT', 'URGENT'],
     priceMonthly: 0,
@@ -65,6 +66,7 @@ export const PLANS = {
     devices: 5,
     repeatTasks: true,
     nagReminders: false,
+    reports: false,
     aiDailyLimit: 50,
     alarmSounds: ['classic', 'digital', 'bell', 'morning', 'DEFAULT', 'URGENT'],
     priceMonthly: 39000,
@@ -89,6 +91,8 @@ export const PLANS = {
     repeatTasks: true,
     // "Nhắc dai": lý do trả tiền rõ nhất của Pro — xem backend/src/services/nagService.js
     nagReminders: true,
+    // Báo cáo năng suất + xuất Excel/PDF — xem backend/src/services/reportService.js
+    reports: true,
     aiDailyLimit: Infinity,
     alarmSounds: ['classic', 'digital', 'bell', 'morning', 'gentle', 'DEFAULT', 'URGENT'],
     priceMonthly: 79000,
@@ -97,6 +101,7 @@ export const PLANS = {
     // (trang giá hiện kèm nhãn “Sắp có”) — bán thứ chưa có là mất khách oan.
     features: [
       'Nhắc dai tới khi bạn xác nhận: việc Khẩn cấp/Cao chưa xong thì chuông kêu lại (bạn chọn 1–30 phút một lần)',
+      'Báo cáo năng suất 7/30/90 ngày: việc xong đúng hạn, giờ nào bạn làm tốt nhất, việc đang bị bỏ quên lâu nhất — xuất Excel/PDF',
       'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
       'Không giới hạn thiết bị đồng bộ',
       'Trợ lý AI không giới hạn',
@@ -104,7 +109,6 @@ export const PLANS = {
     ],
     upcoming: [
       'AI xếp cả tuần thành kế hoạch kèm các bước làm',
-      'Báo cáo năng suất và xuất Excel/PDF',
       'Đồng bộ hai chiều Google Calendar (hiện đã có chiều app → lịch)',
     ],
   },
@@ -133,6 +137,7 @@ export function planCatalog() {
       aiDailyLimit: finiteOrNull(plan.aiDailyLimit),
       repeatTasks: plan.repeatTasks,
       nagReminders: plan.nagReminders,
+      reports: plan.reports,
     },
   }))
 }

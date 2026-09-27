@@ -511,6 +511,11 @@ describe('Webhook ngân hàng', () => {
     })
     expect(first).toBe(true)
     expect(second).toBe(false)
+    // Vẫn chỉ MỘT dòng lịch sử: bộ đồng bộ ngân hàng đọc lại giao dịch cũ mỗi
+    // phút, ghi thêm dòng thứ hai là sai lệch sổ sách (và Prisma lại in ra
+    // prisma:error trông như hệ thống hỏng, trong khi đây là chuyện bình thường).
+    const rows = await prisma.billingEvent.count({ where: { externalId: 'test-dup-001' } })
+    expect(rows).toBe(1)
   })
 })
 

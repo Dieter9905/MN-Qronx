@@ -553,6 +553,41 @@ a:hover .icon-pop,
   box-shadow: 0 20px 48px -12px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(96, 165, 250, 0.32);
 }
 
+/* ---- In / lưu PDF ---- */
+/* Người dùng Pro in bảng báo cáo năng suất ra PDF để lưu hoặc gửi cho người khác:
+   trên bản in chỉ được còn nội dung báo cáo — bỏ menu, header, nút bấm và các nút
+   nổi (chúng là position: fixed nên nếu không ẩn sẽ lặp lại trên mọi trang). */
+@media print {
+  aside,
+  header,
+  nav,
+  .no-print,
+  .fixed {
+    display: none !important;
+  }
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  body {
+    background: #fff !important;
+  }
+  .card {
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  .page-enter,
+  .route-beam {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  @page {
+    margin: 12mm;
+  }
+}
+
 /* ---- Reduce motion ---- */
 @media (prefers-reduced-motion: reduce) {
   *,

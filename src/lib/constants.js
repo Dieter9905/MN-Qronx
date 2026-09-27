@@ -176,6 +176,7 @@ export const PLANS = [
     // trang giá hiện kèm nhãn “Sắp có” — đừng bán thứ chưa có.
     features: [
       'Nhắc dai tới khi bạn xác nhận: việc quan trọng chưa xong thì chuông kêu lại',
+      'Báo cáo năng suất 7/30/90 ngày kèm xuất Excel/PDF',
       'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
       'Không giới hạn thiết bị đồng bộ',
       'Trợ lý AI không giới hạn',
@@ -183,10 +184,16 @@ export const PLANS = [
     ],
     upcoming: [
       'AI xếp cả tuần thành kế hoạch kèm các bước làm',
-      'Báo cáo năng suất và xuất Excel/PDF',
       'Đồng bộ hai chiều Google Calendar (hiện đã có chiều app → lịch)',
     ],
-    limits: { activeTasks: null, aiDailyLimit: null, devices: null, repeatTasks: true, nagReminders: true },
+    limits: {
+      activeTasks: null,
+      aiDailyLimit: null,
+      devices: null,
+      repeatTasks: true,
+      nagReminders: true,
+      reports: true,
+    },
   },
 ]
 

@@ -757,13 +757,23 @@ export async function sendRenewalReminders({
 // ─── Kích hoạt gói ──────────────────────────────────────────
 
 /**
- * Ghi lịch sử gia hạn chống trùng (webhook có thể gửi lại nhiều lần).
+ * Ghi lịch sử giao dịch chống trùng.
+ *
+ * Dùng chung cho webhook (có thể gửi lại nhiều lần) và bộ đồng bộ ngân hàng.
+ *
+ * Dùng createMany + skipDuplicates thay vì để `create` ném lỗi P2002 rồi bắt:
+ * bộ đồng bộ ngân hàng đọc lại giao dịch cũ MỖI PHÚT, nên cách cũ làm Prisma in
+ * ra một dòng `prisma:error Unique constraint failed (external_id)` đều đặn —
+ * nhìn như hệ thống đang lỗi trong khi thực ra đó là "giao dịch đã xử lý rồi".
+ * Sai một chỗ đáng lẽ bình thường thành báo động giả thì lúc có lỗi thật sẽ
+ * không ai còn tin nhật ký nữa.
+ *
  * @returns {Promise<boolean>} true nếu sự kiện này là mới
  */
 export async function registerBillingEvent({ provider, eventType, externalId, orderId, amount, payload }) {
-  try {
-    await prisma.billingEvent.create({
-      data: {
+  const res = await prisma.billingEvent.createMany({
+    data: [
+      {
         provider,
         eventType,
         externalId: String(externalId).slice(0, 190),
@@ -771,13 +781,11 @@ export async function registerBillingEvent({ provider, eventType, externalId, or
         amount: amount ?? null,
         payload: payload ? JSON.parse(JSON.stringify(payload)) : undefined,
       },
-    })
-    return true
-  } catch (err) {
-    // P2002 = vi phạm unique → sự kiện đã xử lý trước đó
-    if (err?.code === 'P2002') return false
-    throw err
-  }
+    ],
+    // Trùng external_id → bỏ qua, không ném lỗi (đã xử lý ở lần trước)
+    skipDuplicates: true,
+  })
+  return res.count > 0
 }
 
 /**

@@ -21,7 +21,7 @@ còn phải làm để bán được gói trong app Android trên Google Play.
 |---|---|---|---|
 | Miễn phí | 0đ | 0đ | 50 việc đang mở, **có công việc lặp lại**, 3 nhắc/việc, 2 thiết bị, AI 5 lần/ngày |
 | Plus | 39.000đ | 390.000đ | Không giới hạn việc/danh mục/việc con, 5 thiết bị, AI 50 lần/ngày |
-| Pro | 79.000đ | 790.000đ | **Nhắc dai tới khi xác nhận**, không giới hạn AI/thiết bị, toàn bộ âm thanh + âm thanh riêng |
+| Pro | 79.000đ | 790.000đ | **Nhắc dai tới khi xác nhận**, **báo cáo năng suất + xuất Excel/PDF**, không giới hạn AI/thiết bị, toàn bộ âm thanh + âm thanh riêng |
 
 **Điểm bán riêng của Pro: “nhắc dai tới khi bạn xác nhận”.** Free/Plus chuông kêu
 một lần, bỏ qua là quên; Pro thì việc chưa xong sẽ kêu lại theo chu kỳ người dùng
@@ -31,10 +31,23 @@ chứ không phải kiểu “nới trần” mà người dùng hiếm khi đ�
 công việc (ô “Nhắc dai tới khi xong”), luật ở `backend/src/services/nagService.js`,
 chuông lặp ở `schedulers/reminderScheduler.js`.
 
+**Điểm bán thứ hai: “báo cáo năng suất” — thứ khiến khách ở lại trả tiền hằng tháng.**
+Trang `/app/reports` (chỉ Pro) trả lời bốn câu hỏi mà người đi làm nào cũng hỏi:
+mình xong bao nhiêu việc, có **đúng hạn** không, làm tốt nhất **vào giờ nào / thứ nào**,
+và việc nào đang **bị bỏ quên lâu nhất** (kèm danh sách bấm vào sửa ngay). Có chuỗi
+ngày có việc xong, so sánh với kỳ trước (“tuần này hơn tuần trước bao nhiêu việc”),
+và đếm xem **nhắc dai đã kéo bạn quay lại bao nhiêu việc** — bằng chứng cụ thể rằng
+việc trả tiền cho Pro có tác dụng. Nút **Xuất Excel** trả file .csv (BOM UTF-8 +
+dòng `sep=;` vì Excel bản Việt dùng dấu phẩy làm dấu thập phân), nút **Lưu PDF** in
+báo cáo bằng `window.print()` (đã có khối `@media print` trong `src/index.css`).
+Luật và số liệu nằm ở `backend/src/services/reportService.js` — **mọi con số do server
+tính theo giờ Việt Nam**, giao diện không tự đếm lại (hai nơi tính hai kiểu là cách
+chắc chắn nhất để khách nhìn thấy hai con số khác nhau).
+
 **Chỉ ghi vào bảng này thứ khách đang dùng được.** Thứ chưa làm xong nằm ở
 `PLANS[...].upcoming` (trang giá hiện kèm nhãn “Sắp có”), hiện gồm: AI xếp kế hoạch
-tuần, báo cáo + xuất Excel/PDF, đồng bộ **hai chiều** Google Calendar (một chiều
-app → lịch đã có sẵn cho mọi gói qua file .ics).
+tuần, đồng bộ **hai chiều** Google Calendar (một chiều app → lịch đã có sẵn cho mọi
+gói qua file .ics).
 
 > **Quyết định (27/09/2026): bỏ “nhắc qua Zalo OA” khỏi danh sách bán.** Người đã cài
 > app trên điện thoại thì thông báo đẩy hiện thẳng trên màn hình, không cần Zalo.
