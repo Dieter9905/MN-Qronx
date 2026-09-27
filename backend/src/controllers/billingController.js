@@ -272,6 +272,39 @@ export const adminSyncBankNow = catchAsync(async (req, res) => {
   success(res, 200, message, result)
 })
 
+/**
+ * POST /api/v1/billing/orders/:orderCode/check — khách bấm “Tôi đã chuyển”.
+ *
+ * Kiểm tra lại đơn, và nếu lâu rồi chưa đọc giao dịch ngân hàng thì kích hoạt một
+ * lần đọc ngay: khách vừa chuyển tiền xong thì gói mở trong vài giây thay vì phải
+ * chờ hết chu kỳ 5 phút. Chỉ đọc thêm, không bao giờ tự mở gói nếu chưa có tiền.
+ */
+export const checkMyOrder = catchAsync(async (req, res) => {
+  const before = await billingService.getOrder(req.user.id, req.params.orderCode)
+
+  let checkedBank = false
+  if (before.order.status === 'PENDING') {
+    // Chặn dội API ngân hàng: nhiều khách cùng bấm cũng chỉ đọc 20 giây một lần.
+    const settings = await billingService.billingSettings({ fresh: true })
+    const lastSyncAt = settings?.lastSyncAt ? new Date(settings.lastSyncAt).getTime() : 0
+    if (Date.now() - lastSyncAt > 20000) {
+      const sync = await bankApiService.syncBankTransactions({ force: true, trigger: 'USER' })
+      checkedBank = Boolean(sync?.ok)
+    }
+  }
+
+  const data = await billingService.getOrder(req.user.id, req.params.orderCode)
+  const paidNow = data.order.status === 'PAID'
+  const message = paidNow
+    ? 'Đã nhận được tiền — gói của bạn vừa được kích hoạt 🎉'
+    : data.order.status === 'EXPIRED'
+      ? 'Đơn này đã hết hạn. Bấm “Tạo mã mới” để có mã đơn khác.'
+      : checkedBank
+        ? 'Đã kiểm tra giao dịch mới nhất từ ngân hàng — chưa thấy tiền vào. Trang này vẫn tự kiểm tra tiếp.'
+        : 'Chưa thấy tiền vào. Hệ thống vẫn tự kiểm tra liên tục, bạn để trang này mở nhé.'
+  success(res, 200, message, { ...data, checkedBank })
+})
+
 /** POST /api/v1/admin/billing/settings/rotate-secret — sinh mã xác thực webhook mới */
 export const adminRotateWebhookSecret = catchAsync(async (req, res) => {
   const secret = await billingService.rotateWebhookSecret(req.user.id)
@@ -283,6 +316,7 @@ export default {
   getMyBilling,
   createOrder,
   getOrder,
+  checkMyOrder,
   cancelOrder,
   startTrial,
   bankWebhook,

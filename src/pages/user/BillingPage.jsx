@@ -27,6 +27,7 @@ import {
   getMyBilling,
   createOrder,
   getOrder,
+  checkOrder,
   cancelOrder,
   startTrial,
 } from '../../services/billingService'
@@ -51,6 +52,36 @@ function daysRemaining(expiresAt) {
   return Math.ceil((new Date(expiresAt) - Date.now()) / 86400000)
 }
 
+/** Số giây còn lại tới hạn (0 khi đã qua) — dùng cho đồng hồ đếm ngược mã QR. */
+function secondsLeft(expiresAt) {
+  if (!expiresAt) return 0
+  return Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
+}
+
+/** 09:45 khi còn dưới 1 giờ, 47:09:45 khi còn dài hơn. */
+function countdownText(totalSeconds) {
+  const seconds = String(totalSeconds % 60).padStart(2, '0')
+  const minutes = String(Math.floor(totalSeconds / 60) % 60).padStart(2, '0')
+  const hours = Math.floor(totalSeconds / 3600)
+  return hours > 0 ? `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`
+}
+
+/** Đếm ngược mỗi giây tới `expiresAt`: mã QR chỉ có giá trị tới lúc đơn hết hạn. */
+function useCountdown(expiresAt) {
+  const [left, setLeft] = useState(() => secondsLeft(expiresAt))
+  useEffect(() => {
+    setLeft(secondsLeft(expiresAt))
+    if (!expiresAt) return undefined
+    const timer = setInterval(() => {
+      const next = secondsLeft(expiresAt)
+      setLeft(next)
+      if (next <= 0) clearInterval(timer)
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [expiresAt])
+  return left
+}
+
 /** Trang gói: xem hạn mức, dùng thử, mua/gia hạn bằng chuyển khoản VietQR. */
 export default function BillingPage() {
   const { user, refresh } = useAuth()
@@ -65,6 +96,9 @@ export default function BillingPage() {
   const [busy, setBusy] = useState(null)
   const [checkout, setCheckout] = useState(null) // { order, payment }
   const [paymentState, setPaymentState] = useState('PENDING')
+  // Nút “Tôi đã chuyển”: đang kiểm tra, và lời nhắc sau khi kiểm tra xong
+  const [checking, setChecking] = useState(false)
+  const [checkNote, setCheckNote] = useState('')
 
   const current = overview?.plan || user?.plan || 'FREE'
   const paid = current === 'PLUS' || current === 'PRO'
@@ -121,10 +155,7 @@ export default function BillingPage() {
       setPaymentState(res.data.order.status)
       if (res.data.order.status === 'PAID') {
         clearInterval(pollRef.current)
-        await load()
-        await refresh()
-        toast.success('Đã nhận được thanh toán — gói của bạn đã được kích hoạt 🎉')
-        setCheckout(null)
+        await settlePaid()
       }
     }, 5000)
     return () => clearInterval(pollRef.current)
@@ -140,8 +171,39 @@ export default function BillingPage() {
       return
     }
     setPaymentState(res.data.order.status)
+    setCheckNote('')
     setCheckout({ order: res.data.order, payment: res.data.payment })
     await load()
+  }
+
+  /** Đánh dấu đã nhận tiền: dừng chờ, nạp lại gói và đóng khung thanh toán. */
+  const settlePaid = async () => {
+    await load()
+    await refresh()
+    toast.success('Đã nhận được thanh toán — gói của bạn đã được kích hoạt 🎉')
+    setCheckout(null)
+  }
+
+  /**
+   * “Tôi đã chuyển”: hỏi máy chủ kiểm tra ngay (máy chủ kéo luôn giao dịch ngân
+   * hàng mới nhất) thay vì ngồi chờ tới lượt đồng bộ kế tiếp.
+   */
+  const checkNow = async () => {
+    if (!checkout) return
+    setChecking(true)
+    const res = await checkOrder(checkout.order.orderCode)
+    setChecking(false)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    setPaymentState(res.data.order.status)
+    if (res.data.order.status === 'PAID') {
+      await settlePaid()
+      return
+    }
+    setCheckNote(res.message)
+    toast.info(res.message)
   }
 
   const doTrial = async () => {
@@ -506,6 +568,10 @@ export default function BillingPage() {
           onCopy={copy}
           onCancel={() => dropOrder(checkout.order.orderCode)}
           onClose={() => setCheckout(null)}
+          onCheck={checkNow}
+          checking={checking}
+          checkNote={checkNote}
+          onRenew={() => buy(checkout.order.plan)}
         />
       )}
     </div>
@@ -514,7 +580,13 @@ export default function BillingPage() {
 
 // ─── Khung thanh toán ───────────────────────────────────────
 
-function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose }) {
+function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose, onCheck, checking, checkNote, onRenew }) {
+  // Đồng hồ đếm ngược hiệu lực của mã: hết giờ là mã cũ không còn dùng được, vì
+  // nội dung chuyển khoản chính là mã đơn đã hết hạn.
+  const left = useCountdown(order.expiresAt)
+  const expired = status === 'EXPIRED' || (status !== 'PAID' && left <= 0)
+  const urgent = !expired && left <= 120
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-navy-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-6 shadow-xl sm:rounded-2xl dark:bg-slate-800">
@@ -538,11 +610,41 @@ function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose }) {
         <div className="mt-4 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 p-4 text-white">
           <p className="text-xs font-bold uppercase tracking-wider text-white/80">Số tiền cần chuyển</p>
           <p className="mt-1 text-3xl font-extrabold">{formatVnd(order.amount)}</p>
-          <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-white/90">
+          <p className="mt-2 inline-flex flex-wrap items-center gap-1.5 text-xs font-bold text-white/90">
             <Clock size={14} weight="bold" />
-            {status === 'EXPIRED' ? 'Đơn đã hết hạn' : `Đơn hết hạn sau ${formatDate(order.expiresAt)}`}
+            {status === 'PAID' ? (
+              'Đã thanh toán'
+            ) : expired ? (
+              'Mã QR đã hết hiệu lực'
+            ) : (
+              <>
+                Mã QR còn hiệu lực
+                <span
+                  className={`rounded-lg px-1.5 py-0.5 font-mono text-sm font-extrabold ${
+                    urgent ? 'bg-rose-500 text-white' : 'bg-white/20'
+                  }`}
+                >
+                  {countdownText(left)}
+                </span>
+                {urgent && <span className="font-extrabold">sắp hết — chuyển ngay nhé</span>}
+              </>
+            )}
           </p>
+          {!expired && status !== 'PAID' && (
+            <p className="mt-1 text-[11px] font-semibold text-white/80">
+              Hết giờ này thì mã đơn cũ không còn khớp — lúc đó bấm “Tạo mã mới”.
+            </p>
+          )}
         </div>
+
+        {expired && (
+          <div className="mt-4 rounded-xl bg-rose-50 p-4 text-sm font-semibold text-rose-700 ring-1 ring-rose-200 dark:bg-rose-900/20 dark:text-rose-200 dark:ring-rose-800/50">
+            Đơn này đã quá hạn nên mã đơn{' '}
+            <span className="font-mono font-extrabold">{order.orderCode}</span> không còn dùng để chuyển khoản được nữa. Bấm
+            “Tạo mã mới” để sinh đơn khác. Nếu bạn đã lỡ chuyển tiền cho đơn này, tiền vẫn được ghi lại trong mục “Tiền đã vào
+            nhưng chưa khớp đơn” và chúng tôi sẽ xử lý — nhắn mục Hỗ trợ kèm mã đơn trên là xong.
+          </div>
+        )}
 
         {!payment?.configured ? (
           <div className="mt-4 rounded-xl bg-amber-50 p-4 text-sm font-semibold text-amber-800 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:ring-amber-800/50">
@@ -555,7 +657,7 @@ function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose }) {
               // Ưu tiên mã QR do hệ thống tự sinh (hoặc do ngân hàng tạo qua API) —
               // ảnh vietqr.io chỉ còn là phương án dự phòng.
               const qrSrc = payment.qrImageDataUrl || payment.qrImageUrl || payment.vietQrUrl
-              if (!qrSrc) return null
+              if (!qrSrc || expired) return null
               return (
                 <div className="mt-4 flex flex-col items-center">
                   <p className="inline-flex items-center gap-1.5 text-xs font-bold text-navy-500 dark:text-slate-400">
@@ -598,6 +700,12 @@ function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose }) {
           </>
         )}
 
+        {checkNote && status !== 'PAID' && !expired && (
+          <p className="mt-4 rounded-xl bg-blue-50 p-3 text-xs font-bold text-blue-700 ring-1 ring-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:ring-blue-800/50">
+            {checkNote}
+          </p>
+        )}
+
         <div className="mt-5 rounded-xl bg-navy-50 p-4 text-xs font-semibold text-navy-600 dark:bg-slate-900/50 dark:text-slate-300">
           {status === 'PAID' ? (
             <span className="text-emerald-600 dark:text-emerald-400">Đã nhận được tiền — gói đang được kích hoạt.</span>
@@ -614,14 +722,23 @@ function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose }) {
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={onClose}>
-            Tôi sẽ chuyển sau
-          </Button>
-          {status === 'PENDING' && (
+          {expired ? (
+            <Button icon={ArrowClockwise} onClick={onRenew}>
+              Tạo mã mới
+            </Button>
+          ) : (
+            <Button icon={Check} loading={checking} disabled={status === 'PAID'} onClick={onCheck}>
+              Tôi đã chuyển
+            </Button>
+          )}
+          {status === 'PENDING' && !expired && (
             <Button variant="ghost" className="text-rose-600 dark:text-rose-400" onClick={onCancel}>
               Huỷ đơn này
             </Button>
           )}
+          <Button variant="ghost" onClick={onClose}>
+            Đóng
+          </Button>
         </div>
       </div>
     </div>

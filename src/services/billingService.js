@@ -24,6 +24,12 @@ export async function cancelOrder(orderCode) {
   return api('POST', `/billing/orders/${orderCode}/cancel`)
 }
 
+// "Tôi đã chuyển": kiểm tra lại đơn ngay, và nếu lâu rồi chưa đọc giao dịch ngân
+// hàng thì máy chủ kéo ngay một lần — gói mở trong vài giây thay vì chờ chu kỳ.
+export async function checkOrder(orderCode) {
+  return api('POST', `/billing/orders/${orderCode}/check`)
+}
+
 // ─── Dùng thử Pro (mỗi tài khoản một lần) ───────────────────
 export async function startTrial() {
   return api('POST', '/billing/trial')

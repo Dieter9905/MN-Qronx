@@ -20,6 +20,9 @@ router.get('/me', auth, billingController.getMyBilling)
 router.post('/trial', auth, billingController.startTrial)
 router.post('/orders', auth, createOrderValidation, validate, billingController.createOrder)
 router.get('/orders/:orderCode', auth, orderCodeValidation, validate, billingController.getOrder)
+
+// Khách bấm “Tôi đã chuyển” → kiểm tra lại và kéo giao dịch ngân hàng ngay
+router.post('/orders/:orderCode/check', auth, orderCodeValidation, validate, billingController.checkMyOrder)
 router.post(
   '/orders/:orderCode/cancel',
   auth,

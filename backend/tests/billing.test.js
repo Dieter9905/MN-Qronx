@@ -1169,6 +1169,91 @@ describe('API ngân hàng (kéo giao dịch về)', () => {
     expect(after.data.data.planExpiresAt).toBe(firstExpiry)
   }, 120000)
 
+  it('khách bấm “Tôi đã chuyển” → đọc giao dịch ngay và mở gói, không phải chờ chu kỳ', async () => {
+    const payer = await newUser('check_now')
+    const created = await api('POST', '/billing/orders', {
+      token: payer.token,
+      body: { plan: 'PLUS', cycle: 'MONTHLY' },
+    })
+    const code = created.data.data.order.orderCode
+
+    await api('PUT', '/admin/billing/settings', {
+      token: adminToken,
+      body: {
+        bankApiProvider: 'SEPAY',
+        bankApiToken: 'sepay-token-test',
+        bankApiAccount: '246813579',
+        syncEnabled: true,
+        syncIntervalMinutes: 5,
+      },
+    })
+    // Lần đồng bộ trước đã lâu → được phép đọc ngay (nếu không sẽ bị chặn 20 giây)
+    await prisma.billingSetting.update({
+      where: { settingId: 1 },
+      data: { lastSyncAt: new Date(Date.now() - 60000) },
+    })
+    billingService.clearBillingSettingsCache()
+
+    const txId = Number(String(Date.now()).slice(-7))
+    const calls = []
+    mockBankApi(async (url) => {
+      calls.push(url)
+      return jsonResponse({
+        status: 200,
+        transactions: [
+          {
+            id: txId,
+            transaction_date: '2026-09-27 10:00:00',
+            amount_in: '39000.00',
+            amount_out: '0.00',
+            transaction_content: `CT DEN: MN QRONX ${code} chuyen tien`,
+            reference_number: 'FT26092701',
+          },
+        ],
+      })
+    })
+
+    const res = await api('POST', `/billing/orders/${code}/check`, { token: payer.token })
+    expect(res.status).toBe(200)
+    expect(res.data.data.checkedBank).toBe(true)
+    expect(res.data.data.order.status).toBe('PAID')
+    expect(calls.some((u) => u.includes('transactions/list'))).toBe(true)
+
+    const me = await api('GET', '/billing/me', { token: payer.token })
+    expect(me.data.data.plan).toBe('PLUS')
+    expect(me.data.data.daysLeft).toBeGreaterThanOrEqual(29)
+  }, 180000)
+
+  it('bấm “Tôi đã chuyển” khi chưa có tiền thì vẫn chờ, và đơn của người khác thì không đụng được', async () => {
+    const payer = await newUser('check_wait')
+    const created = await api('POST', '/billing/orders', {
+      token: payer.token,
+      body: { plan: 'PLUS', cycle: 'MONTHLY' },
+    })
+    const code = created.data.data.order.orderCode
+
+    await prisma.billingSetting.update({
+      where: { settingId: 1 },
+      data: { lastSyncAt: new Date(Date.now() - 60000) },
+    })
+    billingService.clearBillingSettingsCache()
+    mockBankApi(async () => jsonResponse({ status: 200, transactions: [] }))
+
+    const res = await api('POST', `/billing/orders/${code}/check`, { token: payer.token })
+    expect(res.status).toBe(200)
+    expect(res.data.data.order.status).toBe('PENDING')
+    expect(res.data.message).toMatch(/chưa thấy tiền/i)
+
+    const me = await api('GET', '/billing/me', { token: payer.token })
+    expect(me.data.data.plan).toBe('FREE')
+
+    // Không ai kiểm tra được đơn của người khác, và phải đăng nhập mới gọi được
+    const stolen = await api('POST', `/billing/orders/${code}/check`, { token: other.token })
+    expect(stolen.status).toBe(403)
+    const anonymous = await api('POST', `/billing/orders/${code}/check`)
+    expect(anonymous.status).toBe(401)
+  }, 120000)
+
   it('SePay: từ chối token sai thì báo lỗi rõ, không kích hoạt gì', async () => {
     await api('PUT', '/admin/billing/settings', {
       token: adminToken,
