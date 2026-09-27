@@ -289,6 +289,16 @@ model Task {
   // khi người dùng bấm Xong. null = tắt. Đây là lý do trả tiền rõ nhất của Pro:
   // "nhắc là nhớ", chứ không phải nhắc một lần rồi thôi.
   nagEveryMinutes Int?       @map("nag_every_minutes")
+  // Luân phiên người làm (gói Pro): việc lặp lại mà mỗi kỳ MỘT người chịu trách
+  // nhiệm, xoay vòng theo thứ tự đã giao — "tuần này ai đổ rác". Không có cột này
+  // thì chủ việc phải tự nhớ ai làm kỳ trước (đúng việc mà app nhắc việc sinh ra để
+  // làm hộ), và cả nhà cùng nhận chuông rồi cùng đoán kỳ này đến lượt ai.
+  rotateEnabled Boolean @default(false) @map("rotate_enabled")
+  // Người đến lượt trong KỲ NÀY; kỳ sau được tính lại khi việc xong. Cố ý là Int
+  // trần chứ không phải khoá ngoại: người bị gỡ khỏi việc sẽ làm cột này trỏ vào
+  // người không còn trong danh sách, nên mọi chỗ đọc PHẢI đối chiếu lại với
+  // task_shares (nextTurnAssignee / reminderTargetsForTask) thay vì tin cột này.
+  turnAssigneeId Int?  @map("turn_assignee_id")
   // Thùng rác: xoá là ĐẶT ngày này chứ không xoá dòng — còn giữ được 30 ngày
   // để khôi phục (người dùng không sợ mất dữ liệu). Mọi truy vấn đều lọc
   // deletedAt = null để việc trong thùng rác không hiện ở list/dashboard.

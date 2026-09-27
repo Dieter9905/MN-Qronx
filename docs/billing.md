@@ -126,7 +126,8 @@ sách người được giao** — mọi truy vấn cũ vẫn khoá theo `tasks.
 đường nào để họ thấy việc khác của chủ; (2) **báo xong phần mình KHÔNG làm việc của
 chủ tự hoàn thành** — việc chỉ xong khi chủ bấm Xong, nếu không thì “nhờ người khác”
 thành “giao quyền quyết định cho người khác”. Việc lặp lại giữ nguyên người được giao
-cho kỳ sau (giống cách giữ chế độ nhắc dai), trạng thái xong đặt lại từ đầu.
+cho kỳ sau (giống cách giữ chế độ nhắc dai), trạng thái xong đặt lại từ đầu — trừ khi
+bật **luân phiên** (xem dưới).
 
 Vì sao đây cũng là kênh tăng trưởng: mỗi lần một khách Pro nhờ ai đó, người đó phải
 có tài khoản MN-Qronx (dùng miễn phí) và sẽ thấy việc kèm chuông — đường có thêm
@@ -134,6 +135,40 @@ người dùng mà không tốn tiền quảng cáo. Nhờ vậy mục **Việc 
 đánh dấu Pro trong menu, và cuối trang có câu dẫn sang bảng giá cho người muốn nhờ
 lại người khác. Mã ở `backend/src/services/taskShareService.js`,
 `controllers/taskShareController.js`, bảng `task_shares`.
+
+**Luân phiên người làm: “tuần này ai đổ rác”.** Giao việc trả lời được câu “nhờ ai
+làm”, nhưng việc nhà lặp lại cần câu trả lời khác: “**kỳ này đến lượt ai**”. Không có
+nó, một việc “đổ rác hằng tuần” giao cho 3 người thì cả 3 cùng nhận chuông mỗi tuần
+(dễ bỏ qua vì ai cũng tưởng người khác làm) hoặc cả 3 cùng làm. Vì vậy trên việc lặp
+lại, chủ việc bật được **luân phiên** (`Task.rotateEnabled`); mỗi kỳ đúng **một**
+người là `Task.turnAssigneeId` — người **đến lượt**. Thứ tự xoay được suy ra từ
+`task_shares` theo **thời điểm giao việc** (`rotationOrder()`), không lưu thành cột
+riêng: danh sách người được giao đã là thứ tự, thêm một cột nữa chỉ là chỗ để hai
+nguồn dữ liệu lệch nhau. Hàm này **sắp xếp có ý định** chứ không tin thứ tự dòng DB
+trả về — cùng một danh sách đi qua hai truy vấn (nhắc nhở lọc `doneAt`, trang chi tiết
+thì không) mà lệch thứ tự thì lượt kế tiếp rơi vào hai người khác nhau ở hai màn hình.
+
+Chuông chỉ đánh thức người đến lượt (cộng chủ việc, nếu chủ không phải người đến
+lượt), nên không còn cảnh ba người cùng nhận. Khi chủ bấm Xong, kỳ lặp kế tiếp tự
+chuyển lượt sang người kế tiếp; hết danh sách thì quay lại đầu. Có sẵn cả đường
+**đổi tay thủ công** cho những tuần bất thường (“tuần này con ốm, mẹ làm”):
+`setRotation(..., { assigneeId })` chỉ đổi người của kỳ này mà không tắt luân phiên,
+và chỉ cho đổi sang người đã được giao việc này — nếu không, người đến lượt sẽ là
+người không có trong danh sách và chuông sẽ kêu vào khoảng không.
+Người đến lượt thấy việc trong **Việc được giao** kèm nhãn **“Đến lượt bạn”**
+(`isMyTurn`), người khác trong danh sách vẫn thấy việc nhưng ở dạng “chờ tới lượt” và
+không bị nhắc — họ không bị mất việc, chỉ là kỳ này chưa tới phiên.
+
+Bốn chi tiết dễ sai đã xử lý sẵn: (1) người đến lượt bị **thu hồi** khỏi việc thì lượt
+tự nhảy sang người kế tiếp, không để việc “mồ côi lượt”; (2) thêm người mới vào việc
+đang luân phiên thì người đó vào **cuối hàng** (nhờ mốc `createdAt`), không chen ngang
+làm lệch phiên của người đang chờ; (3) **bật luân phiên hai lần không đẩy lượt sang
+người khác** — lượt đang có được giữ nếu người đó còn trong danh sách, vì nút này
+khách sẽ bấm lại và “bấm lại mà đổi người trực” là loại lỗi im lặng tệ nhất;
+(4) việc **không** ở chế độ luân phiên thì mọi thứ chạy y như trước — luân phiên là
+lớp phủ, không phải đường thứ hai. Mã ở `taskShareService`
+(`setRotation`, `nextTurnAssignee`, `reminderTargetsForTask`), route
+`PUT /tasks/:taskId/rotation`.
 
 ### Gói Pro Gia đình: tăng TIỀN MỖI KHÁCH, không chỉ tăng số khách
 

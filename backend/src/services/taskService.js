@@ -5,6 +5,7 @@ import { parsePagination, paginationMeta } from '../utils/pagination.js'
 import ApiError from '../utils/ApiError.js'
 import { PLANS, getUserPlan, planLimit, planLimitError } from '../utils/planLimits.js'
 import { parseNagEveryMinutes, assertNagAllowed } from './nagService.js'
+import { nextTurnAssignee } from './taskShareService.js'
 
 
 // ─── Find All (List + Filter + Sort + Paginate) ─────────
@@ -259,6 +260,9 @@ export async function complete(userId, taskId) {
     let nextTask = null
     if (task.repeatType !== 'NONE') {
       const nextDueAt = calculateNextDueDate(task.dueAt, task.repeatType, task.repeatDays)
+      // Danh sách người được giao của KỲ VỪA XONG — còn đủ người kể cả người vừa
+      // làm, nên vòng xoay không bị ngắn dần sau mỗi kỳ.
+      const oldShares = task.shares || []
 
       nextTask = await tx.task.create({
         data: {
@@ -271,6 +275,11 @@ export async function complete(userId, taskId) {
           repeatDays: task.repeatDays,
           // Việc lặp lại giữ luôn chế độ nhắc dai: lần sau cũng phải nhắc tới khi xong
           nagEveryMinutes: task.nagEveryMinutes,
+          // Luân phiên người làm: kỳ sau thuộc về NGƯỜI KẾ TIẾP trong danh sách đã
+          // giao. Tính ở đây (chứ không ở giao diện) để kỳ sau đúng người kể cả khi
+          // khách chỉ bấm Xong trên điện thoại.
+          rotateEnabled: task.rotateEnabled,
+          turnAssigneeId: task.rotateEnabled ? nextTurnAssignee(oldShares, task.turnAssigneeId) : null,
           dueAt: nextDueAt,
           parentTaskId: taskId,
         },
@@ -279,7 +288,6 @@ export async function complete(userId, taskId) {
       // Việc lặp lại giữ luôn người được giao: "đổ rác hằng tuần" giao cho con
       // thì tuần sau vẫn là việc của con, không phải giao lại từ đầu mỗi tuần.
       // doneAt để trống vì đây là kỳ MỚI — kỳ trước đã xong rồi.
-      const oldShares = task.shares || []
       if (oldShares.length) {
         await tx.taskShare.createMany({
           data: oldShares.map((s) => ({

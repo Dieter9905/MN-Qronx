@@ -46,6 +46,9 @@ router.delete(
 router.get('/:taskId/shares', auth, shareController.getShares)
 router.post('/:taskId/shares', auth, shareController.shareTask)
 router.delete('/:taskId/shares/:shareId', auth, shareController.revokeShare)
+// Luân phiên người làm (bật/tắt, đổi người của kỳ này) — cùng nhóm quyền với giao
+// việc: chỉ chủ việc, và chỉ gói Pro vì người nhận vẫn phải được giao việc trước.
+router.put('/:taskId/rotation', auth, shareController.setRotation)
 
 // Nested routes
 router.use('/:taskId/subtasks', subtaskRoutes)

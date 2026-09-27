@@ -242,6 +242,15 @@ export async function getTaskShares(id) {
   return api('GET', `/tasks/${id}/shares`)
 }
 
+// PUT /api/v1/tasks/:id/rotation — luân phiên người làm
+//   { enabled: true|false }  → bật/tắt
+//   { assigneeId }           → đổi người làm KỲ NÀY (kỳ sau vẫn xoay đúng thứ tự)
+export async function setTaskRotation(id, payload = {}) {
+  const res = await api('PUT', `/tasks/${id}/rotation`, { body: payload })
+  if (res.success && res.data?.task) res.data = { ...res.data, task: toTask(res.data.task) }
+  return res
+}
+
 // DELETE /api/v1/tasks/:id/shares/:shareId — thu hồi việc đã giao
 export async function revokeTaskShare(id, shareId) {
   const res = await api('DELETE', `/tasks/${id}/shares/${shareId}`)
@@ -275,6 +284,11 @@ function toAssignedTask(item) {
     doneAt: item.doneAt || null,
     isDone: !!item.doneAt,
     closed: !!item.completed,
+    // Luân phiên người làm: việc này KỲ NÀY có phải lượt của tôi không. Thiếu hai
+    // dòng này thì trang "Việc được giao" hiện mọi việc giống nhau, và người đến
+    // lượt không biết mình đang bị chờ — đúng thứ tính năng sinh ra để nói.
+    rotateEnabled: !!item.rotateEnabled,
+    isMyTurn: !!item.isMyTurn,
     category: item.category || null,
     nextReminderAt: item.nextReminderAt || null,
     assignedBy: item.assignedBy || null,

@@ -11,9 +11,26 @@ async function newUser(prefix) {
   return { email, token, userId: row.userId }
 }
 
+/**
+ * Hạn của việc test: **hôm nay**, tính theo ngày của MÁY CHỦ (giờ VN = UTC+7, xem
+ * `utils/dateUtils.js`). Cố ý không dùng thẳng `now + 1h` như trước: chạy suite
+ * trong giờ cuối của ngày (22h–24h VN) thì "+1 giờ" hoá thành NGÀY MAI và
+ * `todayCount` về 0 — test đỏ oan, chỉ vì chạy muộn, và người sửa sau sẽ đi tìm
+ * lỗi ở dashboard. Ở đây vẫn ưu tiên "sắp tới trong hôm nay" (now + 1h) nhưng
+ * chặn lại ở 23:59 hôm nay, nên không bao giờ vượt sang ngày mai.
+ */
+function dueToday() {
+  const VN_OFFSET_MS = 7 * 60 * 60 * 1000
+  const now = Date.now()
+  const vnNow = new Date(now + VN_OFFSET_MS)
+  const endOfVnDay =
+    Date.UTC(vnNow.getUTCFullYear(), vnNow.getUTCMonth(), vnNow.getUTCDate(), 23, 59, 0) -
+    VN_OFFSET_MS
+  return new Date(Math.min(now + 3600_000, endOfVnDay)).toISOString()
+}
+
 async function createTask(token, title) {
-  const dueAt = new Date(Date.now() + 3600_000).toISOString()
-  const res = await api('POST', '/tasks', { token, body: { title, dueAt } })
+  const res = await api('POST', '/tasks', { token, body: { title, dueAt: dueToday() } })
   expect(res.status).toBe(201)
   return res.data.data
 }

@@ -87,6 +87,13 @@ function transformData(data, urlpath) {
     return Array.isArray(data) ? data.map(transformTaskShare) : transformTaskShare(data)
   }
 
+  // PUT /tasks/:id/rotation trả về công việc đã cập nhật (kèm danh sách người được
+  // giao và lượt mới) để giao diện vẽ lại khối luân phiên ngay, không phải gọi
+  // thêm một lượt nữa.
+  if (segments[0] === 'tasks' && segments[2] === 'rotation') {
+    return data.task && data.task.taskId ? { ...data, task: transformTask(data.task) } : data
+  }
+
   // ── Việc người khác nhờ tôi làm (/me/assigned) ──
   // Không khớp TASK_PATHS nên phải xử lý riêng; trả thẳng dạng đã sẵn dùng.
   if (segments[0] === 'me' && segments[1] === 'assigned') {

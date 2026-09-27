@@ -100,6 +100,14 @@ export function toTask(task) {
     // nếu không thì nhãn "đã giao cho N người" không bao giờ hiện trong danh sách.
     assignees,
     shareCount: task.shareCount ?? task._count?.shares ?? assignees.length,
+    // Luân phiên người làm (Pro): `order` là thứ tự lượt DO MÁY CHỦ sắp (cũ nhất
+    // trước). Giao diện đọc thẳng — tự sắp lại ở trình duyệt là cách nhanh nhất để
+    // màn hình nói "kỳ sau đến lượt chị" trong khi chuông kêu ở máy người khác.
+    rotation: {
+      enabled: !!task.rotation?.enabled,
+      turnAssigneeId: task.rotation?.turnAssigneeId ?? null,
+      order: Array.isArray(task.rotation?.order) ? task.rotation.order : [],
+    },
   }
 }
 

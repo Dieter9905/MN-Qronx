@@ -33,6 +33,22 @@ export const revokeShare = catchAsync(async (req, res) => {
   success(res, 200, 'Đã thu hồi việc đã giao', result)
 })
 
+// Luân phiên người làm: bật/tắt, hoặc đổi người của kỳ này. Một đường cho cả ba
+// việc vì cùng một trạng thái — hai đường thì sớm muộn cũng có đường quên xoá lượt.
+export const setRotation = catchAsync(async (req, res) => {
+  const taskId = parseInt(req.params.taskId)
+  const { enabled, assigneeId } = req.body || {}
+  const result = await shareService.setRotation(req.user.id, taskId, { enabled, assigneeId })
+
+  const message =
+    assigneeId !== undefined && assigneeId !== null && assigneeId !== ''
+      ? 'Đã đổi người làm kỳ này'
+      : enabled === false
+        ? 'Đã tắt luân phiên'
+        : 'Đã bật luân phiên — mỗi kỳ một người chịu trách nhiệm và chỉ người đó được nhắc'
+  success(res, 200, message, result)
+})
+
 // ── Phía người được giao ────────────────────────────────────
 
 export const getAssigned = catchAsync(async (req, res) => {

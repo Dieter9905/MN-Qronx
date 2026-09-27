@@ -100,9 +100,16 @@ export async function dispatchReminder(reminder) {
   for (const assigneeId of reminderTargetsForTask(task, userId)) {
     if (assigneeId === userId) continue
     try {
+      // Việc luân phiên: người nhận chuông là NGƯỜI ĐẾN LƯỢT, nên nói đúng
+      // chuyện đó thay vì "bạn được nhờ" — câu chữ ở đây chính là thứ khách đọc
+      // trên màn hình khoá, và nó quyết định họ có mở app hay không.
       await pushToUser(assigneeId, {
-        title: `👥 Việc bạn được nhờ: ${task.title}`,
-        body: 'Bạn được nhờ làm việc này. Bấm để xem chi tiết.',
+        title: task.rotateEnabled
+          ? `🔄 Đến lượt bạn: ${task.title}`
+          : `👥 Việc bạn được nhờ: ${task.title}`,
+        body: task.rotateEnabled
+          ? 'Kỳ này đến lượt bạn. Bấm để xem và báo xong.'
+          : 'Bạn được nhờ làm việc này. Bấm để xem chi tiết.',
         taskId: task.taskId,
         reminderId: reminder.reminderId,
         url: '/app/assigned',

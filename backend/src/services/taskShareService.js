@@ -28,6 +28,45 @@ export const MAX_ASSIGNEES_PER_TASK = 5
 /** Trần số việc đang giao đi của một tài khoản — chặn lạm dụng, không chặn người dùng thật. */
 export const MAX_OPEN_SHARES = 50
 
+// ─── Luân phiên người làm ────────────────────────────────────
+//
+// Vì sao cần: "đổ rác hằng tuần" giao cho cả nhà là vô nghĩa — không ai thấy mình
+// chịu trách nhiệm, và cả nhà cùng nhận chuông rồi cùng đoán kỳ này đến lượt ai.
+// Luân phiên trả lời đúng câu đó, và vẫn chỉ gói trả phí có được vì nó nằm trên
+// tính năng giao việc (người được nhờ vẫn không cần trả phí).
+
+/**
+ * Thứ tự lượt = thứ tự giao việc (cũ nhất trước).
+ *
+ * Cố ý KHÔNG dựa vào thứ tự dòng mà DB trả về: cùng một danh sách đi qua hai truy
+ * vấn khác nhau (nhắc nhở lọc doneAt, trang chi tiết thì không) mà lệch thứ tự thì
+ * kỳ sau rơi vào tay người khác nhau ở hai màn hình — loại lỗi khách chỉ phát hiện
+ * khi đã trả tiền.
+ */
+export function rotationOrder(shares = []) {
+  return [...shares].sort((a, b) => {
+    const byDate = new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+    if (byDate !== 0) return byDate
+    return Number(a.shareId || 0) - Number(b.shareId || 0)
+  })
+}
+
+/**
+ * Người đến lượt ở KỲ SAU. Hàm thuần vì đây là luật dễ sai nhất và sai thì IM LẶNG:
+ * việc rơi vào tay người không biết mình có việc cho tới lúc chuông kêu, hoặc một
+ * người làm mãi vì lượt cũ trỏ vào người đã bị gỡ khỏi việc.
+ */
+export function nextTurnAssignee(shares = [], currentTurnId) {
+  const order = rotationOrder(shares)
+  if (!order.length) return null
+  const index = order.findIndex((s) => Number(s.assigneeId) === Number(currentTurnId))
+  // Lượt hiện tại không còn trong danh sách (bị gỡ, hoặc lần đầu bật luân phiên):
+  // bắt đầu lại từ người đầu tiên — hơn là để lượt trống, vì lượt trống nghĩa là
+  // không ai được nhắc.
+  if (index === -1) return Number(order[0].assigneeId)
+  return Number(order[(index + 1) % order.length].assigneeId)
+}
+
 /** Trả về đúng quyền lợi của gói: chỉ Pro được giao việc. */
 async function assertCanShare(userId) {
   const plan = await getUserPlan(userId)
@@ -105,6 +144,12 @@ export async function shareTask(userId, taskId, { email, note } = {}) {
     include: { assignee: { select: { userId: true, fullName: true, email: true, avatarUrl: true } } },
   })
 
+  // Việc đang luân phiên mà lượt đang trống (người cũ vừa bị gỡ) thì người mới
+  // nhận lượt luôn — để trống là việc nằm không và không ai được nhắc.
+  if (task.rotateEnabled && !task.turnAssigneeId) {
+    await prisma.task.update({ where: { taskId }, data: { turnAssigneeId: assignee.userId } })
+  }
+
   // Thông báo đẩy cho người nhận: không có nó thì họ chỉ biết khi tự mở app — mà
   // thói quen làm hỏng việc nhờ vả chính là người nhận không biết mình có việc mới.
   try {
@@ -139,8 +184,72 @@ export async function revokeShare(userId, taskId, shareId) {
   if (!share) throw ApiError.notFound('Không tìm thấy người được giao này')
 
   await prisma.taskShare.delete({ where: { shareId } })
+
+  // Người bị thu hồi đang đến lượt: chuyển lượt NGAY sang người kế tiếp. Để lượt
+  // trỏ vào người đã bị gỡ là việc nằm không — không ai được nhắc, và cả nhà hiểu
+  // nhầm rằng kỳ này đã có người lo.
+  if (task.rotateEnabled && Number(task.turnAssigneeId) === Number(share.assigneeId)) {
+    const after = nextTurnAssignee(task.shares || [], share.assigneeId)
+    const nextTurn = Number(after) === Number(share.assigneeId) ? null : after
+    await prisma.task.update({ where: { taskId }, data: { turnAssigneeId: nextTurn } })
+  }
+
   const fresh = await taskRepo.findById(taskId, userId)
   return { removed: shareId, task: fresh }
+}
+
+/**
+ * Bật/tắt luân phiên, hoặc đổi người của KỲ NÀY (chủ việc làm).
+ * @returns {Promise<{ task: object }>} công việc đã cập nhật, kèm danh sách người được giao
+ */
+export async function setRotation(userId, taskId, { enabled, assigneeId } = {}) {
+  await assertCanShare(userId)
+  const task = await loadOwnTask(userId, taskId)
+  const shares = rotationOrder(task.shares || [])
+  const wantsTurn = assigneeId !== undefined && assigneeId !== null && assigneeId !== ''
+
+  // Đổi người của kỳ này ("tuần này con ốm, mẹ làm"): chỉ đổi NGƯỜI, không bật/tắt.
+  if (wantsTurn) {
+    if (!task.rotateEnabled) {
+      throw ApiError.badRequest('Việc này chưa bật luân phiên nên chưa đổi được người của kỳ này')
+    }
+    const target = shares.find((s) => Number(s.assigneeId) === Number(assigneeId))
+    if (!target) throw ApiError.badRequest('Chỉ đổi được sang người đã được giao việc này')
+    await prisma.task.update({ where: { taskId }, data: { turnAssigneeId: target.assigneeId } })
+    const fresh = await taskRepo.findById(taskId, userId)
+    return { task: fresh }
+  }
+
+  // Tắt luân phiên: việc trở lại "giao cho nhiều người, ai xong cũng được". Xoá
+  // luôn cột lượt — để lại một cái tên vô nghĩa là mầm lỗi cho lần bật sau.
+  if (enabled === false) {
+    await prisma.task.update({ where: { taskId }, data: { rotateEnabled: false, turnAssigneeId: null } })
+    const fresh = await taskRepo.findById(taskId, userId)
+    return { task: fresh }
+  }
+
+  if (task.repeatType === 'NONE') {
+    throw ApiError.badRequest(
+      'Luân phiên chỉ dùng được cho việc lặp lại. Bật lặp lại (hằng ngày/tuần/tháng) cho việc này trước.'
+    )
+  }
+  if (shares.length < 2) {
+    throw ApiError.badRequest(
+      'Cần giao việc này cho ít nhất 2 người rồi mới luân phiên được — một người thì không có gì để xoay.'
+    )
+  }
+
+  // Giữ nguyên lượt đang có nếu người đó vẫn trong danh sách: bấm bật hai lần
+  // không được đẩy lượt sang người khác.
+  const current = shares.find((s) => Number(s.assigneeId) === Number(task.turnAssigneeId))
+  const turnAssignee = current ? current.assigneeId : shares[0].assigneeId
+  await prisma.task.update({
+    where: { taskId },
+    data: { rotateEnabled: true, turnAssigneeId: turnAssignee },
+  })
+
+  const fresh = await taskRepo.findById(taskId, userId)
+  return { task: fresh }
 }
 
 /**
@@ -223,8 +332,21 @@ export async function setMyDone(userId, taskId, done) {
  */
 export function reminderTargetsForTask(task, ownerUserId) {
   const owner = Number(ownerUserId)
+  const shares = task?.shares || []
   const targets = [owner]
-  for (const share of task?.shares || []) {
+
+  // Việc luân phiên chỉ nhắc ĐÚNG người đến lượt. Nhắc cả nhóm là quay lại đúng
+  // vấn đề mà luân phiên sinh ra để giải (không ai thấy mình chịu trách nhiệm) và
+  // làm phiền người vừa làm xong kỳ trước. Chủ việc vẫn được nhắc như mọi việc
+  // của mình — việc vẫn nằm trên bảng của họ.
+  if (task?.rotateEnabled) {
+    const turnId = Number(task.turnAssigneeId)
+    const turnShare = shares.find((s) => Number(s.assigneeId) === turnId)
+    if (turnShare && !turnShare.doneAt && turnId !== owner) targets.push(turnId)
+    return targets
+  }
+
+  for (const share of shares) {
     const id = Number(share.assigneeId)
     if (!share.doneAt && id !== owner && !targets.includes(id)) targets.push(id)
   }
@@ -235,6 +357,9 @@ export default {
   shareTask,
   listShares,
   revokeShare,
+  setRotation,
+  rotationOrder,
+  nextTurnAssignee,
   listAssignedToMe,
   setMyDone,
   reminderTargetsForTask,

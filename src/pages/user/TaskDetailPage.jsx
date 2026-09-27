@@ -20,6 +20,7 @@ import {
   LockSimple,
   PaperPlaneTilt,
   SealCheck,
+  ArrowsClockwise,
 } from '@phosphor-icons/react'
 import {
   getTask,
@@ -32,6 +33,7 @@ import {
   deleteSubtask,
   shareTask,
   revokeTaskShare,
+  setTaskRotation,
 } from '../../services/taskService'
 import { useAuth } from '../../context/AuthContext'
 import { addReminder, removeReminder } from '../../services/reminderService'
@@ -40,6 +42,7 @@ import { PageLoader, EmptyState } from '../../components/common/Feedback'
 import Button from '../../components/common/Button'
 import { StatusBadge, PriorityBadge, CategoryBadge } from '../../components/common/Badge'
 import { ConfirmDialog } from '../../components/common/Modal'
+import { Toggle, Select } from '../../components/common/Inputs'
 import { formatDateTime, formatRelativeDay, formatTime, effectiveStatus, isOverdue } from '../../lib/format'
 import { repeatSummary, isProPlan } from '../../lib/constants'
 
@@ -62,6 +65,7 @@ export default function TaskDetailPage() {
   const [shareNote, setShareNote] = useState('')
   const [shareBusy, setShareBusy] = useState(false)
   const [shareHint, setShareHint] = useState(null)
+  const [rotationBusy, setRotationBusy] = useState(false)
 
   const load = async () => {
     const res = await getTask(id)
@@ -190,6 +194,16 @@ export default function TaskDetailPage() {
   const assignees = task.assignees || []
   const doneCount = assignees.filter((s) => s.doneAt).length
 
+  // ── Luân phiên người làm (Pro) ─────────────────────────────
+  // Thứ tự lượt lấy từ máy chủ (order), KHÔNG sắp lại ở trình duyệt.
+  const rotation = task.rotation || { enabled: false, turnAssigneeId: null, order: [] }
+  const orderIds = rotation.order.length ? rotation.order : assignees.map((s) => s.assignee?.id)
+  const turnName = assignees.find((s) => s.assignee?.id === rotation.turnAssigneeId)?.assignee?.fullName
+  const turnIndex = orderIds.indexOf(rotation.turnAssigneeId)
+  const nextTurnId =
+    orderIds.length > 1 && turnIndex >= 0 ? orderIds[(turnIndex + 1) % orderIds.length] : null
+  const nextTurnName = assignees.find((s) => s.assignee?.id === nextTurnId)?.assignee?.fullName
+
   const onShare = async (e) => {
     e.preventDefault()
     const email = shareEmail.trim()
@@ -223,6 +237,20 @@ export default function TaskDetailPage() {
       return
     }
     toast.success('Đã thu hồi việc đã giao')
+    load()
+  }
+
+  // Bật/tắt luân phiên hoặc đổi người của kỳ này — cùng một đường API, và cả ba
+  // việc đều phải vẽ lại từ dữ liệu máy chủ (nên luôn load() lại).
+  const onRotation = async (payload) => {
+    setRotationBusy(true)
+    const res = await setTaskRotation(task.id, payload)
+    setRotationBusy(false)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    toast.success(res.message)
     load()
   }
 
@@ -553,6 +581,60 @@ export default function TaskDetailPage() {
                   </p>
                 )}
               </form>
+            )}
+            {/* Luân phiên người làm: việc nhà lặp lại mà mỗi kỳ MỘT người chịu
+                trách nhiệm — "tuần này ai đổ rác". Không có khối này thì cả nhà
+                cùng nhận chuông rồi cùng đoán, và việc rơi vào tay người không
+                biết mình có việc. */}
+            {!closed && task.repeatType !== 'NONE' && assignees.length >= 2 && (
+              <div className="mt-4 rounded-xl bg-navy-50/70 p-3 ring-1 ring-inset ring-navy-100 dark:bg-slate-900/50 dark:ring-slate-700">
+                <Toggle
+                  checked={rotation.enabled}
+                  onChange={(next) => onRotation({ enabled: next })}
+                  disabled={rotationBusy}
+                  label="Luân phiên mỗi kỳ"
+                  description="Mỗi kỳ một người chịu trách nhiệm, xoay vòng theo thứ tự đã giao. Chuông chỉ nhắc người đến lượt."
+                />
+                {rotation.enabled && (
+                  <div className="mt-1 space-y-2.5 border-t border-navy-100 px-1 pt-3 dark:border-slate-700">
+                    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-navy-700 dark:text-slate-200">
+                      <ArrowsClockwise size={14} weight="bold" className="text-violet-600 dark:text-violet-400" />
+                      Kỳ này: <strong>{turnName || 'chưa chọn ai'}</strong>
+                      {nextTurnName && (
+                        <span className="font-medium text-navy-400 dark:text-slate-500">
+                          · kỳ sau: {nextTurnName}
+                        </span>
+                      )}
+                    </p>
+                    <Select
+                      value={rotation.turnAssigneeId ?? ''}
+                      onChange={(e) => onRotation({ assigneeId: Number(e.target.value) })}
+                      disabled={rotationBusy}
+                      aria-label="Người làm kỳ này"
+                      className="h-10 text-xs"
+                    >
+                      {assignees.map((s) => (
+                        <option key={s.shareId} value={s.assignee?.id}>
+                          {s.assignee?.fullName || 'Người được giao'}
+                        </option>
+                      ))}
+                    </Select>
+                    <p className="text-[11px] leading-relaxed text-navy-400 dark:text-slate-500">
+                      Đổi người ở đây chỉ áp dụng cho kỳ này — kỳ sau vẫn xoay đúng thứ tự
+                      (tuần này con ốm thì mẹ làm, tuần sau vẫn đến lượt con).
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+            {!closed && assignees.length >= 2 && task.repeatType === 'NONE' && (
+              <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">
+                Muốn mỗi kỳ một người làm?{' '}
+                <Link to={`/app/tasks/${task.id}/edit`} className="font-bold underline">
+                  Bật lặp lại
+                </Link>{' '}
+                cho việc này trước — luân phiên cần biết kỳ sau là khi nào.
+              </p>
             )}
             {closed && (
               <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">

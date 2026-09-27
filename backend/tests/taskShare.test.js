@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { startServer, stopServer, api, register, login, prisma } from './setup.js'
 import { dispatchReminder } from '../src/services/reminderDispatchService.js'
-import { MAX_ASSIGNEES_PER_TASK, reminderTargetsForTask } from '../src/services/taskShareService.js'
+import {
+  MAX_ASSIGNEES_PER_TASK,
+  reminderTargetsForTask,
+  nextTurnAssignee,
+} from '../src/services/taskShareService.js'
 
 // Ghi lại mọi lời gọi gửi thông báo đẩy. Thay dịch vụ gửi thay vì thay hàm trong
 // dịch vụ khác: đổi thuộc tính của module KHÔNG ảnh hưởng tới liên kết đã import,
@@ -415,5 +419,307 @@ describe('Việc được giao — việc lặp lại giữ nguyên người nh�
 
     const list = await api('GET', '/me/assigned', { token: helper.token })
     expect(list.data.data.some((i) => i.taskId === nextTaskId)).toBe(true)
+  })
+})
+
+// ─── Luân phiên người làm ───────────────────────────────────
+//
+// Phần dễ sai nhất không phải mấy đường API mà là VÒNG XOAY: thứ tự lượt, quay lại
+// người đầu khi hết vòng, và lượt cũ trỏ vào người đã bị gỡ. Sai mấy chỗ đó thì
+// tính năng vẫn "chạy" — mà việc thì rơi vào tay người không biết mình có việc.
+
+describe('Luân phiên — vòng xoay (hàm thuần)', () => {
+  const order = (ids) =>
+    ids.map((id, i) => ({
+      shareId: i + 1,
+      assigneeId: id,
+      createdAt: new Date(`2026-01-0${i + 1}T00:00:00Z`),
+    }))
+
+  it('đi hết vòng thì quay lại người đầu', () => {
+    const shares = order([11, 22, 33])
+    expect(nextTurnAssignee(shares, 11)).toBe(22)
+    expect(nextTurnAssignee(shares, 22)).toBe(33)
+    expect(nextTurnAssignee(shares, 33)).toBe(11)
+  })
+
+  it('lượt cũ trỏ vào người đã bị gỡ → bắt đầu lại từ người đầu, không để trống', () => {
+    expect(nextTurnAssignee(order([11, 22]), 999)).toBe(11)
+    expect(nextTurnAssignee([], 11)).toBeNull()
+  })
+
+  it('thứ tự là thứ tự GIAO việc, không phụ thuộc DB trả về kiểu gì', () => {
+    const scrambled = [
+      { shareId: 3, assigneeId: 33, createdAt: new Date('2026-01-03T00:00:00Z') },
+      { shareId: 1, assigneeId: 11, createdAt: new Date('2026-01-01T00:00:00Z') },
+      { shareId: 2, assigneeId: 22, createdAt: new Date('2026-01-02T00:00:00Z') },
+    ]
+    expect(nextTurnAssignee(scrambled, 11)).toBe(22)
+  })
+
+  it('cùng lúc tạo (createdAt bằng nhau) thì xếp theo shareId', () => {
+    const sameTime = new Date('2026-02-02T00:00:00Z')
+    const shares = [
+      { shareId: 9, assigneeId: 99, createdAt: sameTime },
+      { shareId: 7, assigneeId: 77, createdAt: sameTime },
+    ]
+    expect(nextTurnAssignee(shares, 77)).toBe(99)
+  })
+
+  it('chỉ nhắc ĐÚNG người đến lượt, không nhắc cả nhóm', () => {
+    const task = {
+      rotateEnabled: true,
+      turnAssigneeId: 22,
+      shares: [
+        { assigneeId: 11, doneAt: null },
+        { assigneeId: 22, doneAt: null },
+        { assigneeId: 33, doneAt: null },
+      ],
+    }
+    // 11 là chủ việc — chủ việc luôn được nhắc vì việc nằm trên bảng của họ
+    expect(reminderTargetsForTask(task, 11)).toEqual([11, 22])
+
+    // Người đến lượt đã báo xong → thôi nhắc họ, không nhắc luôn người khác
+    const turnDone = {
+      ...task,
+      shares: [
+        { assigneeId: 11, doneAt: null },
+        { assigneeId: 22, doneAt: new Date() },
+        { assigneeId: 33, doneAt: null },
+      ],
+    }
+    expect(reminderTargetsForTask(turnDone, 11)).toEqual([11])
+
+    // Lượt trống (mọi người bị gỡ) → vẫn nhắc chủ việc, không nhắc người ngoài lượt
+    expect(reminderTargetsForTask({ ...task, turnAssigneeId: null }, 11)).toEqual([11])
+  })
+
+  it('việc KHÔNG luân phiên vẫn nhắc mọi người được giao như trước', () => {
+    const task = {
+      rotateEnabled: false,
+      turnAssigneeId: null,
+      shares: [
+        { assigneeId: 11, doneAt: null },
+        { assigneeId: 22, doneAt: null },
+        { assigneeId: 33, doneAt: new Date() },
+      ],
+    }
+    expect(reminderTargetsForTask(task, 11)).toEqual([11, 22])
+  })
+})
+
+describe('Luân phiên — đường API', () => {
+  let owner
+  let a
+  let b
+  let outsider
+
+  beforeAll(async () => {
+    owner = await newUser('rotate_owner', 'PRO')
+    a = await newUser('rotate_a')
+    b = await newUser('rotate_b')
+    outsider = await newUser('rotate_outsider')
+  })
+
+  /** Việc lặp lại đã giao cho 2 người — trạng thái để bật luân phiên. */
+  async function rotatingTask(token = owner.token, repeatType = 'DAILY') {
+    const taskId = await makeTask(token, 'Đổ rác', { repeatType })
+    await api('POST', `/tasks/${taskId}/shares`, { token, body: { email: a.email } })
+    await api('POST', `/tasks/${taskId}/shares`, { token, body: { email: b.email } })
+    return taskId
+  }
+
+  it('việc không lặp lại thì không bật được kèm lý do', async () => {
+    const taskId = await rotatingTask(owner.token, 'NONE')
+    const res = await api('PUT', `/tasks/${taskId}/rotation`, {
+      token: owner.token,
+      body: { enabled: true },
+    })
+    expect(res.status).toBe(400)
+    expect(res.data.message).toContain('lặp lại')
+    // Đã chặn thì không được ghi gì
+    const row = await prisma.task.findUnique({ where: { taskId }, select: { rotateEnabled: true } })
+    expect(row.rotateEnabled).toBe(false)
+  })
+
+  it('một người thì chưa xoay được', async () => {
+    const taskId = await makeTask(owner.token, 'Việc một người', { repeatType: 'DAILY' })
+    await api('POST', `/tasks/${taskId}/shares`, { token: owner.token, body: { email: a.email } })
+    const res = await api('PUT', `/tasks/${taskId}/rotation`, {
+      token: owner.token,
+      body: { enabled: true },
+    })
+    expect(res.status).toBe(400)
+    expect(res.data.message).toContain('2 người')
+  })
+
+  it('gói Free bị chặn như mọi phần khác của giao việc', async () => {
+    const free = await newUser('rotate_free', 'FREE')
+    const taskId = await makeTask(free.token, 'Việc của người Free', { repeatType: 'DAILY' })
+    const res = await api('PUT', `/tasks/${taskId}/rotation`, {
+      token: free.token,
+      body: { enabled: true },
+    })
+    expect(res.status).toBe(400)
+    expect(res.data.message).toContain('Pro')
+  })
+
+  it('bật luân phiên → lượt đầu thuộc người giao trước, trả kèm thứ tự lượt', async () => {
+    const taskId = await rotatingTask()
+    const res = await api('PUT', `/tasks/${taskId}/rotation`, {
+      token: owner.token,
+      body: { enabled: true },
+    })
+    expect(res.status).toBe(200)
+    expect(res.data.message).toContain('luân phiên')
+    const task = res.data.data.task
+    expect(task.rotation.enabled).toBe(true)
+    expect(task.rotation.turnAssigneeId).toBe(a.userId)
+    expect(task.rotation.order).toEqual([a.userId, b.userId])
+    // Trả kèm công việc đã chuyển đổi để giao diện vẽ lại khối người được giao
+    expect(task.assignees).toHaveLength(2)
+  })
+
+  it('bấm bật hai lần không đẩy lượt sang người khác', async () => {
+    const taskId = await rotatingTask()
+    await api('PUT', `/tasks/${taskId}/rotation`, { token: owner.token, body: { enabled: true } })
+    await api('PUT', `/tasks/${taskId}/rotation`, { token: owner.token, body: { enabled: true } })
+    const row = await prisma.task.findUnique({ where: { taskId }, select: { turnAssigneeId: true } })
+    expect(row.turnAssigneeId).toBe(a.userId)
+  })
+
+  it('hoàn thành kỳ này → kỳ sau thuộc người kế tiếp, đủ người và hết vòng thì quay lại', async () => {
+    const taskId = await rotatingTask()
+    await api('PUT', `/tasks/${taskId}/rotation`, { token: owner.token, body: { enabled: true } })
+
+    const first = await api('POST', `/tasks/${taskId}/complete`, { token: owner.token })
+    const next1 = first.data.data.nextTask.id
+    const row1 = await prisma.task.findUnique({
+      where: { taskId: next1 },
+      select: { rotateEnabled: true, turnAssigneeId: true },
+    })
+    expect(row1.rotateEnabled).toBe(true)
+    expect(row1.turnAssigneeId).toBe(b.userId)
+    // Kỳ mới phải giữ ĐỦ người được giao, nếu không thì vòng xoay đứt sau một kỳ
+    expect(await prisma.taskShare.count({ where: { taskId: next1 } })).toBe(2)
+    const sharesNext = await prisma.taskShare.findMany({
+      where: { taskId: next1 },
+      select: { doneAt: true },
+    })
+    expect(sharesNext.every((s) => s.doneAt === null)).toBe(true)
+
+    const second = await api('POST', `/tasks/${next1}/complete`, { token: owner.token })
+    const next2 = second.data.data.nextTask.id
+    const row2 = await prisma.task.findUnique({
+      where: { taskId: next2 },
+      select: { turnAssigneeId: true },
+    })
+    expect(row2.turnAssigneeId).toBe(a.userId)
+  })
+
+  it('người đến lượt thấy “đến lượt bạn”, người khác thì không', async () => {
+    const taskId = await rotatingTask()
+    await api('PUT', `/tasks/${taskId}/rotation`, { token: owner.token, body: { enabled: true } })
+
+    const mine = await api('GET', '/me/assigned', { token: a.token })
+    const item = mine.data.data.find((i) => i.taskId === taskId)
+    expect(item.isMyTurn).toBe(true)
+    expect(item.rotateEnabled).toBe(true)
+
+    const other = await api('GET', '/me/assigned', { token: b.token })
+    expect(other.data.data.find((i) => i.taskId === taskId).isMyTurn).toBe(false)
+  })
+
+  it('đổi người của kỳ này — chỉ sang người đã được giao việc', async () => {
+    const taskId = await rotatingTask()
+    await api('PUT', `/tasks/${taskId}/rotation`, { token: owner.token, body: { enabled: true } })
+
+    const res = await api('PUT', `/tasks/${taskId}/rotation`, {
+      token: owner.token,
+      body: { assigneeId: b.userId },
+    })
+    expect(res.status).toBe(200)
+    const row = await prisma.task.findUnique({ where: { taskId }, select: { turnAssigneeId: true } })
+    expect(row.turnAssigneeId).toBe(b.userId)
+
+    const bad = await api('PUT', `/tasks/${taskId}/rotation`, {
+      token: owner.token,
+      body: { assigneeId: outsider.userId },
+    })
+    expect(bad.status).toBe(400)
+    expect(bad.data.message).toContain('đã được giao')
+  })
+
+  it('việc chưa bật luân phiên thì chưa đổi được người của kỳ', async () => {
+    const taskId = await rotatingTask()
+    const res = await api('PUT', `/tasks/${taskId}/rotation`, {
+      token: owner.token,
+      body: { assigneeId: b.userId },
+    })
+    expect(res.status).toBe(400)
+    expect(res.data.message).toContain('chưa bật luân phiên')
+  })
+
+  it('thu hồi người đang đến lượt → lượt sang người khác NGAY', async () => {
+    const taskId = await rotatingTask()
+    await api('PUT', `/tasks/${taskId}/rotation`, { token: owner.token, body: { enabled: true } })
+
+    const list = await api('GET', `/tasks/${taskId}/shares`, { token: owner.token })
+    const shareA = list.data.data.find((s) => s.assignee.id === a.userId)
+    await api('DELETE', `/tasks/${taskId}/shares/${shareA.shareId}`, { token: owner.token })
+
+    const row = await prisma.task.findUnique({ where: { taskId }, select: { turnAssigneeId: true } })
+    expect(row.turnAssigneeId).toBe(b.userId)
+  })
+
+  it('thu hồi người duy nhất còn lại → lượt để trống chứ không trỏ vào người đã gỡ', async () => {
+    const taskId = await rotatingTask()
+    await api('PUT', `/tasks/${taskId}/rotation`, { token: owner.token, body: { enabled: true } })
+
+    const list = await api('GET', `/tasks/${taskId}/shares`, { token: owner.token })
+    for (const share of list.data.data) {
+      await api('DELETE', `/tasks/${taskId}/shares/${share.shareId}`, { token: owner.token })
+    }
+    const row = await prisma.task.findUnique({ where: { taskId }, select: { turnAssigneeId: true } })
+    expect(row.turnAssigneeId).toBeNull()
+  })
+
+  it('tắt luân phiên → xoá lượt, và kỳ sau không còn xoay', async () => {
+    const taskId = await rotatingTask()
+    await api('PUT', `/tasks/${taskId}/rotation`, { token: owner.token, body: { enabled: true } })
+    const off = await api('PUT', `/tasks/${taskId}/rotation`, {
+      token: owner.token,
+      body: { enabled: false },
+    })
+    expect(off.status).toBe(200)
+    expect(off.data.data.task.rotation.enabled).toBe(false)
+
+    const row = await prisma.task.findUnique({
+      where: { taskId },
+      select: { rotateEnabled: true, turnAssigneeId: true },
+    })
+    expect(row.rotateEnabled).toBe(false)
+    expect(row.turnAssigneeId).toBeNull()
+
+    const done = await api('POST', `/tasks/${taskId}/complete`, { token: owner.token })
+    const nextId = done.data.data.nextTask.id
+    const child = await prisma.task.findUnique({
+      where: { taskId: nextId },
+      select: { rotateEnabled: true, turnAssigneeId: true },
+    })
+    expect(child.rotateEnabled).toBe(false)
+    expect(child.turnAssigneeId).toBeNull()
+  })
+
+  it('người ngoài không bật được luân phiên cho việc của chủ', async () => {
+    const taskId = await rotatingTask()
+    // Cố ý dùng người CÓ gói Pro nhưng không phải chủ việc: nếu chỉ chặn theo gói
+    // thì đây vẫn là lỗ cho người ngoài — cổng "chỉ chủ việc" phải đứng riêng.
+    const proOutsider = await newUser('rotate_pro_outsider', 'PRO')
+    const res = await api('PUT', `/tasks/${taskId}/rotation`, {
+      token: proOutsider.token,
+      body: { enabled: true },
+    })
+    expect(res.status).toBe(404)
   })
 })

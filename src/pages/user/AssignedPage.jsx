@@ -132,6 +132,14 @@ export default function AssignedPage() {
                   <div className="mt-1.5 flex flex-wrap items-center gap-2">
                     <PriorityBadge priority={item.priority} />
                     {item.category && <CategoryBadge category={item.category} />}
+                    {/* Việc luân phiên: nói thẳng kỳ này đến lượt ai. Không có nhãn
+                        này thì mọi việc trông giống nhau và người đến lượt không
+                        biết mình đang bị chờ. */}
+                    {item.isMyTurn && !item.isDone && !item.closed && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:ring-amber-800">
+                        <ArrowsClockwise size={12} weight="bold" /> Đến lượt bạn
+                      </span>
+                    )}
                     {item.closed && (
                       <span className="rounded-full bg-navy-100 px-2 py-0.5 text-[11px] font-bold text-navy-500 dark:bg-slate-700 dark:text-slate-400">
                         Chủ việc đã kết thúc

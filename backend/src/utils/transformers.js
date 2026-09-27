@@ -7,6 +7,9 @@
  */
 
 import { parseRepeatDays } from './dateUtils.js'
+// Thứ tự lượt luân phiên phải do MỘT chỗ định nghĩa (taskShareService) — giao diện
+// đọc đúng thứ tự đó để nói "kỳ sau đến lượt ai", thay vì tự đoán ở trình duyệt.
+import { rotationOrder } from '../services/taskShareService.js'
 
 // ─── User ──────────────────────────────────────────────
 
@@ -128,6 +131,11 @@ export function transformAssignedTask(share) {
     note: share.note || '',
     doneAt: share.doneAt || null,
     completed: t.status === 'COMPLETED' || t.status === 'CANCELLED',
+    // Luân phiên người làm: người nhận cần biết KỲ NÀY có phải lượt của mình không
+    // — không có dòng này thì trang "Việc được giao" hiện mọi việc giống nhau và
+    // người đến lượt không biết mình đang bị chờ.
+    rotateEnabled: Boolean(t.rotateEnabled),
+    isMyTurn: Boolean(t.rotateEnabled) && Number(t.turnAssigneeId) === Number(share.assigneeId),
     category: t.category ? transformCategory(t.category) : null,
     nextReminderAt: t.reminders?.[0]?.remindAt || null,
     assignedBy: share.sharedBy
@@ -145,6 +153,8 @@ export function transformAssignedTask(share) {
 
 export function transformTask(task) {
   if (!task) return null
+  // Một thứ tự duy nhất cho cả danh sách người được giao lẫn vòng xoay lượt.
+  const shares = rotationOrder(Array.isArray(task.shares) ? task.shares : [])
   return {
     id: task.taskId,
     userId: task.userId,
@@ -167,8 +177,15 @@ export function transformTask(task) {
     reminders: Array.isArray(task.reminders) ? task.reminders.map(transformReminder) : [],
     // Người được giao việc (Pro). shareCount có cả trong danh sách (nhờ _count) để
     // trang Công việc hiện được nhãn "đã giao cho N người" mà không tốn thêm query.
-    assignees: Array.isArray(task.shares) ? task.shares.map(transformTaskShare) : [],
-    shareCount: task._count?.shares ?? (Array.isArray(task.shares) ? task.shares.length : 0),
+    assignees: shares.map(transformTaskShare),
+    shareCount: task._count?.shares ?? shares.length,
+    // Luân phiên người làm (Pro): kỳ này ai chịu trách nhiệm, và thứ tự lượt để
+    // giao diện nói được "kỳ sau đến lượt ai". `order` là danh sách id người nhận.
+    rotation: {
+      enabled: Boolean(task.rotateEnabled),
+      turnAssigneeId: task.rotateEnabled ? (task.turnAssigneeId ?? null) : null,
+      order: shares.map((s) => Number(s.assigneeId)),
+    },
   }
 }
 
