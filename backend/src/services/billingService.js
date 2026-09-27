@@ -389,6 +389,11 @@ function serializeOrder(order) {
     amount: order.amount,
     status: order.status,
     provider: order.provider,
+    // Ai/kênh nào đã mở gói cho đơn này: mã giao dịch ngân hàng (WEBHOOK) hay id
+    // admin bấm xác nhận. Thiếu hai trường này thì trang quản trị chỉ hiện
+    // "Đã kích hoạt ✓" và rất dễ tưởng một cú bấm xác nhận làm xong hai đơn.
+    providerRef: order.providerRef ?? null,
+    confirmedBy: order.confirmedBy ?? null,
     transferContent: order.transferContent,
     paidAt: order.paidAt,
     expiresAt: order.expiresAt,

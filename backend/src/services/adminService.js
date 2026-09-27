@@ -121,6 +121,30 @@ export async function setUserPlan(userId, plan) {
 
   // Đổi về FREE: xoá mốc thời gian và đóng các dòng Subscription đang mở.
   if (plan === 'FREE') {
+    // Để lại DẤU VẾT trước khi cắt: hạ về Free là lấy đi thời gian khách đã trả
+    // tiền. Trước đây việc này không ghi lại gì nên không ai biết ai đã bấm và
+    // khách bị mất bao nhiêu ngày (đã từng có ca mất 30 ngày gói Pro như vậy).
+    const activeSubs = await prisma.subscription.findMany({
+      where: { userId, status: 'ACTIVE' },
+      orderBy: { subscriptionId: 'desc' },
+    })
+    await prisma.subscription.create({
+      data: {
+        userId,
+        plan: 'FREE',
+        cycle: 'MONTHLY',
+        provider: 'ADMIN',
+        status: 'CANCELLED',
+        startedAt: new Date(),
+        expiresAt: user.planExpiresAt || new Date(),
+        cancelledAt: new Date(),
+        note: activeSubs.length
+          ? `Admin hạ về Free — cắt ${activeSubs
+              .map((s) => `${s.plan} còn tới ${s.expiresAt.toISOString().slice(0, 10)}`)
+              .join(', ')}`.slice(0, 255)
+          : 'Admin hạ về Free',
+      },
+    })
     await prisma.subscription.updateMany({
       where: { userId, status: 'ACTIVE' },
       data: { status: 'EXPIRED' },

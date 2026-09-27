@@ -48,6 +48,25 @@ const STATUS_LABEL = {
 }
 
 /**
+ * Đơn đã thanh toán được mở gói bởi đường nào.
+ * Phải nói rõ: tiền vào thì hệ thống tự mở, còn admin bấm xác nhận là việc khác —
+ * nếu chỉ hiện "Đã kích hoạt ✓" thì rất dễ tưởng một cú bấm xác nhận đã hoàn thành
+ * nhiều đơn cùng lúc.
+ */
+function activationOf(order) {
+  if (order.status !== 'PAID') return null
+  if (order.provider === 'WEBHOOK') {
+    return { label: 'Tiền vào tự mở', detail: order.providerRef || 'khớp từ ngân hàng' }
+  }
+  if (order.provider === 'ADMIN') return { label: 'Admin đổi gói', detail: order.note || '' }
+  if (order.provider === 'TRIAL') return { label: 'Dùng thử', detail: '' }
+  return {
+    label: order.confirmedBy ? 'Admin xác nhận' : 'Đã thanh toán',
+    detail: order.providerRef || '',
+  }
+}
+
+/**
  * Đối soát thanh toán: người dùng chuyển khoản → admin thấy đơn ở đây và bấm
  * "Đã nhận tiền" để kích hoạt gói (hoặc để webhook Casso/Sepay tự làm).
  */
@@ -1046,9 +1065,22 @@ export default function AdminOrdersPage() {
                             </Button>
                           </>
                         )}
-                        {o.status === 'PAID' && (
-                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Đã kích hoạt ✓</span>
-                        )}
+                        {(() => {
+                          const activation = activationOf(o)
+                          if (!activation) return null
+                          return (
+                            <span className="text-right">
+                              <span className="block text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                                {activation.label} ✓
+                              </span>
+                              {activation.detail && (
+                                <span className="mt-0.5 block font-mono text-[10px] font-semibold text-navy-400 dark:text-slate-500">
+                                  {activation.detail}
+                                </span>
+                              )}
+                            </span>
+                          )
+                        })()}
                       </div>
                     </td>
                   </tr>

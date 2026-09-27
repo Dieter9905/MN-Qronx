@@ -58,16 +58,27 @@ beforeAll(async () => {
 }, 300000)
 
 afterAll(async () => {
+  // CHỈ dọn sự kiện do chính test này tạo ra.
+  //
+  // Trước đây chỗ này xoá mọi sự kiện có externalId bắt đầu bằng `sepay:` /
+  // `acb:` — mà DATABASE_URL trỏ thẳng vào Postgres production, nên mỗi lần chạy
+  // `npm test` là xoá luôn LỊCH SỬ GIAO DỊCH THẬT của khách (đúng những dòng ghi
+  // lại tiền đã vào tài khoản và dùng để chống cộng tiền hai lần). Nay chỉ xoá
+  // theo đơn của tài khoản test (`*@example.com`) và các mã `test-…`.
+  const testOrders = await prisma.paymentOrder.findMany({
+    where: { user: { email: { endsWith: '@example.com' } } },
+    select: { orderId: true },
+  })
   await prisma.billingEvent.deleteMany({
     where: {
       OR: [
         { externalId: { startsWith: 'test-' } },
-        // Sự kiện do bộ đồng bộ API tạo ra (id giả lập theo từng lần chạy)
-        { externalId: { startsWith: 'sepay:' } },
-        { externalId: { startsWith: 'acb:' } },
+        ...(testOrders.length ? [{ orderId: { in: testOrders.map((o) => o.orderId) } }] : []),
       ],
     },
   })
+  // Cấu hình nhận tiền của môi trường thật được trả lại nguyên trạng — không xoá
+  // hẳn, nếu không production mất mã xác thực webhook sau khi chạy test.
   await prisma.billingSetting.deleteMany({ where: { settingId: 1 } })
   if (savedBillingSettings) {
     const { settingId, ...rest } = savedBillingSettings
@@ -1241,6 +1252,41 @@ describe('API ngân hàng (kéo giao dịch về)', () => {
     const status = await api('GET', '/admin/billing/settings', { token: adminToken })
     expect(status.data.data.sync).toMatchObject({ provider: 'ACB', syncEnabled: true, intervalMinutes: 3 })
     expect(status.data.data.sync.lastSyncStatus).toBe('OK')
+  }, 120000)
+})
+
+// ─── Admin hạ gói: phải để lại dấu vết ──────────────────────
+
+describe('Admin hạ gói về Free', () => {
+  it('ghi lại dấu vết thời gian bị cắt, không xoá im lặng', async () => {
+    const paid = await newUser('plan_free_audit')
+    await api('POST', '/billing/trial', { token: paid.token })
+
+    const before = await api('GET', '/billing/me', { token: paid.token })
+    expect(before.data.data.plan).toBe('PRO')
+
+    const res = await api('PUT', `/admin/users/${paid.userId}/plan`, {
+      token: adminToken,
+      body: { plan: 'FREE' },
+    })
+    expect(res.status).toBe(200)
+
+    const after = await prisma.user.findUnique({
+      where: { userId: paid.userId },
+      select: { plan: true, planExpiresAt: true },
+    })
+    expect(after.plan).toBe('FREE')
+    expect(after.planExpiresAt).toBeNull()
+
+    // Có dòng ghi lại việc cắt quyền lợi: ai cắt, gói gì, còn tới ngày nào
+    const trace = await prisma.subscription.findFirst({
+      where: { userId: paid.userId, provider: 'ADMIN', status: 'CANCELLED' },
+      orderBy: { subscriptionId: 'desc' },
+    })
+    expect(trace).toBeTruthy()
+    expect(trace.note).toMatch(/hạ về Free/i)
+    expect(trace.note).toMatch(/PRO/)
+    expect(trace.cancelledAt).toBeTruthy()
   }, 120000)
 })
 
