@@ -61,6 +61,17 @@ chính khách). Luật ở `backend/src/services/plannerService.js`.
 > nay xếp bằng **luật**: chạy ngay, không tốn lượt AI, và không bao giờ bịa ra công
 > việc không có thật — điều tối quan trọng với một app nhắc việc. Phần “gợi ý các bước
 > làm” cho một việc lớn đã có sẵn trong Trợ lý AI.
+>
+> **Bổ sung (28/09/2026): nói và chụp ảnh là hai đường vào Trợ lý AI, không phải tính
+> năng mới.** Khách Pro có thể nói một câu hoặc chụp tờ giấy / ảnh chụp màn hình, chữ
+> đọc được đổ vào đúng ô nhập như khi gõ tay — cả hai chạy trên máy khách (mic dùng
+> Web Speech API, ảnh dùng tesseract.js) nên giọng nói và ảnh của khách không rời khỏi
+> máy, không tốn lượt AI, và không cần thuê dịch vụ nhìn ảnh. Chi tiết + giới hạn thật
+> (chữ viết tay đọc kém, Firefox không có mic) ở `docs/ai-capture.md`.
+>
+> Chú ý khi bán: **đây là đường vào, không phải bộ não.** Nó không làm AI giỏi hơn;
+> nó chỉ bỏ bước gõ. Nên vẫn không được hứa “AI hiểu ảnh” — chỉ được nói “chụp tờ giấy
+> là thành công việc, chữ in đọc tốt, chữ viết tay thì nên gõ”.
 
 **Điểm bán thứ tư: báo cáo tuần gửi email sáng thứ 2.** Hai tính năng trên chỉ có giá
 trị nếu khách NHỚ mở app; thư tuần làm việc đó thay khách: tuần rồi họ xong bao nhiêu

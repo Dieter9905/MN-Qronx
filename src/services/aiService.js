@@ -268,12 +268,17 @@ function extractTime(text) {
   // Thứ tự quan trọng: pattern "buổi + giờ" (chiều 5h, tối 8h, sáng 7h30)
   // phải được kiểm tra TRƯỚC pattern "giờ + buổi" (5h chiều, 8h tối),
   // nếu không "chiều 5h" sẽ bị hiểu thành 5h SÁNG (lệch 12 giờ).
+  // Chữ "h" chỉ là mốc giờ khi NGAY SAU nó không phải chữ cái: "7h30", "14h tối"
+  // đúng là giờ, còn "4 họp" thì không — nếu không chặn, "Thứ 4 họp phụ huynh lúc
+  // 14h" bị đọc thành 4 giờ, và cụm "4 h" bị cắt khỏi tiêu đề nên việc mất luôn
+  // chữ "h" (ra "Thứ ọp phụ huynh"). Cùng một luật đã có trong HAS_CLOCK.
+  const H = 'h(?![a-zà-ỹ])'
   const timePatterns = [
     // Period trước số: "chiều 5h", "tối 8h", "sáng 7h30", "khuya 24h"
-    /(sang|sáng|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)\s*(\d{1,2})\s*[:h]?\s*(\d{2})?/i,
+    new RegExp(`(sang|sáng|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)\\s*(\\d{1,2})\\s*(?::|${H})?\\s*(\\d{2})?`, 'i'),
     // Số trước, period sau: "5h", "5:30", "14h", "14:00", "5h chiều", "8h tối"
     // (trước đây thiếu "tối"/"khuya" → "7h tối" mất hint → ra 07:00)
-    /(\d{1,2})\s*[:h]\s*(\d{2})?\s*(sang|sáng|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)?/i,
+    new RegExp(`(\\d{1,2})\\s*(?::|${H})\\s*(\\d{2})?\\s*(sang|sáng|trưa|trua|chiều|chieu|tối|toi|đêm|dem|khuya)?`, 'i'),
     // "2 giờ", "2 tiếng"
     /(\d{1,2})\s*(gio|giờ|tiếng|tieng|hour)/i,
     // "2am", "2pm"
