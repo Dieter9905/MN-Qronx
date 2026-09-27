@@ -178,6 +178,7 @@ export const PLANS = [
       'Nhắc dai tới khi bạn xác nhận: việc quan trọng chưa xong thì chuông kêu lại',
       'Báo cáo năng suất 7/30/90 ngày kèm xuất Excel/PDF',
       'Kế hoạch tuần: tự xếp việc vào từng ngày, cảnh báo khi tuần quá tải',
+      'Báo cáo tuần gửi email sáng thứ 2 (tắt được bất cứ lúc nào)',
       'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
       'Không giới hạn thiết bị đồng bộ',
       'Trợ lý AI không giới hạn',

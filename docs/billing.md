@@ -21,7 +21,7 @@ còn phải làm để bán được gói trong app Android trên Google Play.
 |---|---|---|---|
 | Miễn phí | 0đ | 0đ | 50 việc đang mở, **có công việc lặp lại**, 3 nhắc/việc, 2 thiết bị, AI 5 lần/ngày |
 | Plus | 39.000đ | 390.000đ | Không giới hạn việc/danh mục/việc con, 5 thiết bị, AI 50 lần/ngày |
-| Pro | 79.000đ | 790.000đ | **Nhắc dai tới khi xác nhận**, **báo cáo năng suất + xuất Excel/PDF**, **kế hoạch tuần**, không giới hạn AI/thiết bị, toàn bộ âm thanh + âm thanh riêng |
+| Pro | 79.000đ | 790.000đ | **Nhắc dai tới khi xác nhận**, **báo cáo năng suất + xuất Excel/PDF**, **kế hoạch tuần**, **báo cáo tuần qua email**, không giới hạn AI/thiết bị, toàn bộ âm thanh + âm thanh riêng |
 
 **Điểm bán riêng của Pro: “nhắc dai tới khi bạn xác nhận”.** Free/Plus chuông kêu
 một lần, bỏ qua là quên; Pro thì việc chưa xong sẽ kêu lại theo chu kỳ người dùng
@@ -60,6 +60,26 @@ chính khách). Luật ở `backend/src/services/plannerService.js`.
 > nay xếp bằng **luật**: chạy ngay, không tốn lượt AI, và không bao giờ bịa ra công
 > việc không có thật — điều tối quan trọng với một app nhắc việc. Phần “gợi ý các bước
 > làm” cho một việc lớn đã có sẵn trong Trợ lý AI.
+
+**Điểm bán thứ tư: báo cáo tuần gửi email sáng thứ 2.** Hai tính năng trên chỉ có giá
+trị nếu khách NHỚ mở app; thư tuần làm việc đó thay khách: tuần rồi họ xong bao nhiêu
+việc, đúng hạn bao nhiêu, việc nào đang quá hạn, và tuần này có gì chờ (kèm cảnh báo
+quá tải và 3 việc nên làm trước). Nội dung dựng từ chính `reportService` và
+`plannerService` nên thư và web không bao giờ nói hai con số khác nhau
+(`backend/src/services/weeklyReportService.js`, hẹn giờ ở
+`schedulers/weeklyReportScheduler.js`: Thứ 2, 07:00–10:00 giờ VN).
+
+> ⚠️ **Hạn mức gửi thư là ràng buộc thật của tính năng này.** Tài khoản Mailjet đang ở
+giai đoạn duyệt tạm: **10 thư/giờ và 10 thư/ngày** (`services/mailQuota.js`). Vì vậy
+mỗi lượt chỉ gửi một lô 4 thư; chạm trần là DỪNG ngay và lượt sau (15 phút) gửi tiếp,
+không thử lại liên tục — mỗi thư bị từ chối là một điểm trừ khi Mailjet xét duyệt. Khi
+số khách Pro vượt ~10 người, **phải** xin Mailjet gỡ giới hạn hoặc chuyển sang Resend
+/ SMTP riêng trước, nếu không phần lớn khách sẽ không nhận được thư.
+>
+> Cột `users.weekly_report_sent_at` là chốt chặn chống gửi trùng (cron và nhịp
+> `/health` cùng gọi hàm gửi, máy chủ Render ngủ nên cron có thể không chạy). Khách
+tắt/mở trong **Cài đặt → Thông báo** (`PUT /me/weekly-report`) — thiếu đường tắt thì
+thư tuần thành thư rác.
 
 **Chỉ ghi vào bảng này thứ khách đang dùng được.** Thứ chưa làm xong nằm ở
 `PLANS[...].upcoming` (trang giá hiện kèm nhãn “Sắp có”), hiện chỉ còn: đồng bộ **hai

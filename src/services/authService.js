@@ -21,6 +21,8 @@ function normalizeUser(u) {
     points: u.points ?? 0,
     loginStreak: u.loginStreak ?? 0,
     inviteCode: u.inviteCode ?? null,
+    // Quyền lợi gói Pro: nhận báo cáo tuần qua email (mặc định bật)
+    weeklyReportEnabled: u.weeklyReportEnabled !== false,
     isActive: u.isActive ?? true,
     createdAt: u.createdAt,
   }
@@ -119,6 +121,12 @@ export async function updateProfile(payload = {}) {
 }
 
 // PUT /api/v1/me/password – đổi mật khẩu
+// Bật/tắt báo cáo tuần qua email (quyền lợi gói Pro). Đây là đường duy nhất để
+// khách ngừng nhận thư tuần — thiếu nó thì thư báo cáo thành thư rác.
+export async function setWeeklyReport(enabled) {
+  return api('PUT', '/me/weekly-report', { body: { enabled } })
+}
+
 export async function changePassword({ currentPassword, newPassword } = {}) {
   return api('PUT', '/me/password', {
     body: { currentPassword, newPassword },

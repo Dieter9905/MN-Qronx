@@ -21,6 +21,8 @@ async function findProfile(userId) {
       loginStreak: true,
       lastLoginDate: true,
       inviteCode: true,
+      // Quyền lợi gói Pro: trạng thái nhận báo cáo tuần qua email (khách tự tắt)
+      weeklyReportEnabled: true,
       role: { select: { roleName: true } },
       createdAt: true,
       updatedAt: true,

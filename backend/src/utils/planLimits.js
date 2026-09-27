@@ -108,6 +108,7 @@ export const PLANS = {
       'Nhắc dai tới khi bạn xác nhận: việc Khẩn cấp/Cao chưa xong thì chuông kêu lại (bạn chọn 1–30 phút một lần)',
       'Báo cáo năng suất 7/30/90 ngày: việc xong đúng hạn, giờ nào bạn làm tốt nhất, việc đang bị bỏ quên lâu nhất — xuất Excel/PDF',
       'Kế hoạch tuần: app tự xếp việc nào làm ngày nào và cảnh báo trước khi tuần bị quá tải',
+      'Báo cáo tuần gửi email sáng thứ 2: tuần rồi làm được gì, tuần này có gì chờ (không cần mở app)',
       'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
       'Không giới hạn thiết bị đồng bộ',
       'Trợ lý AI không giới hạn',

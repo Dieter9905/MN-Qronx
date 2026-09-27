@@ -116,6 +116,30 @@ router.get('/stats', auth, userController.getStats)
  */
 router.get('/activity', auth, userController.getRecentActivity)
 
+/**
+ * @swagger
+ * /me/weekly-report:
+ *   put:
+ *     tags: [User Profile]
+ *     summary: Bật/tắt báo cáo tuần qua email (quyền lợi gói Pro)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [enabled]
+ *             properties:
+ *               enabled:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Trạng thái mới
+ */
+router.put('/weekly-report', auth, userController.setWeeklyReport)
+
 // ── Lịch .ics: dán vào Google Calendar / Outlook một lần là tự đồng bộ ──
 router.get('/ics', auth, calendarIcsController.getMyIcs)
 router.post('/ics/rotate', auth, calendarIcsController.rotateMyIcs)

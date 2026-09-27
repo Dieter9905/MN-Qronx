@@ -40,6 +40,7 @@ import { ALARM_SOUNDS, DEFAULT_SNOOZE_OPTIONS, PLATFORM } from '../../lib/consta
 import { relativeTime } from '../../lib/format'
 import { startAlarmSound, stopAlarmSound } from '../../context/AlarmContext'
 import { pushStatus, enablePush, disablePush, syncPushSubscription } from '../../lib/push'
+import { setWeeklyReport } from '../../services/authService'
 import { getMyIcsUrl, rotateIcsUrl } from '../../services/calendarService'
 
 const TABS = [
@@ -66,6 +67,28 @@ export default function SettingsPage() {
   // URL lịch .ics để dán vào Google Calendar / Outlook
   const [icsUrl, setIcsUrl] = useState('')
   const [icsBusy, setIcsBusy] = useState(false)
+  // Báo cáo tuần qua email (gói Pro). Mặc định bật — khách phải tự tắt được, nếu
+  // không thì thư tuần thành thư rác trong mắt họ.
+  const isPro = user?.plan === 'PRO'
+  const [weeklyReport, setWeeklyReportOn] = useState(user?.weeklyReportEnabled !== false)
+  const [weeklyReportBusy, setWeeklyReportBusy] = useState(false)
+
+  const saveWeeklyReport = async (enabled) => {
+    setWeeklyReportBusy(true)
+    try {
+      const res = await setWeeklyReport(enabled)
+      if (!res.success) {
+        toast.error(res.message)
+        return
+      }
+      setWeeklyReportOn(res.data.weeklyReportEnabled)
+      toast.success(res.data.weeklyReportEnabled ? 'Đã bật báo cáo tuần qua email' : 'Đã tắt báo cáo tuần qua email')
+    } catch {
+      toast.error('Không kết nối được máy chủ. Thử lại sau ít phút.')
+    } finally {
+      setWeeklyReportBusy(false)
+    }
+  }
 
   useEffect(() => {
     let alive = true
@@ -453,6 +476,30 @@ export default function SettingsPage() {
             {!push.supported && (
               <p className="mt-1.5 text-xs text-navy-400 dark:text-slate-500">
                 Trình duyệt này chưa hỗ trợ Web Push — thử Chrome, Edge hoặc Safari.
+              </p>
+            )}
+          </div>
+
+          {/* Báo cáo tuần qua email — quyền lợi gói Pro */}
+          <div className="px-1 py-2">
+            <Toggle
+              label="Báo cáo tuần qua email"
+              description="Sáng thứ 2 hằng tuần, MN-Qronx gửi email tóm tắt: tuần rồi bạn xong bao nhiêu việc, đúng hạn bao nhiêu, việc nào đang quá hạn, và tuần này có gì chờ. Không cần mở app vẫn biết tình hình."
+              checked={weeklyReport && isPro}
+              disabled={!isPro || weeklyReportBusy}
+              onChange={saveWeeklyReport}
+            />
+            {!isPro ? (
+              <p className="mt-1.5 text-xs font-semibold text-violet-600 dark:text-violet-300">
+                Báo cáo tuần là quyền lợi của gói Pro.{' '}
+                <Link to="/app/billing" className="underline">
+                  Nâng cấp Pro
+                </Link>{' '}
+                để nhận thư mỗi sáng thứ 2.
+              </p>
+            ) : (
+              <p className="mt-1.5 text-xs text-navy-400 dark:text-slate-500">
+                Cũng có thể xem ngay trong app ở mục “Báo cáo năng suất”.
               </p>
             )}
           </div>

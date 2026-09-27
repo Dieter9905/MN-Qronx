@@ -4,6 +4,7 @@ import ApiError from '../utils/ApiError.js'
 import { startOfDay, endOfDay } from '../utils/dateUtils.js'
 import { isPlanExpired, downgradeUser } from '../utils/planLimits.js'
 import { ensureInviteCode, creditDailyLogin, activateInvitation } from './rewardService.js'
+import * as weeklyReportService from './weeklyReportService.js'
 
 // ─── Get Profile ────────────────────────────────────────
 
@@ -41,9 +42,19 @@ export async function getProfile(userId, { ipAddress, deviceId } = {}) {
     loginStreak: user.loginStreak || 0,
     lastLoginDate: user.lastLoginDate || null,
     inviteCode: user.inviteCode || null,
+    // Quyền lợi gói Pro: báo cáo tuần qua email (khách tự tắt được trong Cài đặt)
+    weeklyReportEnabled: user.weeklyReportEnabled !== false,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   }
+}
+
+// ─── Báo cáo tuần qua email ──────────────────────────────
+// Khách tự bật/tắt. Không đặt nút tắt ở đâu khác vì đây là cách duy nhất để một
+// người ngừng nhận thư — thiếu nó thì thư tuần thành thư rác.
+
+export async function setWeeklyReport(userId, enabled) {
+  return weeklyReportService.setWeeklyReportEnabled(userId, enabled)
 }
 
 // ─── Update Profile ─────────────────────────────────────

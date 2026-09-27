@@ -2,6 +2,7 @@ import app from './app.js'
 import './schedulers/reminderScheduler.js'
 import { runBankSyncIfDue } from './schedulers/bankSyncScheduler.js'
 import { runRenewalRemindersIfDue } from './schedulers/billingReminderScheduler.js'
+import { runWeeklyReportsIfDue } from './schedulers/weeklyReportScheduler.js'
 import { onHealthPing } from './routes/index.js'
 import config from './config/index.js'
 
@@ -22,6 +23,11 @@ onHealthPing(() => {
   // ngay sau mỗi lần tỉnh dậy để khách không bị lỡ email nhắc.
   runRenewalRemindersIfDue().catch((err) =>
     console.error('[RenewalReminder] Lỗi khi kiểm tra theo nhịp health:', err.message)
+  )
+  // Báo cáo tuần (thứ 2, sáng): máy chủ ngủ thì cron không chạy, nên tranh thủ gửi
+  // ngay sau khi tỉnh — trễ vài giờ vẫn hơn mất cả tuần của khách Pro.
+  runWeeklyReportsIfDue().catch((err) =>
+    console.error('[WeeklyReport] Lỗi khi kiểm tra theo nhịp health:', err.message)
   )
 })
 
