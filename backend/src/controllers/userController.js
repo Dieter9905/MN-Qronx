@@ -37,6 +37,23 @@ export const setWeeklyReport = catchAsync(async (req, res) => {
   success(res, 200, enabled ? 'Đã bật báo cáo tuần qua email' : 'Đã tắt báo cáo tuần qua email', data)
 })
 
+/**
+ * POST /api/v1/me/weekly-report/test
+ * Gửi ngay một bản báo cáo tuần cho CHÍNH người gọi, để họ xem trước thư thứ 2.
+ * Không đụng tới mốc "đã gửi tuần này" nên thư thật vẫn tới đúng hạn.
+ */
+export const sendTestWeeklyReport = catchAsync(async (req, res) => {
+  const data = await userService.sendTestWeeklyReport(req.user.id)
+  success(
+    res,
+    200,
+    data.sent
+      ? `Đã gửi thử tới ${data.email}`
+      : 'Máy chủ chưa gửi được email — đây là nội dung thư sẽ gửi',
+    data
+  )
+})
+
 export const changePassword = catchAsync(async (req, res) => {
   const { currentPassword, newPassword } = req.body
   await userService.changePassword(req.user.id, currentPassword, newPassword)

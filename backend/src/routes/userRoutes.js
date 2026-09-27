@@ -140,6 +140,9 @@ router.get('/activity', auth, userController.getRecentActivity)
  *         description: Trạng thái mới
  */
 router.put('/weekly-report', auth, userController.setWeeklyReport)
+// Gửi thử ngay cho CHÍNH người gọi: thư tuần chỉ đi mỗi thứ 2 nên không có cách nào
+// khác để xem trước nội dung thư đang gửi cho khách trả tiền.
+router.post('/weekly-report/test', auth, userController.sendTestWeeklyReport)
 
 // ── Việc người khác nhờ tôi làm (giao việc là quyền lợi gói Pro của NGƯỜI GIAO) ──
 // Người NHẬN không cần gói trả phí — có thêm người nhận là có thêm khách dùng app.

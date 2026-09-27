@@ -143,6 +143,10 @@ model User {
   // lần cũng chỉ gửi đúng một thư mỗi tuần cho mỗi khách.
   weeklyReportEnabled Boolean   @default(true) @map("weekly_report_enabled")
   weeklyReportSentAt  DateTime? @map("weekly_report_sent_at")
+  // Lần gần nhất khách tự bấm "Gửi thử báo cáo tuần". Dùng để chặn bấm liên tục:
+  // hạn mức gửi thư của tài khoản Mailjet chỉ 10 thư/ngày, nên một người bấm thử
+  // mười lần là hết chỗ cho thư thật của mọi khách khác.
+  weeklyReportTestAt DateTime? @map("weekly_report_test_at")
   isActive     Boolean  @default(true) @map("is_active")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")

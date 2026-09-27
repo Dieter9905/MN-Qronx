@@ -79,7 +79,36 @@ số khách Pro vượt ~10 người, **phải** xin Mailjet gỡ giới hạn h
 > Cột `users.weekly_report_sent_at` là chốt chặn chống gửi trùng (cron và nhịp
 > `/health` cùng gọi hàm gửi, máy chủ Render ngủ nên cron có thể không chạy). Khách
 tắt/mở trong **Cài đặt → Thông báo** (`PUT /me/weekly-report`) — thiếu đường tắt thì
-thư tuần thành thư rác.
+> thư tuần thành thư rác.
+
+**Nút “Gửi thử cho tôi ngay” (Cài đặt → Thông báo).** Thư tuần chỉ đi mỗi thứ 2, nên
+không ai — kể cả chủ app — xem được nó trước khi nó tới hộp thư của toàn bộ khách trả
+tiền. Một thư khách hàng chưa từng ai đọc là rủi ro không đáng có, nên khách Pro bấm
+là nhận ngay một bản gửi tới **chính email của mình** (`POST /me/weekly-report/test`).
+Ba điều cố ý khác đường gửi thật: **không** ghi `weekly_report_sent_at` (nếu ghi thì
+bấm thử một lần là mất thư thật của tuần đó); có chặn bấm liên tục 10 phút
+(`weekly_report_test_at`) vì hạn mức chỉ 10 thư/ngày dùng chung cho mọi khách; và khi
+máy chủ không gửi được thì vẫn trả **nội dung thư** để khách đọc, thay vì chỉ báo lỗi.
+
+### Một giao dịch ngân hàng phải có ĐÚNG MỘT khoá
+
+Lỗi đã xảy ra thật trên production (27/09/2026): webhook SePay gửi `id` trần
+(`85009768`) còn bộ đồng bộ API thêm tiền tố (`sepay:85009768`). Cùng một giao dịch
+vào hai lần dưới hai khoá khác nhau nên chốt chống trùng theo `external_id` không bắt
+được: lần đầu khớp đúng đơn và kích hoạt gói, lần sau bị đánh dấu “Đơn … đã thanh toán
+trước đó” rồi nằm lại trong danh sách **“Tiền đã vào nhưng chưa khớp đơn”**. Admin nhìn
+thấy tiền lơ lửng — và rất dễ bấm “Gán vào đơn” cho một đơn khác, tức là tặng thêm 30
+ngày cho một lần trả tiền.
+
+Nay mọi đường vào tiền đi qua `canonicalBankExternalId()`
+(`backend/src/services/billingService.js`): id SePay dạng số luôn thành
+`sepay:<id>`; mã không phải SePay (Casso) **giữ nguyên** khoá cũ để không đổi đường
+đang chạy đúng. Khi thêm bất kỳ đường đọc giao dịch mới nào, khoá phải đi qua hàm này.
+
+> **Còn một điểm cần tự kiểm tra ở SePay:** nhật ký có các dòng `BANK_TRANSFER_OUT`
+> đúng bằng giá gói (79.000đ, 39.000đ) — tức là giao dịch **tiền ra** cùng số tiền với
+> gói khách mua. Hệ thống bỏ qua tiền ra (đúng, không kích hoạt gói), nhưng nếu SePay
+> đang trả nhầm chiều cho giao dịch tiền vào thì cần sửa ở phía SePay/Casso.
 
 **Điểm bán thứ năm: “nhờ người khác làm” — quyền lợi Pro duy nhất Free/Plus KHÔNG
 thể có bằng cách nào khác.** Bốn tính năng trên đều là “một mình bạn làm tốt hơn”:

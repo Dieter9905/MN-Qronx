@@ -1111,6 +1111,28 @@ export function extractTransactions(payload) {
 }
 
 /**
+ * MỘT giao dịch ngân hàng phải có ĐÚNG MỘT khoá, dù nó tới từ đường nào.
+ *
+ * Lỗi đã xảy ra thật trên production: webhook của SePay gửi `id` trần ("85009768")
+ * còn bộ đồng bộ API lại thêm tiền tố ("sepay:85009768"). Cùng một giao dịch vào
+ * hai lần dưới hai khoá khác nhau nên chốt chống trùng theo `external_id` không
+ * bắt được: lần đầu khớp đúng đơn và kích hoạt gói, lần sau bị đánh dấu
+ * "Đơn ... đã thanh toán trước đó" rồi nằm lại trong danh sách "Tiền đã vào nhưng
+ * chưa khớp đơn". Admin nhìn thấy tiền lơ lửng — và nếu bấm "Gán vào đơn" thì cộng
+ * thêm 30 ngày cho một lần trả tiền.
+ *
+ * Chỉ gắn tiền tố khi CHẮC là SePay (id toàn chữ số): Casso dùng mã tham chiếu dạng
+ * chữ-số nên giữ nguyên khoá cũ, tránh đổi khoá của đường đang chạy đúng.
+ */
+export function canonicalBankExternalId(tx = {}) {
+  const raw = tx.providerId ?? tx.externalId
+  if (!raw) return `NOID:${tx.content}:${tx.amount}`
+  const value = String(raw)
+  const bare = value.replace(/^sepay:/i, '')
+  return /^\d+$/.test(bare) ? `sepay:${bare}` : value
+}
+
+/**
  * Xử lý MỘT giao dịch ngân hàng: dò mã đơn trong nội dung, kiểm tra số tiền rồi
  * kích hoạt gói. Idempotent theo `externalId` nên webhook gửi lại hay bộ đồng bộ
  * API đọc lại giao dịch cũ đều không cộng thêm ngày.
@@ -1120,7 +1142,7 @@ export function extractTransactions(payload) {
  *  - API: hệ thống tự kéo lịch sử giao dịch từ API ngân hàng (bankApiService)
  */
 export async function processBankTransaction(tx, { source = 'WEBHOOK' } = {}) {
-  const externalId = tx.externalId ? String(tx.externalId) : `NOID:${tx.content}:${tx.amount}`
+  const externalId = canonicalBankExternalId(tx)
   const isNew = await registerBillingEvent({
     provider: 'WEBHOOK',
     eventType: 'BANK_TRANSFER',

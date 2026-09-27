@@ -127,6 +127,12 @@ export async function setWeeklyReport(enabled) {
   return api('PUT', '/me/weekly-report', { body: { enabled } })
 }
 
+// Gửi ngay một bản báo cáo tuần tới email của chính mình, để xem trước thư thứ 2
+// (thư thật chỉ đi mỗi thứ 2 nên không có cách nào khác để kiểm tra nội dung).
+export async function sendTestWeeklyReport() {
+  return api('POST', '/me/weekly-report/test')
+}
+
 export async function changePassword({ currentPassword, newPassword } = {}) {
   return api('PUT', '/me/password', {
     body: { currentPassword, newPassword },

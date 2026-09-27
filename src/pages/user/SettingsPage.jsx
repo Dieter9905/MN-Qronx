@@ -40,7 +40,8 @@ import { ALARM_SOUNDS, DEFAULT_SNOOZE_OPTIONS, PLATFORM } from '../../lib/consta
 import { relativeTime } from '../../lib/format'
 import { startAlarmSound, stopAlarmSound } from '../../context/AlarmContext'
 import { pushStatus, enablePush, disablePush, syncPushSubscription } from '../../lib/push'
-import { setWeeklyReport } from '../../services/authService'
+import { setWeeklyReport, sendTestWeeklyReport } from '../../services/authService'
+import { EnvelopeSimple } from '@phosphor-icons/react'
 import { getMyIcsUrl, rotateIcsUrl } from '../../services/calendarService'
 
 const TABS = [
@@ -72,6 +73,24 @@ export default function SettingsPage() {
   const isPro = user?.plan === 'PRO'
   const [weeklyReport, setWeeklyReportOn] = useState(user?.weeklyReportEnabled !== false)
   const [weeklyReportBusy, setWeeklyReportBusy] = useState(false)
+
+  const [testMailBusy, setTestMailBusy] = useState(false)
+  const [testMailPreview, setTestMailPreview] = useState(null)
+
+  const onSendTestWeeklyReport = async () => {
+    setTestMailBusy(true)
+    const res = await sendTestWeeklyReport()
+    setTestMailBusy(false)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    // Máy chủ có thể chưa gửi được (hạn mức thư, mạng) nhưng vẫn trả NỘI DUNG thư —
+    // hiện ra để khách đọc được thư thay vì chỉ thấy báo lỗi trống.
+    setTestMailPreview(res.data)
+    if (res.data?.sent) toast.success(res.message)
+    else toast.error(res.message)
+  }
 
   const saveWeeklyReport = async (enabled) => {
     setWeeklyReportBusy(true)
@@ -498,6 +517,44 @@ export default function SettingsPage() {
                 để nhận thư mỗi sáng thứ 2.
               </p>
             ) : (
+              <>
+                <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={EnvelopeSimple}
+                    onClick={onSendTestWeeklyReport}
+                    loading={testMailBusy}
+                    disabled={weeklyReportBusy}
+                  >
+                    Gửi thử cho tôi ngay
+                  </Button>
+                  <span className="text-xs text-navy-400 dark:text-slate-500">
+                    Thư thật chỉ đi mỗi sáng thứ 2 — bấm đây để xem trước nội dung.
+                  </span>
+                </div>
+                {testMailPreview && (
+                  <div className="mt-2 rounded-xl bg-navy-50 p-3 ring-1 ring-inset ring-navy-100 dark:bg-slate-700/60 dark:ring-slate-600">
+                    <p className="text-xs font-bold text-navy-700 dark:text-slate-200">
+                      {testMailPreview.sent
+                        ? `Đã gửi tới ${testMailPreview.email}`
+                        : 'Máy chủ chưa gửi được email — nội dung thư ở dưới là thư sẽ gửi:'}
+                    </p>
+                    {testMailPreview.subject && (
+                      <p className="mt-1 text-xs font-semibold text-navy-500 dark:text-slate-300">
+                        Tiêu đề: “{testMailPreview.subject}”
+                      </p>
+                    )}
+                    {testMailPreview.preview && (
+                      <pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded-lg bg-white p-2.5 text-[11px] leading-relaxed text-navy-600 ring-1 ring-inset ring-navy-100 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-600">
+                        {testMailPreview.preview}
+                      </pre>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+            {isPro && (
               <p className="mt-1.5 text-xs text-navy-400 dark:text-slate-500">
                 Cũng có thể xem ngay trong app ở mục “Báo cáo năng suất”.
               </p>

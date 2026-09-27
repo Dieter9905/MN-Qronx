@@ -1568,3 +1568,79 @@ describe('Nhắc trước khi hết hạn', () => {
     expect(sent.some((m) => m.to === u.email)).toBe(false)
   })
 })
+
+// ─── MỘT giao dịch ngân hàng = MỘT khoá ─────────────────────
+//
+// Lỗi đã xảy ra thật trên production: webhook SePay gửi `id` trần còn bộ đồng bộ API
+// thêm tiền tố "sepay:", nên cùng một giao dịch vào hai lần dưới hai khoá khác nhau.
+// Lần đầu khớp đơn và kích hoạt gói; lần sau bị đánh dấu "Đơn đã thanh toán trước đó"
+// rồi nằm lại trong danh sách "Tiền đã vào nhưng chưa khớp đơn" — admin nhìn thấy tiền
+// lơ lửng và rất dễ gán tay vào một đơn khác, tức là tặng thêm 30 ngày cho một lần trả.
+
+describe('Giao dịch ngân hàng — hai đường vào phải dùng chung một khoá', () => {
+  it('id SePay dạng số: webhook và bộ đồng bộ API cho ra cùng một khoá', () => {
+    expect(billingService.canonicalBankExternalId({ externalId: '85009768' })).toBe('sepay:85009768')
+    expect(billingService.canonicalBankExternalId({ externalId: 'sepay:85009768' })).toBe('sepay:85009768')
+    expect(billingService.canonicalBankExternalId({ providerId: '85009768' })).toBe('sepay:85009768')
+  })
+
+  it('mã không phải SePay (Casso) giữ nguyên khoá — không đổi đường đang chạy đúng', () => {
+    expect(billingService.canonicalBankExternalId({ externalId: 'FT2409ABC123' })).toBe('FT2409ABC123')
+  })
+
+  it('không có mã giao dịch thì dùng nội dung + số tiền, và rỗng thì vẫn có khoá', () => {
+    expect(billingService.canonicalBankExternalId({ content: 'MNQX', amount: 10000 })).toBe(
+      'NOID:MNQX:10000'
+    )
+  })
+
+  it('cùng giao dịch qua webhook rồi qua API → lần hai bị coi là trùng, không thêm sự kiện', async () => {
+    const payer = await newUser('bill_dupkey')
+    const created = await api('POST', '/billing/orders', {
+      token: payer.token,
+      body: { plan: 'PRO', cycle: 'MONTHLY' },
+    })
+    const code = created.data.data.order.orderCode
+    const bankId = `85${Date.now().toString().slice(-6)}`
+
+    // 1. Webhook: SePay gửi id trần
+    const viaWebhook = await billingService.processBankTransaction(
+      { externalId: bankId, content: `${code} chuyen tien`, amount: 79000, transferType: 'in' },
+      { source: 'WEBHOOK' }
+    )
+    expect(viaWebhook.matched).toBe(true)
+    expect(viaWebhook.orderCode).toBe(code)
+
+    const afterFirst = await prisma.billingEvent.count({ where: { externalId: `sepay:${bankId}` } })
+    expect(afterFirst).toBe(1)
+
+    // 2. Bộ đồng bộ API đọc lại CHÍNH giao dịch đó, khoá có tiền tố
+    const viaSync = await billingService.processBankTransaction(
+      {
+        externalId: `sepay:${bankId}`,
+        providerId: bankId,
+        content: `${code} chuyen tien`,
+        amount: 79000,
+        transferType: 'in',
+      },
+      { source: 'API' }
+    )
+    expect(viaSync.duplicated).toBe(true)
+    expect(viaSync.matched).toBe(false)
+
+    // Không sinh thêm sự kiện, và cũng KHÔNG có dòng "chưa khớp" lơ lửng
+    expect(await prisma.billingEvent.count({ where: { externalId: `sepay:${bankId}` } })).toBe(1)
+    const unmatched = await prisma.billingEvent.findMany({
+      where: { externalId: `sepay:${bankId}`, eventType: 'BANK_TRANSFER_UNMATCHED' },
+    })
+    expect(unmatched).toHaveLength(0)
+
+    // Và gói chỉ được cộng MỘT lần cho một lần trả tiền
+    const order = await prisma.paymentOrder.findUnique({ where: { orderCode: code } })
+    expect(order.status).toBe('PAID')
+    const user = await prisma.user.findUnique({ where: { userId: payer.userId } })
+    expect(user.plan).toBe('PRO')
+    const subs = await prisma.subscription.count({ where: { userId: payer.userId } })
+    expect(subs).toBe(1)
+  })
+})

@@ -57,6 +57,12 @@ export async function setWeeklyReport(userId, enabled) {
   return weeklyReportService.setWeeklyReportEnabled(userId, enabled)
 }
 
+// Gửi thử ngay cho chính người bấm — nhờ vậy khách (và chủ app) xem được thư thứ 2
+// trước khi nó tới hộp thư của toàn bộ khách trả tiền.
+export async function sendTestWeeklyReport(userId) {
+  return weeklyReportService.sendTestWeeklyReport(userId)
+}
+
 // ─── Update Profile ─────────────────────────────────────
 
 export async function updateProfile(userId, { fullName, phoneNumber, avatarUrl }) {

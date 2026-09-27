@@ -323,6 +323,84 @@ export async function sendWeeklyReports({
   return result
 }
 
+/** Khoảng cách tối thiểu giữa hai lần bấm "Gửi thử" (phút). */
+export const TEST_COOLDOWN_MINUTES = 10
+
+/**
+ * Gửi NGAY một bản báo cáo tuần cho CHÍNH người bấm, để họ thấy trước thư thứ 2
+ * trông thế nào.
+ *
+ * Vì sao cần: thư tuần chỉ đi mỗi thứ 2, nên không ai — kể cả chủ app — xem được nó
+ * trước khi nó tới hộp thư của toàn bộ khách trả tiền. Một thư khách hàng mà chưa
+ * từng được ai đọc là rủi ro không đáng có.
+ *
+ * Ba điều CỐ Ý khác đường gửi thật:
+ *  1. **Không ghi `weeklyReportSentAt`.** Nếu ghi thì bấm thử một lần là mất luôn thư
+ *     thật của tuần đó — đúng thứ khách trả tiền để nhận.
+ *  2. **Có chặn bấm liên tục** (`weeklyReportTestAt`) vì hạn mức gửi thư chỉ 10
+ *     thư/ngày; một người bấm thử mười lần là hết chỗ cho thư thật.
+ *  3. **Chỉ gửi cho chính họ**, không có đường nào để gửi thử cho người khác.
+ *
+ * @param {number} userId
+ * @param {{now?:Date, mailer?:Function}} options
+ * @returns {Promise<{sent:boolean, skipped?:string, subject:string, email:string, preview:string}>}
+ */
+export async function sendTestWeeklyReport(userId, { now = new Date(), mailer = sendEmail } = {}) {
+  const user = await prisma.user.findUnique({
+    where: { userId },
+    select: {
+      userId: true,
+      fullName: true,
+      email: true,
+      plan: true,
+      planExpiresAt: true,
+      weeklyReportTestAt: true,
+    },
+  })
+  if (!user) throw ApiError.notFound('Không tìm thấy người dùng')
+  if (user.plan !== 'PRO' || isPlanExpired(user)) {
+    throw ApiError.badRequest(
+      'Báo cáo tuần qua email là quyền lợi của gói Pro. Nâng cấp lên Pro để nhận thư mỗi sáng thứ 2.'
+    )
+  }
+
+  const lastTest = user.weeklyReportTestAt ? new Date(user.weeklyReportTestAt).getTime() : 0
+  const waitMs = TEST_COOLDOWN_MINUTES * 60000
+  if (lastTest && now.getTime() - lastTest < waitMs) {
+    const left = Math.ceil((waitMs - (now.getTime() - lastTest)) / 60000)
+    throw ApiError.badRequest(
+      `Bạn vừa gửi thử rồi. Chờ khoảng ${left} phút nữa để không chiếm hạn mức gửi thư của khách khác.`
+    )
+  }
+
+  const [report, planner] = await Promise.all([
+    buildReport(userId, { days: WEEKLY_REPORT_DAYS, now }),
+    buildWeekPlan(userId, { now }),
+  ])
+  const email = buildWeeklyEmail({ user, report, planner, now })
+
+  // Ghi mốc NGAY, trước khi gửi: nếu gửi xong mới ghi mà tiến trình chết giữa chừng
+  // thì khách bấm lại được ngay và ăn tiếp vào hạn mức.
+  await prisma.user.update({ where: { userId }, data: { weeklyReportTestAt: now } })
+
+  try {
+    await mailer({ to: user.email, subject: email.subject, text: email.text, html: email.html })
+  } catch (err) {
+    // Không ném lỗi ra ngoài: giao diện vẫn hiện được BẢN XEM TRƯỚC để khách biết
+    // thư có nội dung gì, và biết là máy chủ chưa gửi được.
+    console.error(`[WeeklyReport] Gửi thử cho ${user.email} thất bại:`, err.message)
+    return {
+      sent: false,
+      reason: err.message,
+      subject: email.subject,
+      email: user.email,
+      preview: email.text,
+    }
+  }
+
+  return { sent: true, subject: email.subject, email: user.email, preview: email.text }
+}
+
 /** Bật/tắt nhận báo cáo tuần (khách tự quyết, không hỏi thêm gì). */
 export async function setWeeklyReportEnabled(userId, enabled) {
   const user = await prisma.user.findUnique({ where: { userId }, select: { userId: true } })
@@ -338,10 +416,12 @@ export async function setWeeklyReportEnabled(userId, enabled) {
 export default {
   WEEKLY_REPORT_DAYS,
   WEEKLY_REPORT_MIN_GAP_DAYS,
+  TEST_COOLDOWN_MINUTES,
   DEFAULT_BATCH,
   firstName,
   buildWeeklyEmail,
   collectRecipients,
   sendWeeklyReports,
+  sendTestWeeklyReport,
   setWeeklyReportEnabled,
 }

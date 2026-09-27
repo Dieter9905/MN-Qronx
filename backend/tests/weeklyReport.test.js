@@ -409,3 +409,106 @@ describe('Báo cáo tuần — khách tự tắt/mở', () => {
     expect(on.data.data.weeklyReportEnabled).toBe(true)
   })
 })
+
+// ─── Nút "Gửi thử báo cáo tuần" ─────────────────────────────
+//
+// Thư tuần chỉ đi mỗi thứ 2, nên đường gửi thử là cách DUY NHẤT để khách (và chủ app)
+// xem trước nội dung thư đang gửi cho toàn bộ khách trả tiền. Hai điều phải đúng:
+// bấm thử KHÔNG được làm mất thư thật của tuần đó, và không được để một người bấm
+// liên tục chiếm hết hạn mức 10 thư/ngày dành cho mọi khách.
+
+describe('Báo cáo tuần — gửi thử cho chính mình', () => {
+  beforeAll(async () => {
+    await startServer()
+  })
+
+  afterAll(async () => {
+    await stopServer()
+  })
+
+  it('gói Free bị chặn kèm chỉ dẫn nâng cấp Pro', async () => {
+    const u = await newUser('weekly_test_free', 'FREE')
+    const res = await api('POST', '/me/weekly-report/test', { token: u.token })
+    expect(res.status).toBe(400)
+    expect(res.data.message).toContain('Pro')
+  })
+
+  it('gói Pro: gửi đúng tới email của mình, có nội dung thư thật', async () => {
+    const u = await newUser('weekly_test_pro', 'PRO')
+
+    // Không gửi thư thật: tiêm mailer giả qua tầng dịch vụ
+    const { sendTestWeeklyReport } = await import('../src/services/weeklyReportService.js')
+    const sent = []
+    const result = await sendTestWeeklyReport(u.userId, {
+      mailer: async (opts) => {
+        sent.push(opts)
+        return { sent: true }
+      },
+    })
+
+    expect(result.sent).toBe(true)
+    expect(result.email).toBe(u.email)
+    expect(sent).toHaveLength(1)
+    expect(sent[0].to).toBe(u.email)
+    expect(sent[0].subject).toBeTruthy()
+    // Nội dung là thư thật của chính người này, không phải mẫu rỗng
+    expect(sent[0].text).toContain('Đây là báo cáo tuần MN-Qronx')
+    expect(sent[0].text).toContain('TUẦN NÀY')
+    expect(sent[0].text).not.toContain('undefined')
+    expect(result.preview).toContain('TUẦN NÀY')
+  })
+
+  it('gửi thử KHÔNG làm mất thư thật của tuần đó', async () => {
+    const u = await newUser('weekly_test_keep', 'PRO')
+    const { sendTestWeeklyReport } = await import('../src/services/weeklyReportService.js')
+
+    await sendTestWeeklyReport(u.userId, { mailer: async () => ({ sent: true }) })
+
+    // Mốc "đã gửi tuần này" phải còn TRỐNG, nếu không thì bấm thử một lần là mất
+    // luôn thư thật — đúng thứ khách trả tiền để nhận.
+    const row = await prisma.user.findUnique({
+      where: { userId: u.userId },
+      select: { weeklyReportSentAt: true, weeklyReportTestAt: true },
+    })
+    expect(row.weeklyReportSentAt).toBeNull()
+    expect(row.weeklyReportTestAt).not.toBeNull()
+
+    // Và người này vẫn nằm trong danh sách nhận thư thật
+    const recipients = await collectRecipients({ userIds: [u.userId] })
+    expect(recipients.map((r) => r.userId)).toContain(u.userId)
+  })
+
+  it('bấm liên tục bị chặn — hạn mức gửi thư là của chung mọi khách', async () => {
+    const u = await newUser('weekly_test_spam', 'PRO')
+    const { sendTestWeeklyReport } = await import('../src/services/weeklyReportService.js')
+    const mailer = async () => ({ sent: true })
+
+    await sendTestWeeklyReport(u.userId, { mailer })
+
+    const second = await api('POST', '/me/weekly-report/test', { token: u.token })
+    expect(second.status).toBe(400)
+    expect(second.data.message).toContain('vừa gửi thử')
+
+    // Chờ đủ lâu thì gửi lại được
+    const later = await sendTestWeeklyReport(u.userId, {
+      mailer,
+      now: new Date(Date.now() + 11 * 60_000),
+    })
+    expect(later.sent).toBe(true)
+  })
+
+  it('máy chủ không gửi được vẫn trả bản xem trước, không ném lỗi trắng màn hình', async () => {
+    const u = await newUser('weekly_test_fail', 'PRO')
+    const { sendTestWeeklyReport } = await import('../src/services/weeklyReportService.js')
+
+    const result = await sendTestWeeklyReport(u.userId, {
+      mailer: async () => {
+        throw new Error('Mailjet API lỗi')
+      },
+    })
+    expect(result.sent).toBe(false)
+    expect(result.reason).toContain('Mailjet')
+    // Vẫn có nội dung để khách đọc
+    expect(result.preview).toContain('Đây là báo cáo tuần MN-Qronx')
+  })
+})
