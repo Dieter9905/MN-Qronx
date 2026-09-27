@@ -243,6 +243,9 @@ router.put(
 /** Sinh mã xác thực webhook mới (mã cũ hết hiệu lực ngay) */
 router.post('/billing/settings/rotate-secret', billingController.adminRotateWebhookSecret)
 
+/** Gửi thử webhook từ máy chủ để biết cấu hình SePay đã thông chưa (không kích hoạt gói) */
+router.post('/billing/test-webhook', billingController.adminTestWebhook)
+
 /** Kiểm tra kết nối API ngân hàng (gọi thật, chỉ đọc, không kích hoạt gói) */
 router.post('/billing/test-connection', billingController.adminTestBankConnection)
 

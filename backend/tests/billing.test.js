@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest'
 import {
   startServer,
@@ -624,6 +625,131 @@ describe('Cài đặt nhận tiền (ACB)', () => {
     })
     expect(stale.status).toBe(401)
   }, 180000)
+
+  it('nhận webhook ký HMAC-SHA256 (cách SePay khuyến nghị), chặn chữ ký sai và request cũ', async () => {
+    const secret = (await api('POST', '/admin/billing/settings/rotate-secret', { token: adminToken })).data.data
+      .webhookSecret
+    const payer = await newUser('bill_hmac')
+    const created = await api('POST', '/billing/orders', {
+      token: payer.token,
+      body: { plan: 'PLUS', cycle: 'MONTHLY' },
+    })
+    const code = created.data.data.order.orderCode
+
+    const timestamp = Math.floor(Date.now() / 1000)
+    const sign = (ts, rawBody, key) =>
+      `sha256=${crypto.createHmac('sha256', key).update(`${ts}.${rawBody}`).digest('hex')}`
+    const rawBody = JSON.stringify({
+      id: `test-hmac-${code}`,
+      content: `CT DEN: MN QRONX ${code} chuyen tien`,
+      transferAmount: 39000,
+      transferType: 'in',
+    })
+
+    // Ký bằng khoá khác → từ chối, không kích hoạt gói
+    const wrongKey = await api('POST', '/billing/webhook/bank', {
+      rawBody,
+      headers: { 'x-sepay-signature': sign(timestamp, rawBody, 'khoa-khac'), 'x-sepay-timestamp': String(timestamp) },
+    })
+    expect(wrongKey.status).toBe(401)
+
+    // Request cũ hơn 10 phút → từ chối (chống gửi lại)
+    const staleAt = timestamp - 3600
+    const stale = await api('POST', '/billing/webhook/bank', {
+      rawBody,
+      headers: { 'x-sepay-signature': sign(staleAt, rawBody, secret), 'x-sepay-timestamp': String(staleAt) },
+    })
+    expect(stale.status).toBe(401)
+
+    // Chữ ký đúng, không cần mã trong URL → khớp đơn và kích hoạt gói
+    const ok = await api('POST', '/billing/webhook/bank', {
+      rawBody,
+      headers: { 'x-sepay-signature': sign(timestamp, rawBody, secret), 'x-sepay-timestamp': String(timestamp) },
+    })
+    expect(ok.status).toBe(200)
+    expect(ok.data.data.results[0]).toMatchObject({ matched: true, orderCode: code, applied: true })
+
+    const me = await api('GET', '/billing/me', { token: payer.token })
+    expect(me.data.data.plan).toBe('PLUS')
+
+    // Chữ ký đúng nhưng thêm một ký tự vào body là phải hỏng (ký trên bytes thô)
+    const tampered = await api('POST', '/billing/webhook/bank', {
+      rawBody: `${rawBody} `,
+      headers: { 'x-sepay-signature': sign(timestamp, rawBody, secret), 'x-sepay-timestamp': String(timestamp) },
+    })
+    expect(tampered.status).toBe(401)
+  }, 180000)
+
+  it('nhận được mã xác thực ở mọi chỗ SePay có thể đặt: Basic auth, x-api-key, secure-token', async () => {
+    const secret = (await api('POST', '/admin/billing/settings/rotate-secret', { token: adminToken })).data.data
+      .webhookSecret
+
+    // Basic auth: nhiều người để mã ở mật khẩu, số khác để ở tài khoản
+    const asPassword = await api('POST', '/billing/webhook/bank', {
+      rawBody: '{"data":[]}',
+      headers: { Authorization: `Basic ${Buffer.from(`sepay:${secret}`).toString('base64')}` },
+    })
+    expect(asPassword.status).toBe(200)
+    expect(asPassword.data.data.received).toBe(0)
+
+    const asUser = await api('POST', '/billing/webhook/bank', {
+      rawBody: '{"data":[]}',
+      headers: { Authorization: `Basic ${Buffer.from(`${secret}:`).toString('base64')}` },
+    })
+    expect(asUser.status).toBe(200)
+
+    const viaApiKey = await api('POST', '/billing/webhook/bank', {
+      rawBody: '{"data":[]}',
+      headers: { 'x-api-key': secret },
+    })
+    expect(viaApiKey.status).toBe(200)
+
+    const viaSecureToken = await api('POST', '/billing/webhook/bank', {
+      rawBody: '{"data":[]}',
+      headers: { 'secure-token': secret },
+    })
+    expect(viaSecureToken.status).toBe(200)
+  }, 120000)
+
+  it('ghi lại lần gọi webhook gần nhất kèm lý do, để quản trị không phải đoán', async () => {
+    const secret = (await api('POST', '/admin/billing/settings/rotate-secret', { token: adminToken })).data.data
+      .webhookSecret
+
+    // Đúng cảnh SePay báo “Không xác thực”: gọi tới nhưng không gửi kèm mã nào
+    const bare = await api('POST', '/billing/webhook/bank', { body: { data: [] } })
+    expect(bare.status).toBe(401)
+    expect(bare.data.message).toMatch(/không gửi kèm mã xác thực/i)
+
+    const setup = await api('GET', '/admin/billing/settings', { token: adminToken })
+    expect(setup.data.data.lastWebhook).toMatchObject({ status: 'REJECTED', auth: 'không gửi kèm' })
+    expect(setup.data.data.lastWebhook.message).toMatch(/\?token=/)
+    // URL kèm sẵn mã để dán vào SePay ở chế độ “Không xác thực”
+    expect(setup.data.data.webhookUrlWithToken).toBe(`${setup.data.data.webhookUrl}?token=${secret}`)
+
+    // Sai mã → nhật ký nói rõ mã nhận từ đâu
+    const wrong = await api('POST', '/billing/webhook/bank?token=sai-ma', { body: { data: [] } })
+    expect(wrong.status).toBe(401)
+    const afterWrong = await api('GET', '/admin/billing/settings', { token: adminToken })
+    expect(afterWrong.data.data.lastWebhook.auth).toBe('query ?token')
+
+    // Gọi đúng → nhật ký chuyển sang OK (webhook còn sống hay không, nhìn là biết)
+    const good = await api('POST', `/billing/webhook/bank?token=${secret}`, { body: { data: [] } })
+    expect(good.status).toBe(200)
+    const last = await api('GET', '/admin/billing/settings', { token: adminToken })
+    expect(last.data.data.lastWebhook).toMatchObject({ status: 'OK', auth: 'query ?token' })
+  }, 120000)
+
+  it('gửi thử webhook từ máy chủ: cấu hình thông thì trả 200 và không kích hoạt gói nào', async () => {
+    await api('POST', '/admin/billing/settings/rotate-secret', { token: adminToken })
+
+    const res = await api('POST', '/admin/billing/test-webhook', { token: adminToken })
+    expect(res.status).toBe(200)
+    expect(res.data.data).toMatchObject({ ok: true, status: 200 })
+    expect(res.data.data.url).toContain('/billing/webhook/bank?token=')
+
+    const forbidden = await api('POST', '/admin/billing/test-webhook', { token: buyer.token })
+    expect(forbidden.status).toBe(403)
+  }, 120000)
 
   it('tiền RA không bao giờ kích hoạt gói, dù nội dung có mã đơn', async () => {
     const payer = await newUser('bill_out')

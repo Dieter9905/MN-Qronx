@@ -72,11 +72,69 @@ export const startTrial = catchAsync(async (req, res) => {
 
 // ─── Webhook ngân hàng (không cần đăng nhập, xác thực bằng mã bí mật) ───
 
-/** POST /api/v1/billing/webhook/bank – Casso/Sepay báo có tiền vào */
+/**
+ * POST /api/v1/billing/webhook/bank – Casso/Sepay báo có tiền vào.
+ * Mọi lần gọi (kể cả bị từ chối) đều được ghi lại để trang quản trị hiển thị:
+ * webhook có tới không, gửi kèm mã gì, vì sao hỏng.
+ */
 export const bankWebhook = catchAsync(async (req, res) => {
   await billingService.verifyWebhookRequest(req)
-  const result = await billingService.handleBankWebhook(req.body)
-  success(res, 200, 'Đã xử lý webhook', result)
+  try {
+    const result = await billingService.handleBankWebhook(req.body)
+    const applied = result.results.filter((r) => r.applied).length
+    await billingService.recordWebhookAttempt({
+      req,
+      status: 'OK',
+      auth: req.webhookAuth,
+      message: result.received
+        ? `Đã nhận ${result.received} giao dịch · kích hoạt ${applied} gói`
+        : 'Webhook gọi thử (không có giao dịch) — cấu hình đã đúng',
+    })
+    success(res, 200, 'Đã xử lý webhook', result)
+  } catch (err) {
+    await billingService.recordWebhookAttempt({
+      req,
+      status: 'ERROR',
+      auth: req.webhookAuth,
+      message: `Lỗi khi xử lý giao dịch: ${err.message}`,
+    })
+    throw err
+  }
+})
+
+/**
+ * POST /api/v1/admin/billing/test-webhook — máy chủ tự gọi URL webhook của chính
+ * mình (đi qua Internet, đúng như SePay gọi) để biết cấu hình đã thông chưa.
+ * Payload rỗng nên KHÔNG kích hoạt gói nào, không làm thay đổi dữ liệu.
+ */
+export const adminTestWebhook = catchAsync(async (req, res) => {
+  const baseUrl = publicBaseUrl(req)
+  const secret = await billingService.webhookSecret()
+  if (!baseUrl) {
+    return success(res, 200, 'Không xác định được địa chỉ công khai của API', { ok: false })
+  }
+  if (!secret) {
+    return success(res, 200, 'Chưa có mã xác thực webhook — bấm “Sinh mã mới” trước rồi thử lại', { ok: false })
+  }
+
+  const url = `${baseUrl.replace(/\/+$/, '')}/api/v1/billing/webhook/bank?token=${encodeURIComponent(secret)}`
+  const started = Date.now()
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Apikey ${secret}` },
+      body: JSON.stringify({ data: [] }),
+    })
+    const text = await response.text()
+    const ms = Date.now() - started
+    const ok = response.status === 200
+    const message = ok
+      ? `Webhook thông: máy chủ trả 200 sau ${ms}ms. Sang SePay bấm “Gửi thử” để chắc chắn đầu bên kia cũng đúng.`
+      : `Webhook trả ${response.status} sau ${ms}ms — xem chi tiết bên dưới.`
+    success(res, 200, message, { ok, status: response.status, ms, url, response: text.slice(0, 400) })
+  } catch (err) {
+    success(res, 200, `Không gọi được webhook: ${err.message}`, { ok: false, url, error: err.message })
+  }
 })
 
 // ─── Quản trị ───────────────────────────────────────────────
@@ -235,6 +293,7 @@ export default {
   adminGetBillingSetup,
   adminSaveBillingSettings,
   adminRotateWebhookSecret,
+  adminTestWebhook,
   adminTestBankConnection,
   adminSyncBankNow,
 }

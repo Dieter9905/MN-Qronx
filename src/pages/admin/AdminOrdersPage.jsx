@@ -22,6 +22,7 @@ import {
   adminRotateWebhookSecret,
   adminTestBankConnection,
   adminSyncBankNow,
+  adminTestWebhook,
 } from '../../services/billingService'
 
 const STATUS_TABS = [
@@ -84,6 +85,9 @@ export default function AdminOrdersPage() {
   const [apiTest, setApiTest] = useState(null)
   const [savingSetup, setSavingSetup] = useState(false)
   const [rotating, setRotating] = useState(false)
+  // Kết quả "gửi thử webhook" và nhật ký lần gọi gần nhất (để biết vì sao SePay báo lỗi)
+  const [testingWebhook, setTestingWebhook] = useState(false)
+  const [webhookTest, setWebhookTest] = useState(null)
   // null = tự quyết định: chưa cấu hình thì mở sẵn để admin thấy việc cần làm
   const [showSetup, setShowSetup] = useState(null)
   // Giao dịch đã vào tài khoản nhưng chưa khớp đơn nào (khách ghi sai nội dung…)
@@ -193,6 +197,22 @@ export default function AdminOrdersPage() {
     }
     toast.success('Đã lưu cấu hình API ngân hàng')
     setShowSetup(true)
+    loadSetup()
+  }
+
+  const testWebhook = async () => {
+    setTestingWebhook(true)
+    setWebhookTest(null)
+    const res = await adminTestWebhook()
+    setTestingWebhook(false)
+    if (!res.success) {
+      toast.error(res.message)
+      return
+    }
+    setWebhookTest(res.data)
+    if (res.data?.ok) toast.success('Webhook thông — máy chủ trả 200')
+    else toast.error(res.message)
+    // Nhật ký vừa được ghi thêm một dòng → đọc lại để hiển thị mới nhất
     loadSetup()
   }
 
@@ -407,6 +427,21 @@ export default function AdminOrdersPage() {
           </div>
         )}
 
+        {/* Webhook gọi tới mà bị từ chối = tiền vào không tự mở gói. Nói thẳng ra
+            ngay trên đầu thẻ thay vì để admin tự đoán vì sao khách thanh toán rồi
+            vẫn ở gói cũ. */}
+        {(setup?.lastWebhook?.status === 'REJECTED' || setup?.lastWebhook?.status === 'ERROR') && (
+          <div className="mt-3 rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-700 ring-1 ring-rose-200 dark:bg-rose-900/20 dark:text-rose-200 dark:ring-rose-800/50">
+            <p className="flex items-start gap-2">
+              <Warning size={15} weight="fill" className="mt-0.5 shrink-0" />
+              <span>
+                Webhook gần nhất bị từ chối lúc {formatDateTime(setup.lastWebhook.at)} — tiền vào sẽ không tự mở gói.{' '}
+                {setup.lastWebhook.message}
+              </span>
+            </p>
+          </div>
+        )}
+
         {openSetup(showSetup, bank) && (
           <div className="mt-4 grid gap-5 lg:grid-cols-2">
             {/* 1. Tài khoản nhận tiền */}
@@ -475,7 +510,7 @@ export default function AdminOrdersPage() {
                 2. Tự kích hoạt khi tiền vào (webhook)
               </p>
               <div className="rounded-xl bg-navy-50/70 p-3 dark:bg-slate-900/60">
-                <p className="text-xs font-bold text-navy-600 dark:text-slate-300">URL webhook (dán vào SePay / Casso)</p>
+                <p className="text-xs font-bold text-navy-600 dark:text-slate-300">URL webhook dán vào SePay / Casso</p>
                 <p className="mt-1 break-all font-mono text-[11px] font-bold text-navy-800 dark:text-white">
                   {setup?.webhookUrl || '(chưa xác định)'}
                 </p>
@@ -487,6 +522,14 @@ export default function AdminOrdersPage() {
                     onClick={() => copy(setup.webhookUrl, 'URL webhook')}
                   >
                     Copy URL
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={!setup?.webhookUrlWithToken}
+                    onClick={() => copy(setup.webhookUrlWithToken, 'URL kèm mã')}
+                  >
+                    Copy URL kèm mã
                   </Button>
                 </div>
               </div>
@@ -511,13 +554,58 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
 
+              {/* Nhật ký lần gọi gần nhất: SePay báo “Không xác thực” thì chỗ này nói
+                  rõ nó gọi tới lúc nào, gửi kèm gì và vì sao bị từ chối. */}
+              <div
+                className={`rounded-xl p-3 ring-1 ${
+                  setup?.lastWebhook?.status === 'OK'
+                    ? 'bg-emerald-50 ring-emerald-200 dark:bg-emerald-900/20 dark:ring-emerald-800/50'
+                    : setup?.lastWebhook
+                      ? 'bg-rose-50 ring-rose-200 dark:bg-rose-900/20 dark:ring-rose-800/50'
+                      : 'bg-navy-50/70 ring-navy-100 dark:bg-slate-900/60 dark:ring-slate-700'
+                }`}
+              >
+                <p className="text-xs font-bold text-navy-600 dark:text-slate-300">Lần SePay gọi webhook gần nhất</p>
+                {setup?.lastWebhook ? (
+                  <>
+                    <p className="mt-1 text-[11px] font-bold text-navy-700 dark:text-slate-200">
+                      {setup.lastWebhook.status === 'OK' ? '✓ Đã nhận' : '✗ Bị từ chối'} lúc{' '}
+                      {formatDateTime(setup.lastWebhook.at)} · gửi kèm: {setup.lastWebhook.auth}
+                    </p>
+                    <p className="mt-1 text-[11px] font-semibold text-navy-500 dark:text-slate-400">
+                      {setup.lastWebhook.message}
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-1 text-[11px] font-semibold text-navy-500 dark:text-slate-400">
+                    Chưa thấy lần gọi nào. Sang SePay bấm “Gửi thử” ở dòng webhook, hoặc bấm nút bên dưới để máy chủ tự gọi thử.
+                  </p>
+                )}
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <Button size="sm" variant="secondary" loading={testingWebhook} onClick={testWebhook}>
+                    Gửi thử từ máy chủ
+                  </Button>
+                </div>
+                {webhookTest && (
+                  <p className="mt-2 break-all text-[11px] font-semibold text-navy-500 dark:text-slate-400">
+                    {webhookTest.ok ? 'Máy chủ trả' : 'Lỗi'}{' '}
+                    {webhookTest.status ? `HTTP ${webhookTest.status}` : ''} {webhookTest.response || webhookTest.error || ''}
+                  </p>
+                )}
+              </div>
+
               <ol className="list-inside list-decimal space-y-1 text-[11px] font-semibold text-navy-500 dark:text-slate-400">
                 <li>Tạo tài khoản SePay (miễn phí) rồi liên kết tài khoản ACB của bạn.</li>
-                <li>Vào mục Webhooks → Thêm webhook: dán URL ở trên, chọn loại “Tiền vào”, xác thực bằng Apikey với mã ở trên.</li>
                 <li>
-                  Bấm “Kiểm tra/Gửi thử” của SePay. Khi khách chuyển khoản đúng nội dung, gói được kích hoạt tự động trong vài
-                  giây — không cần bạn bấm xác nhận.
+                  Vào mục Webhooks → Thêm webhook. <span className="font-bold">URL</span>: bấm “Copy URL kèm mã” ở trên rồi dán
+                  — URL này đã có sẵn mã nên chọn phương thức xác thực là <span className="font-bold">Không xác thực</span> cũng
+                  chạy. Muốn chắc hơn thì chọn <span className="font-bold">API Key</span> rồi dán mã ở ô trên.
                 </li>
+                <li>
+                  Loại giao dịch chọn “Tiền vào”, tài khoản chọn “Tất cả tài khoản”. Sai hai mục này là webhook không bao giờ
+                  gọi tới.
+                </li>
+                <li>Bấm “Gửi thử” của SePay. Thấy dòng “Lần SePay gọi webhook gần nhất: ✓ Đã nhận” là thông.</li>
                 <li>
                   Giao dịch không khớp tự động (ghi sai nội dung, chuyển thiếu) vẫn được giữ lại ở mục “Tiền đã vào nhưng chưa
                   khớp đơn” bên dưới.

@@ -15,7 +15,17 @@ const app = express()
 app.use(helmet({ contentSecurityPolicy: false }))
 app.use(cors())
 app.use(cookieParser())
-app.use(express.json({ limit: '8mb' }))
+app.use(
+  express.json({
+    limit: '8mb',
+    // Giữ lại body thô cho webhook ngân hàng: SePay ký HMAC-SHA256 trên đúng
+    // chuỗi bytes nhận được, parse ra rồi stringify lại là chữ ký lệch ngay
+    // (thứ tự khoá, khoảng trắng và cách escape Unicode đều có thể khác).
+    verify: (req, res, buf) => {
+      if (req.originalUrl?.includes('/billing/webhook')) req.rawBody = buf
+    },
+  })
+)
 
 // ── Swagger UI ──────────────────────────────────────────────
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {

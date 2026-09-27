@@ -942,25 +942,123 @@ export async function startTrial(userId) {
 
 // ─── Webhook chuyển khoản (Casso / Sepay) ───────────────────
 
-/** Xác thực webhook: chấp nhận token trong header hoặc query. */
+/** So sánh bí mật theo thời gian hằng định (không rò rỉ mã qua thời gian phản hồi). */
+function secretEquals(a, b) {
+  const left = Buffer.from(String(a ?? ''), 'utf8')
+  const right = Buffer.from(String(b ?? ''), 'utf8')
+  if (!left.length || left.length !== right.length) return false
+  return crypto.timingSafeEqual(left, right)
+}
+
+/**
+ * Tìm “thứ mà SePay/Casso gửi kèm” trong request.
+ *
+ * SePay cho chọn 4 kiểu xác thực khi tạo webhook (Không xác thực / API Key /
+ * HMAC-SHA256 / OAuth2) và mỗi kiểu đặt bí mật ở một chỗ khác nhau. Đoán sai một
+ * chỗ là tiền vào không tự mở gói, nên ở đây chấp nhận hết:
+ *   - ?token=<mã>  (dùng được với chế độ “Không xác thực”)
+ *   - Apikey/Bearer/x-api-key/secure-token trong header
+ *   - Basic auth: tài khoản hoặc mật khẩu chính là mã
+ * Trả về cả “nhãn” để ghi nhật ký — admin nhìn thấy SePay thực sự gửi gì.
+ */
+export function readWebhookCredential(req) {
+  const authorization = req.get('authorization') || ''
+  const bearer = authorization.match(/^(?:Bearer|Apikey)\s+(.+)$/i)
+  const basic = authorization.match(/^Basic\s+(.+)$/i)
+  const candidates = [
+    { kind: 'query ?token', value: req.query?.token },
+    { kind: 'header secure-token', value: req.get('secure-token') },
+    { kind: 'header x-webhook-secret', value: req.get('x-webhook-secret') },
+    { kind: 'header x-api-key', value: req.get('x-api-key') },
+    { kind: 'header apikey', value: req.get('apikey') },
+    { kind: 'header Authorization: Apikey/Bearer', value: bearer?.[1] },
+  ]
+  for (const candidate of candidates) {
+    if (candidate.value) return { kind: candidate.kind, value: String(candidate.value).trim() }
+  }
+  if (basic) {
+    const decoded = Buffer.from(basic[1], 'base64').toString('utf8')
+    const [user, pass] = decoded.split(':')
+    // Basic auth không có quy ước: có người để mã ở user, có người để ở mật khẩu
+    return { kind: 'header Authorization: Basic', value: String(pass || user || '').trim() }
+  }
+  return { kind: 'không gửi kèm', value: '' }
+}
+
+/**
+ * Kiểm tra chữ ký HMAC-SHA256 của SePay: sha256=HMAC(timestamp + '.' + rawBody).
+ * Bắt buộc dùng body THÔ — parse rồi serialize lại là chữ ký lệch (thứ tự khoá,
+ * khoảng trắng, cách escape Unicode đều khác).
+ */
+export function verifySepaySignature(req, secret) {
+  const signature = req.get('x-sepay-signature') || ''
+  const timestamp = req.get('x-sepay-timestamp') || ''
+  const rawBody = req.rawBody ? req.rawBody.toString('utf8') : ''
+  if (!signature || !timestamp || !rawBody) return false
+  // Chống gửi lại request cũ: SePay ký kèm thời điểm, lệch quá 10 phút là bỏ
+  const age = Math.abs(Date.now() / 1000 - Number(timestamp))
+  if (!Number.isFinite(age) || age > 600) return false
+  const expected = `sha256=${crypto.createHmac('sha256', secret).update(`${timestamp}.${rawBody}`).digest('hex')}`
+  return secretEquals(expected, signature)
+}
+
+/**
+ * Ghi lại lần gọi webhook gần nhất (thành công hay bị từ chối, kèm lý do) để
+ * trang quản trị hiển thị đúng sự thật thay vì để admin đoán.
+ * Không bao giờ được làm hỏng việc nhận webhook nếu ghi log gặp lỗi.
+ */
+export async function recordWebhookAttempt({ status, auth = null, message = '', req = null } = {}) {
+  try {
+    const ip =
+      String(req?.get?.('x-forwarded-for') || '').split(',')[0].trim() || String(req?.ip || '').trim()
+    const data = {
+      lastWebhookAt: new Date(),
+      lastWebhookStatus: String(status || '').slice(0, 20) || null,
+      lastWebhookAuth: String(auth || '').slice(0, 80) || null,
+      lastWebhookMessage: `${message}${ip ? ` · IP ${ip}` : ''}`.slice(0, 255) || null,
+    }
+    await prisma.billingSetting.upsert({
+      where: { settingId: 1 },
+      create: { settingId: 1, ...data },
+      update: data,
+    })
+    clearBillingSettingsCache()
+  } catch (err) {
+    console.warn('[billing] không ghi được nhật ký webhook:', err?.message)
+  }
+}
+
+/** Xác thực webhook: token trong query/header, Basic auth, hoặc chữ ký HMAC. */
 export async function verifyWebhookRequest(req) {
   const expected = await webhookSecret()
   if (!expected) {
     // Chưa cấu hình bí mật → từ chối để không ai tự kích hoạt gói miễn phí.
     // Dùng 401 chứ không phải 500: đây là lỗi cấu hình phía mình, và 500 sẽ khiến
     // SePay/Casso tưởng lỗi tạm thời nên gửi lại liên tục.
-    throw ApiError.unauthorized('Chưa có mã xác thực webhook — vào Quản trị → Đơn hàng → Cài đặt nhận tiền để sinh mã.')
+    const reason =
+      'Chưa có mã xác thực webhook — vào Quản trị → Đơn hàng → Cài đặt nhận tiền để sinh mã.'
+    await recordWebhookAttempt({ status: 'REJECTED', auth: '—', message: reason, req })
+    throw ApiError.unauthorized(reason)
   }
-  const provided =
-    req.get('secure-token') ||
-    req.get('x-webhook-secret') ||
-    (req.get('authorization') || '').replace(/^(Bearer|Apikey)\s+/i, '') ||
-    req.query.token ||
-    ''
-  if (String(provided) !== expected) {
-    throw ApiError.unauthorized('Sai mã xác thực webhook')
+
+  const credential = readWebhookCredential(req)
+  if (credential.value && secretEquals(credential.value, expected)) {
+    req.webhookAuth = credential.kind
+    return true
   }
-  return true
+  if (verifySepaySignature(req, expected)) {
+    req.webhookAuth = 'chữ ký HMAC-SHA256'
+    return true
+  }
+
+  // Nói rõ vì sao bị từ chối — câu này hiện thẳng trong thông báo lỗi của SePay
+  // và trong nhật ký ở trang quản trị, để lần sau không phải đoán nữa.
+  const reason =
+    credential.kind === 'không gửi kèm'
+      ? 'Webhook gọi tới nhưng không gửi kèm mã xác thực. Thêm ?token=<mã> vào URL, hoặc chọn phương thức xác thực API Key rồi dán mã trong trang quản trị.'
+      : `Mã xác thực không khớp (nhận từ ${credential.kind}) — dán lại mã mới nhất trong Quản trị → Đơn hàng → Cài đặt nhận tiền.`
+  await recordWebhookAttempt({ status: 'REJECTED', auth: credential.kind, message: reason, req })
+  throw ApiError.unauthorized(reason)
 }
 
 /** Rút danh sách giao dịch từ payload của Casso hoặc Sepay. */
@@ -968,7 +1066,18 @@ export function extractTransactions(payload) {
   const list = []
   const push = (t) => list.push(t)
 
-  const raw = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : [payload]
+  // SePay gửi một giao dịch phẳng; Casso gửi { data: [...] }; Bank Hub có thể gói
+  // trong { data: { transactions: [...] } }. Chấp nhận hết để không mất giao dịch.
+  const data = payload?.data
+  const raw = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.transactions)
+      ? data.transactions
+      : data && typeof data === 'object' && data.id !== undefined
+        ? [data]
+        : Array.isArray(payload)
+          ? payload
+          : [payload]
   for (const item of raw) {
     if (!item || typeof item !== 'object') continue
     push({
@@ -1178,10 +1287,12 @@ export async function attachTransferToOrder({ eventId, orderCode, adminId, note 
  * còn thiếu bước nào.
  */
 export async function adminBillingSetup({ baseUrl = '' } = {}) {
-  const [bank, secret, unmatched] = await Promise.all([
+  const [bank, secret, unmatched, row] = await Promise.all([
     bankConfig(),
     webhookSecret(),
     listUnmatchedTransfers({ limit: 50 }),
+    // Đọc thẳng từ DB (không dùng nhớ tạm) để nhật ký webhook hiện ra ngay
+    prisma.billingSetting.findUnique({ where: { settingId: 1 } }),
   ])
 
   const warnings = []
@@ -1196,11 +1307,24 @@ export async function adminBillingSetup({ baseUrl = '' } = {}) {
     )
   }
 
+  const webhookUrl = baseUrl ? `${baseUrl.replace(/\/+$/, '')}/api/v1/billing/webhook/bank` : ''
+
   return {
     bank,
     bankOptions: BANK_OPTIONS,
     webhookSecret: secret,
-    webhookUrl: baseUrl ? `${baseUrl.replace(/\/+$/, '')}/api/v1/billing/webhook/bank` : '',
+    webhookUrl,
+    // URL kèm sẵn mã: dán được vào SePay ở chế độ “Không xác thực” (đỡ phải cấu
+    // hình header) — vẫn bảo mật vì đi qua HTTPS và có nút sinh mã mới.
+    webhookUrlWithToken: webhookUrl && secret ? `${webhookUrl}?token=${secret}` : '',
+    lastWebhook: row?.lastWebhookAt
+      ? {
+          at: row.lastWebhookAt,
+          status: row.lastWebhookStatus || '',
+          auth: row.lastWebhookAuth || 'không rõ',
+          message: row.lastWebhookMessage || '',
+        }
+      : null,
     templates: [
       { id: 'compact2', name: 'Gọn (kèm số tiền + nội dung)' },
       { id: 'compact', name: 'Gọn hơn' },
@@ -1234,6 +1358,9 @@ export default {
   handleBankWebhook,
   processBankTransaction,
   verifyWebhookRequest,
+  readWebhookCredential,
+  verifySepaySignature,
+  recordWebhookAttempt,
   bankConfig,
   effectiveBank,
   billingSettings,

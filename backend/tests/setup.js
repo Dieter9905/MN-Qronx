@@ -28,18 +28,23 @@ export async function stopServer() {
 
 // ─── HTTP helpers ──────────────────────────────────────
 
-export async function api(method, path, { body, token, query } = {}) {
+/**
+ * Gọi API test. `headers` để thêm header lạ (vd chữ ký HMAC của SePay), và
+ * `rawBody` để gửi đúng chuỗi bytes cần ký — JSON.stringify lại là chữ ký lệch.
+ */
+export async function api(method, path, { body, token, query, headers: extraHeaders, rawBody } = {}) {
   let url = `${BASE()}${path}`
   if (query) {
     const params = new URLSearchParams(query).toString()
     url += `?${params}`
   }
 
-  const headers = { 'Content-Type': 'application/json' }
+  const headers = { 'Content-Type': 'application/json', ...(extraHeaders || {}) }
   if (token) headers['Authorization'] = `Bearer ${token}`
 
   const opts = { method, headers }
-  if (body) opts.body = JSON.stringify(body)
+  if (rawBody !== undefined) opts.body = rawBody
+  else if (body) opts.body = JSON.stringify(body)
 
   const res = await fetch(url, opts)
   const data = await res.json().catch(() => null)

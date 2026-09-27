@@ -63,6 +63,12 @@ export async function adminRotateWebhookSecret() {
   return api('POST', '/admin/billing/settings/rotate-secret')
 }
 
+// Máy chủ tự gọi URL webhook của chính mình (đi qua Internet, đúng như SePay gọi)
+// để biết cấu hình đã thông chưa — không kích hoạt gói nào.
+export async function adminTestWebhook() {
+  return api('POST', '/admin/billing/test-webhook')
+}
+
 // ─── Quản trị: API ngân hàng (hệ thống tự kéo giao dịch về) ──
 // Khác với webhook (ngân hàng/SePay đẩy về), đây là hệ thống CHỦ ĐỘNG gọi API
 // ngân hàng nên tiền vào là gói tự bật, không cần ai xem sao kê.

@@ -544,6 +544,15 @@ model BillingSetting {
   // Con trỏ chống đọc lại giao dịch cũ (since_id của SePay)
   lastSyncCursor      String?   @map("last_sync_cursor") @db.VarChar(60)
 
+  // ─── Nhật ký lần gọi webhook gần nhất ───────────────────
+  // SePay gọi webhook bị lỗi mà không ai biết là tiền vào không tự mở gói. Các
+  // cột này để trang quản trị hiện đúng sự thật: có gọi tới không, gửi kèm mã
+  // gì, và vì sao bị từ chối.
+  lastWebhookAt       DateTime? @map("last_webhook_at")
+  lastWebhookStatus   String?   @map("last_webhook_status") @db.VarChar(20)
+  lastWebhookAuth     String?   @map("last_webhook_auth") @db.VarChar(80)
+  lastWebhookMessage  String?   @map("last_webhook_message") @db.VarChar(255)
+
   updatedBy       Int?     @map("updated_by")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
