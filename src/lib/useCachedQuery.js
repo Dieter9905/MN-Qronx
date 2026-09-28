@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { sessionUser } from '../services/session'
 import { useSlowHint } from './useSlowHint'
+import { onTasksChanged } from './dataEvents'
 
 /**
  * Tải dữ liệu kiểu "hiện ngay, làm mới sau" — dành cho backend Render gói free.
@@ -106,6 +107,11 @@ export function useCachedQuery(key, fetcher, { retries = 2 } = {}) {
       aliveRef.current = false
     }
   }, [load])
+
+  // Việc được tạo / sửa / đánh dấu xong ở MỘT màn hình khác (kể cả trên màn hình
+  // chuông) thì bản đang hiển thị ở đây phải cũ đi ngay — bản lưu trong cache là
+  // để mở app tức thì, không phải để nói dối về dữ liệu vừa đổi.
+  useEffect(() => onTasksChanged(load), [load])
 
   const slow = useSlowHint(loading)
 

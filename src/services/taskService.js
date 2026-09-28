@@ -1,5 +1,10 @@
 import api from './apiClient'
 import { toTask, toSubtask, paginate } from './normalize'
+import { notifyTasksChanged } from '../lib/dataEvents'
+
+// Mọi thao tác ĐỔI việc đều phát tín hiệu này khi máy chủ đã trả về thành công.
+// Nhờ vậy việc được đánh dấu xong ở một màn hình (kể cả trên màn hình chuông)
+// làm các trang đang mở khác tự tải lại, thay vì vẫn hiển thị việc cũ.
 
 function toPagedTaskList(res) {
   if (!res.success) return res
@@ -85,7 +90,10 @@ export async function createTask(payload = {}) {
       if (s.content?.trim()) await api('POST', `/tasks/${id}/subtasks`, { body: { content: s.content } })
     }
   }
-  if (res.success) res.data = toTask(res.data)
+  if (res.success) {
+    res.data = toTask(res.data)
+    notifyTasksChanged()
+  }
   return res
 }
 
@@ -143,7 +151,9 @@ export async function updateTask(id, payload = {}) {
     }
   }
 
-  return getTask(id)
+  const updated = await getTask(id)
+  notifyTasksChanged()
+  return updated
 }
 
 // PUT /api/v1/tasks/{id} — chỉ đổi HẠN của công việc.
@@ -151,12 +161,16 @@ export async function updateTask(id, payload = {}) {
 // nên chỉ truyền { dueAt } là danh mục bị xoá và các trường khác bị ghi đè.
 // Dùng khi khách dời hạn ngay trên Kế hoạch tuần.
 export async function rescheduleTask(id, dueAt) {
-  return api('PUT', `/tasks/${id}`, { body: { dueAt } })
+  const res = await api('PUT', `/tasks/${id}`, { body: { dueAt } })
+  if (res.success) notifyTasksChanged()
+  return res
 }
 
 // DELETE /api/v1/tasks/{id} — đưa vào thùng rác (xoá mềm, giữ 30 ngày)
 export async function deleteTask(id) {
-  return api('DELETE', `/tasks/${id}`)
+  const res = await api('DELETE', `/tasks/${id}`)
+  if (res.success) notifyTasksChanged()
+  return res
 }
 
 // ─── Thùng rác ─────────────────────────────────────────
@@ -168,11 +182,15 @@ export async function getTrash(params = {}) {
 }
 
 export async function restoreTask(id) {
-  return api('POST', `/tasks/${id}/restore`)
+  const res = await api('POST', `/tasks/${id}/restore`)
+  if (res.success) notifyTasksChanged()
+  return res
 }
 
 export async function emptyTrash() {
-  return api('DELETE', '/tasks/trash')
+  const res = await api('DELETE', '/tasks/trash')
+  if (res.success) notifyTasksChanged()
+  return res
 }
 
 // POST /api/v1/tasks/{id}/complete
@@ -185,6 +203,7 @@ export async function completeTask(id) {
       completedTask: { id: completed.taskId ?? completed.id, status: 'COMPLETED' },
       nextTask: nextTask ? toTask(nextTask) : null,
     }
+    notifyTasksChanged()
   }
   return res
 }
@@ -192,7 +211,10 @@ export async function completeTask(id) {
 // POST /api/v1/tasks/{id}/reopen
 export async function reopenTask(id) {
   const res = await api('POST', `/tasks/${id}/reopen`)
-  if (res.success) res.data = toTask(res.data)
+  if (res.success) {
+    res.data = toTask(res.data)
+    notifyTasksChanged()
+  }
   return res
 }
 
@@ -201,6 +223,7 @@ export async function cancelTask(id) {
   const res = await api('POST', `/tasks/${id}/cancel`)
   if (res.success) {
     res.data = { id: Number(id), status: 'CANCELLED' }
+    notifyTasksChanged()
   }
   return res
 }

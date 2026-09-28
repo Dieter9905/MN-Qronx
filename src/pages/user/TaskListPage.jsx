@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MagnifyingGlass, Plus, Funnel, X, ArrowLeft, ArrowRight, CaretDown, Trash, ArrowUUpLeft } from '@phosphor-icons/react'
 import { getTasks, completeTask, getTrash, restoreTask, emptyTrash } from '../../services/taskService'
 import { getCategories } from '../../services/categoryService'
+import { onTasksChanged } from '../../lib/dataEvents'
 import { useToast } from '../../components/common/Toast'
 import { Skeleton, EmptyState } from '../../components/common/Feedback'
 import Button from '../../components/common/Button'
@@ -90,6 +91,14 @@ export default function TaskListPage() {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, page])
+
+  // Việc được đánh dấu xong ở nơi khác — trên hết là màn hình chuông báo thức phủ
+  // toàn màn hình — thì danh sách đang mở phải tải lại, nếu không khách quay lại
+  // vẫn thấy việc vừa làm xong nằm đó. Giữ `load` trong ref để chỉ đăng ký MỘT
+  // lần, thay vì đăng ký lại mỗi khi đổi bộ lọc.
+  const loadRef = useRef(load)
+  loadRef.current = load
+  useEffect(() => onTasksChanged(() => loadRef.current()), [])
 
   const activeFilterCount = useMemo(
     () =>

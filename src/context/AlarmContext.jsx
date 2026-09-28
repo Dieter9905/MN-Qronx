@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { getDueReminders, snoozeReminder, dismissReminder, triggerDemoAlarm } from '../services/reminderService'
+import { completeTask } from '../services/taskService'
 import { getNotificationSettings, getCustomSoundUrl } from '../services/notificationService'
 import { useAuth } from './AuthContext'
 
@@ -170,9 +171,15 @@ export function AlarmProvider({ children }) {
     }
   }, [user, fire])
 
-  const snooze = useCallback(async () => {
+  /**
+   * Hoãn nhắc nhở. Nhận số phút khách chọn NGAY TRÊN MÀN HÌNH CHUÔNG; không truyền
+   * gì thì dùng mặc định của khách (Cài đặt → Hoãn mặc định).
+   */
+  const snooze = useCallback(async (minutesOverride) => {
     if (!alarm) return null
-    const minutes = alarm.snoozeMinutes ?? settings?.defaultSnoozeMinutes ?? 10
+    const minutes = Number(minutesOverride) > 0
+      ? Number(minutesOverride)
+      : alarm.snoozeMinutes ?? settings?.defaultSnoozeMinutes ?? 10
     stopAlarmSound()
     setAlarm(null)
     // Alarm demo chỉ là mô phỏng local → không gọi API
@@ -182,6 +189,26 @@ export function AlarmProvider({ children }) {
     const res = await snoozeReminder(alarm.id, { snoozeMinutes: minutes })
     return res
   }, [alarm, settings])
+
+  /**
+   * "Đã xong việc" — hành động chính tại chỗ, vì việc làm xong đúng lúc chuông kêu
+   * là kết thúc tự nhiên nhất của cả vòng nhắc nhở.
+   *
+   * Thứ tự quan trọng: gọi máy chủ TRƯỚC, chỉ tắt chuông khi việc đã thật sự được
+   * đánh dấu xong. Nếu tắt chuông trước rồi API lỗi thì khách tưởng việc đã xong
+   * trong khi nó vẫn nằm trong danh sách — đúng loại im lặng tệ nhất.
+   *
+   * Việc hoàn thành cũng huỷ MỌI nhắc nhở của việc đó ở phía máy chủ, nên chuông
+   * thôi kêu (kể cả "nhắc dai") mà không cần gọi thêm đường tắt nhắc nhở nào.
+   */
+  const complete = useCallback(async () => {
+    if (!alarm?.task?.id) return null
+    const res = await completeTask(alarm.task.id)
+    if (!res.success) return res
+    stopAlarmSound()
+    setAlarm(null)
+    return res
+  }, [alarm])
 
   const dismiss = useCallback(async () => {
     if (!alarm) return null
@@ -209,8 +236,8 @@ export function AlarmProvider({ children }) {
   )
 
   const value = useMemo(
-    () => ({ alarm, snooze, dismiss, triggerDemo, demoLoading }),
-    [alarm, snooze, dismiss, triggerDemo, demoLoading]
+    () => ({ alarm, snooze, complete, dismiss, triggerDemo, demoLoading }),
+    [alarm, snooze, complete, dismiss, triggerDemo, demoLoading]
   )
 
   return <AlarmContext.Provider value={value}>{children}</AlarmContext.Provider>
