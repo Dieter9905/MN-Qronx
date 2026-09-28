@@ -3,14 +3,25 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 /**
  * Nhập công việc bằng GIỌNG NÓI (Web Speech API của trình duyệt).
  *
- * Vì sao dùng API của trình duyệt thay vì thu âm rồi gửi lên máy chủ: giọng nói là
- * thứ riêng tư nhất người dùng có thể đưa vào app (họ nói trong nhà, trong xe, có
- * khi cả tên người khác), mà API này trả chữ ngay trên máy — không upload, không
- * tốn hạn mức AI, không độ trễ mạng, và chạy được cả khi máy chủ đang ngủ.
+ * Vì sao dùng API của trình duyệt thay vì thu âm rồi gửi lên máy chủ MN-Qronx:
+ * không tốn hạn mức AI, không độ trễ mạng, không phải thuê thêm dịch vụ, và chạy
+ * được cả khi máy chủ đang ngủ (Render gói free).
  *
- * Giới hạn có thật, phải nói thẳng trong giao diện: Chrome/Edge/Safari (kể cả
- * Chrome trên Android) hỗ trợ; Firefox thì KHÔNG. Thiếu `isVoiceSupported()` thì
- * giao diện ẩn luôn nút mic thay vì để khách bấm rồi không có gì xảy ra.
+ * ⚠️ ĐỪNG hứa với khách là "giọng nói không rời khỏi máy". Chrome/Edge KHÔNG nhận
+ * dạng tại máy: chúng gửi audio tới dịch vụ của Google rồi trả chữ về (chỉ từ
+ * Chrome 139 mới có chế độ tại máy qua `processLocally`, và app này chưa dùng).
+ * Đó cũng chính là lý do có mã lỗi "network" bên dưới.
+ *
+ * Giới hạn có thật, phải nói thẳng trong giao diện:
+ * - Chrome / Edge / Safari (kể cả Chrome trên Android): chạy được.
+ * - Firefox: KHÔNG có API → `isVoiceSupported()` false, giao diện ẨN nút mic, vì
+ *   bấm vào sẽ không có gì xảy ra và khách tưởng app lỗi.
+ * - Chromium NHÚNG trong ứng dụng khác (Electron — gồm khung trình duyệt của app
+ *   desktop): API CÓ mặt nhưng bản dựng không kèm khoá dịch vụ nhận dạng của
+ *   Google, nên mọi phiên đều kết thúc bằng mã lỗi "network" DÙ mạng rất tốt
+ *   (electron/electron#46143). Ở đây cố ý KHÔNG ẩn nút: bấm vào sẽ nhận được câu
+ *   giải thích đúng và cách sửa, còn ẩn đi thì tính năng như biến mất mà không ai
+ *   biết vì sao — cái cần tránh là "bấm mà không có gì xảy ra", không phải nút.
  */
 
 /** Trình duyệt này có nhận dạng giọng nói không? */
@@ -21,13 +32,37 @@ export function isVoiceSupported() {
 
 // Mã lỗi của Web Speech API → câu tiếng Việt nói được việc phải làm tiếp.
 // "aborted" không có ở đây vì đó là do chính người dùng bấm dừng.
+// "network" cũng không: câu cho nó phải tính theo môi trường, xem `networkErrorMessage`.
 const ERROR_MESSAGES = {
   'not-allowed': 'Bạn chưa cho phép dùng micro. Hãy bật quyền micro cho trang này rồi thử lại.',
   'service-not-allowed': 'Trình duyệt đang chặn nhận dạng giọng nói. Hãy mở trang bằng Chrome và thử lại.',
   'audio-capture': 'Không tìm thấy micro nào đang kết nối.',
   'no-speech': 'Không nghe thấy gì. Bấm micro rồi nói gần máy hơn.',
-  network: 'Nhận dạng giọng nói cần mạng. Kiểm tra kết nối rồi thử lại.',
   'language-not-supported': 'Giọng nói tiếng Việt chưa được hỗ trợ trên máy này.',
+}
+
+/** Bản Chromium nhúng trong ứng dụng khác (Electron) — API có nhưng dịch vụ thì không. */
+function isEmbeddedChromium() {
+  if (typeof navigator === 'undefined') return false
+  return /\bElectron\//i.test(navigator.userAgent || '')
+}
+
+/**
+ * Câu cho mã lỗi "network" — mã gây hiểu nhầm nhiều nhất trong cả API này.
+ *
+ * Chrome báo "network" cho MỌI trường hợp không lấy được chữ từ dịch vụ nhận dạng
+ * của Google, kể cả khi mạng của khách hoàn toàn bình thường. Vì vậy câu cũ
+ * ("Kiểm tra kết nối rồi thử lại") đổ lỗi sai chỗ và khiến khách đi kiểm tra router
+ * trong khi nguyên nhân là trình duyệt. Ở đây tách làm ba trường hợp thật.
+ */
+function networkErrorMessage() {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return 'Máy đang không có kết nối mạng nên chưa nhận dạng được giọng nói. Khi có mạng trở lại, bấm micro và nói lại giúp tôi.'
+  }
+  if (isEmbeddedChromium()) {
+    return 'Trình duyệt đang mở app là bản Chromium nhúng trong ứng dụng khác, không có dịch vụ nhận dạng giọng nói của Google — nên báo lỗi mạng dù mạng vẫn tốt. Mở MN-Qronx bằng Chrome, Edge hoặc Safari trên máy để dùng micro; hoặc cứ gõ tay, mọi thứ khác vẫn chạy bình thường.'
+  }
+  return 'Trình duyệt không gọi được dịch vụ nhận dạng giọng nói (Chrome gửi tiếng nói tới máy chủ Google để nhận dạng, không nhận dạng tại máy). Hay gặp khi: VPN / tường lửa / tiện ích chặn quảng cáo đang chặn máy chủ Google, DNS chặn Google, hoặc đang dùng trình duyệt không phải Chrome/Edge/Safari. Mở bằng Chrome rồi bấm micro lại giúp tôi.'
 }
 
 /**
@@ -76,6 +111,12 @@ export function useVoiceInput({ onText, onError, lang = 'vi-VN' } = {}) {
       onErrorRef.current?.('Trình duyệt này không nhận dạng giọng nói. Hãy gõ tay hoặc mở bằng Chrome.')
       return
     }
+    // Chromium nhúng (Electron) không có dịch vụ nhận dạng: mở phiên chỉ để nhận
+    // đúng một lỗi "network" gây hiểu nhầm, nên nói thẳng lý do ngay từ đây.
+    if (isEmbeddedChromium()) {
+      onErrorRef.current?.(networkErrorMessage())
+      return
+    }
     if (wantRef.current) return
 
     wantRef.current = true
@@ -112,7 +153,7 @@ export function useVoiceInput({ onText, onError, lang = 'vi-VN' } = {}) {
         const code = event?.error
         // Người dùng bấm dừng, hoặc trình duyệt tự huỷ phiên → không phải lỗi
         if (code === 'aborted') return
-        const msg = ERROR_MESSAGES[code]
+        const msg = code === 'network' ? networkErrorMessage() : ERROR_MESSAGES[code]
         if (msg) {
           wantRef.current = false
           setListening(false)

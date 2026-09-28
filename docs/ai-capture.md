@@ -6,24 +6,48 @@ luồng xử lý như khi gõ tay.
 | Cách | Đường vào | Chạy ở đâu |
 | --- | --- | --- |
 | Gõ | ô nhập của trợ lý AI / Tạo nhanh | — |
-| Nói | `src/lib/useVoiceInput.js` + `components/common/VoiceButton.jsx` | Web Speech API của trình duyệt (trên máy khách) |
+| Nói | `src/lib/useVoiceInput.js` + `components/common/VoiceButton.jsx` | Web Speech API của trình duyệt (trình duyệt gửi audio tới Google rồi trả chữ về) |
 
 Có mặt ở hai chỗ: khung chat **Trợ lý AI** (`components/AiTaskChat.jsx`) và hộp thoại
 **Tạo nhanh** (`components/QuickCapture.jsx`).
 
-## Vì sao chạy TRÊN MÁY khách, không gửi lên máy chủ
+## Vì sao không tự thu âm rồi gửi lên máy chủ MN-Qronx
 
-- **Giọng nói là dữ liệu riêng tư nhất** người dùng đưa vào app: họ nói trong nhà,
-  trong xe, có khi cả tên người khác. Web Speech API trả chữ ngay trên máy — không
-  upload, không tốn hạn mức AI theo ngày, không phụ thuộc mạng tới máy chủ
-  (`api/ai/parse-tasks` có hạn mức và có thể đang ngủ).
+- Không tốn hạn mức AI theo ngày (`api/ai/parse-tasks` có hạn mức và có thể đang
+  ngủ), không có độ trễ mạng, không phải thuê thêm dịch vụ nhận dạng nào.
+
+### ⚠️ Điều KHÔNG được hứa: "giọng nói không rời khỏi máy"
+
+Bản đầu của tài liệu này ghi sai chỗ đó. Chrome/Edge **không** nhận dạng tại máy:
+chúng gửi audio tới dịch vụ của Google rồi trả chữ về tab (đó là lý do API này cần
+mạng, và cũng là lý do có mã lỗi `network`). Chỉ từ Chrome 139 mới có chế độ nhận
+dạng ngay trên máy qua `processLocally`, và **app này chưa dùng** — nên tuyệt đối
+ không dùng câu "không rời khỏi máy" trong marketing hay trong app. Nói đúng được
+phép nói: *chữ nghe được không được lưu ở đâu trong hệ thống MN-Qronx, và không tốn
+lượt AI nào của bạn*.
 
 Đổi lại phải nói thật về giới hạn:
 
-- Mic: Chrome / Edge / Safari (kể cả Chrome trên Android). **Firefox không hỗ trợ**
-  → nút mic tự ẩn, không để khách bấm vào rồi không có gì xảy ra.
+- Mic chạy trên **Chrome / Edge / Safari** (kể cả Chrome trên Android).
+- **Firefox không có API này** → nút mic tự ẩn, không để khách bấm vào rồi không có
+  gì xảy ra.
+- **Chromium nhúng trong ứng dụng khác (Electron)** — gồm khung trình duyệt của các
+  app desktop — CÓ API nhưng bản dựng không kèm khoá dịch vụ nhận dạng của Google,
+  nên mọi phiên đều kết thúc bằng lỗi `network` **dù mạng rất tốt**
+  ([electron#46143](https://github.com/electron/electron/issues/46143)). Nút mic vẫn
+  hiện ở môi trường này, và bấm vào là nhận được câu giải thích đúng + cách sửa
+  (mở bằng Chrome/Edge/Safari).
 - Nghe sai chính tả, sai dấu là chuyện thường → chữ luôn đổ vào ô nhập để khách đọc
   lại, sửa, rồi mới tạo.
+
+### Mã lỗi `network` không có nghĩa là "mạng của khách hỏng"
+
+Chrome dùng đúng một mã `network` cho mọi ca không lấy được chữ từ dịch vụ nhận
+ dạng, kể cả khi mạng bình thường (VPN / tường lửa / tiện ích chặn quảng cáo đang
+chặn máy chủ Google, DNS chặn Google, hoặc trình duyệt là bản Chromium nhúng). Vì vậy
+`networkErrorMessage()` trong `src/lib/useVoiceInput.js` tách thành ba câu khác nhau:
+đang thật sự offline · Chromium nhúng · còn lại. Câu cũ "Kiểm tra kết nối rồi thử
+lại" đã bị bỏ vì nó đổ lỗi sai chỗ và đẩy khách đi kiểm tra router.
 
 ## Luật quan trọng nhất: KHÔNG tự tạo công việc
 

@@ -63,10 +63,13 @@ chính khách). Luật ở `backend/src/services/plannerService.js`.
 > làm” cho một việc lớn đã có sẵn trong Trợ lý AI.
 >
 > **Bổ sung (28/09/2026): nói là một đường vào Trợ lý AI, không phải tính năng mới.**
-> Khách Pro có thể nói một câu, chữ nghe được đổ vào đúng ô nhập như khi gõ tay — chạy
-> trên máy khách (Web Speech API) nên giọng nói của khách không rời khỏi máy, không tốn
-> lượt AI, và không cần thuê dịch vụ nào. Chi tiết + giới hạn thật (Firefox không có
-> mic) ở `docs/ai-capture.md`.
+> Khách Pro có thể nói một câu, chữ nghe được đổ vào đúng ô nhập như khi gõ tay — dùng
+> Web Speech API của trình duyệt nên không tốn lượt AI, không có độ trễ mạng, và không
+> cần thuê thêm dịch vụ nhận dạng nào. **Đừng quảng cáo "giọng nói không rời khỏi
+> máy"**: Chrome/Edge gửi audio tới dịch vụ nhận dạng của Google rồi mới trả chữ về
+> (chỉ Chrome 139+ mới nhận dạng tại máy, app chưa dùng). Câu được phép nói: *chữ nghe
+> được không được MN-Qronx lưu ở đâu*. Giới hạn thật (Firefox không có mic; Chromium
+> nhúng như Electron báo lỗi mạng dù mạng tốt) ở `docs/ai-capture.md`.
 >
 > **Quyết định (28/09/2026): bỏ đường vào bằng ẢNH (OCR), chỉ giữ mic.** Bản thử cho
 > chụp / kéo–thả / dán ảnh để đọc chữ (tesseract.js chạy trên máy khách) đã bị gỡ. Lý do
