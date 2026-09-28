@@ -62,16 +62,25 @@ chính khách). Luật ở `backend/src/services/plannerService.js`.
 > việc không có thật — điều tối quan trọng với một app nhắc việc. Phần “gợi ý các bước
 > làm” cho một việc lớn đã có sẵn trong Trợ lý AI.
 >
-> **Bổ sung (28/09/2026): nói và chụp ảnh là hai đường vào Trợ lý AI, không phải tính
-> năng mới.** Khách Pro có thể nói một câu hoặc chụp tờ giấy / ảnh chụp màn hình, chữ
-> đọc được đổ vào đúng ô nhập như khi gõ tay — cả hai chạy trên máy khách (mic dùng
-> Web Speech API, ảnh dùng tesseract.js) nên giọng nói và ảnh của khách không rời khỏi
-> máy, không tốn lượt AI, và không cần thuê dịch vụ nhìn ảnh. Chi tiết + giới hạn thật
-> (chữ viết tay đọc kém, Firefox không có mic) ở `docs/ai-capture.md`.
+> **Bổ sung (28/09/2026): nói là một đường vào Trợ lý AI, không phải tính năng mới.**
+> Khách Pro có thể nói một câu, chữ nghe được đổ vào đúng ô nhập như khi gõ tay — chạy
+> trên máy khách (Web Speech API) nên giọng nói của khách không rời khỏi máy, không tốn
+> lượt AI, và không cần thuê dịch vụ nào. Chi tiết + giới hạn thật (Firefox không có
+> mic) ở `docs/ai-capture.md`.
+>
+> **Quyết định (28/09/2026): bỏ đường vào bằng ẢNH (OCR), chỉ giữ mic.** Bản thử cho
+> chụp / kéo–thả / dán ảnh để đọc chữ (tesseract.js chạy trên máy khách) đã bị gỡ. Lý do
+> không phải kỹ thuật mà là chất lượng: chữ đọc ra chỉ đúng với ảnh chữ in cỡ lớn, còn
+> chữ viết tay, ảnh nghiêng, thiếu sáng thì sai nhiều — mà đó lại đúng là thứ khách hay
+> chụp, và một công việc sai giờ tệ hơn là không có công việc nào. Cái giá đi kèm cũng
+> không nhỏ: ~4 MB bộ nhận dạng tải về máy khách ở lần đầu, cộng một mớ luật riêng (nối
+> dòng bị xé, cắt dòng bị gộp) chỉ để bù lỗi OCR. Mic giữ lại vì không tải gì thêm và
+> chữ hiện ngay trong ô nhập cho khách sửa.
 >
 > Chú ý khi bán: **đây là đường vào, không phải bộ não.** Nó không làm AI giỏi hơn;
-> nó chỉ bỏ bước gõ. Nên vẫn không được hứa “AI hiểu ảnh” — chỉ được nói “chụp tờ giấy
-> là thành công việc, chữ in đọc tốt, chữ viết tay thì nên gõ”.
+> nó chỉ bỏ bước gõ. Nên không được hứa “AI hiểu ảnh” (không còn đường ảnh nào), và
+> cũng không nên hứa mic nghe đúng 100% — chữ nghe được luôn cần khách liếc lại trước
+> khi bấm tạo.
 
 **Điểm bán thứ tư: báo cáo tuần gửi email sáng thứ 2.** Hai tính năng trên chỉ có giá
 trị nếu khách NHỚ mở app; thư tuần làm việc đó thay khách: tuần rồi họ xong bao nhiêu

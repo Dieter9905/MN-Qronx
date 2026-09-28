@@ -9,8 +9,6 @@ import { createTask } from '../services/taskService'
 import { getCategories } from '../services/categoryService'
 import { parseNaturalLanguageTasks, suggestTaskBreakdown, fetchAIParseTasks } from '../services/aiService'
 import VoiceButton from './common/VoiceButton'
-import ImageOcrButton, { imageFileFromDrop, imageFileFromClipboard } from './common/ImageOcrButton'
-import { useImageOcr } from '../lib/useImageOcr'
 
 const PRIORITY_DOT = { LOW: 'bg-slate-400', MEDIUM: 'bg-blue-500', HIGH: 'bg-amber-500', URGENT: 'bg-rose-500' }
 const PRIORITY_LABEL = { LOW: 'Thấp', MEDIUM: 'Trung bình', HIGH: 'Cao', URGENT: 'Khẩn cấp' }
@@ -28,9 +26,8 @@ export default function QuickCapture({ onClose, onCreated }) {
   const [parsing, setParsing] = useState(false)
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [suggestedSubtasks, setSuggestedSubtasks] = useState([])
-  // Chữ máy đang nghe dở (mic) và trạng thái kéo ảnh vào — hiện ngay cạnh ô nhập
+  // Chữ máy đang nghe dở (mic) — hiện ngay cạnh ô nhập
   const [voiceHint, setVoiceHint] = useState('')
-  const [dropActive, setDropActive] = useState(false)
 
   const [title, setTitle] = useState('')
   const [categoryId, setCategoryId] = useState('')
@@ -97,35 +94,11 @@ export default function QuickCapture({ onClose, onCreated }) {
     }
   }, [inputText, mode, categories, applyParsedTasks])
 
-  // ── Nói và chụp ảnh: hai đường vào CÙNG ô nhập ───────────────
-  // Chữ từ mic và chữ đọc từ ảnh đều đổ vào `inputText`, rồi đi qua đúng bước
-  // phân tích + xem trước như khi gõ tay. Nhờ vậy ảnh/giọng nói không có luật
-  // riêng nào để lệch, và khách vẫn đọc lại được trước khi tạo.
+  // ── Nói: một đường vào CÙNG ô nhập ───────────────────────────
+  // Chữ từ mic đổ vào `inputText`, rồi đi qua đúng bước phân tích + xem trước như
+  // khi gõ tay. Nhờ vậy giọng nói không có luật riêng nào để lệch, và khách vẫn
+  // đọc lại được trước khi tạo.
   const onVoiceText = (text) => setInputText((prev) => (prev ? `${prev} ${text}` : text))
-
-  const { busy: ocrBusy, status: ocrStatus, run: runOcr } = useImageOcr({
-    onText: ({ text, lines, confidence }) => {
-      setInputText(text)
-      if (confidence && confidence < 60) {
-        toast.info(`Ảnh hơi mờ (độ rõ ${confidence}%) nên chữ đọc được có thể sai — sửa lại trong ô nhập rồi tạo.`)
-      } else {
-        toast.success(`Đã đọc ${lines.length} dòng từ ảnh — kiểm tra lại trong ô nhập nhé.`)
-      }
-    },
-    onError: (message) => toast.error(message),
-  })
-
-  // Kéo ảnh vào hộp thoại (ảnh thời khoá biểu, tờ giấy nhớ, ảnh chụp tin nhắn…).
-  // Chỉ chặn mặc định khi thật sự có tệp, để không nuốt thao tác kéo khác.
-  const onDropImage = (e) => {
-    if (![...(e.dataTransfer?.types || [])].includes('Files')) return
-    // Chỉ có ý nghĩa ở chế độ AI: chế độ Form là điền từng ô, ảnh đọc ra chữ
-    // cũng không biết đặt vào đâu.
-    if (mode !== 'ai' || !isPro) return
-    e.preventDefault()
-    setDropActive(false)
-    runOcr(imageFileFromDrop(e))
-  }
 
   const handleSuggestBreakdown = useCallback(() => {
     if (title) {
@@ -258,25 +231,7 @@ export default function QuickCapture({ onClose, onCreated }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-navy-900/60 backdrop-blur-sm sm:items-center dark:bg-black/60">
       <div className="relative mx-4 w-full max-w-lg animate-slide-up">
-        <div
-          className={`overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-navy-100 dark:bg-slate-900 dark:ring-slate-700 ${dropActive ? 'ring-2 ring-violet-400' : ''}`}
-          onDragOver={(e) => {
-            if (![...(e.dataTransfer?.types || [])].includes('Files')) return
-            e.preventDefault()
-            if (mode === 'ai' && isPro) setDropActive(true)
-          }}
-          onDragLeave={() => setDropActive(false)}
-          onDrop={onDropImage}
-          // Dán ảnh chụp màn hình (Ctrl+V) — chỉ nhận khi clipboard có ẢNH, dán
-          // chữ vẫn là việc bình thường của ô nhập
-          onPaste={(e) => {
-            if (mode !== 'ai' || !isPro) return
-            const file = imageFileFromClipboard(e)
-            if (!file) return
-            e.preventDefault()
-            runOcr(file)
-          }}
-        >
+        <div className="overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-navy-100 dark:bg-slate-900 dark:ring-slate-700">
           {/* Header */}
           <div className="flex items-center justify-between bg-brand-gradient px-5 py-4">
             <div className="flex items-center gap-2 text-white">
@@ -362,37 +317,19 @@ export default function QuickCapture({ onClose, onCreated }) {
                 />
               </div>
 
-              {/* Nói hoặc chụp: cùng đổ chữ vào ô trên, nên khách luôn đọc lại được
-                  trước khi tạo — OCR và giọng nói đều sai được vài chữ. */}
+              {/* Nói: chữ đổ vào ô trên, nên khách luôn đọc lại được trước khi tạo
+                  — giọng nói sai được vài chữ. */}
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <VoiceButton
                   onText={onVoiceText}
                   onInterim={setVoiceHint}
                   onError={(message) => toast.error(message)}
-                  disabled={ocrBusy}
                   label={t.aiVoiceLabel}
                 />
-                <ImageOcrButton
-                  onFile={runOcr}
-                  busy={ocrBusy}
-                  label={t.aiImageLabel}
-                />
                 <span className="flex-1 text-[11px] font-medium leading-snug text-navy-400 dark:text-slate-500">
-                  {t.aiVoiceImageHint}
+                  {t.aiVoiceHint}
                 </span>
               </div>
-
-              {dropActive && (
-                <p className="mt-2 rounded-xl bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700 ring-1 ring-inset ring-violet-200 dark:bg-violet-900/30 dark:text-violet-300 dark:ring-violet-800">
-                  {t.aiDropHint}
-                </p>
-              )}
-              {ocrStatus && (
-                <p className="mt-2 flex items-center gap-2 rounded-xl bg-navy-50 px-3 py-2 text-xs font-semibold text-blue-600 ring-1 ring-inset ring-navy-100 dark:bg-slate-700 dark:text-blue-300 dark:ring-slate-600">
-                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-400/30 border-t-blue-500" />
-                  {ocrStatus}
-                </p>
-              )}
               {voiceHint && (
                 <p className="mt-2 truncate rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-600 ring-1 ring-inset ring-rose-100 dark:bg-rose-900/20 dark:text-rose-300 dark:ring-rose-900">
                   🎙 {t.aiListening}: “{voiceHint}”
@@ -628,10 +565,8 @@ const app_text = {
     aiSuggestedSteps: 'Các bước gợi ý:',
     aiCreateTask: 'Tạo bằng AI',
     aiVoiceLabel: 'Nói để tạo công việc',
-    aiImageLabel: 'Chụp hoặc chọn ảnh có chữ',
-    aiVoiceImageHint: 'Nói, hoặc chụp ảnh tờ giấy / ảnh chụp màn hình — AI đọc rồi tách thành công việc.',
+    aiVoiceHint: 'Bấm micro rồi nói một câu — chữ hiện ra trong ô để bạn đọc lại trước khi tạo.',
     aiListening: 'Đang nghe',
-    aiDropHint: 'Thả ảnh vào đây để AI đọc chữ',
   },
   en: {
     quickCapture: 'Quick Capture',
@@ -650,9 +585,7 @@ const app_text = {
     aiSuggestedSteps: 'Suggested steps:',
     aiCreateTask: 'Create with AI',
     aiVoiceLabel: 'Speak to create a task',
-    aiImageLabel: 'Take or pick a photo with text',
-    aiVoiceImageHint: 'Speak, or shoot a note / screenshot — AI reads it and splits it into tasks.',
+    aiVoiceHint: 'Tap the mic and say one sentence — the text appears in the box so you can check it before saving.',
     aiListening: 'Listening',
-    aiDropHint: 'Drop an image here and AI will read the text',
   },
 }

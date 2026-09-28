@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Brain, PaperPlaneTilt, Sparkle, Trash, Plus, CheckCircle, ImageSquare } from '@phosphor-icons/react'
+import { Brain, PaperPlaneTilt, Sparkle, Trash, Plus, CheckCircle } from '@phosphor-icons/react'
 import { useToast } from './common/Toast'
 import { createTask, getAllTasks, completeTask, deleteTask } from '../services/taskService'
 import { TASK_COMMAND, detectTaskCommand, findTaskMatches, doneMessage, noMatchMessage } from '../lib/aiCommand'
@@ -8,8 +8,6 @@ import { getCategories } from '../services/categoryService'
 import { parseNaturalLanguageTasks, fetchAIParseTasks, suggestTaskBreakdown } from '../services/aiService'
 import { PRIORITY, REPEAT_TYPE_LIST } from '../lib/constants'
 import VoiceButton from './common/VoiceButton'
-import ImageOcrButton, { imageFileFromDrop, imageFileFromClipboard } from './common/ImageOcrButton'
-import { useImageOcr } from '../lib/useImageOcr'
 
 function toLocalInputValue(date) {
   if (!date) return ''
@@ -82,10 +80,9 @@ export default function AiTaskChat({ onTasksCreated }) {
   const [busy, setBusy] = useState(false)
   const [creating, setCreating] = useState(false)
   const [usedAI, setUsedAI] = useState(null)
-  // Chữ máy đang nghe dở (mic) và trạng thái đọc ảnh — hiện ngay dưới ô nhập để
-  // khách biết máy có nghe/đọc được không, thay vì ngồi đoán.
+  // Chữ máy đang nghe dở (mic) — hiện ngay dưới ô nhập để khách biết máy có nghe
+  // được không, thay vì ngồi đoán.
   const [voiceHint, setVoiceHint] = useState('')
-  const [dropActive, setDropActive] = useState(false)
   const bottomRef = useRef(null)
   // Việc vừa được nhắc/tạo trong chat — dùng cho câu lệnh kiểu "hoàn thành việc đó"
   // Khôi phục "việc vừa nhắc" từ lịch sử đã lưu để câu "hoàn thành việc đó"
@@ -303,41 +300,11 @@ export default function AiTaskChat({ onTasksCreated }) {
     })
   }
 
-  // ── Nói và chụp: hai đường vào CÙNG một luồng xử lý ──────────
-  // Chữ từ mic và chữ đọc từ ảnh đều đi tiếp qua handleSend như khách gõ tay.
-  // Không làm đường riêng cho giọng nói/ảnh: đường riêng là một chỗ nữa để lệch
-  // hành vi (quên nhận câu lệnh, quên xác nhận trước khi tạo).
+  // ── Nói: một đường vào CÙNG một luồng xử lý ──────────────────
+  // Chữ từ mic đi tiếp qua handleSend như khách gõ tay. Không làm đường riêng
+  // cho giọng nói: đường riêng là một chỗ nữa để lệch hành vi (quên nhận câu
+  // lệnh, quên xác nhận trước khi tạo).
   const onVoiceText = (text) => setInput((prev) => (prev ? `${prev} ${text}` : text))
-
-  const { busy: ocrBusy, status: ocrStatus, run: runOcr } = useImageOcr({
-    onText: ({ text, lines, confidence }) => {
-      if (confidence && confidence < 60) {
-        toast.info(`Ảnh hơi mờ (độ rõ ${confidence}%) nên chữ đọc được có thể sai — xem lại tin nhắn vừa gửi rồi sửa nếu cần.`)
-      } else {
-        toast.success(`Đã đọc ${lines.length} dòng từ ảnh. Kiểm tra lại rồi bấm Tạo nhé.`)
-      }
-      handleSend(text)
-    },
-    onError: (message) => toast.error(message),
-  })
-
-  // Kéo ảnh vào khung chat. Chỉ chặn mặc định khi thật sự có ảnh, nếu không sẽ
-  // nuốt luôn thao tác kéo chữ/đường dẫn vào trang.
-  const onChatDrop = (e) => {
-    if (![...(e.dataTransfer?.types || [])].includes('Files')) return
-    e.preventDefault()
-    setDropActive(false)
-    runOcr(imageFileFromDrop(e))
-  }
-
-  // Dán ảnh chụp màn hình (Ctrl+V). Chỉ nhận khi clipboard có ẢNH — dán chữ vẫn
-  // là việc của ô nhập.
-  const onChatPaste = (e) => {
-    const file = imageFileFromClipboard(e)
-    if (!file) return
-    e.preventDefault()
-    runOcr(file)
-  }
 
   const updateTask = (msgId, idx, patch) => {
     setMessages((ms) => ms.map((m) => (m.id === msgId ? { ...m, tasks: m.tasks.map((t, i) => (i === idx ? { ...t, ...patch } : t)) } : m)))
@@ -426,17 +393,7 @@ export default function AiTaskChat({ onTasksCreated }) {
   }
 
   return (
-    <section
-      className={`card overflow-hidden dark:bg-slate-800 ${dropActive ? 'ring-2 ring-violet-400' : ''}`}
-      onDragOver={(e) => {
-        if (![...(e.dataTransfer?.types || [])].includes('Files')) return
-        e.preventDefault()
-        setDropActive(true)
-      }}
-      onDragLeave={() => setDropActive(false)}
-      onDrop={onChatDrop}
-      onPaste={onChatPaste}
-    >
+    <section className="card overflow-hidden dark:bg-slate-800">
       <div className="flex items-center justify-between border-b border-navy-100 bg-gradient-to-r from-violet-50 to-fuchsia-50 px-5 py-4 dark:border-slate-700 dark:from-violet-900/20 dark:to-fuchsia-900/20">
         <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
           <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-brand-gradient text-white">
@@ -654,19 +611,8 @@ export default function AiTaskChat({ onTasksCreated }) {
       </div>
 
       <div className="border-t border-navy-100 px-4 py-3 dark:border-slate-700">
-        {/* Trạng thái nghe / đọc ảnh: nằm ngay trên ô nhập vì đó là chỗ mắt đang
-            nhìn khi vừa bấm micro hoặc vừa chọn ảnh. */}
-        {dropActive && (
-          <p className="mb-2 flex items-center gap-2 rounded-xl bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700 ring-1 ring-inset ring-violet-200 dark:bg-violet-900/30 dark:text-violet-300 dark:ring-violet-800">
-            <ImageSquare size={14} weight="bold" /> Thả ảnh vào đây để AI đọc chữ và tách thành công việc
-          </p>
-        )}
-        {ocrStatus && (
-          <p className="mb-2 flex items-center gap-2 rounded-xl bg-navy-50 px-3 py-2 text-xs font-semibold text-violet-600 ring-1 ring-inset ring-navy-100 dark:bg-slate-700 dark:text-violet-300 dark:ring-slate-600">
-            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-violet-400/30 border-t-violet-500" />
-            {ocrStatus}
-          </p>
-        )}
+        {/* Trạng thái nghe: nằm ngay trên ô nhập vì đó là chỗ mắt đang nhìn khi
+            vừa bấm micro. */}
         {voiceHint && (
           <p className="mb-2 truncate rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-600 ring-1 ring-inset ring-rose-100 dark:bg-rose-900/20 dark:text-rose-300 dark:ring-rose-900">
             🎙 Đang nghe: “{voiceHint}”
@@ -701,13 +647,7 @@ export default function AiTaskChat({ onTasksCreated }) {
             onText={onVoiceText}
             onInterim={setVoiceHint}
             onError={(message) => toast.error(message)}
-            disabled={busy || creating || ocrBusy}
-          />
-          <ImageOcrButton
-            onFile={runOcr}
-            busy={ocrBusy}
             disabled={busy || creating}
-            label="Chụp hoặc chọn ảnh có chữ (cũng kéo–thả hoặc dán ảnh được)"
           />
           <button
             type="submit"
