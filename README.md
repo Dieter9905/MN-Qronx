@@ -6,11 +6,16 @@ Website SPA của **MN-Qronx** (trước đây là TaskAlarm theo tài liệu BA
 
 | Tài liệu | Nội dung |
 |---|---|
-| `BA/01_TaskAlarm_Business_Analysis.md` | Nghiệp vụ, yêu cầu chức năng (FR-01 → FR-31), business rules |
-| `BA/05_TaskAlarm_API_Specification.md` | Quy ước API `/api/v1/**` và envelope chuẩn |
-| `BA/06_TaskAlarm_Wireframe_Specification.md` | Danh sách màn hình (SCR-G-* / SCR-U-* / SCR-A-*) |
-| `BA/07_TaskAlarm_Architecture.md` | Kiến trúc hệ thống, stack công nghệ |
-| `BA/taskalarm_postgresql_schema.sql` / `taskalarm_sqlserver_schema.sql` | Schema cơ sở dữ liệu |
+| [`BA/01_MN-Qronx_Business_Analysis.md`](BA/01_MN-Qronx_Business_Analysis.md) | Nghiệp vụ, yêu cầu chức năng (FR-01 → FR-71), business rules |
+| [`BA/02_MN-Qronx_Diagrams.md`](BA/02_MN-Qronx_Diagrams.md) | Use Case & Activity Diagram |
+| [`BA/03_MN-Qronx_ERD.md`](BA/03_MN-Qronx_ERD.md) | ERD 27 model (theo Prisma) |
+| [`BA/04_MN-Qronx_database_design.md`](BA/04_MN-Qronx_database_design.md) | Cơ sở dữ liệu, sao lưu/khôi phục |
+| [`BA/05_MN-Qronx_API_Specification.md`](BA/05_MN-Qronx_API_Specification.md) | Quy ước API `/api/v1/**` và envelope chuẩn |
+| [`BA/06_MN-Qronx_Wireframe_Specification.md`](BA/06_MN-Qronx_Wireframe_Specification.md) | Danh sách màn hình (SCR-G-* / SCR-U-* / SCR-A-*) |
+| [`BA/07_MN-Qronx_Architecture.md`](BA/07_MN-Qronx_Architecture.md) | Kiến trúc hệ thống, stack công nghệ |
+| [`BA/08_MN-Qronx_Backend_Implementation_Plan.md`](BA/08_MN-Qronx_Backend_Implementation_Plan.md) | Kế hoạch & trạng thái backend |
+| [`BA/09_MN-Qronx_Technical_Spec.md`](BA/09_MN-Qronx_Technical_Spec.md) | Đặc tả kỹ thuật backend theo module |
+| [`BA/mn-qronx_postgresql_schema.sql`](BA/mn-qronx_postgresql_schema.sql) / [`BA/mn-qronx_sqlserver_schema.sql`](BA/mn-qronx_sqlserver_schema.sql) | Schema SQL tham chiếu |
 
 ## Công nghệ
 
@@ -22,7 +27,7 @@ Website SPA của **MN-Qronx** (trước đây là TaskAlarm theo tài liệu BA
 | Icons | Phosphor (`@phosphor-icons/react`) |
 | Font | Plus Jakarta Sans (Google Fonts) |
 | State | Context API (`AuthContext`, `AlarmContext`) |
-| Data | Mock service layer trên `localStorage` (mô phỏng REST API, không cần backend) |
+| Data | REST API thật (`/api/v1/**`) qua `src/services/apiClient.js`; backend Express + Prisma nằm trong [`backend/`](backend/) |
 
 ## Chạy thử
 
@@ -65,26 +70,29 @@ Có thể đăng ký tài khoản mới ngay trên trang `/register`.
 │   │   ├── AuthContext.jsx    # Đăng nhập/đăng xuất, phiên JWT (giả)
 │   │   └── AlarmContext.jsx   # Poll reminder đến hạn, phát âm thanh, hoãn/tắt
 │   ├── pages/
-│   │   ├── guest/       # Landing, Đăng nhập, Đăng ký, Quên/Đặt lại mật khẩu
-│   │   ├── user/        # Dashboard, Công việc, Chi tiết, Form, Lịch, Danh mục, …
-│   │   └── admin/       # Dashboard hệ thống, Quản lý người dùng
-│   ├── services/        # Lớp gọi API mô phỏng (auth, task, reminder, device…)
-│   └── lib/             # db.js (seed + localStorage), constants, format thời gian VN
-├── public/              # favicon
+│   │   ├── guest/       # Landing, Đăng nhập, Đăng ký, Quên/Đặt lại mật khẩu, Bảng giá, OAuth
+│   │   ├── user/        # Dashboard, Công việc, Chi tiết, Form, Lịch, Danh mục, Gói & thanh toán,
+│   │   │                # Trợ lý AI, Điểm thưởng, Báo cáo, Kế hoạch tuần, Việc được giao, Cả nhà, Hỗ trợ…
+│   │   └── admin/       # Dashboard hệ thống, Quản lý người dùng, Đơn hàng, Hỗ trợ
+│   ├── services/        # apiClient (REST thật) + service theo module (auth, task, billing…)
+│   └── lib/             # constants, format, push, useCachedQuery…
+├── backend/             # REST API (Express + Prisma) – xem BA/07 và BA/08
+├── public/              # favicon, manifest.json, sw.js (PWA)
 ├── vercel.json          # Cấu hình deploy Vercel
 └── package.json         # App Vite React ở root
 ```
 
-## Tính năng chính (theo BA)
+## Tính năng chính
 
-- **Guest**: trang giới thiệu, đăng ký, đăng nhập, quên/đặt lại mật khẩu.
-- **User**: dashboard cá nhân; CRUD công việc + việc con + nhắc nhở (tối đa 5); lặp lại Ngày/Tuần/Tháng;
-  lịch Ngày/Tuần/Tháng; danh mục (màu, ẩn/hiện); tìm kiếm & lọc; lịch sử thông báo;
-  cài đặt thông báo (âm thanh, hoãn mặc định, rung); quản lý thiết bị; hồ sơ; đổi mật khẩu.
-- **Báo thức (cốt lõi)**: bấm chuông ⏰ trên header để mô phỏng báo thức toàn màn hình –
-  âm thanh Web Audio, màu nền theo mức ưu tiên, Hoãn (tối đa 3 lần) / Tắt; polling reminder
-  đến hạn mỗi 20 giây.
-- **Admin**: dashboard hệ thống (thống kê + biểu đồ 7 ngày), quản lý người dùng (khóa/mở khóa) – không xem nội dung công việc của User (BR-19).
+- **Guest**: trang giới thiệu, bảng giá, đăng ký (xác thực email), đăng nhập (mật khẩu/Google), quên & đặt lại mật khẩu.
+- **User**: dashboard cá nhân; công việc + việc con + nhắc nhở (số lượng theo gói); lặp lại Ngày/Tuần (chọn thứ)/Tháng;
+  thùng rác 30 ngày có khôi phục; lịch Ngày/Tuần/Tháng; danh mục (màu, ẩn/hiện); tìm kiếm & lọc;
+  lịch sử thông báo; cài đặt thông báo & âm thanh riêng; thiết bị; hồ sơ; đổi mật khẩu;
+  xuất lịch `.ics`; trợ lý AI (hạn mức theo gói); điểm thưởng & mã mời; chat hỗ trợ.
+- **Báo thức (cốt lõi)**: overlay toàn màn hình – âm thanh Web Audio, màu nền theo mức ưu tiên,
+  Hoãn (tối đa 3 lần) / Tắt; gửi **Web Push** để chuông kêu cả khi đã đóng tab; gói Pro có **nhắc dai** tới khi xác nhận.
+- **Gói trả phí**: Miễn phí / Plus / Pro / Pro Gia đình – thanh toán VietQR, dùng thử 7 ngày, đổi điểm, giao việc & luân phiên (Pro), báo cáo năng suất, kế hoạch tuần.
+- **Admin**: dashboard hệ thống, quản lý người dùng (tạo/khóa/mở/đổi gói/xóa), đối soát đơn & cấu hình nhận tiền, trả lời hỗ trợ – không xem nội dung công việc của User (BR-58).
 
 ## Quy tắc UX áp dụng (theo skill ui-ux-pro-max)
 

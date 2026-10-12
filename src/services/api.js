@@ -1,5 +1,5 @@
 // Mô phỏng tầng HTTP: envelope chuẩn { success, message, data } / { success, message, errors }
-// theo API Specification (05_TaskAlarm_API_Specification.md)
+// theo API Specification (BA/05_MN-Qronx_API_Specification.md)
 
 import { getDb, getSession } from '../lib/db'
 
