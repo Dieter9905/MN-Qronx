@@ -1,0 +1,50 @@
+erDiagram
+    CATEGORY {
+        int categoryId PK
+        int userId FK
+        string categoryName
+        string colorCode
+        bool isActive
+    }
+    TASK {
+        int taskId PK
+        int userId FK
+        int categoryId FK "tùy chọn"
+        int parentTaskId FK "task lần lặp kế tiếp"
+        string title
+        datetime dueAt
+        enum status "TODO | IN_PROGRESS | COMPLETED | CANCELLED"
+        enum priority "LOW | MEDIUM | HIGH | URGENT"
+        enum repeatType "NONE | DAILY | WEEKLY | MONTHLY"
+        int turnAssigneeId "đến lượt ai xử lý"
+        datetime deletedAt "soft delete"
+    }
+    SUBTASK {
+        int subtaskId PK
+        int taskId FK
+        string content
+        bool isCompleted
+        int displayOrder
+    }
+    REMINDER {
+        int reminderId PK
+        int taskId FK
+        datetime remindAt
+        enum status "SCHEDULED -> TRIGGERED -> SNOOZED/DISMISSED/CANCELLED"
+        int snoozeCount
+        int nagCount
+    }
+    TASK_SHARE {
+        int shareId PK
+        int taskId FK
+        int assigneeId FK "người nhận việc"
+        int sharedById FK "người giao"
+        datetime doneAt
+    }
+    USER ||--o{ CATEGORY : "sở hữu"
+    USER ||--o{ TASK : "tạo"
+    CATEGORY ||--o{ TASK : "phân loại"
+    TASK ||--o{ SUBTASK : "chứa"
+    TASK ||--o{ REMINDER : "được nhắc bởi"
+    TASK ||--o{ TASK_SHARE : "giao cho"
+    TASK ||--o{ TASK : "sinh ra lần lặp kế tiếp"

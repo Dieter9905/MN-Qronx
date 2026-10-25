@@ -1,0 +1,43 @@
+erDiagram
+    DEVICE {
+        int deviceId PK
+        int userId FK
+        string deviceToken UK
+        enum platform "WEB | ANDROID | IOS"
+        bool isActive
+    }
+    WEB_PUSH_SUBSCRIPTION {
+        int subscriptionId PK
+        int userId FK
+        string endpoint UK
+        string p256dh
+        string auth
+        datetime lastUsedAt
+    }
+    NOTIFICATION_SETTING {
+        int notificationSettingId PK
+        int userId FK, UK "1 người 1 cài đặt"
+        string alarmSound
+        int defaultSnoozeMinutes
+        bool vibrationEnabled
+    }
+    NOTIFICATION_LOG {
+        int notificationLogId PK
+        int reminderId FK
+        int deviceId FK "nullable"
+        enum action "SENT | SNOOZED | DISMISSED"
+        datetime sentAt
+    }
+    CUSTOM_SOUND {
+        int customSoundId PK
+        int userId FK
+        string name
+        string mimeType
+        binary data "nội dung mp3"
+    }
+    USER ||--o{ DEVICE : "đăng ký thiết bị"
+    USER ||--o{ WEB_PUSH_SUBSCRIPTION : "đăng ký web push"
+    USER ||--|| NOTIFICATION_SETTING : "có cài đặt chung"
+    USER ||--o{ CUSTOM_SOUND : "tải âm thanh riêng"
+    DEVICE ||--o{ NOTIFICATION_LOG : "nhận thông báo"
+    REMINDER ||--o{ NOTIFICATION_LOG : "phát sinh"

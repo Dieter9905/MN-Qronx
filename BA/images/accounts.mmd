@@ -1,0 +1,41 @@
+erDiagram
+    USER {
+        int userId PK
+        int roleId FK
+        string fullName
+        string email UK
+        string phoneNumber
+        string googleId UK "đăng nhập Google"
+        string avatarUrl
+        enum plan "FREE | PLUS | PRO | BUSINESS"
+        int points
+        string inviteCode UK
+        datetime planExpiresAt
+    }
+    ROLE {
+        int roleId PK
+        string roleName UK "USER | ADMIN"
+        string description
+    }
+    REFRESH_TOKEN {
+        int tokenId PK
+        int userId FK
+        string token UK
+        datetime expiresAt
+    }
+    PASSWORD_RESET_REQUEST {
+        int resetRequestId PK
+        int userId FK
+        string resetToken UK
+        datetime usedAt
+    }
+    EMAIL_VERIFICATION_CODE {
+        int emailVerificationId PK
+        string email "trỏ theo email, chưa cần user có sẵn"
+        string code "6 chữ số"
+        datetime usedAt
+    }
+    ROLE ||--o{ USER : "1 vai trò - nhiều người dùng"
+    USER ||--o{ REFRESH_TOKEN : "giữ phiên (refresh token)"
+    USER ||--o{ PASSWORD_RESET_REQUEST : "yêu cầu đặt lại mật khẩu"
+    USER ||--o{ EMAIL_VERIFICATION_CODE : "mã xác thực email (theo email)"

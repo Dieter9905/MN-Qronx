@@ -1,0 +1,27 @@
+erDiagram
+    SUPPORT_CONVERSATION {
+        int supportConversationId PK
+        int userId FK, UK "mỗi người 1 hội thoại"
+        enum status "OPEN | RESOLVED"
+        string lastMessagePreview
+        int unreadForAdmin
+        int unreadForUser
+    }
+    SUPPORT_MESSAGE {
+        int supportMessageId PK
+        int conversationId FK
+        enum senderRole "USER | ADMIN"
+        int authorId FK
+        text body
+        datetime readByUserAt
+        datetime readByAdminAt
+    }
+    SUPPORT_ATTACHMENT {
+        int supportAttachmentId PK
+        int messageId FK
+        string mimeType
+        binary data
+    }
+    USER ||--|| SUPPORT_CONVERSATION : "có hội thoại riêng"
+    SUPPORT_CONVERSATION ||--o{ SUPPORT_MESSAGE : "chứa tin nhắn"
+    SUPPORT_MESSAGE ||--o{ SUPPORT_ATTACHMENT : "đính kèm ảnh"

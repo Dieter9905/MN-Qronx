@@ -1,0 +1,51 @@
+erDiagram
+    SUBSCRIPTION {
+        int subscriptionId PK
+        int userId FK
+        enum plan "FREE | PLUS | PRO | BUSINESS"
+        enum cycle "MONTHLY | YEARLY"
+        enum provider "VIETQR | WEBHOOK | MOMO | PLAY | ADMIN | TRIAL | REWARD | BUSINESS"
+        enum status "ACTIVE | EXPIRED | CANCELLED"
+        datetime startedAt
+        datetime expiresAt
+        bool autoRenew
+    }
+    PAYMENT_ORDER {
+        int orderId PK
+        string orderCode UK "MNQ..."
+        int userId FK
+        enum plan
+        enum cycle
+        int amount "VND"
+        enum status "PENDING | PAID | CANCELLED | EXPIRED"
+        string transferContent "nội dung chuyển khoản"
+        datetime paidAt
+        datetime expiresAt
+    }
+    BILLING_EVENT {
+        int billingEventId PK
+        string provider "nguồn báo tiền"
+        string eventType
+        string externalId UK "chống xử lý trùng"
+        int amount
+        json payload
+    }
+    BILLING_SETTING {
+        int settingId PK "luôn = 1"
+        string bankId "BIN ngân hàng nhận tiền"
+        string bankAccount
+        string bankAccountName
+        string webhookSecret
+        bool syncEnabled "API ngân hàng tự động"
+        int syncIntervalMinutes
+    }
+    FAMILY_MEMBER {
+        int familyMemberId PK
+        int ownerId FK "chủ gói Business"
+        int memberId FK, UK "một người chỉ ở một nhóm, hạn lấy theo chủ"
+        bool shareProgress
+    }
+    USER ||--o{ SUBSCRIPTION : "lịch sử gói"
+    USER ||--o{ PAYMENT_ORDER : "đặt mua"
+    PAYMENT_ORDER ||--o{ BILLING_EVENT : "sự kiện báo tiền"
+    USER ||--o{ FAMILY_MEMBER : "chủ gói / thành viên"

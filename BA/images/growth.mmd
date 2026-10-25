@@ -1,0 +1,26 @@
+erDiagram
+    POINT_TRANSACTION {
+        int pointTransactionId PK
+        int userId FK
+        int amount "+ hoặc -"
+        enum reason "DAILY_LOGIN | STREAK_BONUS | INVITE | REDEEM_REWARD"
+        string note
+    }
+    INVITATION {
+        int invitationId PK
+        int inviterId FK
+        int inviteeId FK
+        string inviteCode
+        string ipAddress
+        string deviceId
+        enum status "PENDING | CREDITED | REJECTED"
+    }
+    AI_USAGE {
+        int aiUsageId PK
+        int userId FK
+        date usageDate "YYYY-MM-DD giờ VN"
+        int count
+    }
+    USER ||--o{ POINT_TRANSACTION : "biến động điểm"
+    USER ||--o{ INVITATION : "mời / được mời"
+    USER ||--o{ AI_USAGE : "lượt dùng AI theo ngày"
