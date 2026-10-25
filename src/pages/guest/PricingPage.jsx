@@ -8,12 +8,12 @@ import { formatVnd } from '../../lib/format'
 import { PLANS as FALLBACK_PLANS, PLAN_NAMES, PLAN_BADGE, BILLING_CYCLES } from '../../lib/constants'
 import { getProducts } from '../../services/billingService'
 
-const PLAN_ICON = { FREE: Sparkle, PLUS: Rocket, PRO: Crown, FAMILY: Crown }
+const PLAN_ICON = { FREE: Sparkle, PLUS: Rocket, PRO: Crown, BUSINESS: Crown }
 const PLAN_ICON_COLOR = {
   FREE: 'bg-slate-100 text-slate-600',
   PLUS: 'bg-blue-50 text-blue-600',
   PRO: 'bg-violet-50 text-violet-600',
-  FAMILY: 'bg-fuchsia-50 text-fuchsia-600',
+  BUSINESS: 'bg-fuchsia-50 text-fuchsia-600',
 }
 
 export default function PricingPage() {
@@ -113,7 +113,7 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* 4 gói (Miễn phí, Plus, Pro, Pro Gia đình) — 2 cột trên máy tính bảng,
+        {/* 4 gói (Miễn phí, Plus, Pro, Pro Doanh nghiệp) — 2 cột trên máy tính bảng,
             4 cột trên màn hình rộng, thay vì để trống một ô ở hàng dưới. */}
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
           {plans.map((p) => {

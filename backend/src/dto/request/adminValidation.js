@@ -45,5 +45,5 @@ export const createUserValidation = [
 export const planChangeValidation = [
   body('plan')
     .trim()
-    .isIn(['FREE', 'PLUS', 'PRO', 'FAMILY']).withMessage('Gói chỉ là FREE, PLUS, PRO hoặc FAMILY'),
+    .isIn(['FREE', 'PLUS', 'PRO', 'BUSINESS']).withMessage('Gói chỉ là FREE, PLUS, PRO hoặc BUSINESS'),
 ]

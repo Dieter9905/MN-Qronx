@@ -42,15 +42,15 @@ import {
   startTrial,
 } from '../../services/billingService'
 
-const PLAN_ICON = { FREE: Sparkle, PLUS: Rocket, PRO: Crown, FAMILY: Crown }
+const PLAN_ICON = { FREE: Sparkle, PLUS: Rocket, PRO: Crown, BUSINESS: Crown }
 const PLAN_ICON_COLOR = {
   FREE: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
   PLUS: 'bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300',
   PRO: 'bg-violet-50 text-violet-600 dark:bg-violet-900/40 dark:text-violet-300',
-  FAMILY: 'bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-900/40 dark:text-fuchsia-300',
+  BUSINESS: 'bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-900/40 dark:text-fuchsia-300',
 }
 // Thang bậc gói: cao hơn thì là "nâng cấp", thấp hơn/ngang thì là "gia hạn".
-const RANK = { FREE: 0, PLUS: 1, PRO: 2, FAMILY: 3 }
+const RANK = { FREE: 0, PLUS: 1, PRO: 2, BUSINESS: 3 }
 
 const ORDER_STATUS = {
   PENDING: { label: 'Chờ thanh toán', cls: 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:ring-amber-800/50' },
@@ -94,12 +94,12 @@ function useCountdown(expiresAt) {
   return left
 }
 
-// ─── Gói Pro Gia đình ────────────────────────────────────────
+// ─── Gói Pro Doanh nghiệp ────────────────────────────────────────
 /**
- * Khối "Gói gia đình" — CÙNG một khối cho cả ba vai:
+ * Khối "Gói doanh nghiệp" — CÙNG một khối cho cả ba vai:
  *   • người chưa có nhà → thấy mức giá và nút mua;
  *   • chủ gói           → thấy danh sách chỗ trống, form mời và nút gỡ;
- *   • người trong nhà    → thấy mình dùng chung của ai và nút rời đi.
+ *   • người trong nhóm    → thấy mình dùng chung của ai và nút rời đi.
  * Một khối, ba nội dung: không có chuyện hai màn hình nói hai chuyện khác nhau
  * về cùng một gói.
  */
@@ -111,9 +111,9 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
   const [confirmLeave, setConfirmLeave] = useState(false)
   const [confirmRemove, setConfirmRemove] = useState(null)
 
-  // Chủ gói: khi API hỏng thì vẫn vào được khối này nhờ gói FAMILY trên máy —
+  // Chủ gói: khi API hỏng thì vẫn vào được khối này nhờ gói BUSINESS trên máy —
   // server tự chặn nếu thật sự không có quyền mời.
-  const isOwner = !isSeat && (Boolean(family?.ownerActive) || current === 'FAMILY')
+  const isOwner = !isSeat && (Boolean(family?.ownerActive) || current === 'BUSINESS')
   const members = family?.members || []
   const left = family ? (family.seatsLeft ?? 0) : 3
   const expiresAt = isSeat ? family?.owner?.expiresAt : family?.expiresAt
@@ -156,15 +156,15 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
     onChanged()
   }
 
-  // ── Người trong nhà: biết mình dùng chung của ai, và rời đi được ──
+  // ── Người trong nhóm: biết mình dùng chung của ai, và rời đi được ──
   if (isSeat) {
     return (
       <section className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
         <p className="inline-flex items-center gap-2 text-sm font-extrabold text-navy-900 dark:text-white">
-          <UsersThree size={18} weight="fill" className="text-fuchsia-500" /> Gói Pro Gia đình
+          <UsersThree size={18} weight="fill" className="text-fuchsia-500" /> Gói Pro Doanh nghiệp
         </p>
         <p className="mt-3 text-sm text-navy-600 dark:text-slate-300">
-          Bạn đang dùng chung gói Pro Gia đình của <b>{family?.owner?.fullName || 'người thân'}</b>
+          Bạn đang dùng chung gói Pro Doanh nghiệp của <b>{family?.owner?.fullName || 'chủ nhóm'}</b>
           {expiresAt && (
             <>
               {' '}
@@ -177,7 +177,7 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
         <div className="mt-4 flex flex-wrap gap-2">
           {!confirmLeave ? (
             <Button variant="secondary" icon={UsersThree} onClick={() => setConfirmLeave(true)}>
-              Rời gói gia đình
+              Rời gói doanh nghiệp
             </Button>
           ) : (
             <>
@@ -190,7 +190,7 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
             </>
           )}
         </div>
-        {/* Chủ gói xem được tiến độ của người này ở mục Cả nhà — phải nói ngay ở
+        {/* Chủ gói xem được tiến độ của người này ở mục Cả nhóm — phải nói ngay ở
             đây, không thì khách phát hiện ra sau và thấy như bị theo dõi. */}
         <p className="mt-3 flex items-start gap-2 text-xs font-semibold text-navy-500 dark:text-slate-400">
           {family?.progressShared === false ? (
@@ -202,7 +202,7 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
             <>
               <Eye size={14} weight="fill" className="mt-0.5 shrink-0 text-fuchsia-500" />
               Chủ gói thấy được tiến độ công việc của bạn (số việc xong, việc quá hạn — không đọc được nội dung).
-              Bật/tắt ở mục <Link to="/app/family" className="font-extrabold underline">Cả nhà</Link>.
+              Bật/tắt ở mục <Link to="/app/family" className="font-extrabold underline">Cả nhóm</Link>.
             </>
           )}
         </p>
@@ -220,7 +220,7 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
       <section className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="inline-flex items-center gap-2 text-sm font-extrabold text-navy-900 dark:text-white">
-            <UsersThree size={18} weight="fill" className="text-fuchsia-500" /> Gói Pro Gia đình
+            <UsersThree size={18} weight="fill" className="text-fuchsia-500" /> Gói Pro Doanh nghiệp
           </p>
           <p className="text-xs font-extrabold text-navy-500 dark:text-slate-400">
             Đang dùng {members.length + 1}/{family?.maxSeats || 4} tài khoản
@@ -231,12 +231,12 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
           riêng mình, và vẫn là tài khoản độc lập nên việc của bạn vẫn riêng của bạn.
         </p>
 
-        {/* Danh sách người trong nhà */}
+        {/* Danh sách người trong nhóm */}
         <ul className="mt-4 space-y-2">
           <li className="flex items-center justify-between gap-3 rounded-xl bg-fuchsia-50 px-3 py-2.5 ring-1 ring-fuchsia-100 dark:bg-fuchsia-900/20 dark:ring-fuchsia-900/40">
             <div className="min-w-0">
               <p className="truncate text-sm font-extrabold text-navy-900 dark:text-white">Bạn (chủ gói)</p>
-              <p className="truncate text-xs text-navy-500 dark:text-slate-400">Người trả tiền cho cả nhà</p>
+              <p className="truncate text-xs text-navy-500 dark:text-slate-400">Người trả tiền cho cả nhóm</p>
             </div>
           </li>
           {members.map((m) => (
@@ -283,7 +283,7 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
         {/* Form mời */}
         <div className="mt-4 rounded-xl bg-navy-50 p-3 ring-1 ring-navy-100 dark:bg-slate-900/50 dark:ring-slate-700">
           <p className="text-[11px] font-bold uppercase tracking-wider text-navy-500 dark:text-slate-400">
-            Thêm người thân (tối đa {left} chỗ còn trống)
+            Thêm chủ nhóm (tối đa {left} chỗ còn trống)
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <input
@@ -318,12 +318,12 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
           )}
         </div>
 
-        {/* Bảng tiến độ cả nhà là lý do gói này đáng 199.000đ thay vì 79.000đ —
+        {/* Bảng tiến độ cả nhóm là lý do gói này đáng 349.000đ thay vì 79.000đ —
             để ngay cạnh phần mời người, không giấu vào menu. */}
         <div className="mt-4">
           <Link to="/app/family">
             <Button variant="secondary" icon={UsersThree}>
-              Xem cả nhà đang tới đâu
+              Xem cả nhóm đang tới đâu
             </Button>
           </Link>
         </div>
@@ -335,19 +335,19 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
   return (
     <section className="rounded-2xl bg-gradient-to-br from-fuchsia-600 via-pink-600 to-violet-600 p-5 text-white shadow-card">
       <p className="inline-flex items-center gap-2 text-sm font-extrabold">
-        <UsersThree size={18} weight="fill" /> Gói Pro Gia đình — 199.000đ/tháng cho cả nhà
+        <UsersThree size={18} weight="fill" /> Gói Pro Doanh nghiệp — 349.000đ/tháng cho cả nhóm
       </p>
       <p className="mt-2 text-sm text-white/85">
-        Mua một lần, dùng chung tới <b>4 tài khoản</b>: mỗi người vẫn là một tài khoản riêng với việc, nhắc nhở và
+        Mua một lần, dùng chung tới <b>10 tài khoản</b>: mỗi người vẫn là một tài khoản riêng với việc, nhắc nhở và
         báo cáo của chính mình, nhưng tất cả đều có quyền lợi Pro (nhắc dai, báo cáo năng suất, kế hoạch tuần,
-        báo cáo gửi email, nhờ người khác làm). So với 4 gói Pro lẻ là 316.000đ, cả nhà tiết kiệm 117.000đ mỗi tháng.
+        báo cáo gửi email, nhờ người khác làm). So với 10 gói Pro lẻ là 790.000đ, cả nhóm tiết kiệm 441.000đ mỗi tháng.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button variant="light" icon={Crown} loading={busy === 'FAMILY'} onClick={() => onBuy('FAMILY')}>
-          Mua cho cả nhà
+        <Button variant="light" icon={Crown} loading={busy === 'BUSINESS'} onClick={() => onBuy('BUSINESS')}>
+          Mua cho cả nhóm
         </Button>
         <span className="inline-flex items-center rounded-xl bg-white/15 px-3 py-2 text-xs font-bold ring-1 ring-inset ring-white/25">
-          Trả theo năm 1.990.000đ — tặng 2 tháng
+          Trả theo năm 3.490.000đ — tặng 2 tháng
         </span>
       </div>
     </section>
@@ -367,7 +367,7 @@ export default function BillingPage() {
   const [cycle, setCycle] = useState('MONTHLY')
   const [busy, setBusy] = useState(null)
   const [checkout, setCheckout] = useState(null) // { order, payment }
-  // Gói Pro Gia đình: chủ gói mời/gỡ người, người trong nhà xem mình dùng chung của ai
+  // Gói Pro Doanh nghiệp: chủ gói mời/gỡ người, người trong nhóm xem mình dùng chung của ai
   const [family, setFamily] = useState(null)
   const [paymentState, setPaymentState] = useState('PENDING')
   // Nút “Tôi đã chuyển”: đang kiểm tra, và lời nhắc sau khi kiểm tra xong
@@ -377,7 +377,7 @@ export default function BillingPage() {
   const current = overview?.plan || user?.plan || 'FREE'
   const paid = isPaidPlan(current)
   const days = paid ? daysRemaining(overview?.planExpiresAt) : null
-  // Đang dùng một chỗ trong nhà người khác: không có gì để họ "gia hạn" hay "nâng cấp"
+  // Đang dùng một chỗ trong nhóm người khác: không có gì để họ "gia hạn" hay "nâng cấp"
   const isSeat = family?.role === 'MEMBER'
 
   const plans = useMemo(
@@ -405,7 +405,7 @@ export default function BillingPage() {
 
   useEffect(() => {
     load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [])
 
   // Đến từ trang giá với gói đã chọn sẵn ("Nâng cấp Pro") → mở luôn khung thanh toán
@@ -570,7 +570,7 @@ export default function BillingPage() {
                 )}
                 {isSeat && (
                   <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-extrabold ring-1 ring-inset ring-white/40">
-                    Dùng chung của {family?.owner?.fullName || 'người thân'}
+                    Dùng chung của {family?.owner?.fullName || 'chủ nhóm'}
                   </span>
                 )}
               </div>
@@ -615,8 +615,8 @@ export default function BillingPage() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {/* Người trong nhà không tự gia hạn/nâng cấp được — để hai nút này ở đó
-                  là mời họ bấm vào một lỗi. Quản lý gói nằm ở khối "Gói gia đình". */}
+              {/* Người trong nhóm không tự gia hạn/nâng cấp được — để hai nút này ở đó
+                  là mời họ bấm vào một lỗi. Quản lý gói nằm ở khối "Gói doanh nghiệp". */}
               {!isSeat && (
                 <>
                   {!isProPlan(current) && (
@@ -645,7 +645,7 @@ export default function BillingPage() {
         )}
       </section>
 
-      {/* ── Gói Pro Gia đình: một người trả tiền, tới 4 tài khoản cùng dùng ── */}
+      {/* ── Gói Pro Doanh nghiệp: một người trả tiền, tới 10 tài khoản cùng dùng ── */}
       <FamilyCard
         family={family}
         current={current}

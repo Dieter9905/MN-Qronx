@@ -97,15 +97,15 @@ describe('GET /billing/products', () => {
     expect(res.status).toBe(200)
 
     const { plans, cycles, productIds } = res.data.data
-    expect(plans.map((p) => p.id)).toEqual(['FREE', 'PLUS', 'PRO', 'FAMILY'])
+    expect(plans.map((p) => p.id)).toEqual(['FREE', 'PLUS', 'PRO', 'BUSINESS'])
     expect(plans[0].priceMonthly).toBe(0)
     expect(plans[1].priceMonthly).toBe(39000)
     expect(plans[2].priceMonthly).toBe(79000)
-    // Pro Gia đình: 199.000đ/tháng cho tới 4 tài khoản (10 tháng nếu trả theo năm)
-    expect(plans[3].priceMonthly).toBe(199000)
-    expect(plans[3].priceYearly).toBe(1990000)
-    expect(plans[3].limits.seats).toBe(4)
-    // Quyền lợi gia đình PHẢI bằng quyền lợi Pro — dựng từ bản Pro nên hai gói
+    // Pro Doanh nghiệp: 349.000đ/tháng cho tới 10 tài khoản (10 tháng nếu trả theo năm)
+    expect(plans[3].priceMonthly).toBe(349000)
+    expect(plans[3].priceYearly).toBe(3490000)
+    expect(plans[3].limits.seats).toBe(10)
+    // Quyền lợi doanh nghiệp PHẢI bằng quyền lợi Pro — dựng từ bản Pro nên hai gói
     // không bao giờ lệch nhau (một gói Pro "lép" là lỗi tiền thật của khách).
     const { seats: _seats, ...familyLimits } = plans[3].limits
     const { seats: _proSeats, ...proLimits } = plans[2].limits
@@ -116,7 +116,7 @@ describe('GET /billing/products', () => {
     expect(plans[1].priceYearly).toBe(390000)
     expect(cycles.find((c) => c.id === 'YEARLY').days).toBe(365)
     expect(productIds['PRO:MONTHLY']).toBe('mnq_pro_monthly')
-    expect(productIds['FAMILY:MONTHLY']).toBe('mnq_family_monthly')
+    expect(productIds['BUSINESS:MONTHLY']).toBe('mnq_business_monthly')
   })
 
   it('gói Free phải cho công việc lặp lại, nếu không người dùng bỏ app', async () => {

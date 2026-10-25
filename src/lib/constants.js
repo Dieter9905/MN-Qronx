@@ -113,28 +113,28 @@ export const PLAN_NAMES = {
   FREE: 'Miễn phí',
   PLUS: 'Plus',
   PRO: 'Pro',
-  FAMILY: 'Pro Gia đình',
+  BUSINESS: 'Pro Doanh nghiệp',
 }
 
 // ── Quyền lợi theo gói: NGUỒN DUY NHẤT cho các kiểm tra ở giao diện ──
-// Mọi chỗ cũ ghi `plan === 'PRO'` đều phải đi qua đây: gói Pro Gia đình có ĐỦ
+// Mọi chỗ cũ ghi `plan === 'PRO'` đều phải đi qua đây: gói Pro Doanh nghiệp có ĐỦ
 // quyền lợi Pro, nên chủ nhà mà bị coi là "không phải Pro" thì người trả tiền
-// cho cả nhà lại là người không mở được báo cáo, kế hoạch tuần, nhậc dai.
-export const PAID_PLANS = ['PLUS', 'PRO', 'FAMILY']
-export const PRO_PLANS = ['PRO', 'FAMILY']
+// cho cả nhóm lại là người không mở được báo cáo, kế hoạch tuần, nhậc dai.
+export const PAID_PLANS = ['PLUS', 'PRO', 'BUSINESS']
+export const PRO_PLANS = ['PRO', 'BUSINESS']
 
-/** Gói trả phí (Plus, Pro, Pro Gia đình)? */
+/** Gói trả phí (Plus, Pro, Pro Doanh nghiệp)? */
 export function isPaidPlan(plan) {
   return PAID_PLANS.includes(plan)
 }
 
-/** Gói có toàn bộ quyền lợi Pro (Pro hoặc Pro Gia đình)? */
+/** Gói có toàn bộ quyền lợi Pro (Pro hoặc Pro Doanh nghiệp)? */
 export function isProPlan(plan) {
   return PRO_PLANS.includes(plan)
 }
 
 // Giới hạn nhắc nhở mỗi công việc theo gói (backend ép buộc tương ứng)
-export const PLAN_REMINDER_LIMIT = { FREE: 3, PLUS: 5, PRO: 5, FAMILY: 5 }
+export const PLAN_REMINDER_LIMIT = { FREE: 3, PLUS: 5, PRO: 5, BUSINESS: 5 }
 
 // Kỳ thanh toán – giá theo năm = 10 tháng (tặng 2 tháng)
 export const BILLING_CYCLES = [
@@ -197,7 +197,7 @@ export const PLANS = [
       'Báo cáo năng suất 7/30/90 ngày kèm xuất Excel/PDF',
       'Kế hoạch tuần: tự xếp việc vào từng ngày, cảnh báo khi tuần quá tải',
       'Báo cáo tuần gửi email sáng thứ 2 (tắt được bất cứ lúc nào)',
-      'Nhờ người khác làm: giao việc cho người thân/đồng nghiệp, họ vẫn nhận chuông nhắc và bạn biết ngay khi họ xong',
+      'Nhờ người khác làm: giao việc cho chủ nhóm/đồng nghiệp, họ vẫn nhận chuông nhắc và bạn biết ngay khi họ xong',
       'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
       'Không giới hạn thiết bị đồng bộ',
       'Trợ lý AI không giới hạn',
@@ -218,20 +218,20 @@ export const PLANS = [
   {
     // Bản dự phòng khi máy chủ không trả được bảng giá (nguồn vẫn là backend).
     // Quyền lợi Pro lấy lại của gói Pro để hai gói không bao giờ lệch nhau.
-    id: 'FAMILY',
-    label: 'Pro Gia đình',
-    tagline: 'Cả nhà cùng trả một khoản, mỗi người đều có quyền lợi Pro',
-    priceMonthly: 199000,
-    priceYearly: 1990000,
+    id: 'BUSINESS',
+    label: 'Pro Doanh nghiệp',
+    tagline: 'Cả nhóm cùng trả một khoản, mỗi người đều có quyền lợi Pro',
+    priceMonthly: 349000,
+    priceYearly: 3490000,
     gradient: 'from-fuchsia-500 to-pink-500',
-    seats: 4,
+    seats: 10,
     features: [
-      'Dùng chung cho tối đa 4 tài khoản trong nhà: mỗi người vẫn là một tài khoản riêng với việc, nhắc nhở và báo cáo của chính mình',
+      'Dùng chung cho tối đa 10 tài khoản trong nhóm: mỗi người vẫn là một tài khoản riêng với việc, nhắc nhở và báo cáo của chính mình',
       'Nhắc dai tới khi bạn xác nhận: việc quan trọng chưa xong thì chuông kêu lại',
       'Báo cáo năng suất 7/30/90 ngày kèm xuất Excel/PDF',
       'Kế hoạch tuần: tự xếp việc vào từng ngày, cảnh báo khi tuần quá tải',
       'Báo cáo tuần gửi email sáng thứ 2 (tắt được bất cứ lúc nào)',
-      'Nhờ người khác làm: giao việc cho người thân/đồng nghiệp, họ vẫn nhận chuông nhắc và bạn biết ngay khi họ xong',
+      'Nhờ người khác làm: giao việc cho chủ nhóm/đồng nghiệp, họ vẫn nhận chuông nhắc và bạn biết ngay khi họ xong',
       'Không giới hạn công việc, nhắc nhở, danh mục & việc con',
       'Không giới hạn thiết bị đồng bộ',
       'Trợ lý AI không giới hạn',
@@ -256,7 +256,7 @@ export const PLAN_BADGE = {
   FREE: 'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600',
   PLUS: 'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:ring-blue-700',
   PRO: 'bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:ring-violet-700',
-  FAMILY: 'bg-fuchsia-50 text-fuchsia-700 ring-fuchsia-200 dark:bg-fuchsia-900/40 dark:text-fuchsia-300 dark:ring-fuchsia-700',
+  BUSINESS: 'bg-fuchsia-50 text-fuchsia-700 ring-fuchsia-200 dark:bg-fuchsia-900/40 dark:text-fuchsia-300 dark:ring-fuchsia-700',
 }
 
 export const CATEGORY_COLORS = [

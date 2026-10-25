@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { startServer, stopServer, api, register, login, prisma } from './setup.js'
-import { syncFamilySeats, seatsLeft, MAX_FAMILY_SEATS } from '../src/services/familyService.js'
+import { syncFamilySeats, seatsLeft, MAX_BUSINESS_SEATS } from '../src/services/familyService.js'
 import { sendRenewalReminders, listExpiringSoon } from '../src/services/billingService.js'
 
-// Ghi lại thông báo đẩy: người trong nhà cần biết mình vừa được mời (hoặc vừa bị
+// Ghi lại thông báo đẩy: người trong nhóm cần biết mình vừa được mời (hoặc vừa bị
 // gỡ), còn test thì không muốn gửi chuông thật.
 const { pushCalls } = vi.hoisted(() => ({ pushCalls: [] }))
 
@@ -15,14 +15,14 @@ vi.mock('../src/services/pushService.js', () => ({
   countSubscriptions: async () => 1,
 }))
 
-// ─── Gói Pro Gia đình ────────────────────────────────────────
+// ─── Gói Pro Doanh nghiệp ────────────────────────────────────────
 //
-// Gói này bán CỘNG ĐỒNG: một khách trả tiền, tới 4 tài khoản cùng dùng quyền Pro.
+// Gói này bán DOANH NGHIỆP: một khách trả tiền, tới 10 tài khoản cùng dùng quyền Pro.
 // Hai thứ dễ hỏng nhất mà bộ test này phải giữ:
-//   1. Người trong nhà phải được quyền Pro THẬT (không phải chỉ hiện tên gói),
-//      và hết hạn cùng chủ — không thì khách trả tiền cho cả nhà mà cả nhà không
+//   1. Người trong nhóm phải được quyền Pro THẬT (không phải chỉ hiện tên gói),
+//      và hết hạn cùng chủ — không thì khách trả tiền cho cả nhóm mà cả nhóm không
 //      dùng được gì.
-//   2. Không ai trong nhà bị nhắc "mua kỳ mới" hay bị admin coi là khách sắp hết
+//   2. Không ai trong nhóm bị nhắc "mua kỳ mới" hay bị admin coi là khách sắp hết
 //      hạn — họ không tự gia hạn được, nhắc họ là nhắc sai người.
 
 beforeAll(async () => {
@@ -68,56 +68,56 @@ async function syncSeats(attempts = 6) {
 
 // ─── Cổng gói ────────────────────────────────────────────────
 
-describe('Gói Pro Gia đình — chỉ chủ gói mới được mời', () => {
+describe('Gói Pro Doanh nghiệp — chỉ chủ gói mới được mời', () => {
   it('gói Free mời được không (bị chặn kèm mức giá)', async () => {
     const owner = await newUser('fam_free')
     const mate = await newUser('fam_free_mate')
 
     const res = await invite(owner, mate.email)
     expect(res.status).toBe(400)
-    expect(res.data.message).toContain('Pro Gia đình')
+    expect(res.data.message).toContain('Pro Doanh nghiệp')
     expect(await prisma.familyMember.count({ where: { ownerId: owner.userId } })).toBe(0)
   })
 
-  it('gói Pro thường cũng mời không được — gia đình là gói riêng', async () => {
+  it('gói Pro thường cũng mời không được — doanh nghiệp là gói riêng', async () => {
     const owner = await newUser('fam_pro', 'PRO')
     const mate = await newUser('fam_pro_mate')
 
     const res = await invite(owner, mate.email)
     expect(res.status).toBe(400)
-    expect(res.data.message).toContain('Pro Gia đình')
+    expect(res.data.message).toContain('Pro Doanh nghiệp')
   })
 
-  it('chủ gói Pro Gia đình mời được, người được mời có quyền Pro ngay', async () => {
-    const owner = await newUser('fam_owner', 'FAMILY')
+  it('chủ gói Pro Doanh nghiệp mời được, người được mời có quyền Pro ngay', async () => {
+    const owner = await newUser('fam_owner', 'BUSINESS')
     const mate = await newUser('fam_mate')
 
     const res = await invite(owner, mate.email, 'sang giúp chị làm bữa tối nhé')
     expect(res.status).toBe(201)
     expect(res.data.data.role).toBe('OWNER')
     expect(res.data.data.members).toHaveLength(1)
-    expect(res.data.data.seatsLeft).toBe(MAX_FAMILY_SEATS - 2)
+    expect(res.data.data.seatsLeft).toBe(MAX_BUSINESS_SEATS - 2)
 
     const row = await prisma.user.findUnique({ where: { userId: mate.userId } })
     expect(row.plan).toBe('PRO')
-    // Hạn của người trong nhà PHẢI lấy theo chủ — nếu không thì hết hạn mỗi người một kiểu
+    // Hạn của người trong nhóm PHẢI lấy theo chủ — nếu không thì hết hạn mỗi người một kiểu
     expect(new Date(row.planExpiresAt).getTime()).toBe(
       new Date((await prisma.user.findUnique({ where: { userId: owner.userId } })).planExpiresAt).getTime(),
     )
 
-    // Ghế phải ghi đúng nguồn: không phải tiền khách trả, nên provider là FAMILY
+    // Ghế phải ghi đúng nguồn: không phải tiền khách trả, nên provider là BUSINESS
     const seat = await prisma.subscription.findFirst({
-      where: { userId: mate.userId, provider: 'FAMILY', status: 'ACTIVE' },
+      where: { userId: mate.userId, provider: 'BUSINESS', status: 'ACTIVE' },
     })
     expect(seat).toBeTruthy()
     expect(seat.plan).toBe('PRO')
 
     // Người được mời nhận thông báo biết mình vừa có Pro
-    expect(pushCalls.some((p) => p.userId === mate.userId && p.title.includes('Pro Gia đình'))).toBe(true)
+    expect(pushCalls.some((p) => p.userId === mate.userId && p.title.includes('Pro Doanh nghiệp'))).toBe(true)
   })
 
-  it('người trong nhà dùng được quyền Pro THẬT (giao việc — cửa Free/Plus bị chặn)', async () => {
-    const owner = await newUser('fam_gate_owner', 'FAMILY')
+  it('người trong nhóm dùng được quyền Pro THẬT (giao việc — cửa Free/Plus bị chặn)', async () => {
+    const owner = await newUser('fam_gate_owner', 'BUSINESS')
     const mate = await newUser('fam_gate_mate')
     const other = await newUser('fam_gate_other')
 
@@ -127,11 +127,11 @@ describe('Gói Pro Gia đình — chỉ chủ gói mới được mời', () => 
     expect(planRes.status).toBe(200)
     expect(planRes.data.data.plan).toBe('PRO')
 
-    // Giao việc là quyền lợi chỉ Pro có: Free/Plus nhận 400, người trong nhà phải
+    // Giao việc là quyền lợi chỉ Pro có: Free/Plus nhận 400, người trong nhóm phải
     // đi qua được — chứng minh "có Pro" chứ không chỉ là tên gói trên giao diện.
     const taskRes = await api('POST', '/tasks', {
       token: mate.token,
-      body: { title: 'Việc của người trong nhà', dueAt: new Date(Date.now() + 7200_000).toISOString() },
+      body: { title: 'Việc của người trong nhóm', dueAt: new Date(Date.now() + 7200_000).toISOString() },
     })
     expect(taskRes.status).toBe(201)
 
@@ -145,11 +145,11 @@ describe('Gói Pro Gia đình — chỉ chủ gói mới được mời', () => 
 
 // ─── Luật mời ────────────────────────────────────────────────
 
-describe('Gói Pro Gia đình — các luật mời', () => {
+describe('Gói Pro Doanh nghiệp — các luật mời', () => {
   let owner
 
   beforeAll(async () => {
-    owner = await newUser('fam_rules', 'FAMILY')
+    owner = await newUser('fam_rules', 'BUSINESS')
   })
 
   it('email chưa có tài khoản → nói rõ cần rủ đăng ký, không tạo dòng nào', async () => {
@@ -172,8 +172,8 @@ describe('Gói Pro Gia đình — các luật mời', () => {
     expect(await prisma.familyMember.count({ where: { memberId: paid.userId } })).toBe(0)
   })
 
-  it('người đã ở một nhà khác không nhận thêm chỗ nữa', async () => {
-    const otherOwner = await newUser('fam_other', 'FAMILY')
+  it('người đã ở một nhóm khác không nhận thêm chỗ nữa', async () => {
+    const otherOwner = await newUser('fam_other', 'BUSINESS')
     const mate = await newUser('fam_taken')
     expect((await invite(otherOwner, mate.email)).status).toBe(201)
 
@@ -182,19 +182,19 @@ describe('Gói Pro Gia đình — các luật mời', () => {
     expect(res.data.message).toContain('nằm trong một gói')
   })
 
-  it('chủ một nhà khác không bị kéo vào nhà này (kéo là mất gói của người đó)', async () => {
-    const otherOwner = await newUser('fam_other_owner', 'FAMILY')
+  it('chủ một nhóm khác không bị kéo vào nhóm này (kéo là mất gói của người đó)', async () => {
+    const otherOwner = await newUser('fam_other_owner', 'BUSINESS')
     const res = await invite(owner, otherOwner.email)
     expect(res.status).toBe(400)
     expect(res.data.message).toContain('chủ một gói')
   })
 
-  it('chỉ đủ 3 chỗ cho người ngoài (tổng 4 gồm chủ)', async () => {
-    expect(seatsLeft(0)).toBe(MAX_FAMILY_SEATS - 1)
-    expect(seatsLeft(3)).toBe(0)
+  it('chỉ đủ 9 chỗ cho người ngoài (tổng 10 gồm chủ)', async () => {
+    expect(seatsLeft(0)).toBe(MAX_BUSINESS_SEATS - 1)
+    expect(seatsLeft(3)).toBe(MAX_BUSINESS_SEATS - 4)
 
-    const full = await newUser('fam_full', 'FAMILY')
-    for (let i = 0; i < MAX_FAMILY_SEATS - 1; i += 1) {
+    const full = await newUser('fam_full', 'BUSINESS')
+    for (let i = 0; i < MAX_BUSINESS_SEATS - 1; i += 1) {
       const mate = await newUser(`fam_full_mate_${i}`)
       expect((await invite(full, mate.email)).status).toBe(201)
     }
@@ -202,15 +202,15 @@ describe('Gói Pro Gia đình — các luật mời', () => {
     const res = await invite(full, extra.email)
     expect(res.status).toBe(400)
     expect(res.data.message).toContain('đã đủ')
-    expect(await prisma.familyMember.count({ where: { ownerId: full.userId } })).toBe(3)
+    expect(await prisma.familyMember.count({ where: { ownerId: full.userId } })).toBe(MAX_BUSINESS_SEATS - 1)
   })
 })
 
 // ─── Gỡ, rời, và sự sống của gói theo chủ ────────────────────
 
-describe('Gói Pro Gia đình — gỡ thành viên và quyền lợi đi theo hạn của chủ', () => {
+describe('Gói Pro Doanh nghiệp — gỡ thành viên và quyền lợi đi theo hạn của chủ', () => {
   it('gỡ thành viên: mất quyền Pro ngay, dữ liệu không đụng tới', async () => {
-    const owner = await newUser('fam_drop', 'FAMILY')
+    const owner = await newUser('fam_drop', 'BUSINESS')
     const mate = await newUser('fam_drop_mate')
     const res = await invite(owner, mate.email)
     const memberRow = res.data.data.members[0]
@@ -222,12 +222,12 @@ describe('Gói Pro Gia đình — gỡ thành viên và quyền lợi đi theo h
     expect(row.plan).toBe('FREE')
     expect(row.planExpiresAt).toBeNull()
     // Việc của người này không bị xoá — chỉ mất quyền lợi gói
-    const seat = await prisma.subscription.findFirst({ where: { userId: mate.userId, provider: 'FAMILY' } })
+    const seat = await prisma.subscription.findFirst({ where: { userId: mate.userId, provider: 'BUSINESS' } })
     expect(seat.status).toBe('CANCELLED')
   })
 
-  it('người trong nhà tự rời đi được, chủ nhận thông báo', async () => {
-    const owner = await newUser('fam_leave', 'FAMILY')
+  it('người trong nhóm tự rời đi được, chủ nhận thông báo', async () => {
+    const owner = await newUser('fam_leave', 'BUSINESS')
     const mate = await newUser('fam_leave_mate')
     await invite(owner, mate.email)
     pushCalls.length = 0
@@ -240,8 +240,8 @@ describe('Gói Pro Gia đình — gỡ thành viên và quyền lợi đi theo h
     expect(pushCalls.some((p) => p.userId === owner.userId)).toBe(true)
   })
 
-  it('chủ hết hạn → cả nhà mất quyền và dòng thành viên bị xoá (mua lại phải mời lại)', async () => {
-    const owner = await newUser('fam_expire', 'FAMILY')
+  it('chủ hết hạn → cả nhóm mất quyền và dòng thành viên bị xoá (mua lại phải mời lại)', async () => {
+    const owner = await newUser('fam_expire', 'BUSINESS')
     const mate = await newUser('fam_expire_mate')
     await invite(owner, mate.email)
 
@@ -266,14 +266,14 @@ describe('Gói Pro Gia đình — gỡ thành viên và quyền lợi đi theo h
     expect((await prisma.user.findUnique({ where: { userId: mate.userId } })).plan).toBe('FREE')
     // Ghế cũng phải đóng, không chỉ mất quyền trên giấy
     const seat = await prisma.subscription.findFirst({
-      where: { userId: mate.userId, provider: 'FAMILY' },
+      where: { userId: mate.userId, provider: 'BUSINESS' },
       orderBy: { subscriptionId: 'desc' },
     })
     expect(seat.status).toBe('CANCELLED')
   })
 
-  it('chủ gia hạn → người trong nhà kéo theo đúng hạn mới', async () => {
-    const owner = await newUser('fam_renew', 'FAMILY')
+  it('chủ gia hạn → người trong nhóm kéo theo đúng hạn mới', async () => {
+    const owner = await newUser('fam_renew', 'BUSINESS')
     const mate = await newUser('fam_renew_mate')
     await invite(owner, mate.email)
 
@@ -286,13 +286,13 @@ describe('Gói Pro Gia đình — gỡ thành viên và quyền lợi đi theo h
     expect(row.plan).toBe('PRO')
     expect(new Date(row.planExpiresAt).getTime()).toBe(later.getTime())
     const seat = await prisma.subscription.findFirst({
-      where: { userId: mate.userId, provider: 'FAMILY', status: 'ACTIVE' },
+      where: { userId: mate.userId, provider: 'BUSINESS', status: 'ACTIVE' },
     })
     expect(new Date(seat.expiresAt).getTime()).toBe(later.getTime())
   })
 
-  it('người trong nhà không mua được gói riêng (để hai nguồn quyền lợi không đánh nhau)', async () => {
-    const owner = await newUser('fam_seat_buy', 'FAMILY')
+  it('người trong nhóm không mua được gói riêng (để hai nguồn quyền lợi không đánh nhau)', async () => {
+    const owner = await newUser('fam_seat_buy', 'BUSINESS')
     const mate = await newUser('fam_seat_buy_mate')
     await invite(owner, mate.email)
 
@@ -301,14 +301,14 @@ describe('Gói Pro Gia đình — gỡ thành viên và quyền lợi đi theo h
       body: { plan: 'PRO', cycle: 'MONTHLY' },
     })
     expect(res.status).toBe(400)
-    expect(res.data.message).toContain('gia đình')
+    expect(res.data.message).toContain('doanh nghiệp')
     expect(await prisma.paymentOrder.count({ where: { userId: mate.userId } })).toBe(0)
   })
 })
 
-// ─── "Cả nhà hôm nay" — chủ gói nhìn tiến độ người trong nhà ──
+// ─── "Cả nhóm hôm nay" — chủ gói nhìn tiến độ người trong nhóm ──
 
-describe('Gói Pro Gia đình — bảng tiến độ cả nhà', () => {
+describe('Gói Pro Doanh nghiệp — bảng tiến độ cả nhóm', () => {
   let owner
   let mate
   let outsider
@@ -327,13 +327,13 @@ describe('Gói Pro Gia đình — bảng tiến độ cả nhà', () => {
   }
 
   beforeAll(async () => {
-    owner = await newUser('fam_board_owner', 'FAMILY')
+    owner = await newUser('fam_board_owner', 'BUSINESS')
     mate = await newUser('fam_board_mate')
     outsider = await newUser('fam_board_outsider')
     expect((await invite(owner, mate.email)).status).toBe(201)
 
-    // Người trong nhà: 1 việc xong HÔM NAY + 1 việc quá hạn đã lâu
-    const doneId = await makeTaskFor(mate, 'Việc đã xong của người trong nhà')
+    // Người trong nhóm: 1 việc xong HÔM NAY + 1 việc quá hạn đã lâu
+    const doneId = await makeTaskFor(mate, 'Việc đã xong của người trong nhóm')
     const markDone = await api('POST', `/tasks/${doneId}/complete`, { token: mate.token })
     expect(markDone.status).toBe(200)
     // Việc quá hạn KHÔNG tạo được qua API (dueAt phải ở tương lai) — mà quá hạn
@@ -347,14 +347,14 @@ describe('Gói Pro Gia đình — bảng tiến độ cả nhà', () => {
       },
     })
 
-    // Chủ gói cũng có việc xong hôm nay — tổng "cả nhà" phải tính cả chủ gói
+    // Chủ gói cũng có việc xong hôm nay — tổng "cả nhóm" phải tính cả chủ gói
     const ownerTask = await makeTaskFor(owner, 'Việc của chủ gói')
     const ownerDone = await api('POST', `/tasks/${ownerTask}/complete`, { token: owner.token })
     expect(ownerDone.status).toBe(200)
     // Hook này tạo 3 tài khoản qua HTTP nên cần nhiều hơn 10 giây mặc định
   }, 120_000)
 
-  it('chủ gói thấy số liệu THẬT của người trong nhà, và tổng tính cả mình', async () => {
+  it('chủ gói thấy số liệu THẬT của người trong nhóm, và tổng tính cả mình', async () => {
     const res = await api('GET', '/me/family/board', { token: owner.token })
     expect(res.status).toBe(200)
 
@@ -371,19 +371,19 @@ describe('Gói Pro Gia đình — bảng tiến độ cả nhà', () => {
     expect(res.data.data.hiddenCount).toBe(0)
   })
 
-  it('người trong nhà KHÔNG xem được bảng của chủ gói', async () => {
+  it('người trong nhóm KHÔNG xem được bảng của chủ gói', async () => {
     const res = await api('GET', '/me/family/board', { token: mate.token })
     expect(res.status).toBe(400)
     expect(res.data.message).toContain('chủ gói')
   })
 
-  it('người ngoài gói gia đình cũng không, kèm chỉ dẫn mua gói', async () => {
+  it('người ngoài gói doanh nghiệp cũng không, kèm chỉ dẫn mua gói', async () => {
     const res = await api('GET', '/me/family/board', { token: outsider.token })
     expect(res.status).toBe(400)
-    expect(res.data.message).toContain('Pro Gia đình')
+    expect(res.data.message).toContain('Pro Doanh nghiệp')
   })
 
-  it('người trong nhà tắt chia sẻ → máy chủ KHÔNG trả số liệu của họ nữa', async () => {
+  it('người trong nhóm tắt chia sẻ → máy chủ KHÔNG trả số liệu của họ nữa', async () => {
     const off = await api('PUT', '/me/family/progress', { token: mate.token, body: { shared: false } })
     expect(off.status).toBe(200)
     expect(off.data.data.shared).toBe(false)
@@ -395,7 +395,7 @@ describe('Gói Pro Gia đình — bảng tiến độ cả nhà', () => {
     expect(person.doneToday).toBeUndefined()
     expect(person.worst).toBeUndefined()
     expect(res.data.data.hiddenCount).toBe(1)
-    // Tổng cả nhà cũng không tính người đã tắt chia sẻ
+    // Tổng cả nhóm cũng không tính người đã tắt chia sẻ
     expect(res.data.data.totals.doneToday).toBe(1)
 
     // Chính người đó phải thấy rõ trạng thái của mình
@@ -407,18 +407,18 @@ describe('Gói Pro Gia đình — bảng tiến độ cả nhà', () => {
     expect(on.data.data.shared).toBe(true)
   })
 
-  it('người không ở trong nhà nào thì không có gì để chia sẻ', async () => {
+  it('người không ở trong nhóm nào thì không có gì để chia sẻ', async () => {
     const res = await api('PUT', '/me/family/progress', { token: outsider.token, body: { shared: true } })
     expect(res.status).toBe(400)
-    expect(res.data.message).toContain('Pro Gia đình')
+    expect(res.data.message).toContain('Pro Doanh nghiệp')
   })
 })
 
-// ─── Không gửi thư nhắc gia hạn cho người trong nhà ──────────
+// ─── Không gửi thư nhắc gia hạn cho người trong nhóm ──────────
 
-describe('Gói Pro Gia đình — người trong nhà không tự gia hạn được nên không bị nhắc', () => {
+describe('Gói Pro Doanh nghiệp — người trong nhóm không tự gia hạn được nên không bị nhắc', () => {
   it('thư nhắc "mua kỳ mới" chỉ gửi cho người trả tiền, không gửi cho chỗ ngồi', async () => {
-    const owner = await newUser('fam_mail', 'FAMILY', 2)
+    const owner = await newUser('fam_mail', 'BUSINESS', 2)
     const mate = await newUser('fam_mail_mate')
     await invite(owner, mate.email)
 
@@ -426,7 +426,7 @@ describe('Gói Pro Gia đình — người trong nhà không tự gia hạn đư
     await prisma.subscription.create({
       data: {
         userId: owner.userId,
-        plan: 'FAMILY',
+        plan: 'BUSINESS',
         cycle: 'MONTHLY',
         provider: 'VIETQR',
         status: 'ACTIVE',

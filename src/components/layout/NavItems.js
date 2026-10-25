@@ -25,8 +25,8 @@ export const NAV_GROUPS = [
       // Việc được giao: KHÔNG đánh dấu pro — người được nhờ không cần gói trả phí,
       // và mục menu này chính là chỗ để khách thấy tính năng giao việc đang chạy.
       { to: '/app/assigned', labelKey: 'assigned', icon: Users },
-      // "Cả nhà": bảng tiến độ là quyền lợi riêng của chủ gói Pro Gia đình, người
-      // trong nhà vào đây để bật/tắt chia sẻ, người chưa có gói thấy lời mời mua.
+      // "Cả nhóm": bảng tiến độ là quyền lợi riêng của chủ gói Pro Doanh nghiệp, người
+      // trong nhóm vào đây để bật/tắt chia sẻ, người chưa có gói thấy lời mời mua.
       { to: '/app/family', labelKey: 'family', icon: UsersThree, pro: true },
       // Kế hoạch tuần + Báo cáo năng suất: chỉ Pro (trang tự hiện khung nâng cấp cho gói khác)
       { to: '/app/planner', labelKey: 'planner', icon: CalendarCheck, pro: true },

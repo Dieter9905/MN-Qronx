@@ -76,7 +76,7 @@ export async function updateSettings(userId, data = {}) {
     if (customMatch) {
       if (!PAID_PLANS.includes(plan)) {
         throw ApiError.badRequest(
-          'Âm thanh báo thức tùy chỉnh chỉ dành cho gói trả phí (Plus, Pro, Pro Gia đình). Nâng cấp gói để sử dụng tính năng này.'
+          'Âm thanh báo thức tùy chỉnh chỉ dành cho gói trả phí (Plus, Pro, Pro Doanh nghiệp). Nâng cấp gói để sử dụng tính năng này.'
         )
       }
       const sound = await customSoundRepo.findOwned(parseInt(customMatch[1]), userId)

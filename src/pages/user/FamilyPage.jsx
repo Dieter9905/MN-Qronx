@@ -19,19 +19,19 @@ import { formatDate, formatDateTime, formatVnd } from '../../lib/format'
 import { isProPlan } from '../../lib/constants'
 import { useAuth } from '../../context/AuthContext'
 
-// ─── Cả nhà ──────────────────────────────────────────────────
+// ─── Cả nhóm ──────────────────────────────────────────────────
 //
-// Vì sao trang này tồn tại: gói Pro Gia đình (199.000đ) đắt gấp 2,5 lần gói Pro
+// Vì sao trang này tồn tại: gói Pro Doanh nghiệp (349.000đ) đắt gấp 4,4 lần gói Pro
 // thường, mà trước trang này thứ khách nhận thêm chỉ là "3 chỗ ngồi" — người trả
-// tiền không thấy được gì về cả nhà mình. Một chỗ để nhìn tiến độ của người thân
-// là lý do bền nhất để trả 199.000đ thay vì 79.000đ.
+// tiền không thấy được gì về cả nhóm mình. Một chỗ để nhìn tiến độ của chủ nhóm
+// là lý do bền nhất để trả 349.000đ thay vì 79.000đ.
 //
-// Nguyên tắc về quyền riêng tư: người trong nhà LUÔN biết chủ gói đang xem được gì
+// Nguyên tắc về quyền riêng tư: người trong nhóm LUÔN biết chủ gói đang xem được gì
 // và tắt được bất cứ lúc nào. Bị nhìn trộm việc riêng mà không biết là cách chắc
-// chắn nhất để họ rời nhà; tắt được thì họ ở lại và tự quyết định.
+// chắn nhất để họ rời nhóm; tắt được thì họ ở lại và tự quyết định.
 //
 // Ba vai, ba nội dung — nhưng chỉ MỘT trang, vì cả ba đều đang hỏi cùng một câu:
-// "cái gói gia đình này đang cho tôi cái gì?".
+// "cái gói doanh nghiệp này đang cho tôi cái gì?".
 
 function StatChip({ value, label, tone = 'default' }) {
   const tones = {
@@ -59,7 +59,7 @@ function PersonCard({ person, isMe }) {
               {isMe && <span className="ml-1.5 text-xs font-bold text-navy-400 dark:text-slate-500">(bạn)</span>}
             </p>
             <p className="truncate text-xs text-navy-500 dark:text-slate-400">
-              {isMe ? 'Người trả tiền cho cả nhà' : person.email}
+              {isMe ? 'Người trả tiền cho cả nhóm' : person.email}
             </p>
           </div>
         </div>
@@ -121,7 +121,7 @@ export default function FamilyPage() {
 
   useEffect(() => {
     load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [])
 
   const toggleSharing = async (next) => {
@@ -140,7 +140,7 @@ export default function FamilyPage() {
 
   const isSeat = family?.role === 'MEMBER'
 
-  // ── Người trong nhà: biết mình đang chia sẻ gì, và tắt được ──
+  // ── Người trong nhóm: biết mình đang chia sẻ gì, và tắt được ──
   if (isSeat) {
     const shared = family?.progressShared !== false
     return (
@@ -148,10 +148,10 @@ export default function FamilyPage() {
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-navy-900 dark:text-white">
             <UsersThree size={24} weight="fill" className="text-fuchsia-600 dark:text-fuchsia-400" />
-            Cả nhà
+            Cả nhóm
           </h1>
           <p className="mt-1 text-sm text-navy-500 dark:text-slate-400">
-            Bạn đang dùng gói Pro Gia đình của <b>{family?.owner?.fullName || 'người thân'}</b>
+            Bạn đang dùng gói Pro Doanh nghiệp của <b>{family?.owner?.fullName || 'chủ nhóm'}</b>
             {family?.owner?.expiresAt && <> — còn hiệu lực tới {formatDate(family.owner.expiresAt)}</>}.
           </p>
         </div>
@@ -185,7 +185,7 @@ export default function FamilyPage() {
             {[
               'Toàn bộ quyền lợi Pro: nhắc dai, báo cáo năng suất, kế hoạch tuần, nhờ người khác làm',
               'Việc, nhắc nhở và báo cáo là của riêng bạn — chủ gói không sửa được việc của bạn',
-              'Muốn tự trả tiền? Rời gói gia đình ở trang Gói, dữ liệu vẫn còn nguyên',
+              'Muốn tự trả tiền? Rời gói doanh nghiệp ở trang Gói, dữ liệu vẫn còn nguyên',
             ].map((line) => (
               <li key={line} className="flex items-start gap-2">
                 <Check size={15} weight="bold" className="mt-0.5 shrink-0 text-emerald-500" />
@@ -205,7 +205,7 @@ export default function FamilyPage() {
     )
   }
 
-  // ── Chủ gói: bảng tiến độ cả nhà ──
+  // ── Chủ gói: bảng tiến độ cả nhóm ──
   if (board) {
     return (
       <div className="mx-auto max-w-3xl space-y-5 animate-fade-in">
@@ -213,21 +213,21 @@ export default function FamilyPage() {
           <div>
             <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-navy-900 dark:text-white">
               <UsersThree size={24} weight="fill" className="text-fuchsia-600 dark:text-fuchsia-400" />
-              Cả nhà hôm nay
+              Cả nhóm hôm nay
             </h1>
             <p className="mt-1 text-sm text-navy-500 dark:text-slate-400">
-              Mọi người trong gói gia đình đang tới đâu — số liệu do máy chủ tính theo giờ Việt Nam.
+              Mọi người trong gói doanh nghiệp đang tới đâu — số liệu do máy chủ tính theo giờ Việt Nam.
             </p>
           </div>
           <Link to="/app/billing">
             <Button variant="secondary" icon={UsersThree}>
-              Quản lý chỗ trong nhà
+              Quản lý chỗ trong nhóm
             </Button>
           </Link>
         </div>
 
         <div className="rounded-2xl bg-gradient-to-br from-fuchsia-600 via-pink-600 to-violet-600 p-5 text-white shadow-card">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/70">Cả nhà</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/70">Cả nhóm</p>
           <div className="mt-2 flex flex-wrap gap-5">
             <div>
               <p className="text-3xl font-extrabold">{board.totals.doneToday}</p>
@@ -250,7 +250,7 @@ export default function FamilyPage() {
           </div>
           {board.hiddenCount > 0 && (
             <p className="mt-3 text-xs font-semibold text-white/80">
-              {board.hiddenCount} người trong nhà không chia sẻ tiến độ, nên các số trên chưa tính họ.
+              {board.hiddenCount} người trong nhóm không chia sẻ tiến độ, nên các số trên chưa tính họ.
             </p>
           )}
         </div>
@@ -263,12 +263,12 @@ export default function FamilyPage() {
               Nhà mới có mình bạn
             </p>
             <p className="mt-1 text-sm text-navy-500 dark:text-slate-400">
-              Mời người thân vào bằng email — họ dùng miễn phí và có ngay quyền lợi Pro. Nhà dùng được tối đa{' '}
+              Mời chủ nhóm vào bằng email — họ dùng miễn phí và có ngay quyền lợi Pro. Nhà dùng được tối đa{' '}
               {board.maxSeats} tài khoản.
             </p>
             <div className="mt-4 flex justify-center">
               <Link to="/app/billing">
-                <Button icon={UsersThree}>Mời người thân</Button>
+                <Button icon={UsersThree}>Mời chủ nhóm</Button>
               </Link>
             </div>
           </div>
@@ -277,7 +277,7 @@ export default function FamilyPage() {
         )}
 
         <p className="text-center text-xs text-navy-400 dark:text-slate-500">
-          Bảng này là quyền lợi riêng của chủ gói Pro Gia đình. Người trong nhà luôn thấy được là đang chia sẻ và tắt
+          Bảng này là quyền lợi riêng của chủ gói Pro Doanh nghiệp. Người trong nhóm luôn thấy được là đang chia sẻ và tắt
           được bất cứ lúc nào.
         </p>
       </div>
@@ -291,32 +291,32 @@ export default function FamilyPage() {
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-navy-900 dark:text-white">
           <UsersThree size={24} weight="fill" className="text-fuchsia-600 dark:text-fuchsia-400" />
-          Cả nhà
+          Cả nhóm
         </h1>
         <p className="mt-1 text-sm text-navy-500 dark:text-slate-400">
-          Trang này dành cho gói <b>Pro Gia đình</b> — một người trả tiền, cả nhà cùng dùng.
+          Trang này dành cho gói <b>Pro Doanh nghiệp</b> — một người trả tiền, cả nhóm cùng dùng.
         </p>
       </div>
 
       <div className="rounded-2xl bg-gradient-to-br from-fuchsia-600 via-pink-600 to-violet-600 p-6 text-white shadow-card">
         <p className="inline-flex items-center gap-2 text-sm font-extrabold">
-          <Crown size={18} weight="fill" /> Pro Gia đình — {formatVnd(199000)}/tháng cho cả nhà
+          <Crown size={18} weight="fill" /> Pro Doanh nghiệp — {formatVnd(349000)}/tháng cho cả nhóm
         </p>
         <p className="mt-2 text-sm text-white/85">
-          Tới <b>4 tài khoản</b> dùng chung quyền lợi Pro, và chủ gói có trang này để nhìn cả nhà đang tới đâu: hôm nay
-          ai xong việc gì, ai đang quá hạn, việc nào bị bỏ quên lâu nhất. Người trong nhà luôn biết mình đang chia sẻ
+          Tới <b>10 tài khoản</b> dùng chung quyền lợi Pro, và chủ gói có trang này để nhìn cả nhóm đang tới đâu: hôm nay
+          ai xong việc gì, ai đang quá hạn, việc nào bị bỏ quên lâu nhất. Người trong nhóm luôn biết mình đang chia sẻ
           gì và tắt được bất cứ lúc nào.
         </p>
         <div className="mt-4">
           <Link to="/app/billing">
             <Button variant="light" icon={ArrowRight}>
-              {paidButNotFamily ? 'Nâng cấp lên Pro Gia đình' : 'Mua cho cả nhà'}
+              {paidButNotFamily ? 'Nâng cấp lên Pro Doanh nghiệp' : 'Mua cho cả nhóm'}
             </Button>
           </Link>
         </div>
         {paidButNotFamily && (
           <p className="mt-3 text-xs font-semibold text-white/80">
-            Bạn đã có quyền lợi Pro rồi; gói gia đình là để thêm người thân và mở trang này.
+            Bạn đã có quyền lợi Pro rồi; gói doanh nghiệp là để thêm chủ nhóm và mở trang này.
           </p>
         )}
       </div>

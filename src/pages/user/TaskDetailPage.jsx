@@ -43,7 +43,7 @@ import Button from '../../components/common/Button'
 import { StatusBadge, PriorityBadge, CategoryBadge } from '../../components/common/Badge'
 import { ConfirmDialog } from '../../components/common/Modal'
 import { Toggle, Select } from '../../components/common/Inputs'
-import { formatDateTime, formatRelativeDay, formatTime, effectiveStatus, isOverdue } from '../../lib/format'
+import { formatDateTime, formatRelativeDay, effectiveStatus, isOverdue } from '../../lib/format'
 import { repeatSummary, isProPlan } from '../../lib/constants'
 
 export default function TaskDetailPage() {
@@ -582,8 +582,8 @@ export default function TaskDetailPage() {
                 )}
               </form>
             )}
-            {/* Luân phiên người làm: việc nhà lặp lại mà mỗi kỳ MỘT người chịu
-                trách nhiệm — "tuần này ai đổ rác". Không có khối này thì cả nhà
+            {/* Luân phiên người làm: việc nhóm lặp lại mà mỗi kỳ MỘT người chịu
+                trách nhiệm — "tuần này ai đổ rác". Không có khối này thì cả nhóm
                 cùng nhận chuông rồi cùng đoán, và việc rơi vào tay người không
                 biết mình có việc. */}
             {!closed && task.repeatType !== 'NONE' && assignees.length >= 2 && (

@@ -114,9 +114,9 @@ export async function setUserPlan(userId, plan) {
   })
   if (!user) throw ApiError.notFound('Không tìm thấy người dùng')
 
-  const validPlans = ['FREE', 'PLUS', 'PRO', 'FAMILY']
+  const validPlans = ['FREE', 'PLUS', 'PRO', 'BUSINESS']
   if (!validPlans.includes(plan)) {
-    throw ApiError.badRequest('Gói chỉ có thể là FREE, PLUS, PRO hoặc FAMILY')
+    throw ApiError.badRequest('Gói chỉ có thể là FREE, PLUS, PRO hoặc BUSINESS')
   }
 
   // Đổi về FREE: xoá mốc thời gian và đóng các dòng Subscription đang mở.

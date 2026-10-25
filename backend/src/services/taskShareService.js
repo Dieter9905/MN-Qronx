@@ -30,8 +30,8 @@ export const MAX_OPEN_SHARES = 50
 
 // ─── Luân phiên người làm ────────────────────────────────────
 //
-// Vì sao cần: "đổ rác hằng tuần" giao cho cả nhà là vô nghĩa — không ai thấy mình
-// chịu trách nhiệm, và cả nhà cùng nhận chuông rồi cùng đoán kỳ này đến lượt ai.
+// Vì sao cần: "đổ rác hằng tuần" giao cho cả nhóm là vô nghĩa — không ai thấy mình
+// chịu trách nhiệm, và cả nhóm cùng nhận chuông rồi cùng đoán kỳ này đến lượt ai.
 // Luân phiên trả lời đúng câu đó, và vẫn chỉ gói trả phí có được vì nó nằm trên
 // tính năng giao việc (người được nhờ vẫn không cần trả phí).
 
@@ -186,7 +186,7 @@ export async function revokeShare(userId, taskId, shareId) {
   await prisma.taskShare.delete({ where: { shareId } })
 
   // Người bị thu hồi đang đến lượt: chuyển lượt NGAY sang người kế tiếp. Để lượt
-  // trỏ vào người đã bị gỡ là việc nằm không — không ai được nhắc, và cả nhà hiểu
+  // trỏ vào người đã bị gỡ là việc nằm không — không ai được nhắc, và cả nhóm hiểu
   // nhầm rằng kỳ này đã có người lo.
   if (task.rotateEnabled && Number(task.turnAssigneeId) === Number(share.assigneeId)) {
     const after = nextTurnAssignee(task.shares || [], share.assigneeId)

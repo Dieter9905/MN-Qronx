@@ -66,9 +66,9 @@ enum Plan {
   FREE
   PLUS
   PRO
-  // Pro Gia đình: mua một lần, dùng chung cho tới 4 tài khoản (chủ gói + 3 người).
-  // Cùng quyền lợi với PRO — người trong nhà không cần mua thêm gói riêng.
-  FAMILY
+  // Pro Doanh nghiệp: mua một lần, dùng chung cho tới 10 tài khoản (chủ gói + 9 người).
+  // Cùng quyền lợi với PRO — người trong nhóm không cần mua thêm gói riêng.
+  BUSINESS
 }
 
 // ─── Thanh toán & quyền lợi theo gói ───────────────────────
@@ -80,9 +80,9 @@ enum BillingProvider {
   ADMIN    // admin tặng/đổi gói thủ công
   TRIAL    // dùng thử 7 ngày
   REWARD   // đổi điểm lấy ngày dùng gói
-  // Chỗ ngồi trong gói gia đình của người khác: KHÔNG phải tiền khách trả, nên phải
+  // Chỗ ngồi trong gói doanh nghiệp của người khác: KHÔNG phải tiền khách trả, nên phải
   // tách khỏi các provider ở trên để báo cáo doanh thu không đếm nhầm thành khách trả tiền.
-  FAMILY
+  BUSINESS
 }
 
 enum BillingCycle {
@@ -174,7 +174,7 @@ model User {
   // Giao việc (Pro): assignedShares = việc người khác nhờ tôi, sharedTasks = việc tôi nhờ người khác
   assignedShares         TaskShare[]             @relation("TaskShareAssignee")
   sharedTasks            TaskShare[]             @relation("TaskShareSharedBy")
-  // Gói Pro Gia đình: ownedFamilyMembers = những người tôi cho dùng ké, familyMembership = chỗ của tôi trong nhà người khác
+  // Gói Pro Doanh nghiệp: ownedFamilyMembers = những người tôi cho dùng ké, familyMembership = chỗ của tôi trong nhóm người khác
   ownedFamilyMembers     FamilyMember[]          @relation("FamilyOwner")
   familyMembership       FamilyMember?           @relation("FamilyMemberUser")
   invitesSent            Invitation[]            @relation("InviterInvitations")
@@ -371,26 +371,26 @@ model TaskShare {
   @@map("task_shares")
 }
 
-// ─── Gói Pro Gia đình ────────────────────────────────────────
-// Một khách trả tiền cho cả nhà: chủ gói mua FAMILY và kéo tối đa 3 người nữa
-// dùng chung (tổng 4 tài khoản có quyền Pro).
+// ─── Gói Pro Doanh nghiệp ────────────────────────────────────────
+// Một khách trả tiền cho cả nhóm: chủ gói mua BUSINESS và kéo tối đa 9 người nữa
+// dùng chung (tổng 10 tài khoản có quyền Pro).
 //
-// Quyền lợi của người trong nhà được VẬT CHẤT HOÁ trên chính `users.plan = PRO`
-// (cùng Subscription.provider = FAMILY) thay vì tính lại ở mỗi chỗ đọc gói — mỗi
+// Quyền lợi của người trong nhóm được VẬT CHẤT HOÁ trên chính `users.plan = PRO`
+// (cùng Subscription.provider = BUSINESS) thay vì tính lại ở mỗi chỗ đọc gói — mỗi
 // nơi tự suy ra "có được dùng Pro không" là cách chắc chắn để chỗ này cho qua,
-// chỗ kia chặn. Cột/`planExpiresAt` của người trong nhà luôn lấy theo chủ gói nên
-// khi chủ hết hạn thì cả nhà cùng hết (scheduler đồng bộ mỗi phút).
+// chỗ kia chặn. Cột/`planExpiresAt` của người trong nhóm luôn lấy theo chủ gói nên
+// khi chủ hết hạn thì cả nhóm cùng hết (scheduler đồng bộ mỗi phút).
 model FamilyMember {
   familyMemberId Int       @id @default(autoincrement()) @map("family_member_id")
   ownerId        Int       @map("owner_id")
-  // Một người chỉ nằm trong đúng một nhà (@@unique bên dưới) — tránh cùng lúc
+  // Một người chỉ nằm trong đúng một nhóm (@@unique bên dưới) — tránh cùng lúc
   // nhận hai gói và không biết gói nào hết hạn trước.
   memberId       Int       @unique @map("member_id")
   note           String?   @db.VarChar(255)
-  // Chủ gói có xem được tiến độ công việc của người này không (mục "Cả nhà").
-  // Mặc định BẬT vì đó là toàn bộ giá trị của gói gia đình, nhưng người trong nhà
+  // Chủ gói có xem được tiến độ công việc của người này không (mục "Cả nhóm").
+  // Mặc định BẬT vì đó là toàn bộ giá trị của gói doanh nghiệp, nhưng người trong nhóm
   // luôn tắt được — bị nhìn trộm việc riêng mà không biết là cách chắc chắn nhất
-  // để họ rời nhà, còn tắt được thì họ ở lại và tự quyết định.
+  // để họ rời nhóm, còn tắt được thì họ ở lại và tự quyết định.
   shareProgress  Boolean   @default(true) @map("share_progress")
   createdAt      DateTime  @default(now()) @map("created_at")
 

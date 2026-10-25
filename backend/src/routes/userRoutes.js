@@ -145,15 +145,15 @@ router.put('/weekly-report', auth, userController.setWeeklyReport)
 // khác để xem trước nội dung thư đang gửi cho khách trả tiền.
 router.post('/weekly-report/test', auth, userController.sendTestWeeklyReport)
 
-// ── Gói Pro Gia đình: một khách trả tiền, tới 4 tài khoản cùng dùng quyền Pro ──
-// Cả chủ gói lẫn người trong nhà đều gọi GET này rồi tự phân vai ở giao diện.
+// ── Gói Pro Doanh nghiệp: một khách trả tiền, tới 4 tài khoản cùng dùng quyền Pro ──
+// Cả chủ gói lẫn người trong nhóm đều gọi GET này rồi tự phân vai ở giao diện.
 router.get('/family', auth, familyController.getFamily)
 router.post('/family/members', auth, familyController.inviteMember)
 router.delete('/family/members/:memberId', auth, familyController.removeMember)
 router.post('/family/leave', auth, familyController.leaveFamily)
-// "Cả nhà hôm nay": chủ gói nhìn tiến độ người trong nhà (chỉ gói FAMILY còn hạn).
+// "Cả nhóm hôm nay": chủ gói nhìn tiến độ người trong nhóm (chỉ gói BUSINESS còn hạn).
 router.get('/family/board', auth, familyController.getBoard)
-// Người trong nhà tự quyết định có cho chủ gói xem tiến độ của mình hay không.
+// Người trong nhóm tự quyết định có cho chủ gói xem tiến độ của mình hay không.
 router.put('/family/progress', auth, familyController.setProgress)
 
 // ── Việc người khác nhờ tôi làm (giao việc là quyền lợi gói Pro của NGƯỜI GIAO) ──

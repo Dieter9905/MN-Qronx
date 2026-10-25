@@ -1,53 +1,53 @@
 import prisma from '../config/prisma.js'
 import ApiError from '../utils/ApiError.js'
-import { MAX_FAMILY_SEATS, isPlanExpired } from '../utils/planLimits.js'
+import { MAX_BUSINESS_SEATS, isPlanExpired } from '../utils/planLimits.js'
 import { startOfDay, addDays } from '../utils/dateUtils.js'
 
 // Xuất lại để giao diện/test không phải biết gói này định nghĩa ở đâu.
-export { MAX_FAMILY_SEATS }
+export { MAX_BUSINESS_SEATS }
 
-// ─── Gói Pro Gia đình ────────────────────────────────────────
+// ─── Gói Pro Doanh nghiệp ────────────────────────────────────────
 //
 // Vì sao bán thêm gói này: năm quyền lợi Pro trước đều bán cho MỘT người, nên
-// doanh thu chỉ tăng khi có thêm khách mới. Gói gia đình nâng TIỀN MỖI KHÁCH
-// (199.000đ thay vì 79.000đ cho một người) và nhờ mỗi khách kéo theo ba khách
-// dùng miễn phí — mỗi người trong nhà là một tài khoản thật, việc thật, chuông
-// thật, nên cũng là người có thể trả tiền sau này.
+// doanh thu chỉ tăng khi có thêm khách mới. Gói doanh nghiệp nâng TIỀN MỖI KHÁCH
+// (349.000đ thay vì 79.000đ cho một người) và kèm tối đa 9 tài khoản dùng chung —
+// mỗi người trong nhóm là một tài khoản thật, việc thật, chuông thật, nên cũng là
+// người có thể trả tiền sau này.
 //
-// Nguyên tắc quan trọng nhất của dịch vụ này: quyền lợi của người trong nhà được
+// Nguyên tắc quan trọng nhất của dịch vụ này: quyền lợi của người trong nhóm được
 // VẬT CHẤT HOÁ trên `users.plan` (PRO) thay vì suy ra ở mỗi chỗ kiểm tra gói.
 // Mọi cổng quyền lợi cũ — nhắc dai, báo cáo, kế hoạch tuần, giao việc, thiết bị,
 // âm thanh — vì thế chạy đúng mà KHÔNG phải sửa một dòng nào, và cũng không có
 // chỗ nào tính khác chỗ nào về việc "người này có được dùng Pro không".
 //
-// Gói Pro Gia đình chỉ sống khi CHỦ GÓI còn hạn. Chủ hết hạn thì cả nhà cùng
+// Gói Pro Doanh nghiệp chỉ sống khi CHỦ GÓI còn hạn. Chủ hết hạn thì cả nhóm cùng
 // hết và dòng thành viên bị xoá — khi chủ mua lại phải MỜI LẠI, vì tự bật lại
 // quyền cho người đã muốn rời đi là điều không ai mong đợi.
 
-/** Quyền lợi của một chỗ ngồi: Pro (vật chất hoá) + subscription provider=FAMILY. */
+/** Quyền lợi của một chỗ ngồi: Pro (vật chất hoá) + subscription provider=BUSINESS. */
 const SEAT_PLAN = 'PRO'
 
 /** Đang có một lượt đồng bộ chạy hay không (chốt chặn trong tiến trình). */
 let syncing = false
 
-/** Người mua gói: chỉ chủ gói FAMILY còn hạn mới được thao tác với ghế. */
+/** Người mua gói: chỉ chủ gói BUSINESS còn hạn mới được thao tác với ghế. */
 async function loadActiveOwner(userId) {
   const user = await prisma.user.findUnique({
     where: { userId },
     select: { userId: true, fullName: true, email: true, plan: true, planExpiresAt: true },
   })
   if (!user) throw ApiError.notFound('Không tìm thấy người dùng')
-  if (user.plan !== 'FAMILY' || isPlanExpired(user)) {
+  if (user.plan !== 'BUSINESS' || isPlanExpired(user)) {
     throw ApiError.badRequest(
-      'Gói Pro Gia đình là quyền lợi của người mua gói. Mua gói Pro Gia đình để dùng chung cho cả nhà (tối đa 4 tài khoản).',
+      'Gói Pro Doanh nghiệp là quyền lợi của người mua gói. Mua gói Pro Doanh nghiệp để dùng chung cho cả nhóm (tối đa 4 tài khoản).',
     )
   }
   return user
 }
 
-/** Ghế còn trống trong nhà: tổng 4 tài khoản trừ chủ gói. */
+/** Ghế còn trống trong nhóm: tổng 4 tài khoản trừ chủ gói. */
 export function seatsLeft(memberCount) {
-  return Math.max(0, MAX_FAMILY_SEATS - 1 - memberCount)
+  return Math.max(0, MAX_BUSINESS_SEATS - 1 - memberCount)
 }
 
 /**
@@ -72,7 +72,7 @@ async function grantSeat(owner, member) {
   // chủ gia hạn lại đóng một dòng rồi mở một dòng, và hai lượt đồng bộ chạy sát
   // nhau có thể để lại hai ghế cùng ACTIVE cho một người.
   const existing = await prisma.subscription.findFirst({
-    where: { userId: member.userId, provider: 'FAMILY', status: 'ACTIVE' },
+    where: { userId: member.userId, provider: 'BUSINESS', status: 'ACTIVE' },
     orderBy: { subscriptionId: 'desc' },
   })
   if (existing) {
@@ -83,7 +83,7 @@ async function grantSeat(owner, member) {
         expiresAt: owner.planExpiresAt,
         startedAt: seatStart,
         providerRef: `family:${owner.userId}`,
-        note: `Chỗ trong gói Pro Gia đình của ${owner.email}`,
+        note: `Chỗ trong gói Pro Doanh nghiệp của ${owner.email}`,
       },
     })
   } else {
@@ -94,12 +94,12 @@ async function grantSeat(owner, member) {
         cycle: 'MONTHLY',
         // Khác provider với các đơn trả tiền thật: báo cáo doanh thu không được phép
         // đếm một chỗ ngồi là một khách đã trả tiền.
-        provider: 'FAMILY',
+        provider: 'BUSINESS',
         status: 'ACTIVE',
         providerRef: `family:${owner.userId}`,
         startedAt: seatStart,
         expiresAt: owner.planExpiresAt,
-        note: `Chỗ trong gói Pro Gia đình của ${owner.email}`,
+        note: `Chỗ trong gói Pro Doanh nghiệp của ${owner.email}`,
       },
     })
   }
@@ -112,7 +112,7 @@ async function grantSeat(owner, member) {
  */
 async function revokeSeat(memberId) {
   const seat = await prisma.subscription.findFirst({
-    where: { userId: memberId, provider: 'FAMILY', status: 'ACTIVE' },
+    where: { userId: memberId, provider: 'BUSINESS', status: 'ACTIVE' },
   })
   if (!seat) return false
 
@@ -153,9 +153,9 @@ async function notify(userId, payload) {
 }
 
 /**
- * Đồng bộ quyền lợi cả nhà theo chủ gói. Chạy mỗi phút cùng nhịp hạ gói hết hạn
+ * Đồng bộ quyền lợi cả nhóm theo chủ gói. Chạy mỗi phút cùng nhịp hạ gói hết hạn
  * (scheduler) — nhờ đó mọi đường cấp gói (mua, admin tặng, đổi điểm, dùng thử)
- * đều đưa người trong nhà về đúng hạn mới mà không phải vá từng đường.
+ * đều đưa người trong nhóm về đúng hạn mới mà không phải vá từng đường.
  *
  * @returns {Promise<{scanned:number, granted:number, revoked:number, ended:number}>}
  */
@@ -185,7 +185,7 @@ async function runFamilySync(now) {
 
   for (const row of rows) {
     const ownerActive =
-      row.owner.plan === 'FAMILY' &&
+      row.owner.plan === 'BUSINESS' &&
       row.owner.planExpiresAt &&
       new Date(row.owner.planExpiresAt) > now
 
@@ -197,8 +197,8 @@ async function runFamilySync(now) {
       if (dropped) {
         state.revoked += 1
         await notify(row.memberId, {
-          title: '🏠 Gói Pro Gia đình đã kết thúc',
-          body: `Gói Pro Gia đình của ${row.owner.fullName || 'chủ gói'} không còn hiệu lực — bạn trở lại gói Miễn phí.`,
+          title: '🏠 Gói Pro Doanh nghiệp đã kết thúc',
+          body: `Gói Pro Doanh nghiệp của ${row.owner.fullName || 'chủ gói'} không còn hiệu lực — bạn trở lại gói Miễn phí.`,
           url: '/app/billing',
         })
       }
@@ -220,16 +220,16 @@ async function runFamilySync(now) {
  *  • đang có gói riêng (admin tặng…) → không đụng.
  */
 async function ensureSeat(owner, member, now) {
-  // Không đè lên gói người trong nhà có bằng đường khác (đổi điểm, admin tặng,
+  // Không đè lên gói người trong nhóm có bằng đường khác (đổi điểm, admin tặng,
   // dùng thử) — quyền lợi ấy là của họ, kể cả khi nhà này hết hạn trước.
   const ownSub = await prisma.subscription.findFirst({
-    where: { userId: member.userId, status: 'ACTIVE', provider: { not: 'FAMILY' } },
+    where: { userId: member.userId, status: 'ACTIVE', provider: { not: 'BUSINESS' } },
     select: { subscriptionId: true },
   })
   if (ownSub) return false
 
   const seat = await prisma.subscription.findFirst({
-    where: { userId: member.userId, provider: 'FAMILY', status: 'ACTIVE' },
+    where: { userId: member.userId, provider: 'BUSINESS', status: 'ACTIVE' },
   })
 
   if (member.plan === SEAT_PLAN && seat) {
@@ -260,7 +260,7 @@ export async function inviteMember(ownerId, { email, note } = {}) {
   const memberCount = await prisma.familyMember.count({ where: { ownerId } })
   if (seatsLeft(memberCount) <= 0) {
     throw ApiError.badRequest(
-      `Nhà bạn đã đủ ${MAX_FAMILY_SEATS} tài khoản (gồm bạn). Bớt một người rồi mời người khác.`,
+      `Nhóm của bạn đã đủ ${MAX_BUSINESS_SEATS} tài khoản (gồm bạn). Bớt một người rồi mời người khác.`,
     )
   }
 
@@ -283,26 +283,26 @@ export async function inviteMember(ownerId, { email, note } = {}) {
   }
   if (target.userId === ownerId) throw ApiError.badRequest('Bạn đang là chủ gói rồi')
 
-  // Một người chỉ nằm trong một nhà: vừa tránh bị hai gói cùng lúc, vừa tránh
-  // trường hợp chủ một nhà bị "kéo" vào nhà khác và gói của người đó mất quyền.
+  // Một người chỉ nằm trong một nhóm: vừa tránh bị hai gói cùng lúc, vừa tránh
+  // trường hợp chủ một nhóm bị "kéo" vào nhóm khác và gói của người đó mất quyền.
   const elsewhere = await prisma.familyMember.findFirst({
     where: { OR: [{ memberId: target.userId }, { ownerId: target.userId }] },
   })
   if (elsewhere?.ownerId === target.userId) {
     throw ApiError.badRequest(
-      `${target.fullName} đang là chủ một gói Pro Gia đình khác nên không thể vào thêm nhà bạn.`,
+      `${target.fullName} đang là chủ một gói Pro Doanh nghiệp khác nên không thể vào thêm nhóm của bạn.`,
     )
   }
   if (elsewhere) {
-    throw ApiError.badRequest(`${target.fullName} đã nằm trong một gói Pro Gia đình khác rồi.`)
+    throw ApiError.badRequest(`${target.fullName} đã nằm trong một gói Pro Doanh nghiệp khác rồi.`)
   }
 
-  // Người này đang là CHỦ một nhà khác: trước hết vì tự trả tiền, nhưng lỗi phải
+  // Người này đang là CHỦ một nhóm khác: trước hết vì tự trả tiền, nhưng lỗi phải
   // nói đúng lý do — nếu không thì chủ nhà kia tưởng mình chỉ "đang trả phí" chứ
   // không hiểu mình đang có trách nhiệm với cả một gói.
-  if (target.plan === 'FAMILY' && !isPlanExpired(target)) {
+  if (target.plan === 'BUSINESS' && !isPlanExpired(target)) {
     throw ApiError.badRequest(
-      `${target.fullName} đang là chủ một gói Pro Gia đình khác nên không thể vào thêm nhà bạn.`,
+      `${target.fullName} đang là chủ một gói Pro Doanh nghiệp khác nên không thể vào thêm nhóm của bạn.`,
     )
   }
 
@@ -324,15 +324,15 @@ export async function inviteMember(ownerId, { email, note } = {}) {
   await grantSeat(owner, target)
 
   await notify(target.userId, {
-    title: '🏠 Bạn được mời vào gói Pro Gia đình',
-    body: `${owner.fullName || 'Một người'} thêm bạn vào gói Pro Gia đình — giờ bạn có nhắc dai, báo cáo và kế hoạch tuần.`,
+    title: '🏠 Bạn được mời vào gói Pro Doanh nghiệp',
+    body: `${owner.fullName || 'Một người'} thêm bạn vào gói Pro Doanh nghiệp — giờ bạn có nhắc dai, báo cáo và kế hoạch tuần.`,
     url: '/app/billing',
   })
 
   return listFamily(ownerId)
 }
 
-/** Gỡ một người khỏi nhà (chủ gói làm). Người đó mất quyền Pro ngay lập tức. */
+/* * Gỡ một người khỏi nhóm (chủ gói làm). Người đó mất quyền Pro ngay lập tức. */
 export async function removeMember(ownerId, memberId) {
   await loadActiveOwner(ownerId)
 
@@ -340,14 +340,14 @@ export async function removeMember(ownerId, memberId) {
     where: { ownerId, memberId: Number(memberId) },
     include: { member: { select: { userId: true, fullName: true } } },
   })
-  if (!row) throw ApiError.notFound('Không tìm thấy người trong gói gia đình này')
+  if (!row) throw ApiError.notFound('Không tìm thấy người trong gói doanh nghiệp này')
 
   await prisma.familyMember.delete({ where: { familyMemberId: row.familyMemberId } })
   const dropped = await revokeSeat(row.memberId)
 
   if (dropped) {
     await notify(row.memberId, {
-      title: '🏠 Bạn không còn trong gói Pro Gia đình',
+      title: '🏠 Bạn không còn trong gói Pro Doanh nghiệp',
       body: 'Chủ gói đã gỡ bạn khỏi nhà — quyền lợi Pro kết thúc ở đây, dữ liệu của bạn vẫn còn nguyên.',
       url: '/app/billing',
     })
@@ -356,13 +356,13 @@ export async function removeMember(ownerId, memberId) {
   return listFamily(ownerId)
 }
 
-/** Người trong nhà tự rời đi (muốn mua gói riêng hoặc không muốn dùng chung nữa). */
+/** Người trong nhóm tự rời đi (muốn mua gói riêng hoặc không muốn dùng chung nữa). */
 export async function leaveFamily(userId) {
   const row = await prisma.familyMember.findFirst({
     where: { memberId: userId },
     include: { owner: { select: { userId: true, fullName: true, email: true } } },
   })
-  if (!row) throw ApiError.badRequest('Bạn không nằm trong gói Pro Gia đình nào')
+  if (!row) throw ApiError.badRequest('Bạn không nằm trong gói Pro Doanh nghiệp nào')
 
   const me = await prisma.user.findUnique({ where: { userId }, select: { fullName: true } })
 
@@ -370,8 +370,8 @@ export async function leaveFamily(userId) {
   await revokeSeat(userId)
 
   await notify(row.ownerId, {
-    title: '🏠 Có người đã rời gói gia đình',
-    body: `${me?.fullName || 'Một thành viên'} đã rời gói Pro Gia đình của bạn — còn một chỗ trống để mời người khác.`,
+    title: '🏠 Có người đã rời gói doanh nghiệp',
+    body: `${me?.fullName || 'Một thành viên'} đã rời gói Pro Doanh nghiệp của bạn — còn một chỗ trống để mời người khác.`,
     url: '/app/billing',
   })
 
@@ -379,7 +379,7 @@ export async function leaveFamily(userId) {
 }
 
 /**
- * Trạng thái gói gia đình của người gọi — cả hai phía (chủ gói và người trong
+ * Trạng thái gói doanh nghiệp của người gọi — cả hai phía (chủ gói và người trong
  * nhà) xem cùng một màn hình, chỉ khác phần quyền thao tác.
  */
 export async function listFamily(userId) {
@@ -414,12 +414,12 @@ export async function listFamily(userId) {
   })
 
   const ownerActive =
-    me?.plan === 'FAMILY' && me.planExpiresAt && new Date(me.planExpiresAt) > new Date()
+    me?.plan === 'BUSINESS' && me.planExpiresAt && new Date(me.planExpiresAt) > new Date()
 
   return {
     role: owned.length > 0 ? 'OWNER' : membership ? 'MEMBER' : null,
     ownerActive: Boolean(ownerActive),
-    maxSeats: MAX_FAMILY_SEATS,
+    maxSeats: MAX_BUSINESS_SEATS,
     seatsUsed: owned.length + 1,
     seatsLeft: seatsLeft(owned.length),
     expiresAt: ownerActive ? me.planExpiresAt : null,
@@ -430,12 +430,12 @@ export async function listFamily(userId) {
           email: membership.owner.email,
           expiresAt: membership.owner.planExpiresAt,
           ownerActive:
-            membership.owner.plan === 'FAMILY' &&
+            membership.owner.plan === 'BUSINESS' &&
             membership.owner.planExpiresAt &&
             new Date(membership.owner.planExpiresAt) > new Date(),
         }
       : null,
-    // Người trong nhà thấy được chủ gói có đang xem tiến độ của mình hay không
+    // Người trong nhóm thấy được chủ gói có đang xem tiến độ của mình hay không
     progressShared: membership ? membership.shareProgress : null,
     members: owned.map((row) => ({
       familyMemberId: row.familyMemberId,
@@ -450,14 +450,14 @@ export async function listFamily(userId) {
   }
 }
 
-// ─── "Cả nhà hôm nay" — chủ gói nhìn tiến độ người trong nhà ─
+// ─── "Cả nhóm hôm nay" — chủ gói nhìn tiến độ người trong nhóm ─
 
 /** Trạng thái còn phải làm. Việc đã xong/huỷ không bao giờ tính là quá hạn. */
 const OPEN_STATUSES = ['TODO', 'IN_PROGRESS']
 
 /**
  * Số liệu của MỘT tài khoản. Một hàm duy nhất cho chủ gói lẫn từng thành viên:
- * hai chỗ đếm hai kiểu là cách chắc chắn nhất để màn hình "cả nhà" nói dối.
+ * hai chỗ đếm hai kiểu là cách chắc chắn nhất để màn hình "cả nhóm" nói dối.
  *
  * Ngày tính theo giờ Việt Nam (dateUtils.startOfDay) — "hôm nay" của khách không
  * phải "hôm nay" của máy chủ UTC.
@@ -492,11 +492,11 @@ async function progressOf(userId, now) {
 }
 
 /**
- * Bảng "Cả nhà hôm nay" — CHỈ chủ gói xem được.
+ * Bảng "Cả nhóm hôm nay" — CHỈ chủ gói xem được.
  *
- * Vì sao là quyền lợi riêng của gói gia đình chứ không phải một trang cho mọi
- * người: người trả tiền cho cả nhà cần một lý do để trả 199.000đ thay vì 79.000đ,
- * mà lý do bền nhất là thấy được cả nhà đang tiến bộ tới đâu. Người trong nhà
+ * Vì sao là quyền lợi riêng của gói doanh nghiệp chứ không phải một trang cho mọi
+ * người: người trả tiền cho cả nhóm cần một lý do để trả 199.000đ thay vì 79.000đ,
+ * mà lý do bền nhất là thấy được cả nhóm đang tiến bộ tới đâu. Người trong nhóm
  * luôn tắt được phần chia sẻ này (`shareProgress`) và biết rõ là đang bật.
  */
 export async function getFamilyBoard(ownerId, { now = new Date() } = {}) {
@@ -506,8 +506,8 @@ export async function getFamilyBoard(ownerId, { now = new Date() } = {}) {
   })
   if (!owner) throw ApiError.notFound('Không tìm thấy người dùng')
 
-  if (owner.plan !== 'FAMILY' || isPlanExpired(owner)) {
-    // Người trong nhà gõ đúng địa chỉ này là chuyện thường (menu ai cũng thấy).
+  if (owner.plan !== 'BUSINESS' || isPlanExpired(owner)) {
+    // Người trong nhóm gõ đúng địa chỉ này là chuyện thường (menu ai cũng thấy).
     // Nói cho họ biết trang của họ dùng để làm gì, thay vì đọc câu bán gói.
     const membership = await prisma.familyMember.findFirst({
       where: { memberId: ownerId },
@@ -515,8 +515,8 @@ export async function getFamilyBoard(ownerId, { now = new Date() } = {}) {
     })
     throw ApiError.badRequest(
       membership
-        ? 'Bảng "Cả nhà" chỉ chủ gói (người trả tiền) xem được. Bạn đang dùng chỗ trong gói của người khác — mục Cả nhà của bạn dùng để bật/tắt chia sẻ tiến độ.'
-        : 'Bảng "Cả nhà" là quyền lợi của gói Pro Gia đình. Mua gói để cả nhà dùng chung và thấy cả nhà đang tới đâu.',
+        ? 'Bảng "Cả nhóm" chỉ chủ gói (người trả tiền) xem được. Bạn đang dùng chỗ trong gói của người khác — mục Cả nhóm của bạn dùng để bật/tắt chia sẻ tiến độ.'
+        : 'Bảng "Cả nhóm" là quyền lợi của gói Pro Doanh nghiệp. Mua gói để cả nhóm dùng chung và thấy cả nhóm đang tới đâu.',
     )
   }
 
@@ -568,14 +568,14 @@ export async function getFamilyBoard(ownerId, { now = new Date() } = {}) {
     totals,
     hiddenCount: members.length - shared.length,
     expiresAt: owner.planExpiresAt,
-    maxSeats: MAX_FAMILY_SEATS,
+    maxSeats: MAX_BUSINESS_SEATS,
   }
 }
 
-/** Người trong nhà tự quyết định có cho chủ gói xem tiến độ của mình hay không. */
+/** Người trong nhóm tự quyết định có cho chủ gói xem tiến độ của mình hay không. */
 export async function setProgressSharing(userId, shared) {
   const row = await prisma.familyMember.findFirst({ where: { memberId: userId } })
-  if (!row) throw ApiError.badRequest('Bạn không nằm trong gói Pro Gia đình nào')
+  if (!row) throw ApiError.badRequest('Bạn không nằm trong gói Pro Doanh nghiệp nào')
 
   const updated = await prisma.familyMember.update({
     where: { familyMemberId: row.familyMemberId },
@@ -593,5 +593,5 @@ export default {
   setProgressSharing,
   syncFamilySeats,
   seatsLeft,
-  MAX_FAMILY_SEATS,
+  MAX_BUSINESS_SEATS,
 }

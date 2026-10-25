@@ -22,7 +22,7 @@ export const app = {
     reports: 'Báo cáo năng suất',
     planner: 'Kế hoạch tuần',
     assigned: 'Việc được giao',
-    family: 'Cả nhà',
+    family: 'Cả nhóm',
     aiGroup: 'AI',
     aiAssistant: 'Trợ lý AI',
     rewards: 'Phần thưởng',

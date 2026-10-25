@@ -522,21 +522,21 @@ async function currentAiUsage(userId) {
 
 export async function createOrder(userId, { plan, cycle = 'MONTHLY' }) {
   if (!PLANS[plan] || plan === 'FREE') {
-    throw ApiError.badRequest('Gói không hợp lệ. Chỉ có thể mua gói Plus, Pro hoặc Pro Gia đình.')
+    throw ApiError.badRequest('Gói không hợp lệ. Chỉ có thể mua gói Plus, Pro hoặc Pro Doanh nghiệp.')
   }
   if (!CYCLES[cycle]) {
     throw ApiError.badRequest('Kỳ thanh toán không hợp lệ')
   }
 
-  // Đang dùng một chỗ trong gói gia đình của người khác: không cho mua riêng ở đây,
+  // Đang dùng một chỗ trong gói doanh nghiệp của người khác: không cho mua riêng ở đây,
   // vì applyPlanChange sẽ đóng luôn dòng ghế và để hai nguồn quyền lợi đánh nhau.
   const seat = await prisma.subscription.findFirst({
-    where: { userId, provider: 'FAMILY', status: 'ACTIVE' },
+    where: { userId, provider: 'BUSINESS', status: 'ACTIVE' },
     select: { subscriptionId: true },
   })
   if (seat) {
     throw ApiError.badRequest(
-      'Bạn đang dùng gói Pro Gia đình của người thân nên không cần mua riêng. Nếu vẫn muốn tự trả tiền, hãy rời gói gia đình trước ở mục Gói.',
+      'Bạn đang dùng gói Pro Doanh nghiệp của người thân nên không cần mua riêng. Nếu vẫn muốn tự trả tiền, hãy rời gói doanh nghiệp trước ở mục Gói.',
     )
   }
 
@@ -676,12 +676,12 @@ export async function listExpiringSoon({ daysAhead = 7 } = {}) {
   const now = new Date()
   const horizon = new Date(now.getTime() + daysAhead * DAY_MS)
   const rows = await prisma.subscription.findMany({
-    // Ghế trong gói gia đình (provider FAMILY) bị loại khỏi bảng này: người trong
+    // Ghế trong gói doanh nghiệp (provider BUSINESS) bị loại khỏi bảng này: người trong
     // nhà không tự gia hạn được — nhắc họ "mua kỳ mới" là nhắc sai người.
     where: {
       status: 'ACTIVE',
       plan: { not: 'FREE' },
-      provider: { not: 'FAMILY' },
+      provider: { not: 'BUSINESS' },
       expiresAt: { gte: now, lte: horizon },
     },
     include: { user: { select: { email: true, fullName: true } } },
@@ -721,12 +721,12 @@ export async function sendRenewalReminders({
   const horizon = new Date(from.getTime() + daysBefore * DAY_MS)
 
   const due = await prisma.subscription.findMany({
-    // Cùng lý do với bảng "sắp hết hạn" bên trên: ghế gia đình không tự gia hạn được,
+    // Cùng lý do với bảng "sắp hết hạn" bên trên: ghế doanh nghiệp không tự gia hạn được,
     // người duy nhất cần nhắc là chủ gói — mà chủ gói đã có dòng riêng rồi.
     where: {
       status: 'ACTIVE',
       plan: { not: 'FREE' },
-      provider: { not: 'FAMILY' },
+      provider: { not: 'BUSINESS' },
       expiresAt: { gte: from, lte: horizon },
       reminderSentAt: null,
     },

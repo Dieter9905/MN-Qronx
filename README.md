@@ -72,7 +72,7 @@ Có thể đăng ký tài khoản mới ngay trên trang `/register`.
 │   ├── pages/
 │   │   ├── guest/       # Landing, Đăng nhập, Đăng ký, Quên/Đặt lại mật khẩu, Bảng giá, OAuth
 │   │   ├── user/        # Dashboard, Công việc, Chi tiết, Form, Lịch, Danh mục, Gói & thanh toán,
-│   │   │                # Trợ lý AI, Điểm thưởng, Báo cáo, Kế hoạch tuần, Việc được giao, Cả nhà, Hỗ trợ…
+│   │   │                # Trợ lý AI, Điểm thưởng, Báo cáo, Kế hoạch tuần, Việc được giao, Cả nhóm, Hỗ trợ…
 │   │   └── admin/       # Dashboard hệ thống, Quản lý người dùng, Đơn hàng, Hỗ trợ
 │   ├── services/        # apiClient (REST thật) + service theo module (auth, task, billing…)
 │   └── lib/             # constants, format, push, useCachedQuery…
@@ -91,7 +91,7 @@ Có thể đăng ký tài khoản mới ngay trên trang `/register`.
   xuất lịch `.ics`; trợ lý AI (hạn mức theo gói); điểm thưởng & mã mời; chat hỗ trợ.
 - **Báo thức (cốt lõi)**: overlay toàn màn hình – âm thanh Web Audio, màu nền theo mức ưu tiên,
   Hoãn (tối đa 3 lần) / Tắt; gửi **Web Push** để chuông kêu cả khi đã đóng tab; gói Pro có **nhắc dai** tới khi xác nhận.
-- **Gói trả phí**: Miễn phí / Plus / Pro / Pro Gia đình – thanh toán VietQR, dùng thử 7 ngày, đổi điểm, giao việc & luân phiên (Pro), báo cáo năng suất, kế hoạch tuần.
+- **Gói trả phí**: Miễn phí / Plus / Pro / Pro Doanh nghiệp – thanh toán VietQR, dùng thử 7 ngày, đổi điểm, giao việc & luân phiên (Pro), báo cáo năng suất, kế hoạch tuần.
 - **Admin**: dashboard hệ thống, quản lý người dùng (tạo/khóa/mở/đổi gói/xóa), đối soát đơn & cấu hình nhận tiền, trả lời hỗ trợ – không xem nội dung công việc của User (BR-58).
 
 ## Quy tắc UX áp dụng (theo skill ui-ux-pro-max)

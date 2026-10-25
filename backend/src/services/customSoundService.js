@@ -22,7 +22,7 @@ export async function importSound(userId, payload) {
   const plan = await getUserPlan(userId)
   if (!PAID_PLANS.includes(plan)) {
     throw ApiError.badRequest(
-      'Nhập âm thanh báo thức MP3 riêng chỉ dành cho gói trả phí (Plus, Pro, Pro Gia đình). Nâng cấp gói để sử dụng tính năng này.'
+      'Nhập âm thanh báo thức MP3 riêng chỉ dành cho gói trả phí (Plus, Pro, Pro Doanh nghiệp). Nâng cấp gói để sử dụng tính năng này.'
     )
   }
 

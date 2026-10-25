@@ -233,7 +233,7 @@ export async function collectRecipients({ now = new Date(), limit = DEFAULT_BATC
   const cutoff = new Date(now.getTime() - WEEKLY_REPORT_MIN_GAP_DAYS * DAY_MS)
   const rows = await prisma.user.findMany({
     where: {
-      // Cả chủ gói Pro Gia đình lẫn người trong nhà (vật chất hoá là PRO) đều nhận
+      // Cả chủ gói Pro Doanh nghiệp lẫn người trong nhóm (vật chất hoá là PRO) đều nhận
       // thư — họ trả tiền cho cùng một quyền lợi, lẽ nào bị loại khỏi báo cáo.
       plan: { in: PRO_PLANS },
       isActive: true,
