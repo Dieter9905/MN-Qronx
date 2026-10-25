@@ -6,7 +6,7 @@
 
 ## 1. Tổng quan
 
-MN-Qronx dùng chung một REST API backend cho Web SPA (PWA) và app di động. Điểm khác biệt cốt lõi là **nhắc nhở kiểu báo thức** (âm thanh/rung/màn hình toàn màn hình, Hoãn/Tắt, và **nhắc dai** cho gói Pro). Trên nền đó là các mô-đun thương mại: gói trả phí & thanh toán, điểm thưởng, trợ lý AI, giao việc, gói gia đình, báo cáo/kế hoạch tuần, hỗ trợ khách hàng.
+MN-Qronx dùng chung một REST API backend cho Web SPA (PWA) và app di động. Điểm khác biệt cốt lõi là **nhắc nhở kiểu báo thức** (âm thanh/rung/màn hình toàn màn hình, Hoãn/Tắt, và **nhắc dai** cho gói Pro). Trên nền đó là các mô-đun thương mại: gói trả phí & thanh toán, điểm thưởng, trợ lý AI, giao việc, gói Pro Doanh nghiệp, báo cáo/kế hoạch tuần, hỗ trợ khách hàng.
 
 ### 1.1. Kiến trúc tổng thể
 
@@ -25,7 +25,7 @@ MN-Qronx dùng chung một REST API backend cho Web SPA (PWA) và app di động
          └───────────────────────┬─────────────────────────────┘
                                  ▼
                     ┌────────────────────────────┐
-                    │ PostgreSQL (Tiger Cloud)   │
+                    │ PostgreSQL (trên VPS)      │
                     └────────────────────────────┘
 ```
 
@@ -132,7 +132,7 @@ await authRepo.deleteRefreshTokens(userId)   // thu hồi mọi phiên
 
 ### 3.4. Email xác nhận / đặt lại mật khẩu
 
-- Gửi qua `emailService.sendEmail()` — chọn đường theo `MAIL_TRANSPORT` (`auto` → Resend → Mailjet API → SMTP).
+- Gửi qua `emailService.sendEmail()` — chọn đường theo `MAIL_TRANSPORT` (`auto` → Resend → Mailjet API → SMTP). Production hiện cấu hình `MAIL_TRANSPORT=smtp` với **Gmail SMTP** nên thư luôn đi qua đường SMTP.
 - Kiểm tra hạn mức (`mailQuota`) trước khi gửi; nếu chưa cấu hình dịch vụ, môi trường dev trả mã trong response để test.
 
 ---
@@ -392,7 +392,7 @@ Xem `08_MN-Qronx_Backend_Implementation_Plan.md`, mục 5. Cấu hình thanh to�
 | Vì sao không dùng message queue? | Quy mô đồ án: cron quét DB mỗi phút là đủ; thêm queue là over-engineering. |
 | Chống gửi trùng thông báo thế nào? | Đánh dấu `TRIGGERED` trước khi gửi + chỉ mục (`status`,`remindAt`); hệ thống chạy một instance. |
 | Vì sao lưu ảnh/âm thanh trong DB? | Không muốn phụ thuộc dịch vụ lưu file ngoài; có giới hạn kích thước và kiểm MIME. |
-| Gói Pro Gia đình hoạt động ra sao? | Quyền lợi vật chất hóa trên `users.plan = PRO`, đồng bộ theo chủ gói mỗi phút. |
+| Gói Pro Doanh nghiệp hoạt động ra sao? | Quyền lợi vật chất hóa trên `users.plan = PRO`, đồng bộ theo chủ gói mỗi phút. |
 | Vì sao kế hoạch tuần không dùng AI? | AI riêng là model phân tích câu; xếp việc bằng luật để không bịa việc và không tốn lượt. |
 | Thanh toán tự động thế nào? | VietQR + webhook SePay/Casso (xác thực secret, chống trùng) và API ngân hàng, fallback admin xác nhận. |
 
@@ -417,7 +417,7 @@ Xem `08_MN-Qronx_Backend_Implementation_Plan.md`, mục 5. Cấu hình thanh to�
 | Nhắc nhở | Snooze tối đa 3 | Thêm **nhắc dai** (Pro) tới khi xác nhận |
 | Thông báo | Polling khi tab mở | Web Push (kêu khi đóng tab) + FCM + polling dự phòng |
 | Gói & thanh toán | Không có | 4 gói, VietQR/webhook/API ngân hàng, dùng thử, hạ gói hết hạn |
-| Cộng tác | Không có | Giao việc + luân phiên (Pro), gói gia đình 4 tài khoản |
+| Cộng tác | Không có | Giao việc + luân phiên (Pro), gói Pro Doanh nghiệp 10 ghế |
 | AI | Không có | Trợ lý AI riêng + nhập giọng nói + hạn mức theo gói |
 | Báo cáo | Dashboard 4 số | Báo cáo 7/30/90 + xuất CSV + báo cáo tuần qua email |
 | Hỗ trợ | Không có | Chat người dùng ↔ admin |

@@ -2,15 +2,15 @@
 
 > **Plan. Do. On Time.** — Ứng dụng quản lý thời gian & công việc cá nhân với nhắc nhở kiểu báo thức.
 >
-> Tài liệu này thay thế bản `01_TaskAlarm_Business_Analysis.md` trước đây. Sản phẩm đã đổi tên thành **MN-Qronx** và đã mở rộng ra ngoài phạm vi MVP ban đầu (gói trả phí, trợ lý AI, giao việc, gói gia đình, chăm sóc khách hàng). Mọi mục dưới đây phản ánh **hệ thống đang chạy thật** trong mã nguồn, không còn là bản phác thảo.
+> Tài liệu này thay thế bản `01_TaskAlarm_Business_Analysis.md` trước đây. Sản phẩm đã đổi tên thành **MN-Qronx** và đã mở rộng ra ngoài phạm vi MVP ban đầu (gói trả phí, trợ lý AI, giao việc, gói Pro Doanh nghiệp, chăm sóc khách hàng). Mọi mục dưới đây phản ánh **hệ thống đang chạy thật** trong mã nguồn, không còn là bản phác thảo.
 
 ## 1. Giới thiệu dự án
 
 ### 1.1. Giới thiệu
 
-MN-Qronx là ứng dụng quản lý thời gian và công việc cá nhân, hoạt động trên **Website (PWA)** và dự kiến có **ứng dụng Android/iOS**, giúp người dùng lên kế hoạch, theo dõi và hoàn thành công việc đúng hạn. Điểm khác biệt cốt lõi so với các ứng dụng to-do thông thường là cơ chế **nhắc nhở kiểu báo thức**: khi đến thời điểm đã hẹn, hệ thống **đổ chuông, rung và hiển thị màn hình nhắc nhở toàn màn hình**, buộc người dùng chủ động **Hoãn (Snooze)** hoặc **Tắt (Dismiss)** để xác nhận đã nhận biết công việc.
+MN-Qronx là ứng dụng quản lý thời gian và công việc cá nhân, hoạt động trên **Website (PWA)**, kèm **tiện ích trình duyệt Chrome/Edge** (chuông nhắc việc chạy nền) và dự kiến có **ứng dụng Android/iOS**, giúp người dùng lên kế hoạch, theo dõi và hoàn thành công việc đúng hạn. Điểm khác biệt cốt lõi so với các ứng dụng to-do thông thường là cơ chế **nhắc nhở kiểu báo thức**: khi đến thời điểm đã hẹn, hệ thống **đổ chuông, rung và hiển thị màn hình nhắc nhở toàn màn hình**, buộc người dùng chủ động **Hoãn (Snooze)** hoặc **Tắt (Dismiss)** để xác nhận đã nhận biết công việc.
 
-Sản phẩm đã phát triển thành một ứng dụng freemium hoàn chỉnh: người dùng có thể nâng cấp lên các **gói Plus / Pro / Pro Gia đình** thanh toán bằng chuyển khoản VietQR hoặc Google Play Billing, tích điểm đổi gói, nhờ người khác làm hộ công việc, dùng **trợ lý AI** nhập việc bằng câu nói tự nhiên, và chat trực tiếp với bộ phận hỗ trợ.
+Sản phẩm đã phát triển thành một ứng dụng freemium hoàn chỉnh: người dùng có thể nâng cấp lên các **gói Plus / Pro / Pro Doanh nghiệp** thanh toán bằng chuyển khoản VietQR hoặc Google Play Billing, tích điểm đổi gói, nhờ người khác làm hộ công việc, dùng **trợ lý AI** nhập việc bằng câu nói tự nhiên, và chat trực tiếp với bộ phận hỗ trợ.
 
 ### 1.2. Mục tiêu
 
@@ -19,7 +19,7 @@ Sản phẩm đã phát triển thành một ứng dụng freemium hoàn chỉnh
 - **Nhắc dai (nag)**: việc quan trọng chưa xác nhận xong thì chuông kêu lại theo chu kỳ, thay vì chỉ nhắc một lần.
 - Đồng bộ dữ liệu công việc giữa các thiết bị của cùng một tài khoản; xuất việc sang Google Calendar/Outlook qua tệp `.ics`.
 - Cho phép người dùng **nhờ người khác làm** một công việc và luân phiên người chịu trách nhiệm theo kỳ.
-- Giúp nhóm người dùng (thí dụ gia đình) dùng chung một gói trả phí (`Pro Gia đình`).
+- Giúp nhóm người dùng (thí dụ nhóm doanh nghiệp nhỏ) dùng chung một gói trả phí (`Pro Doanh nghiệp`).
 - Biến dữ liệu sử dụng thành **báo cáo năng suất** và **kế hoạch tuần** có ích cho người dùng trả phí.
 - Duy trì mô hình kinh doanh freemium: gói miễn phí đủ dùng, gói trả phí mở ra giá trị rõ ràng (nhắc dai, báo cáo, kế hoạch tuần, giao việc, giới hạn AI).
 - Cung cấp kênh chăm sóc khách hàng (chat người dùng ↔ admin) và công cụ đối soát thanh toán cho quản trị viên.
@@ -31,7 +31,7 @@ Sản phẩm đã phát triển thành một ứng dụng freemium hoàn chỉnh
 | Guest | Xem trang giới thiệu và bảng giá; đăng ký (có xác thực email), đăng nhập (mật khẩu hoặc Google), quên/đặt lại mật khẩu. |
 | User (gói Miễn phí) | Quản lý hồ sơ, mật khẩu; danh mục; tạo/sửa/xóa (có thùng rác) công việc và việc con; lặp lại Hằng ngày/Hằng tuần (chọn thứ)/Hằng tháng; thêm nhắc nhở và nhận báo thức (âm thanh, rung, snooze/dismiss); lịch; dashboard; lịch sử thông báo; cài đặt thông báo; quản lý thiết bị + Web Push; xuất lịch `.ics`; trợ lý AI (có hạn mức ngày); tích điểm thưởng và dùng mã mời; xem bảng giá, kích hoạt dùng thử, mua gói; chat hỗ trợ; nhận việc người khác giao cho mình. |
 | User (Plus) | Thêm: không giới hạn công việc/danh mục/việc con, 5 nhắc nhở mỗi việc, 5 thiết bị, hạn mức AI 50 lượt/ngày, toàn bộ âm thanh báo thức có sẵn, hỗ trợ ưu tiên. |
-| User (Pro / Pro Gia đình) | Thêm: nhắc dai tới khi xác nhận; báo cáo năng suất 7/30/90 ngày + xuất file; kế hoạch tuần; báo cáo tuần qua email; giao việc cho người khác và luân phiên người làm; không giới hạn thiết bị & AI; âm thanh báo thức tự tải lên. Chủ gói Pro Gia đình dùng chung quyền Pro cho tối đa 4 tài khoản. |
+| User (Pro / Pro Doanh nghiệp) | Thêm: nhắc dai tới khi xác nhận; báo cáo năng suất 7/30/90 ngày + xuất file; kế hoạch tuần; báo cáo tuần qua email; giao việc cho người khác và luân phiên người làm; không giới hạn thiết bị & AI; âm thanh báo thức tự tải lên. Chủ gói Pro Doanh nghiệp dùng chung quyền Pro cho tối đa 9 tài khoản khác (tổng 10 ghế). |
 | Admin | Đăng nhập quản trị; dashboard hệ thống; quản lý tài khoản (tạo, khóa/mở, đổi gói, xóa vĩnh viễn); đối soát đơn thanh toán (xác nhận/hủy, gán giao dịch ngân hàng, cấu hình nhận tiền, webhook, test kết nối, đồng bộ ngân hàng); quản lý hội thoại hỗ trợ (trả lời, đánh dấu đã đọc, đổi trạng thái). |
 
 ### 1.4. Ngoài phạm vi
@@ -53,14 +53,14 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 | Khách vãng lai (Guest) | Tìm hiểu ứng dụng, so sánh gói, tạo tài khoản để bắt đầu. |
 | Người dùng cá nhân | Quản lý công việc, không bỏ lỡ deadline, được nhắc đúng lúc và rõ ràng. |
 | Người dùng trả phí | Muốn được nhắc tới khi xác nhận, muốn thấy số liệu năng suất, muốn nhờ người khác làm hộ. |
-| Gia đình/nhóm nhỏ | Nhiều người cùng dùng một khoản trả phí, mỗi người vẫn có tài khoản và dữ liệu riêng. |
+| Nhóm dùng chung (doanh nghiệp, đội nhóm) | Nhiều người cùng dùng một khoản trả phí, mỗi người vẫn có tài khoản và dữ liệu riêng. |
 | Quản trị viên (Admin) | Giám sát tài khoản, đối soát thanh toán, hỗ trợ khách hàng. |
 
 ### 1.6. Stakeholder
 
 | Stakeholder | Vai trò/Mối quan tâm |
 |---|---|
-| Chủ sở hữu sản phẩm | Doanh thu từ gói Plus/Pro/Pro Gia đình; giữ chân người dùng bằng giá trị cảm nhận được. |
+| Chủ sở hữu sản phẩm | Doanh thu từ gói Plus/Pro/Pro Doanh nghiệp; giữ chân người dùng bằng giá trị cảm nhận được. |
 | Người dùng | Quản lý công việc đơn giản, được nhắc chắc chắn, không bị bỏ sót. |
 | Quản trị viên | Công cụ theo dõi tài khoản, xác nhận thanh toán, trả lời khách. |
 | Nhóm thực hiện đồ án | Tài liệu nghiệp vụ thống nhất để thiết kế, phát triển và kiểm thử. |
@@ -75,9 +75,9 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 - Nếu người dùng từ chối quyền thông báo, hệ thống chỉ hiển thị nhắc nhở trong ứng dụng khi tab đang mở.
 - Admin là vai trò quản trị duy nhất, tạo bằng seed data hoặc do admin hiện có tạo thêm.
 - Khoá VAPID (Web Push) có thể cấu hình qua biến môi trường; nếu thiếu, hệ thống **tự sinh và lưu trong bảng `app_settings`**.
-- Việc gửi email phụ thuộc dịch vụ ngoài (Mailjet/Resend) có **hạn mức** (10 thư/giờ và 10 thư/ngày theo cấu hình) — hệ thống kiểm tra hạn mức trước khi gửi.
+- Việc gửi email dùng **Gmail SMTP** (`smtp.gmail.com:465`, App Password của tài khoản Gmail chủ dự án) để thư xác thực vào hộp chính; đường Resend/Mailjet chỉ còn là đường dự phòng. Hàm kiểm tra hạn mức gửi chỉ áp dụng cho Mailjet (10 thư/ngày) — không có tác dụng khi đi qua Gmail SMTP.
 - Giao dịch ngân hàng được đối soát tự động (webhook SePay/Casso hoặc API ngân hàng) và/hoặc xác nhận thủ công bởi admin.
-- Hạ tầng backend chạy gói free (Render) **ngủ sau 15 phút** không có request; hệ thống dùng keep-alive ping và cơ chế "đánh thức việc định kỳ theo nhịp `/health`".
+- Hạ tầng chạy trên **VPS riêng (Ubuntu 24.04, 103.77.209.154)** 24/7: systemd service `mn-qronx` cho backend, Nginx + Certbot cho HTTPS tại `mn-qronx.id.vn`, PostgreSQL 16 cài trên chính VPS. Đã bỏ Render/Vercel; móc làm việc định kỳ theo nhịp `/health` được giữ lại làm cơ chế dự phòng cho cron trong cùng tiến trình.
 
 ### 1.8. Thuật ngữ
 
@@ -98,7 +98,7 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 | Thùng rác | Công việc bị xóa được giữ 30 ngày (soft delete) rồi mới xóa thật; có thể khôi phục. |
 | Thiết bị (Device) | Trình duyệt hoặc điện thoại đã đăng ký nhận thông báo đẩy. |
 | Web Push Subscription | Đăng ký của trình duyệt (endpoint + p256dh + auth) để nhận thông báo khi tab đã đóng. |
-| Gói (Plan) | Mức dịch vụ: Miễn phí / Plus / Pro / Pro Gia đình. |
+| Gói (Plan) | Mức dịch vụ: Miễn phí / Plus / Pro / Pro Doanh nghiệp. |
 | Đơn hàng (PaymentOrder) | Một lượt mua gói, có mã đơn (`MNQ…`) làm nội dung chuyển khoản. |
 | Gói đăng ký (Subscription) | Lịch sử quyền lợi theo gói (nguồn sự thật về hạn dùng). |
 | Dùng thử (Trial) | 7 ngày Pro, mỗi tài khoản chỉ dùng một lần. |
@@ -106,7 +106,7 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 | Mã mời (Invite Code) | Mã 6 ký tự của mỗi người dùng để rủ bạn bè. |
 | Giao việc (Task Share) | Chủ việc nhờ một tài khoản khác làm hộ (quyền lợi gói Pro của chủ việc). |
 | Luân phiên (Rotation) | Việc lặp lại mà mỗi kỳ một người khác chịu trách nhiệm, xoay theo thứ tự giao việc. |
-| Pro Gia đình | Gói mua một lần cho tối đa 4 tài khoản, quyền lợi y hệt Pro. |
+| Pro Doanh nghiệp | Gói mua một lần cho tối đa 10 tài khoản (chủ gói + 9 người dùng dùng ké), quyền lợi y hệt Pro; 349.000đ/tháng hoặc 3.490.000đ/năm. |
 | Trợ lý AI | Dịch vụ AI riêng của MN-Qronx phân tích câu tiếng Việt thành công việc. |
 | VietQR | Chuẩn mã QR chuyển khoản ngân hàng Việt Nam dùng để thu tiền. |
 | CSKH / Support | Hội thoại hỗ trợ giữa người dùng và admin ngay trong ứng dụng. |
@@ -166,14 +166,14 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 5. Nếu bật **luân phiên**, mỗi kỳ một người chịu trách nhiệm theo thứ tự giao việc; khi việc xong, người đến lượt kỳ sau được tính lại.
 6. Giới hạn: tối đa **5 người nhận** mỗi việc, tối đa **50 việc đang giao đi** mỗi tài khoản.
 
-### 2.6. Quy trình gói Pro Gia đình
+### 2.6. Quy trình gói Pro Doanh nghiệp
 
-1. Chủ gói mua **Pro Gia đình** (dùng chung cho tối đa 4 tài khoản).
+1. Chủ gói mua **Pro Doanh nghiệp** (dùng chung cho tối đa 10 ghế).
 2. Chủ gói mời thành viên bằng email (người được mời phải đã có tài khoản MN-Qronx).
 3. Hệ thống **vật chất hóa** quyền Pro của người trong nhà trên chính `users.plan` (cùng hạn với chủ gói), nên mọi cổng kiểm tra quyền lợi chạy đúng mà không phải sửa gì.
 4. Người trong nhà có thể **tự tắt chia sẻ tiến độ** (`shareProgress`), hoặc **tự rời nhóm**.
 5. Chủ gói hết hạn ⇒ cả nhà cùng hết quyền, dòng thành viên bị xóa; khi chủ mua lại phải **mời lại**.
-6. Một người chỉ nằm trong đúng **một** gói gia đình.
+6. Một người chỉ nằm trong đúng **một** gói Doanh nghiệp.
 
 ### 2.7. Quy trình mua gói và thanh toán
 
@@ -192,7 +192,7 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 1. Đăng nhập mỗi ngày: **+10 điểm** (mỗi ngày một lần). Chuỗi 7 ngày liên tiếp: **+50 điểm**.
 2. Mời bạn: khi người được mời **đăng nhập lần đầu**, người mời nhận **+100 điểm**. Chống lạm dụng: cùng người mời + cùng IP + cùng thiết bị chỉ tính một tài khoản.
 3. Điểm đổi được ngày dùng gói: 7/30 ngày Plus (200/500 điểm) và 7/30 ngày Pro (800/1500 điểm). Đổi điểm đi qua đúng luồng cấp gói nên có `Subscription` và luật cộng dồn như mua bằng tiền.
-4. Nếu người đổi đang là chủ gói **Pro Gia đình** còn hạn, việc đổi điểm được hiểu là **gia hạn nhà** (không hạ gói).
+4. Nếu người đổi đang là chủ gói **Pro Doanh nghiệp** còn hạn, việc đổi điểm được hiểu là **gia hạn** (không hạ gói).
 
 ### 2.9. Quy trình trợ lý AI
 
@@ -220,7 +220,7 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 |---|---|
 | Người dùng miễn phí | Quản lý công việc và nhắc nhở chắc chắn, không mất phí, không quảng cáo. |
 | Người dùng trả phí | Nhắc dai tới khi xác nhận; báo cáo và kế hoạch giúp nhìn thấy tiến bộ; giao việc mở ra việc trước đây không làm được. |
-| Chủ gói gia đình | Một khoản trả cho cả nhà, mỗi người vẫn riêng tư và có dữ liệu của mình. |
+| Chủ gói Pro Doanh nghiệp | Một khoản trả cho cả nhóm, mỗi người vẫn riêng tư và có dữ liệu của mình. |
 | Admin | Đối soát thanh toán và hỗ trợ khách trong cùng một công cụ. |
 | Nhóm phát triển | Quy trình nghiệp vụ và yêu cầu thống nhất làm căn cứ thiết kế, xây dựng, kiểm thử. |
 
@@ -240,9 +240,9 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 | Nội dung | Mô tả |
 |---|---|
 | Vai trò | Người dùng đã đăng ký và đăng nhập. |
-| Quyền hạn | Toàn bộ chức năng của gói hiện tại (Miễn phí/Plus/Pro/Pro Gia đình) và quyền nhận việc được giao. |
+| Quyền hạn | Toàn bộ chức năng của gói hiện tại (Miễn phí/Plus/Pro/Pro Doanh nghiệp) và quyền nhận việc được giao. |
 | Mục tiêu | Hoàn thành công việc đúng hạn, không bỏ sót, thấy được tiến bộ, có thể nhờ người khác làm hộ. |
-| Chức năng chính | Hồ sơ, mật khẩu; danh mục; công việc + việc con + nhắc nhở + lặp lại + nhắc dai + thùng rác; lịch; dashboard; lịch sử thông báo; cài đặt thông báo & âm thanh; thiết bị & Web Push; xuất `.ics`; trợ lý AI; báo cáo; kế hoạch tuần; điểm thưởng & mã mời; gói & thanh toán; việc được giao; gói gia đình; hỗ trợ. |
+| Chức năng chính | Hồ sơ, mật khẩu; danh mục; công việc + việc con + nhắc nhở + lặp lại + nhắc dai + thùng rác; lịch; dashboard; lịch sử thông báo; cài đặt thông báo & âm thanh; thiết bị & Web Push; xuất `.ics`; trợ lý AI; báo cáo; kế hoạch tuần; điểm thưởng & mã mời; gói & thanh toán; việc được giao; gói Doanh nghiệp; hỗ trợ. |
 
 ### 3.3. Admin
 
@@ -353,7 +353,7 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 | FR-57 | Đổi điểm lấy gói | Đổi điểm thành ngày dùng Plus/Pro. | User |
 | FR-58 | Báo cáo tuần qua email | Bật/tắt và gửi thử báo cáo tuần (quyền lợi gói Pro). | User |
 
-### 4.9. Giao việc, luân phiên, gói gia đình
+### 4.9. Giao việc, luân phiên, gói Doanh nghiệp
 
 | ID | Chức năng | Mô tả | Actor |
 |---|---|---|---|
@@ -362,7 +362,7 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 | FR-61 | Xem việc được giao | Xem danh sách việc người khác nhờ mình làm. | User |
 | FR-62 | Đánh dấu xong phần của tôi | Người được giao đánh dấu hoàn thành phần của mình. | User |
 | FR-63 | Bật/tắt luân phiên | Xoay người chịu trách nhiệm mỗi kỳ theo thứ tự giao việc. | User |
-| FR-64 | Quản lý gói gia đình | Mời/gỡ thành viên (tối đa 4 tài khoản), tự rời nhóm, xem bảng tiến độ cả nhà. | User |
+| FR-64 | Quản lý gói Doanh nghiệp | Mời/gỡ thành viên (tối đa 10 ghế), tự rời nhóm, xem bảng tiến độ cả nhà. | User |
 | FR-65 | Chia sẻ tiến độ | Người trong nhà tự bật/tắt việc chủ gói xem được tiến độ của mình. | User |
 
 ### 4.10. Báo cáo & kế hoạch tuần
@@ -455,7 +455,7 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 | UC-U-27 | Giao việc cho người khác (Pro) | Nhờ người khác làm hộ. |
 | UC-U-28 | Xem việc được giao | Xem và đánh dấu xong phần của mình. |
 | UC-U-29 | Bật luân phiên người làm (Pro) | Xoay người chịu trách nhiệm mỗi kỳ. |
-| UC-U-30 | Quản lý gói Pro Gia đình | Mời, gỡ, rời nhóm, xem bảng cả nhà. |
+| UC-U-30 | Quản lý gói Pro Doanh nghiệp | Mời, gỡ, rời nhóm, xem bảng cả nhà. |
 | UC-U-31 | Mua gói / dùng thử | Tạo đơn, thanh toán, kích hoạt, hủy đơn. |
 | UC-U-32 | Tích & đổi điểm thưởng | Xem điểm, mã mời, đổi thưởng. |
 | UC-U-33 | Bật/tắt báo cáo tuần | Bật/tắt và gửi thử email báo cáo tuần. |
@@ -551,7 +551,7 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 | ID | Business Rule |
 |---|---|
 | BR-19 | `remindAt` phải ≤ `dueAt` của công việc. |
-| BR-20 | Số nhắc nhở mỗi việc theo gói: Miễn phí 3, Plus/Pro/Pro Gia đình 5. |
+| BR-20 | Số nhắc nhở mỗi việc theo gói: Miễn phí 3, Plus/Pro/Pro Doanh nghiệp 5. |
 | BR-21 | Trạng thái nhắc nhở chỉ nhận: `SCHEDULED`, `TRIGGERED`, `SNOOZED`, `DISMISSED`, `CANCELLED`. |
 | BR-22 | Mỗi báo thức chỉ được hoãn tối đa 3 lần liên tiếp; sau đó chỉ còn Tắt. |
 | BR-23 | Mọi lần gửi/hoãn/tắt phải ghi vào lịch sử thông báo (`SENT`, `SNOOZED`, `DISMISSED`). |
@@ -565,7 +565,7 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 |---|---|
 | BR-27 | Mỗi `deviceToken` gắn với đúng một tài khoản tại một thời điểm. |
 | BR-28 | Gỡ thiết bị là soft delete (`isActive = false`) để giữ lịch sử thông báo. |
-| BR-29 | Số thiết bị đồng bộ theo gói: Miễn phí 2, Plus 5, Pro/Pro Gia đình không giới hạn. |
+| BR-29 | Số thiết bị đồng bộ theo gói: Miễn phí 2, Plus 5, Pro/Pro Doanh nghiệp không giới hạn. |
 | BR-30 | Mỗi người dùng có tối đa 6 Web Push subscription; endpoint trả 404/410 sẽ bị xóa tự động. |
 | BR-31 | Mỗi người dùng có đúng một cấu hình thông báo (`NotificationSetting`). |
 | BR-32 | Âm thanh báo thức tự tải lên chỉ dùng được với gói trả phí; hết hạn gói thì âm thanh tùy chỉnh trở về chuông mặc định. |
@@ -588,10 +588,10 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 | BR-39 | Webhook thanh toán phải xác thực mã bí mật và mỗi sự kiện chỉ được xử lý **một lần** (chống trùng theo mã ngoài). |
 | BR-40 | Điểm thưởng: đăng nhập hằng ngày +10 (mỗi ngày một lần); chuỗi 7 ngày liên tiếp +50; mời bạn thành công +100. |
 | BR-41 | Chống lạm dụng mời bạn: cùng người mời + cùng IP + cùng thiết bị chỉ tính một tài khoản. |
-| BR-42 | Đổi điểm đi qua đúng luồng cấp gói: có bản ghi `Subscription`, có cộng dồn, và không hạ gói Pro Gia đình. |
-| BR-43 | Gói Pro Gia đình dùng chung cho tối đa 4 tài khoản (chủ gói + 3 người). |
-| BR-44 | Một tài khoản chỉ nằm trong đúng một gói gia đình, và không được mời người đang trả phí riêng. |
-| BR-45 | Chủ gói gia đình hết hạn ⇒ mọi chỗ được cấp mất quyền ngay; khi chủ gia hạn phải mời lại. |
+| BR-42 | Đổi điểm đi qua đúng luồng cấp gói: có bản ghi `Subscription`, có cộng dồn, và không hạ gói Pro Doanh nghiệp. |
+| BR-43 | Gói Pro Doanh nghiệp dùng chung cho tối đa 10 ghế (chủ gói + 9 người dùng ké). |
+| BR-44 | Một tài khoản chỉ nằm trong đúng một gói Doanh nghiệp, và không được mời người đang trả phí riêng. |
+| BR-45 | Chủ gói Doanh nghiệp hết hạn ⇒ mọi chỗ được cấp mất quyền ngay; khi chủ gia hạn phải mời lại. |
 | BR-46 | Người trong nhóm có thể tự tắt chia sẻ tiến độ cho chủ gói, và tự rời nhóm bất cứ lúc nào. |
 | BR-47 | Báo cáo tuần qua email gửi mỗi tuần tối đa một lần cho mỗi tài khoản; nút "gửi thử" bị chặn bấm liên tục để giữ hạn mức email. |
 
@@ -610,7 +610,7 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 
 | ID | Business Rule |
 |---|---|
-| BR-54 | Hạn mức AI theo ngày (theo múi giờ Việt Nam): Miễn phí 5, Plus 50, Pro/Pro Gia đình không giới hạn. Lượt chỉ bị trừ sau khi AI trả kết quả thành công. |
+| BR-54 | Hạn mức AI theo ngày (theo múi giờ Việt Nam): Miễn phí 5, Plus 50, Pro/Pro Doanh nghiệp không giới hạn. Lượt chỉ bị trừ sau khi AI trả kết quả thành công. |
 | BR-55 | Chỉ số báo cáo luôn loại việc trong thùng rác; ngày/giờ tính theo giờ Việt Nam; "đúng hạn" = `completedAt ≤ dueAt`. |
 | BR-56 | Kế hoạch tuần xếp bằng luật (không dùng AI), năng lực mỗi ngày chọn trong 3/5/8/10; việc không còn chỗ trước hạn phải xuất hiện trong danh sách cảnh báo trễ. |
 | BR-57 | Mỗi người dùng có đúng một hội thoại hỗ trợ; mỗi tin nhắn kèm tối đa 3 ảnh. |
@@ -639,7 +639,7 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 | PointTransaction | Lịch sử cộng/trừ điểm thưởng. |
 | Invitation | Lời mời bạn bè và trạng thái kích hoạt. |
 | TaskShare | Giao việc cho người khác và trạng thái xong phần của người nhận. |
-| FamilyMember | Thành viên trong một gói Pro Gia đình. |
+| FamilyMember | Ghế trong một gói Pro Doanh nghiệp (model/bảng vẫn mang tên family). |
 | Subscription | Lịch sử quyền lợi theo gói (nguồn sự thật về hạn dùng). |
 | PaymentOrder | Đơn mua gói và trạng thái thanh toán. |
 | BillingEvent | Nhật ký sự kiện thanh toán (chống xử lý trùng webhook). |
@@ -675,7 +675,7 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 | AI | Phân tích câu thành công việc, hạn mức theo ngày, nhập bằng giọng nói. |
 | Plans & Billing | Danh mục gói, đơn hàng, VietQR, webhook/API ngân hàng, subscription, dùng thử, hạ gói hết hạn. |
 | Rewards | Điểm, chuỗi đăng nhập, mã mời, đổi thưởng. |
-| Sharing & Family | Giao việc, luân phiên, gói Pro Gia đình. |
+| Sharing & Family | Giao việc, luân phiên, gói Pro Doanh nghiệp. |
 | Reports & Planner | Báo cáo năng suất, xuất file, kế hoạch tuần. |
 | Support | Hội thoại hỗ trợ người dùng ↔ admin. |
 | Admin | Dashboard, quản lý người dùng, đối soát thanh toán, cấu hình nhận tiền. |
@@ -729,7 +729,7 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 
 ## 12. Kết luận
 
-Tài liệu Business Analysis của **MN-Qronx** mô tả ứng dụng quản lý thời gian và công việc cá nhân với điểm khác biệt cốt lõi là **cơ chế nhắc nhở kiểu báo thức**, đã mở rộng thành sản phẩm freemium hoàn chỉnh: gói trả phí, trợ lý AI, giao việc, gói gia đình, điểm thưởng và chăm sóc khách hàng.
+Tài liệu Business Analysis của **MN-Qronx** mô tả ứng dụng quản lý thời gian và công việc cá nhân với điểm khác biệt cốt lõi là **cơ chế nhắc nhở kiểu báo thức**, đã mở rộng thành sản phẩm freemium hoàn chỉnh: gói trả phí, trợ lý AI, giao việc, gói Pro Doanh nghiệp, điểm thưởng và chăm sóc khách hàng.
 
 Các quy tắc trọng tâm đã thống nhất xuyên suốt tài liệu:
 
@@ -738,14 +738,14 @@ Các quy tắc trọng tâm đã thống nhất xuyên suốt tài liệu:
 - Việc chuyển sang Hoàn thành/Đã hủy sẽ hủy mọi nhắc nhở chưa kích hoạt.
 - Xóa việc là soft delete: giữ 30 ngày trong thùng rác rồi mới xóa vĩnh viễn.
 - Mỗi công việc thuộc một chủ sở hữu; giao việc chỉ tạo bản ghi chia sẻ, người nhận không sửa/xóa được.
-- Gói Pro Gia đình cho tối đa 4 tài khoản với quyền lợi y hệt Pro.
+- Gói Pro Doanh nghiệp cho tối đa 10 ghế với quyền lợi y hệt Pro.
 - Mọi lần gửi thông báo, mọi sự kiện thanh toán đều được ghi log để tra cứu và chống xử lý trùng.
 
 Các bước tiếp theo được đề xuất:
 
-1. Bổ sung Use Case/Activity Diagram cho các luồng mới (thanh toán, giao việc, gia đình, hỗ trợ) — xem `02_MN-Qronx_Diagrams.md`.
+1. Bổ sung Use Case/Activity Diagram cho các luồng mới (thanh toán, giao việc, gói Doanh nghiệp, hỗ trợ) — xem `02_MN-Qronx_Diagrams.md`.
 2. Giữ ERD và thiết kế cơ sở dữ liệu đồng bộ với `backend/prisma/schema.prisma` — xem `03`, `04`.
 3. Mở rộng đặc tả API theo danh sách endpoint thực tế — xem `05`.
 4. Hoàn thiện UI/UX cho màn hình báo thức, kế hoạch tuần và đối soát đơn — xem `06`.
 5. Phát triển app di động tái dùng lớp `services/` và lớp kiểm tra quyền lợi gói.
-6. Tăng cường kiểm thử tự động cho các luồng thanh toán, gia đình, giao việc và nhắc dai (đã có bộ test Vitest trong `backend/tests/`).
+6. Tăng cường kiểm thử tự động cho các luồng thanh toán, gói Doanh nghiệp, giao việc và nhắc dai (đã có bộ test Vitest trong `backend/tests/`).

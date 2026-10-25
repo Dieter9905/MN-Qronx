@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "MN-Qronx – Nhắc việc",
+  "description": "Xem công việc hôm nay, nhận thông báo chuông và bấm giờ tập trung (Pomodoro) ngay trên trình duyệt, kể cả khi đang không mở trang web.",
+  "version": "1.1.0",
+  "permissions": ["alarms", "notifications", "storage"],
+  "host_permissions": [
+    "https://mn-qronx.id.vn/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "MN-Qronx – Công việc hôm nay"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

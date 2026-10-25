@@ -1,10 +1,10 @@
 # Use Case Diagram và Activity Diagram – MN-Qronx
 
-> Tài liệu này thay thế `02_TaskAlarm_Diagrams.md`. Sơ đồ phản ánh hệ thống đang chạy thật, bao gồm các module mới: gói & thanh toán, trợ lý AI, giao việc, gói gia đình, điểm thưởng, báo cáo/kế hoạch tuần và hỗ trợ.
+> Tài liệu này thay thế `02_TaskAlarm_Diagrams.md`. Sơ đồ phản ánh hệ thống đang chạy thật, bao gồm các module mới: gói & thanh toán, trợ lý AI, giao việc, gói Pro Doanh nghiệp, điểm thưởng, báo cáo/kế hoạch tuần và hỗ trợ.
 
 ## 1. Quy ước
 
-- Actor: `Guest`, `User` (theo gói: Miễn phí/Plus/Pro/Pro Gia đình), `Admin`; và các **hệ thống ngoài**: Cổng thanh toán/ngân hàng, Dịch vụ email, Dịch vụ thông báo đẩy (Web Push/FCM), AI inference server.
+- Actor: `Guest`, `User` (theo gói: Miễn phí/Plus/Pro/Pro Doanh nghiệp), `Admin`; và các **hệ thống ngoài**: Cổng thanh toán/ngân hàng, Dịch vụ email, Dịch vụ thông báo đẩy (Web Push/FCM), AI inference server.
 - Trạng thái công việc lưu trong DB: **Chưa làm (`TODO`)**, **Đang làm (`IN_PROGRESS`)**, **Hoàn thành (`COMPLETED`)**, **Đã hủy (`CANCELLED`)**. "Quá hạn" chỉ là trạng thái hiển thị.
 - Nhắc nhở hoạt động như báo thức: âm thanh/rung + màn hình toàn màn hình, Hoãn (tối đa 3 lần) hoặc Tắt. Gói Pro có thêm **nhắc dai**.
 - Token xác thực: access token (JWT ngắn hạn) + refresh token (dài hạn, lưu DB).
@@ -61,7 +61,7 @@ flowchart LR
             UC33([Báo cáo năng suất & xuất file])
             UC34([Giao việc cho người khác])
             UC35([Luân phiên người làm])
-            UC36([Gói Pro Gia đình])
+            UC36([Gói Pro Doanh nghiệp])
             UC37([Báo cáo tuần qua email])
         end
 
@@ -91,7 +91,7 @@ flowchart LR
             UC71([Ghi lịch sử thông báo])
             UC72([Sinh công việc lặp kế tiếp])
             UC73([Hủy nhắc nhở chưa kích hoạt])
-            UC74([Hạ gói hết hạn & đồng bộ gói gia đình])
+            UC74([Hạ gói hết hạn & đồng bộ gói Doanh nghiệp])
             UC75([Đồng bộ giao dịch ngân hàng])
             UC76([Gửi báo cáo tuần])
             UC77([Dọn thùng rác quá 30 ngày])
@@ -174,8 +174,8 @@ flowchart LR
 - `Hoãn` và `Tắt` đều ghi vào lịch sử thông báo.
 - `Quản lý công việc` bao gồm tự sinh việc lặp kế tiếp (`UC72`) và hủy nhắc nhở chưa kích hoạt (`UC73`).
 - `Thùng rác` bao gồm việc dọn tự động sau 30 ngày (`UC77`).
-- `Tạo đơn mua gói` bao gồm đối soát với cổng thanh toán/ngân hàng; gói gia đình bao gồm đồng bộ quyền lợi thành viên (`UC74`).
-- Các chức năng đánh dấu "trả phí" (`UC31`–`UC37`) yêu cầu gói Pro (hoặc Pro Gia đình); giao việc yêu cầu chủ việc có gói Pro nhưng **người nhận không cần trả phí**.
+- `Tạo đơn mua gói` bao gồm đối soát với cổng thanh toán/ngân hàng; gói Doanh nghiệp bao gồm đồng bộ quyền lợi thành viên (`UC74`).
+- Các chức năng đánh dấu "trả phí" (`UC31`–`UC37`) yêu cầu gói Pro (hoặc Pro Doanh nghiệp); giao việc yêu cầu chủ việc có gói Pro nhưng **người nhận không cần trả phí**.
 
 ## 3. Activity Diagram – Đăng ký và xác thực email
 
@@ -329,7 +329,7 @@ flowchart TD
 
     End2([Đổi thưởng]) --> Check{Đủ điểm?}
     Check -- Không --> Fail[Báo thiếu điểm] --> End3[Kết thúc]
-    Check -- Có --> IsFamily{Đang là chủ gói Gia đình còn hạn?}
+    Check -- Có --> IsFamily{Đang là chủ gói Doanh nghiệp còn hạn?}
     IsFamily -- Có --> ExtendFamily[Gia hạn nhà thêm N ngày]
     IsFamily -- Không --> Apply[Trừ điểm + cấp gói qua luồng Subscription]
     ExtendFamily --> End3

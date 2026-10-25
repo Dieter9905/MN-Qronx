@@ -4,7 +4,7 @@
 
 ## 1. Tổng quan
 
-Backend MN-Qronx là **một monolith Node.js** theo kiến trúc phân lớp (route → middleware → controller → service → repository → Prisma), REST API prefix `/api/v1/`, xác thực JWT (access + refresh token), ORM Prisma trên PostgreSQL. Ngoài lõi quản lý công việc & nhắc nhở, backend còn phục vụ các mô-đun thương mại: gói & thanh toán, điểm thưởng, trợ lý AI, giao việc, gói gia đình, báo cáo/kế hoạch tuần, hỗ trợ khách hàng.
+Backend MN-Qronx là **một monolith Node.js** theo kiến trúc phân lớp (route → middleware → controller → service → repository → Prisma), REST API prefix `/api/v1/`, xác thực JWT (access + refresh token), ORM Prisma trên PostgreSQL. Ngoài lõi quản lý công việc & nhắc nhở, backend còn phục vụ các mô-đun thương mại: gói & thanh toán, điểm thưởng, trợ lý AI, giao việc, gói Pro Doanh nghiệp, báo cáo/kế hoạch tuần, hỗ trợ khách hàng.
 
 ## 2. Tech Stack (Backend) — phiên bản đang dùng
 
@@ -18,7 +18,7 @@ Backend MN-Qronx là **một monolith Node.js** theo kiến trúc phân lớp (r
 | Scheduler | node-cron | 4.x |
 | Push (Web) | web-push | 3.x |
 | Push (Mobile) | firebase-admin | 14.x |
-| Email | nodemailer (Mailjet SMTP) + Mailjet Send API + Resend (HTTPS) | 10.x |
+| Email | nodemailer — production dùng **Gmail SMTP** (`smtp.gmail.com:465`); Mailjet SMTP/API + Resend giữ làm đường dự phòng | 10.x |
 | QR | qrcode | 1.x |
 | API docs | swagger-jsdoc + swagger-ui-express | 6.x / 5.x |
 | Env config | dotenv | 17.x |
@@ -36,7 +36,7 @@ Xem `07_MN-Qronx_Architecture.md`, mục 3. Tóm tắt các nhánh chính:
 - `src/repositories/` — task, category, reminder, device, user, admin, auth, subtask, customSound.
 - `src/schedulers/` — reminder, bankSync, billingReminder, weeklyReport.
 - `src/dto/request/` — validate theo module; `src/dto/response/apiResponse.js` — envelope.
-- `scripts/` — `db-dump.mjs`, `db-restore.mjs`, `check-mail-dns.mjs`, `send-test-email.mjs`, `mailjet-status.mjs`, `verify-mailjet-domain.mjs`, `check-resend.mjs`.
+- `scripts/` — `db-dump.mjs`, `db-restore.mjs`, `fix-dev-db-url.mjs`, `convert-family-to-business.mjs`, `check-mail-dns.mjs`, `send-test-email.mjs`, `mailjet-status.mjs`, `verify-mailjet-domain.mjs`, `check-resend.mjs`.
 - `tests/` — bộ test Vitest.
 
 ## 4. Chi tiết triển khai theo giai đoạn
@@ -60,7 +60,7 @@ Xem `07_MN-Qronx_Architecture.md`, mục 3. Tóm tắt các nhánh chính:
 | 2.2 | Định nghĩa 27 model | Tài khoản, công việc, thông báo, thương mại, tăng trưởng, cộng tác, hỗ trợ (xem `03`/`04`). |
 | 2.3 | Quan hệ & chỉ mục | Theo ERD; đặc biệt `ix_reminders_status_remind_at` cho scheduler và các chỉ mục theo `userId`. |
 | 2.4 | Seed | Roles, admin, tài khoản demo (Plus), danh mục/việc/việc con/nhắc nhở/thiết bị mẫu. |
-| 2.5 | Đồng bộ | `npx prisma db push` (chạy tự động khi deploy qua `render.yaml`). |
+| 2.5 | Đồng bộ | `npx prisma db push` (chạy thủ công trên VPS sau khi schema đổi). |
 
 ### Phase 3 — Middleware & utils
 
@@ -78,7 +78,7 @@ Auth (xác thực email, refresh token, Google OAuth) → User profile → Categ
 | 2 | Rewards | Điểm đăng nhập/chuỗi/mời bạn, mã mời, đổi thưởng. |
 | 3 | AI | Proxy tới inference server riêng + hạn mức theo ngày. |
 | 4 | Task Sharing | Giao việc (Pro), luân phiên. |
-| 5 | Family | Gói Pro Gia đình, đồng bộ ghế theo chủ gói. |
+| 5 | Family | Gói Pro Doanh nghiệp (model/bảng vẫn mang tên `family`), đồng bộ ghế theo chủ gói. |
 | 6 | Reports & Planner | Báo cáo 7/30/90 + xuất CSV; kế hoạch tuần bằng luật. |
 | 7 | Nag/Snooze nâng cao | Nhắc dai theo gói. |
 | 8 | Báo cáo tuần qua email | `weeklyReportScheduler`. |
@@ -93,8 +93,8 @@ Auth (xác thực email, refresh token, Google OAuth) → User profile → Categ
 PORT=8080
 NODE_ENV=development
 
-# Database – Tiger Cloud (giữ nguyên tham số sslmode)
-DATABASE_URL="postgresql://user:password@host:5432/taskalarm?sslmode=require"
+# Database – dev: Postgres local; production: Postgres 16 trên VPS (localhost only)
+DATABASE_URL="postgresql://user:password@host:5432/taskalarm"
 
 # JWT
 JWT_SECRET=your-super-secret-key-change-in-production
@@ -106,14 +106,15 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_CALLBACK_URL=http://localhost:8080/api/v1/auth/google/callback
 FRONTEND_URL=http://localhost:5173
 
-# Email – Mailjet (API + SMTP) và Resend dự phòng
-MAIL_TRANSPORT=auto            # auto | resend | api | smtp
-SMTP_HOST=in-v3.mailjet.com
-SMTP_PORT=587
-SMTP_USER=your-mailjet-api-key
-SMTP_PASS=your-mailjet-secret-key
-SMTP_SECURE=false
-EMAIL_FROM=MN-Qronx <no-reply@mn-qronx.id.vn>
+# Email – production đang dùng Gmail SMTP (App Password của Gmail chủ dự án);
+# Mailjet (API + SMTP) và Resend giữ làm đường dự phòng, không kích hoạt.
+MAIL_TRANSPORT=smtp            # auto | resend | api | smtp
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_USER=your-gmail-address
+SMTP_PASS=your-gmail-app-password
+SMTP_SECURE=true
+EMAIL_FROM=MN-Qronx <your-gmail-address>
 MAILJET_API_KEY=your-mailjet-api-key
 MAILJET_SECRET_KEY=your-mailjet-secret-key
 MAILJET_SANDBOX=false
@@ -177,5 +178,5 @@ Bộ test chạy bằng **Vitest** (`npm test`) trong `backend/tests/`, bao ph�
 - [x] Middleware xác thực, phân quyền, validate, transform và error handler hoạt động.
 - [x] Scheduler nhắc nhở (1 phút) + nhắc dai hoạt động; dọn thùng rác 30 ngày.
 - [x] Thanh toán: tạo đơn, mã QR, webhook/API ngân hàng, admin xác nhận, hạ gói hết hạn.
-- [x] Điểm thưởng, trợ lý AI (hạn mức), giao việc, gói gia đình, báo cáo/kế hoạch tuần, hỗ trợ.
+- [x] Điểm thưởng, trợ lý AI (hạn mức), giao việc, gói Pro Doanh nghiệp, báo cáo/kế hoạch tuần, hỗ trợ.
 - [x] Bộ test Vitest bao phủ các module chính (chạy trên DB test).

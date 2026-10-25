@@ -16,7 +16,7 @@
   - `CANCELLED` (Đã hủy): Đỏ
   - `OVERDUE` (Quá hạn — chỉ hiển thị): Hổ phách + icon cảnh báo
 - **Badge mức ưu tiên**: `LOW` Slate, `MEDIUM` Xanh dương, `HIGH` Hổ phách, `URGENT` Đỏ.
-- **Badge gói**: Miễn phí (Slate), Plus (Xanh dương), Pro (Tím), Pro Gia đình (Hồng).
+- **Badge gói**: Miễn phí (Slate), Plus (Xanh dương), Pro (Tím), Pro Doanh nghiệp (Hồng).
 - **Component dùng lại**: `Button`, `Input`, `Select`, `Badge`, `Modal`, `Toast`, `Avatar`, `Feedback`, `VoiceButton`, `SupportBadge`, `UpdateNotification`.
 - **Layout User**: `AppShell` gồm Sidebar (desktop) / BottomNav + drawer (mobile) + Header. Nút tạo nhanh (`QuickCapture`) và nút chuông mô phỏng báo thức luôn sẵn sàng.
 - **Layout Admin**: `AdminShell` với menu riêng.
@@ -34,7 +34,7 @@
 - **Bố cục**: Hero (tiêu đề + khẩu hiệu "Plan. Do. On Time." + nút "Bắt đầu miễn phí"), khối tính năng nổi bật (quản lý công việc, nhắc kiểu báo thức, trợ lý AI, giao việc, báo cáo), phần gói, footer.
 
 ### SCR-G-02 — Bảng giá (`/pricing`)
-- **Bố cục**: 4 thẻ gói (Miễn phí/Plus/Pro/Pro Gia đình) với giá tháng/năm (nút đổi kỳ), danh sách quyền lợi, nhãn "Sắp có" cho hạng mục chưa làm. Nút CTA theo trạng thái đăng nhập.
+- **Bố cục**: 4 thẻ gói (Miễn phí/Plus/Pro/Pro Doanh nghiệp) với giá tháng/năm (nút đổi kỳ), danh sách quyền lợi, nhãn "Sắp có" cho hạng mục chưa làm. Nút CTA theo trạng thái đăng nhập.
 
 ### SCR-G-03 — Đăng ký (`/register`)
 - **Bố cục**: Form họ tên, email, mật khẩu, xác nhận mật khẩu; sau khi gửi, chuyển sang bước **nhập mã xác nhận email** (gửi lại mã có giới hạn thời gian). Có nút đăng ký bằng Google.
@@ -119,7 +119,7 @@
 ### SCR-U-18 — Cả nhà (`/app/family`)
 - **Bố cục (chủ gói)**: Trạng thái gói, số ghế còn trống, danh sách thành viên (kèm toggle bật/tắt chia sẻ tiến độ của họ ở góc nhìn thành viên), ô mời theo email, nút gỡ; **bảng tiến độ "Cả nhà hôm nay"**.
 - **Bố cục (thành viên)**: Cho biết đang dùng gói của ai, ngày hết hạn chung, công tắc tự chia sẻ tiến độ, nút rời nhóm.
-- **Bố cục (chưa có gói)**: Khung mời mua Pro Gia đình kèm lợi ích.
+- **Bố cục (chưa có gói)**: Khung mời mua Pro Doanh nghiệp kèm lợi ích.
 
 ### SCR-U-19 — Hỗ trợ (`/app/support`)
 - **Bố cục**: Khung chat với admin (bong bóng hai phía), nút gửi ảnh (tối đa 3), chỉ báo đang gõ/đã đọc, trạng thái hội thoại; tự động cuộn tới tin mới.

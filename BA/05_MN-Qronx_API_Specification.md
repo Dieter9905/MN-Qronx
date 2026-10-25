@@ -77,10 +77,10 @@ Response `201`:
 | GET | `/api/v1/me/activity` | User | 5 thông báo gần nhất. |
 | PUT | `/api/v1/me/weekly-report` | User | Bật/tắt báo cáo tuần qua email (gói Pro). |
 | POST | `/api/v1/me/weekly-report/test` | User | Gửi thử báo cáo tuần cho chính mình (bị chặn bấm liên tục). |
-| GET | `/api/v1/me/family` | User | Thông tin gói Pro Gia đình (chủ gói hoặc thành viên). |
+| GET | `/api/v1/me/family` | User | Thông tin gói Pro Doanh nghiệp (chủ gói hoặc thành viên; đường endpoint/model vẫn mang tên `family`). |
 | POST | `/api/v1/me/family/members` | User | Mời một người vào nhà (theo email) — chủ gói. |
 | DELETE | `/api/v1/me/family/members/{memberId}` | User | Gỡ một người khỏi nhà — chủ gói. |
-| POST | `/api/v1/me/family/leave` | User | Tự rời khỏi nhóm gia đình. |
+| POST | `/api/v1/me/family/leave` | User | Tự rời khỏi nhóm gói Doanh nghiệp. |
 | GET | `/api/v1/me/family/board` | User | Bảng tiến độ "Cả nhà hôm nay" — chủ gói. |
 | PUT | `/api/v1/me/family/progress` | User | Thành viên tự bật/tắt chia sẻ tiến độ. |
 | GET | `/api/v1/me/assigned` | User | Danh sách việc người khác giao cho mình. |
@@ -357,7 +357,7 @@ Mọi route dưới `/api/v1/admin/**` yêu cầu `auth` + vai trò `ADMIN`.
 | 400 | Bật nhắc dai khi không có gói Pro | "Nhắc dai … là tính năng của gói Pro…" |
 | 400 | Giao việc khi không có gói Pro | "Nhờ người khác làm là tính năng của gói Pro…" |
 | 400 | Giao việc cho người chưa có tài khoản | "… chưa có tài khoản MN-Qronx. Hãy rủ họ đăng ký…" |
-| 400 | Mời người đang trả phí vào gói gia đình | "… đang có gói trả phí riêng nên không cần chia sẻ chỗ…" |
+| 400 | Mời người đang trả phí vào gói Doanh nghiệp | "… đang có gói trả phí riêng nên không cần chia sẻ chỗ…" |
 | 400 | Tên danh mục trùng | "Danh mục này đã tồn tại" |
 | 400 | Dùng thử lần thứ hai | "Bạn đã dùng thử Pro rồi" |
 | 403 | Thao tác trên Task không thuộc sở hữu | "Bạn không có quyền truy cập công việc này" |

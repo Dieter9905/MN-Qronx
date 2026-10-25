@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <!-- ─── Màn hình đăng nhập ─────────────────────────────── -->
+  <div id="login-view" class="view hidden">
+    <header>
+      <img src="../icons/icon48.png" alt="" width="28" height="28" />
+      <h1>MN-Qronx</h1>
+    </header>
+    <form id="login-form">
+      <input id="email" type="email" placeholder="Email" required autocomplete="username" />
+      <input id="password" type="password" placeholder="Mật khẩu" required autocomplete="current-password" />
+      <button type="submit" id="login-btn">Đăng nhập</button>
+      <p id="login-error" class="error hidden"></p>
+      <p class="hint">Dùng tài khoản trên mn-qronx.id.vn — token lưu ngay trong trình duyệt, không gửi đi đâu khác.</p>
+    </form>
+  </div>
+
+  <!-- ─── Màn hình công việc ─────────────────────────────── -->
+  <div id="tasks-view" class="view hidden">
+    <section id="focus-box" class="focus-box">
+      <!-- Đang chạy / tạm dừng: hiển thị đồng hồ đếm ngược -->
+      <div id="focus-running" class="hidden">
+        <div class="focus-time" id="focus-clock">25:00</div>
+        <div class="focus-state" id="focus-state">Đang tập trung 🍅</div>
+        <div class="focus-actions">
+          <button id="focus-pause-btn" class="ghost">Tạm dừng</button>
+          <button id="focus-stop-btn" class="ghost">Kết thúc</button>
+        </div>
+      </div>
+      <!-- Thời gian nhàn rỗi: chọn độ dài phiên -->
+      <div id="focus-idle">
+        <div class="focus-state">Bấm giờ tập trung 🍅</div>
+        <div class="focus-actions">
+          <button class="ghost focus-preset" data-mins="25">25 phút</button>
+          <button class="ghost focus-preset" data-mins="45">45 phút</button>
+          <button class="ghost focus-preset" data-mins="60">60 phút</button>
+        </div>
+      </div>
+    </section>
+    <header>
+      <img src="../icons/icon48.png" alt="" width="28" height="28" />
+      <div>
+        <h1 id="greeting">Công việc hôm nay</h1>
+        <p id="due-line" class="due-line"></p>
+      </div>
+      <button id="logout-btn" class="ghost" title="Đăng xuất">Thoát</button>
+    </header>
+    <main id="task-list"></main>
+    <footer>
+      <span class="hint">Chuông nền đang chạy tự động mỗi phút</span>
+      <a id="open-web" href="https://mn-qronx.id.vn" target="_blank" rel="noreferrer">Mở web ↗</a>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

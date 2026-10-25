@@ -7,7 +7,7 @@
 Cơ sở dữ liệu của MN-Qronx là **PostgreSQL** và được quản lý bằng **Prisma ORM**.
 
 - **Nguồn sự thật duy nhất:** [`backend/prisma/schema.prisma`](../backend/prisma/schema.prisma) — khai báo 27 model, enum, quan hệ và chỉ mục.
-- **Đồng bộ schema lên DB:** `npx prisma db push` (được gọi tự động khi deploy — xem `render.yaml`). Prisma không dùng migration có version; schema là bản khai báo được áp trực tiếp.
+- **Đồng bộ schema lên DB:** `npx prisma db push` (chạy thủ công trên VPS sau mỗi lần sửa schema). Prisma không dùng migration có version; schema là bản khai báo được áp trực tiếp.
 - **Dữ liệu khởi tạo:** [`backend/prisma/seed.js`](../backend/prisma/seed.js) tạo hai vai trò (`USER`, `ADMIN`), tài khoản admin, một tài khoản demo (gói Plus) cùng danh mục, công việc, việc con, nhắc nhở và một thiết bị mẫu.
 
 Hai tệp SQL trong thư mục này là **bản tham chiếu DDL tương đương** dùng khi cần đọc thiết kế mà không muốn mở Prisma, hoặc khi muốn dựng DB trên hệ quản trị khác:
@@ -23,10 +23,10 @@ Hai tệp SQL trong thư mục này là **bản tham chiếu DDL tương đươn
 
 | | |
 |---|---|
-| Nhà cung cấp đang dùng | **Tiger Cloud** (750 MB, vùng Singapore, không đặt hạn thời gian) |
-| Chuỗi kết nối trên máy chủ | dashboard Render → service `taskalarm-api` → biến `DATABASE_URL` |
+| Nhà cung cấp đang dùng | **PostgreSQL 16 cài ngay trên VPS** (Ubuntu 24.04), chỉ nhận kết nối localhost |
+| Chuỗi kết nối trên máy chủ | `/opt/mn-qronx/backend/.env` → biến `DATABASE_URL` (không lộ ra ngoài mạng) |
 | Chuỗi kết nối trên máy dev | `backend/.env` |
-| Cấu hình trong `render.yaml` | `DATABASE_URL` để `sync: false` (đặt trong dashboard, không lấy từ `fromDatabase`) |
+| Deploy | `render.yaml` đã bị xóa khỏi dự án — backend chạy trên VPS qua systemd `mn-qronx`, không còn Render |
 
 > ⚠️ `backend/.env` trên máy dev nối **thẳng vào dữ liệu thật của khách**. Mọi lệnh xóa phải có `where`, và test chỉ được dọn dữ liệu `*@example.com`.
 
@@ -61,7 +61,7 @@ Toàn bộ việc ghi nằm trong một giao dịch; thư mục `backups/` bị 
 | Thông báo | `devices`, `web_push_subscriptions`, `notification_settings`, `notification_logs`, `custom_sounds`, `app_settings` | Web Push, FCM, âm thanh riêng, cấu hình VAPID |
 | Thương mại | `subscriptions`, `payment_orders`, `billing_events`, `billing_settings` | Gói, đơn, chống trùng webhook, cấu hình nhận tiền |
 | Tăng trưởng | `point_transactions`, `invitations`, `ai_usage` | Điểm thưởng, mời bạn, hạn mức AI/ngày |
-| Cộng tác | `task_shares`, `family_members` | Giao việc và gói Pro Gia đình |
+| Cộng tác | `task_shares`, `family_members` | Giao việc và gói Pro Doanh nghiệp |
 | Hỗ trợ | `support_conversations`, `support_messages`, `support_attachments` | Chat người dùng ↔ admin |
 
 ## 5. Lưu ý khi triển khai ở tầng ứng dụng
