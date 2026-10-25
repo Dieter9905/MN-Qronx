@@ -2,3 +2,7 @@ node_modules/
 .env
 dist/
 *.log
+
+# Sao lưu dữ liệu thật của khách — không bao giờ đẩy lên git
+backups/
+.env.bak*

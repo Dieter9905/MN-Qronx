@@ -11,10 +11,11 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # Postgres KHÔNG còn do Render quản lý: DB free của Render hết hạn 06/10/2026,
+      # dữ liệu đã chuyển sang Tiger Cloud (xem docs/database.md). Vì vậy bỏ
+      # fromDatabase — đặt chuỗi kết nối trong dashboard Render.
       - key: DATABASE_URL
-        fromDatabase:
-          name: mn-qronx
-          property: connectionString
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL

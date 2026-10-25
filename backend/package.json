@@ -8,6 +8,8 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed": "node prisma/seed.js",
+    "db:dump": "node scripts/db-dump.mjs",
+    "db:restore": "node scripts/db-restore.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "mail:check": "node scripts/check-mail-dns.mjs",
