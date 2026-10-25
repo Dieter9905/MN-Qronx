@@ -203,6 +203,20 @@ export function AlarmProvider({ children }) {
    */
   const complete = useCallback(async () => {
     if (!alarm?.task?.id) return null
+    // Chuông demo chỉ là mô phỏng, nên KHÔNG được đụng vào dữ liệu thật. Bấm
+    // "Đã xong việc" ở đây mà gọi máy chủ thì việc khách chỉ định xem thử bị
+    // đánh dấu xong thật, và hoàn thành việc còn huỷ MỌI nhắc nhở của nó — khách
+    // bấm nút "thử" rồi mất luôn nhắc nhở thật của mình. snooze và dismiss đã
+    // chặn theo cách này từ trước; complete là chỗ còn sót.
+    if (alarm.demo) {
+      stopAlarmSound()
+      setAlarm(null)
+      return {
+        success: true,
+        message: 'Chế độ thử: đã tắt chuông, việc thật vẫn còn nguyên',
+        data: null,
+      }
+    }
     const res = await completeTask(alarm.task.id)
     if (!res.success) return res
     stopAlarmSound()

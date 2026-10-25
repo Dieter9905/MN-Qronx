@@ -72,6 +72,12 @@ export default function AlarmOverlay() {
       toast.error(res?.message || 'Không thể đánh dấu hoàn thành')
       return
     }
+    // Chuông demo không đánh dấu xong việc thật, nên câu "Đã đánh dấu hoàn
+    // thành" ở đây sẽ là nói dối. Nói đúng việc vừa xảy ra.
+    if (isDemo) {
+      toast.info('Chế độ thử — việc thật không bị đánh dấu xong')
+      return
+    }
     const next = res.data?.nextTask
     if (next?.dueAt) {
       toast.success(
