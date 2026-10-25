@@ -159,6 +159,8 @@ export default function SettingsPage() {
 
   useEffect(() => {
     load()
+    // load đọc các getter động nên chỉ chạy đúng một lần khi vào trang SETTINGS
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fmtSize = (bytes) => {

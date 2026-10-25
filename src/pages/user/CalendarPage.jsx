@@ -44,7 +44,6 @@ export default function CalendarPage() {
 
   const range = useMemo(() => {
     if (view === 'month') {
-      const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1)
       const start = parseDayKey(formatDayKey(buildMonthGrid(cursor.getFullYear(), cursor.getMonth())[0]))
       const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 42)
       return { from: start, to: end }

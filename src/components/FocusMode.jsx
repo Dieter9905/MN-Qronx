@@ -4,10 +4,7 @@ import {
   Pause,
   ArrowCounterClockwise,
   SkipForward,
-  Timer,
   Lightning,
-  Flame,
-  Trophy,
   Coffee,
 } from '@phosphor-icons/react'
 import { useLanguage } from '../context/LanguageContext'
@@ -31,25 +28,20 @@ export default function FocusMode({ onClose }) {
   const [showCelebration, setShowCelebration] = useState(false)
   const intervalRef = useRef(null)
 
+  // Sinh vị trí particle MỘT LẦN khi mount (useState lazy init) — không gọi
+  // Math.random() trong lần render nào nữa để giữ render thuần khiết.
+  const [particles] = useState(() =>
+    Array.from({ length: 20 }, (_, i) => ({
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      delay: Math.random() * 0.5,
+      fontSize: 16 + Math.random() * 20,
+      emoji: ['🎉', '✨', '🔥', '⭐', '💪'][i % 5],
+    }))
+  )
+
   const totalTime = mode === 'work' ? WORK_DURATION : mode === 'break' ? BREAK_DURATION : LONG_BREAK_DURATION
   const progress = ((totalTime - timeLeft) / totalTime) * 100
-
-  // Timer logic
-  useEffect(() => {
-    if (isRunning && timeLeft > 0) {
-      intervalRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (mode === 'work') setTotalWorkTime((t) => t + 1)
-          return prev - 1
-        })
-      }, 1000)
-    } else if (timeLeft === 0) {
-      clearInterval(intervalRef.current)
-      setIsRunning(false)
-      handleSessionComplete()
-    }
-    return () => clearInterval(intervalRef.current)
-  }, [isRunning, timeLeft, mode])
 
   const handleSessionComplete = useCallback(() => {
     setShowCelebration(true)
@@ -71,6 +63,23 @@ export default function FocusMode({ onClose }) {
       setTimeLeft(WORK_DURATION)
     }
   }, [mode, sessions])
+
+  // Timer logic
+  useEffect(() => {
+    if (isRunning && timeLeft > 0) {
+      intervalRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (mode === 'work') setTotalWorkTime((t) => t + 1)
+          return prev - 1
+        })
+      }, 1000)
+    } else if (timeLeft === 0) {
+      clearInterval(intervalRef.current)
+      setIsRunning(false)
+      handleSessionComplete()
+    }
+    return () => clearInterval(intervalRef.current)
+  }, [isRunning, timeLeft, mode, handleSessionComplete])
 
   const toggle = () => setIsRunning((r) => !r)
 
@@ -112,18 +121,18 @@ export default function FocusMode({ onClose }) {
       {/* Celebration particles */}
       {showCelebration && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          {Array.from({ length: 20 }).map((_, i) => (
+          {particles.map((p, i) => (
             <div
               key={i}
               className="absolute animate-bounce-subtle"
               style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 0.5}s`,
-                fontSize: `${16 + Math.random() * 20}px`,
+                left: `${p.left}%`,
+                top: `${p.top}%`,
+                animationDelay: `${p.delay}s`,
+                fontSize: `${p.fontSize}px`,
               }}
             >
-              {['🎉', '✨', '🔥', '⭐', '💪'][i % 5]}
+              {p.emoji}
             </div>
           ))}
         </div>

@@ -4,7 +4,6 @@ import {
   ListChecks,
   BellRinging,
   ArrowsClockwise,
-  CalendarBlank,
   Clock,
   CheckCircle,
   Lightning,
@@ -14,14 +13,11 @@ import {
   Globe,
   Plus,
   House,
-  ChartBar,
-  Gear,
   UserCirclePlus,
   Bell,
   Fire,
   ShieldCheck,
   Lock,
-  Eye,
   Timer,
   Sun,
   Moon,
@@ -43,6 +39,8 @@ function useT() {
 // ---------- Scroll reveal hook ----------
 function useScrollReveal(options = {}) {
   const ref = useRef(null)
+  const threshold = options?.threshold || 0.15
+  const rootMargin = options?.rootMargin || '0px'
   useEffect(() => {
     const el = ref.current
     if (!el) return
@@ -53,11 +51,11 @@ function useScrollReveal(options = {}) {
           observer.unobserve(el)
         }
       },
-      { threshold: options.threshold || 0.15, rootMargin: options.rootMargin || '0px' }
+      { threshold, rootMargin }
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [threshold, rootMargin])
   return ref
 }
 

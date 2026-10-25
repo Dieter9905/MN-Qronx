@@ -1,6 +1,5 @@
-import { Keyboard, X, Lightning } from '@phosphor-icons/react'
+import { Keyboard, X } from '@phosphor-icons/react'
 import { useLanguage } from '../context/LanguageContext'
-import { useTheme } from '../context/ThemeContext'
 
 const shortcuts_vi = [
   { keys: ['Ctrl', 'N'], label: 'Tạo công việc mới' },

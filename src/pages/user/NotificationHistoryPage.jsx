@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Bell, ArrowLeft, ArrowRight, ClockCounterClockwise } from '@phosphor-icons/react'
 import { getNotificationLogs } from '../../services/notificationService'
-import { useToast } from '../../components/common/Toast'
 import { Skeleton, EmptyState } from '../../components/common/Feedback'
 import Button from '../../components/common/Button'
 import { ActionBadge } from '../../components/common/Badge'
@@ -10,7 +9,6 @@ import { formatDateTime, relativeTime } from '../../lib/format'
 const PAGE_SIZE = 10
 
 export default function NotificationHistoryPage() {
-  const toast = useToast()
   const [page, setPage] = useState(1)
   const [range, setRange] = useState('')
   const [data, setData] = useState(null)
@@ -32,7 +30,7 @@ export default function NotificationHistoryPage() {
     return () => {
       cancelled = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [page, range])
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1

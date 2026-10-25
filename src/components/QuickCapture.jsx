@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, X, Lightning, CalendarBlank, Brain, Clock, Tag, Repeat, CheckCircle, Sparkle, ListChecks, Crown, Lock } from '@phosphor-icons/react'
+import { Plus, X, Lightning, Brain, CheckCircle, Sparkle, ListChecks, Crown, Lock } from '@phosphor-icons/react'
 import { useLanguage } from '../context/LanguageContext'
 import { useToast } from './common/Toast'
 import { useAuth } from '../context/AuthContext'

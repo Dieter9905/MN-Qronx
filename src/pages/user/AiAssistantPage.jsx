@@ -55,7 +55,7 @@ export default function AiAssistantPage() {
 
   useEffect(() => {
     if (isPro) load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [isPro])
 
   const analyzeBreakdown = () => {

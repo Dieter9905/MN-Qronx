@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Sparkle, CheckCircle, TrendUp, Wrench, ArrowRight, Rocket } from '@phosphor-icons/react'
+import { Sparkle, CheckCircle, TrendUp, Wrench, ArrowRight, Rocket } from '@phosphor-icons/react'
 import { updates, APP_VERSION } from '../data/updates'
 
 const STORAGE_KEY = 'mnq:lastSeenVersion'

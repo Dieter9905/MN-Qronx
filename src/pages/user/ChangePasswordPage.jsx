@@ -8,7 +8,7 @@ import { useToast } from '../../components/common/Toast'
 import { changePassword } from '../../services/authService'
 
 export default function ChangePasswordPage() {
-  const { user, logout } = useAuth()
+  const { logout } = useAuth()
   const toast = useToast()
   const navigate = useNavigate()
 

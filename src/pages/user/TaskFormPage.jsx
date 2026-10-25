@@ -31,7 +31,7 @@ import {
   isPaidPlan,
 } from '../../lib/constants'
 import { ColorPicker } from '../../components/common/Inputs'
-import { toDate, addMinutes, setTime } from '../../lib/format'
+import { toDate, addMinutes } from '../../lib/format'
 
 function toLocalInputValue(date) {
   if (!date) return ''
@@ -87,7 +87,7 @@ export default function TaskFormPage() {
 
   useEffect(() => {
     loadCategories()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [])
 
   useEffect(() => {

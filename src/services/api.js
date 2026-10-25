@@ -1,7 +1,7 @@
 // Mô phỏng tầng HTTP: envelope chuẩn { success, message, data } / { success, message, errors }
 // theo API Specification (BA/05_MN-Qronx_API_Specification.md)
 
-import { getDb, getSession } from '../lib/db'
+import { getDb } from '../lib/db'
 
 export function ok(message = 'Thao tác thành công', data = null) {
   return { success: true, message, data }

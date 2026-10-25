@@ -19,7 +19,6 @@ import {
   replyAsAdmin,
   markAdminConversationRead,
   setAdminConversationStatus,
-  getNewSupportMessages,
 } from '../../services/supportService'
 
 /**
