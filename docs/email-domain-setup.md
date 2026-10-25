@@ -136,7 +136,7 @@ About our sending:
 - Sending practices: OTP emails are plain text + HTML, no tracking, no shortened links;
   the app refuses to send more than 10 emails per hour and 10 per day while this
   temporary limit applies.
-- Production API: https://taskalarm-api.onrender.com · frontend https://mn-qronx.id.vn
+- Production API: https://mn-qronx.id.vn · frontend https://mn-qronx.id.vn
 
 Could you please review our account information and lift the temporary sending limit?
 Please let us know if you need anything else (business details, sample emails, or the

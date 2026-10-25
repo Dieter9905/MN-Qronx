@@ -93,8 +93,41 @@ export function toGoogleAvatarUrl(picture, size = 256) {
 }
 
 /**
- * Sinh state ngẫu nhiên chống CSRF.
+ * State tự xác thực (HMAC + timestamp) chống CSRF.
+ *
+ * Trước đây state được lưu vào cookie và so khớp ở callback — nhưng một số
+ * trình duyệt/trình chặn quảng cáo huỷ cookie SameSite=Lax trong luồng chuyển
+ * trang (start → Google → callback), làm login Google luôn trượt với lỗi
+ * `google_state`. Đổi sang state tự chứng thực: định dạng
+ * `nonce.timestamp.chữ-ký`, chỉ server có secret mới sinh được chữ ký hợp lệ,
+ * và quá 10 phút là vô hiệu — không cần cookie, không cần lưu server-side.
  */
+export const STATE_TTL_MS = 10 * 60 * 1000
+
+function signState(nonce, ts) {
+  return crypto
+    .createHmac('sha256', config.jwt.secret)
+    .update(`${nonce}.${ts}`)
+    .digest('hex')
+}
+
 export function generateState() {
-  return crypto.randomBytes(16).toString('hex')
+  const nonce = crypto.randomBytes(16).toString('hex')
+  const ts = Date.now().toString(36)
+  return `${nonce}.${ts}.${signState(nonce, ts)}`
+}
+
+/**
+ * Xác thực state của callback Google: chữ ký đúng và không quá hạn (10 phút).
+ */
+export function verifyState(state) {
+  const [nonce, ts, sig] = String(state || '').split('.')
+  if (!nonce || !ts || !sig) return false
+  const expected = signState(nonce, ts)
+  const a = Buffer.from(sig)
+  const b = Buffer.from(expected)
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return false
+  const issued = parseInt(ts, 36)
+  const age = Date.now() - issued
+  return Number.isFinite(issued) && age >= 0 && age <= STATE_TTL_MS
 }

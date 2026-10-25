@@ -381,7 +381,7 @@ ngắn nhất (Casso cũng hỗ trợ ACB):
 
 1. Tạo tài khoản SePay → **Liên kết tài khoản ACB** (chỉ cần đăng nhập ngân hàng một lần).
 2. Vào **Webhooks → Thêm**:
-   - URL: `https://taskalarm-api.onrender.com/api/v1/billing/webhook/bank`
+   - URL: `https://mn-qronx.id.vn/api/v1/billing/webhook/bank`
      (lấy đúng URL từ khung “Cài đặt nhận tiền” cho khỏi sai).
    - Loại giao dịch: **Tiền vào** (`transferType = in`).
    - Xác thực: **Apikey** với **mã xác thực** trong khung cài đặt (Sepay gửi ở header
@@ -529,7 +529,7 @@ lẫn biến môi trường) thì endpoint **từ chối mọi request** (500) �
 gói miễn phí. Giá trị đặt trong app **đè** `BILLING_WEBHOOK_SECRET`. Casso gửi mã này ở
 header `secure-token`; Sepay dùng `Authorization: Apikey …`.
 Cách cấu hình phía Casso: *Casso → Webhook → thêm URL*
-`https://taskalarm-api.onrender.com/api/v1/billing/webhook/bank` + secure token.
+`https://mn-qronx.id.vn/api/v1/billing/webhook/bank` + secure token.
 
 ### Vài tình huống thường gặp
 

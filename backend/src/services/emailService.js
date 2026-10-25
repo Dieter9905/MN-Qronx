@@ -247,7 +247,9 @@ async function sendViaSmtp({ to, cc, bcc, replyTo, subject, text, html }) {
     to: Array.isArray(to) ? to.join(', ') : to,
     ...(cc && { cc: Array.isArray(cc) ? cc.join(', ') : cc }),
     ...(bcc && { bcc: Array.isArray(bcc) ? bcc.join(', ') : bcc }),
-    ...(replyTo && { replyTo }),
+    // Reply-To mặc định trùng tài khoản gửi: tăng độ tin cậy trong mắt Gmail
+    // (thư hệ thống không có Reply-To, chỉ trả lời là vào hòm chủ, dễ bị coi bulk).
+    replyTo: replyTo || config.smtp.user || undefined,
     subject,
     text,
     html,
@@ -379,11 +381,11 @@ export async function sendEmail(opts) {
     return { sent: false, smtpMissing: true, devLog: text }
   }
 
-  // Hạn mức gửi là giới hạn ở tầng tài khoản Mailjet (áp cho cả API và SMTP), nên kiểm
-  // tra trước khi gửi để không đốt quota bằng những lần gửi chắc chắn thất bại.
-  // SandboxMode không gửi thật → bỏ qua kiểm tra. Đi đường Resend thì hạn mức của
-  // Mailjet không liên quan, không được để nó chặn thư gửi được.
-  if (transport !== 'resend' && !config.mail.sandbox) {
+  // Hạn mức Mailjet (duyệt tạm 10 thư/giờ) chỉ áp khi gửi qua Mailjet API.
+  // Đường SMTP (Gmail) hay Resend có hạn mức riêng của bên thứ ba — bỏ kiểm tra
+  // Mailjet trên các đường đó để không còn log 401 vô nghĩa khi đã rời Mailjet.
+  // SandboxMode không gửi thật → bỏ qua kiểm tra.
+  if (transport === 'api' && !config.mail.sandbox) {
     await assertQuotaAvailable()
   }
 

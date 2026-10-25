@@ -4,16 +4,17 @@
 // Auth: accessToken lưu localStorage 'mnq:accessToken', refreshToken 'mnq:refreshToken'.
 // Nếu request trả 401 (token hết hạn), tự động gọi /auth/refresh-token rồi thử lại 1 lần.
 
+// Production chạy trên VPS riêng (https://mn-qronx.id.vn, Nginx → systemd mn-qronx)
+// — không còn dùng Render nữa. VITE_API_URL chỉ cần đặt khi dev/build nơi khác.
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'https://taskalarm-api.onrender.com/api/v1'
+  import.meta.env.VITE_API_URL || 'https://mn-qronx.id.vn/api/v1'
 
 const BASE_URL = API_BASE_URL
 
 /**
- * Đánh thức máy chủ (fire-and-forget) trước khi người dùng thật sự cần.
- * Web service gói free của Render "ngủ" sau 15 phút không có request, lần truy
- * cập sau phải chờ khởi động ~30-60 giây. Gọi sớm ngay khi mở app để máy chủ
- * boot trong lúc người dùng còn đang đọc trang hoặc gõ mật khẩu.
+ * Đánh thức máy chủ (fire-and-forget) và chặn rác kết nối mạng ngắn hạn.
+ * Trước đây dùng cho backend Render gói free (ngủ sau 15 phút, lần đầu truy
+ * cập chờ 30-60 giây); giờ chạy trên VPS 24/7 nhưng giữ lại để bắt lỗi mạng sớm.
  */
 export function warmUpServer() {
   try {
@@ -115,7 +116,7 @@ export async function api(method, path, { body, query } = {}) {
 
   // Lỗi nghiệp vụ từ backend – trả về envelope để UI hiển thị message/errors.
   // Kèm `status` để lớp gọi biết lỗi nào nên thử lại: 429/5xx là hạ tầng tạm
-  // hỏng (thường gặp khi máy chủ Render gói free đang khởi động), còn 4xx là lỗi
+  // hỏng (hạ tầng tạm thời), còn 4xx là lỗi
   // nghiệp vụ thì thử lại vô ích.
   return {
     ...(data || {

@@ -269,24 +269,20 @@ Hai cái bẫy của harness (đã xử lý trong `evaluate.py`):
 
 ## 6. Deploy
 
-```bash
-docker build -t mn-qronx-ai ./ai
-docker run -p 8000:8000 mn-qronx-ai
-```
+Production bây giờ chạy AI ngay trên VPS (không còn dùng Render):
 
-Trên Render: New → Web Service → trỏ repo, Root Directory `ai`,
-Start Command `uvicorn serve:app --host 0.0.0.0 --port $PORT`.
-Copy URL public vào env backend: `AI_INFER_URL=https://<tên>.onrender.com`,
-`AI_MODEL_VERSION=mn-qronx-parser-v1`.
+- Code ở `/opt/mn-qronx/ai`, venv Python tại `ai/venv` (fastapi + uvicorn).
+- systemd service `mn-qronx-ai`: `uvicorn serve:app --host 127.0.0.1 --port 8000`,
+  chỉ nghe loopback — backend gọi nội bộ qua `AI_INFER_URL=http://127.0.0.1:8000`.
+- Khởi động lại: `systemctl restart mn-qronx-ai`, log: `journalctl -u mn-qronx-ai -f`.
 
-Copy checkpoint đã train vào `ai/checkpoints/best` rồi build lại image —
+Copy checkpoint đã train vào `ai/checkpoints/best` rồi khởi động lại service —
 `serve.py` tự dùng model fine-tune thay vì parser luật.
 
 Ba điều cần biết trước khi trông đợi production dùng model:
 
-1. `Dockerfile` hiện **không COPY thư mục `checkpoints/`** ⇒ bản trên Render
-   luôn chạy parser luật, không bao giờ nạp model.
-2. Render free là **CPU**. Sinh ~450 token cho một câu 3-5 việc mất hàng chục
+1. Bản đang chạy **chưa có `checkpoints/best`** ⇒ chạy parser luật.
+2. VPS (2 vCPU, không GPU): sinh ~450 token cho một câu 3-5 việc mất hàng chục
    giây, vượt `AI_MODEL_TIMEOUT` (mặc định 8 s) nên `serve.py` sẽ lùi về luật.
    Muốn dùng model thật thì cần GPU (hoặc lượng tử hoá int8/ONNX cho CPU).
 3. `GET /health` giờ báo `engine`: `rule-only` hay `model+rule`, kèm

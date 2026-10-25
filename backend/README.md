@@ -67,35 +67,23 @@ npm test                      # Chạy 35 tests
 
 Server chạy tại `http://localhost:8080`. Swagger UI tại `/docs`.
 
-## Deploy lên Render (Free)
+## Deploy lên VPS (production)
 
-### Cách 1: Render Blueprint (tự động)
+Production bây giờ chạy trên VPS riêng (đã cài Node 22, Nginx, PostgreSQL 16):
 
-1. Push code lên GitHub
-2. Vào [render.com](https://render.com) → New → Blueprint
-3. Chọn repo → Render tự đọc `render.yaml`
-4. Deploy xong, có URL: `https://taskalarm-api.onrender.com`
+- Code: `/opt/mn-qronx` trên VPS, backend chạy systemd service `mn-qronx`
+  (`/etc/systemd/system/mn-qronx.service`), DB Postgres local trên VPS (`qronx`).
+- `DATABASE_URL`, `JWT_SECRET`, `PORT=8081`, `NODE_ENV=production`,
+  `FRONTEND_URL=https://mn-qronx.id.vn` đặt trong `/opt/mn-qronx/backend/.env` (chmod 600).
+- Start: `systemctl start mn-qronx` — log xem bằng `journalctl -u mn-qronx -f`.
+- Nginx serve frontend `/var/www/qronx` + proxy `/api` và `/docs` về `127.0.0.1:8081`,
+  HTTPS bằng certbot (tự gia hạn).
+- API URL: `https://mn-qronx.id.vn/api/v1` · Swagger: `https://mn-qronx.id.vn/docs`
+- Frontend build với `VITE_API_URL=https://mn-qronx.id.vn/api/v1` rồi copy `dist/`
+  vào `/var/www/qronx`.
 
-### Cách 2: Manual
-
-1. Tạo **Web Service** trên Render
-   - Build Command: `npm install && npx prisma generate && npx prisma db push && npm run seed`
-   - Start Command: `node src/server.js`
-   - Plan: Free
-2. Tạo **PostgreSQL** database trên Render
-3. Copy Internal Database URL vào env var `DATABASE_URL`
-4. Thêm env vars:
-   - `JWT_SECRET` = random string
-   - `NODE_ENV` = production
-   - `PORT` = 10000
-
-### Sau khi deploy
-
-- API URL: `https://taskalarm-api.onrender.com/api/v1`
-- Swagger: `https://taskalarm-api.onrender.com/docs`
-- Set `VITE_API_URL` trên frontend: `https://taskalarm-api.onrender.com/api/v1`
-
-> ⚠️ Render Free tier: server sẽ sleep sau 15 phút không có request. First request sau sleep mất ~30s.
+> Không còn dùng Render nữa — server VPS luôn chạy, không sleep, cron scheduler
+> trong process hoạt động bình thường.
 
 ## API Endpoints
 

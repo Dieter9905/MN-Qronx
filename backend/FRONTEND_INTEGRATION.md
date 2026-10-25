@@ -5,8 +5,8 @@
 ## Quick Start
 
 ```bash
-# 1. Backend đã deploy trên Render (xem README.md)
-# URL: https://taskalarm-api.onrender.com/api/v1
+# 1. Backend đã deploy trên VPS riêng (xem README.md)
+# URL: https://mn-qronx.id.vn/api/v1
 
 # 2. Hoặc chạy local:
 cd backend && docker compose up -d && npm run seed && npm run dev
@@ -18,7 +18,7 @@ cd backend && docker compose up -d && npm run seed && npm run dev
 | Environment | URL |
 |---|---|
 | Local | `http://localhost:8080/api/v1` |
-| Production | `https://taskalarm-api.onrender.com/api/v1` |
+| Production | `https://mn-qronx.id.vn/api/v1` |
 
 ## Swagger Docs
 
@@ -381,7 +381,7 @@ export async function getDashboard() {
 ```env
 # Frontend .env
 VITE_API_URL=http://localhost:8080/api/v1       # Local
-VITE_API_URL=https://taskalarm-api.onrender.com/api/v1  # Production
+VITE_API_URL=https://mn-qronx.id.vn/api/v1  # Production
 ```
 
 ## Error Handling

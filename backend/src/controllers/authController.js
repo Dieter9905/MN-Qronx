@@ -84,9 +84,6 @@ export const resetPassword = catchAsync(async (req, res) => {
 
 // ─── Google OAuth ───────────────────────────────────────
 
-const GOOGLE_STATE_COOKIE = 'google_oauth_state'
-const STATE_TTL_MS = 10 * 60 * 1000
-
 /**
  * GET /api/v1/auth/google – chuyển hướng tới Google
  */
@@ -94,12 +91,9 @@ export const googleRedirect = catchAsync(async (req, res) => {
   if (!googleAuthService.isConfigured()) {
     return res.redirect(`${config.frontendUrl}/login?error=google_not_configured`)
   }
+  // State tự xác thực (HMAC + hạn 10 phút) — xem googleAuthService.generateState.
+  // Không dùng cookie: một số trình duyệt chặn cookie trong luồng hãy tạo login trượt.
   const state = googleAuthService.generateState()
-  res.cookie(GOOGLE_STATE_COOKIE, state, {
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: STATE_TTL_MS,
-  })
   res.redirect(googleAuthService.buildAuthUrl(state))
 })
 
@@ -110,11 +104,9 @@ export const googleCallback = catchAsync(async (req, res) => {
   const fail = (error) => res.redirect(`${config.frontendUrl}/login?error=${error || 'google'}`)
 
   try {
-    const state = req.cookies?.[GOOGLE_STATE_COOKIE]
-    if (!state || state !== req.query.state) {
+    if (!googleAuthService.verifyState(req.query.state)) {
       return fail('google_state')
     }
-    res.clearCookie(GOOGLE_STATE_COOKIE)
 
     if (!req.query.code) {
       return fail('google')
