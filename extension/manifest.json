@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "MN-Qronx – Nhắc việc",
-  "description": "Xem công việc hôm nay, nhận thông báo chuông và bấm giờ tập trung (Pomodoro) ngay trên trình duyệt, kể cả khi đang không mở trang web.",
+  "description": "Xem việc hôm nay, nhận chuông nhắc đến hạn và bấm giờ tập trung Pomodoro ngay trên trình duyệt, kể cả khi không mở trang web.",
   "version": "1.1.1",
   "permissions": ["alarms", "notifications", "storage"],
   "host_permissions": [
