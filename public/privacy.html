@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chính sách quyền riêng tư – MN-Qronx</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f1524; color: #e8ecf6;
+      font: 16px/1.7 system-ui, -apple-system, 'Segoe UI', sans-serif;
+      padding: 48px 20px 80px;
+    }
+    main { max-width: 760px; margin: 0 auto; }
+    h1 { font-size: 26px; margin-bottom: 6px; }
+    h2 { font-size: 19px; margin: 34px 0 10px; }
+    p, li { color: #c3cbdd; }
+    ul { padding-left: 22px; margin: 8px 0; }
+    li { margin: 6px 0; }
+    .muted { color: #9aa5c0; font-size: 14px; }
+    strong { color: #fff; }
+    a { color: #7c8cff; }
+    .badge {
+      display: inline-block; padding: 4px 12px; border-radius: 999px;
+      background: linear-gradient(90deg, #2563eb, #8b5cf6); color: #fff;
+      font-size: 13px; font-weight: 600; margin-bottom: 18px;
+    }
+    @media print {
+      body { background: #fff; color: #111; }
+      p, li { color: #333; } strong { color: #000; } h2 { color: #000; }
+      .badge { color: #000; background: #eee; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <span class="badge">MN-Qronx</span>
+  <h1>Chính sách quyền riêng tư</h1>
+  <p class="muted">Cập nhật lần cuối: 26/10/2026</p>
+
+  <h2>1. Tiện ích và dịch vụ</h2>
+  <p>Tiện ích trình duyệt <strong>MN-Qronx – Nhắc việc</strong> (extension) và trang web
+  <strong>MN-Qronx</strong> (<a href="https://mn-qronx.id.vn">https://mn-qronx.id.vn</a>) giúp người dùng
+  quản lý công việc, nhận chuông nhắc đến giờ hẹn và bấm giờ tập trung Pomodoro. Trang này trình bày
+  rõ dữ liệu nào được xử lý và lý do.</p>
+
+  <h2>2. Dữ liệu tiện ích xử lý trong trình duyệt</h2>
+  <ul>
+    <li><strong>Email và token xác thực</strong> — cấp sau khi người dùng đăng nhập vào
+    mn-qronx.id.vn; lưu trong <em>chrome.storage.local</em>, chỉ nằm trên trình duyệt của người dùng,
+    và chỉ được gửi tới máy chủ mn-qronx.id.vn của chính dự án khi gọi API.</li>
+    <li><strong>Danh sách công việc</strong> — lấy từ máy chủ để hiển thị trong popup và đánh chuông
+    khi nhắc đến giờ.</li>
+    <li><strong>Trạng thái bấm giờ tập trung</strong> — mộc kết thúc phiên, dùng cho đồng hồ và
+    thông báo hết phiên.</li>
+    <li><strong>Web Push subscription</strong> — chỉ được tạo khi người dùng bật thông báo, dùng để
+    máy chủ gửi thông báo nhắc việc.</li>
+  </ul>
+
+  <h2>3. Dữ liệu lưu trên máy chủ</h2>
+  <p>Tài khoản (email, hồ sơ), danh sách công việc, cài đặt nhắc và đăng ký push được lưu trên máy
+  chủ <strong>mn-qronx.id.vn</strong> (VPS của chủ dự án). Dữ liệu chỉ được dùng để cung cấp tính năng
+  nhắc việc cho đúng tài khoản đó.</p>
+
+  <h2>4. Những điều không làm</h2>
+  <ul>
+    <li>Không theo dõi lịch sử duyệt web, không thu thập vị trí địa lý.</li>
+    <li>Không bán hay chuyển giao dữ liệu người dùng cho bên thứ ba (ngoài việc gửi thông báo push
+    cần thiết để tiện ích hoạt động).</li>
+    <li>Không dùng dữ liệu người dùng cho những mục đích không liên quan đến mục đích duy nhất của
+    tiện ích.</li>
+    <li>Không dùng dữ liệu người dùng để xác định khả năng thanh toán hay phục vụ mục đích cho vay
+    hoặc tín dụng.</li>
+  </ul>
+
+  <h2>5. Quyền của người dùng</h2>
+  <ul>
+    <li>Xem, sửa, xoá công việc bất cứ lúc nào trong ứng dụng.</li>
+    <li>Gỡ tiện ích — toàn bộ dữ liệu lưu trong trình duyệt (token, cài đặt, trạng thái bấm giờ)
+    được xoá theo.</li>
+    <li>Yêu cầu xoá hẳn tài khoản cùng dữ liệu trên máy chủ: gửi email tới địa chỉ liên hệ bên
+    dưới.</li>
+  </ul>
+
+  <h2>6. Liên hệ</h2>
+  <p>Email: <strong>minhnhat13246@gmail.com</strong> · Trang chủ:
+  <a href="https://mn-qronx.id.vn">https://mn-qronx.id.vn</a></p>
+</main>
+</body>
+</html>
