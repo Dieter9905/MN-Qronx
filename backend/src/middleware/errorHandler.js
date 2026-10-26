@@ -23,6 +23,15 @@ const errorHandler = (err, req, res, next) => {
     })
   }
 
+  // Lỗi phân tích/dung lượng body do CLIENT gửi sai (body-parser):
+  // sai JSON, quá lớn… — lỗi của người gọi, không phải hệ thống
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ success: false, message: 'Dữ liệu gửi lên không đúng định dạng JSON' })
+  }
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ success: false, message: 'Dữ liệu gửi lên quá lớn' })
+  }
+
   // Unexpected / unhandled errors
   console.error('[Unhandled Error]', err)
   return res.status(500).json({
