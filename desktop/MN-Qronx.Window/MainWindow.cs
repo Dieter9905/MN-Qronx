@@ -14,11 +14,13 @@ public sealed class MainWindow : Form
     private const string StartUrl = "https://mn-qronx.id.vn/app";
     private const string AllowedHost = "mn-qronx.id.vn";
 
-    // Dịch vụ đăng nhập chạy NGAY TRONG app: flow Google OAuth rồi tới
-    // mn-qronx → accounts.google.com → callback về mn-qronx. Nếu chỉ
-    // cho phép mn-qronx thì trang chọn tài khoản Google bị bắn ra trình
-    // duyệt và tìm cách đăng nhập không quay về cửa sổ này.
-    private static readonly string[] SigninHosts = { "accounts.google.com" };
+    // Dịch vụ đăng nhập chạy NGAY TRONG app: flow Google OAuth đi qua
+    // mn-qronx → accounts.google.com → chọn tài khoản → hand-off consent
+    // (cookie signed part=…) → callback về mn-qronx. Google có thể dùng
+    // bất kỳ host con nào của mình trong flow; nếu chặn gượng thì trang
+    // hand-off bị bắn ra trình duyệt không带回cookie phiên → Google 400.
+    // Cả họ google.com coi như "trong app"; URL ngoài họ này nhưng
+    // không phải trang app vẫn mở bằng trình duyệt như cũ.
     private const string RegistryKey = @"Software\MNQronx\Window";
 
     private Microsoft.Web.WebView2.WinForms.WebView2? _web;
@@ -54,15 +56,26 @@ public sealed class MainWindow : Form
                 Text = string.IsNullOrWhiteSpace(core.DocumentTitle)
                     ? "MN-Qronx" : core.DocumentTitle;
 
-            // Cửa sổ mới (popup): đăng nhập/popup site chính ở lại app,
-            // còn thật sự ra ngoài thì mở bằng trình duyệt mặc định
+            // Cửa sổ mới (popup): popup của host trong app (Google hand-off
+            // consent…) mở thành cửa sổ con THẬT dùng chung profile — giữ
+            // đúng ngữ cảnh phiên; ngoài phạm vi thì mới ra trình duyệt.
+            // Popup không có URI (about:blank) → không làm gì cả (chặn bỏ
+            // thẳng, tránh mở chỗ trống).
             core.NewWindowRequested += (_, e) =>
             {
                 e.Handled = true;
+                if (string.IsNullOrEmpty(e.Uri) || e.Uri == "about:blank")
+                    return;
                 if (ShouldStayInApp(e.Uri))
-                    core.Navigate(e.Uri);
+                {
+                    var popup = new PopupWindow(e.Uri, ShouldStayInApp, IsInternal, environment);
+                    popup.NavigateMainWindowRequested += (_, url) => core.Navigate(url);
+                    popup.Show(this);
+                }
                 else
+                {
                     OpenInSystemBrowser(e.Uri);
+                }
             };
 
             // Điều hướng ra ngoài app (không phải host chính và không phải
@@ -108,15 +121,18 @@ public sealed class MainWindow : Form
             && (uri.Host == AllowedHost || uri.Host.EndsWith($".{AllowedHost}"));
     }
 
-    // Host của dịch vụ đăng nhập (Google…) được coi như "trong app"
-    private static bool IsSigninHost(string? url)
+    // Họ google.com: mọi bước của flow OAuth Google (accounts, consent,
+    // myaccount…) đều nằm trong app, tránhhand-off mất phiên
+    private static bool IsGoogleHost(string? url)
     {
         return Uri.TryCreate(url, UriKind.Absolute, out var uri)
-            && SigninHosts.Contains(uri.Host);
+            && (uri.Host == "google.com"
+                || uri.Host.EndsWith(".google.com")
+                || uri.Host == "accounts.youtube.com");
     }
 
     private static bool ShouldStayInApp(string? url) =>
-        IsInternal(url) || IsSigninHost(url);
+        IsInternal(url) || IsGoogleHost(url);
 
     private static string LastUrlOr(string fallback)
     {
