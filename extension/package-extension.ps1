@@ -33,7 +33,11 @@ $staging = Join-Path ([System.IO.Path]::GetTempPath()) "mnqext-$version"
 if (Test-Path $staging) { Remove-Item $staging -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $staging | Out-Null
 Get-ChildItem $src -Recurse -File | Where-Object {
-    $_.Extension -notin '.ps1', '.md' -and $_.Name -notin 'Thumbs.db', 'desktop.ini'
+    # loại: tooling nội bộ, rác Windows, và thư mục store/ (ảnh chụp + icon
+    # listing dùng cho dashboard — không thuộc gói runtime)
+    $_.Extension -notin '.ps1', '.md' -and
+    $_.Name -notin 'Thumbs.db', 'desktop.ini' -and
+    $_.FullName.Substring($src.Length + 1) -notmatch '^store\\'
 } | ForEach-Object {
     $rel = $_.FullName.Substring($src.Length + 1)
     $dstFile = Join-Path $staging $rel
