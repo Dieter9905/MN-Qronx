@@ -15,16 +15,33 @@ MÁY CẦN GÌ
   • Có kết Internet — app mở trang mn-qronx.id.vn, tài khoản và
     dữ liệu công việc dùng chung một nguồn như website.
 
+CHUÔNG BÁO — BÁO TỚI HẠN DÙ APP ĐÃ TẮT
+  • Sau khi bạn đăng nhập trong app, một daemon nhỏ (mode --bell
+    của chính MNQronx.Window.exe) tự chạy nền và tự khởi động cùng
+    máy. Cửa sổ app đóng hẳn thì nó vẫn hỏi server mỗi phút: đúng
+    giờ hẹn nào đến hạn là Windows hiện thông báo + kêu chuông
+    nhắc bạn xử lý.
+  • App đang mở thì daemon lui để web tự kêu trên màn hình —
+    không bao giờ kêu đôi thành hai tiếng dồn dập.
+  • Cùng một nhắc hẹn không kêu lại trong vòng 5 phút; tiếng kêu dài
+    2 phút cho chắc, không ai xử lý thì tự im.
+  • Đăng xuất trong app là chuông nền tắt luôn — đăng nhập lần nữa
+    là tự sống lại.
+  • Lý lịch của daemon: đăng ký ở khoá Run của HKCU (tự thấy trong
+    Task Manager → "Ứng dụng khởi động" với tên MNQronxBell) và
+    token được lưu mã hoá DPAPI chỉ đọc được bởi đúng user này.
+
 ĐÁNG CHÚ Ý
-  • Chuông nhắc cần cửa sổ MN-Qronx vẫn mở: thu nhỏ xuống cũng được,
-    đừng tắt hẳn trong lúc cần chuông.
   • Vị trí cửa sổ + trang đang xem tự nhớ cho lần sau.
   • Link ra ngoài (tải file, trang khác) tự mở bằng trình duyệt
-    mặc định của máy.
+    mặc định của máy; trang đăng nhập Google hoàn toàn trong app.
 
 GỠ BỎ
-  • Xóa cả thư mục MN-Qronx-win64 là xong (app không cài rác vào
-    hệ thống).
+  • Cách sạch nhất: mở app → đăng xuất (chuông nền tự tắt), rồi xóa
+    cả thư mục MN-Qronx-win64.
+  • Sau khi xóa thư mục, mở Task Manager → tab "Ứng dụng khởi
+    động" tắt mục MNQronxBell nếu còn thấy (thư mục mất là nó tự
+    không chạy được, mục này chỉ cho gọn Startup).
   • Shortcut tạo ở bước 3 cũng xóa theo tay.
 
 Để dùng bản mới: tải gói mới từ nơi bạn được cấp, thay thư mục cũ

@@ -8,11 +8,21 @@ Kênh phát hành chính: **portable ZIP** — khách tải về, giải nén, �
 ```
 desktop/
 ├─ MN-Qronx.Window/        # dự án C# (WinForms + WebView2)
-│  ├─ Program.cs           # vào app, khóa một instance/máy
-│  ├─ MainWindow.cs        # cửa sổ: link ngoài mở trình duyệt (trừ host
-│  │                       # đăng nhập accounts.google.com chạy trong app),
+│  ├─ Program.cs           # vào app, khóa một instance/máy; route --bell
+│  │                       # (daemon chuông nền) và --bell-test
+│  ├─ MainWindow.cs        # cửa sổ: host link google.com trong app, trang
+│  │                       # ngoài mở trình duyệt, popup Google chạy như
+│  │                       # cửa sổ con chia sẻ profile; cầu chuông nền
+│  │                       # (inject script đọc mnq:accessToken → đè TokenStore);
 │  │                       # F5 reload, kích thước + trang cuối lưu Registry,
 │  │                       # dữ liệu web ở %LOCALAPPDATA%\MNQronx\WebView2
+│  ├─ PopupWindow.cs       # cửa sổ popup con (đăng nhập Google hand-off)
+│  ├─ BellDaemon.cs        # chuông nền: hỏi /reminders/due mỗi 60s, toast +
+│  │                       # chuông đúng kiểu web; tự refresh token;
+│  │                       # đăng ký Run key HKCU khởi động cùng máy
+│  ├─ ToastSupport.cs      # shortcut AUMID (MT.mnqronx.Window) + toast Windows
+│  ├─ TokenStore.cs        # token daemon mã hoá DPAPI trong Bell\tokens.bin
+│  ├─ BellSound.cs         # melody chuông 6 nốt (22050 Hz) đúng kiểu web
 │  ├─ Package.appxmanifest # nhận diện MSIX (chỉ dùng nếu chọn gói MSIX)
 │  ├─ MN-Qronx.Window.csproj
 │  └─ Assets/
@@ -46,6 +56,38 @@ bao giờ lọt vào gói (đã lọc `*.WebView2` + dữ liệu web chuyển v�
 
 Việc còn lại của việc phát hành: từ destination khách tải được —
 đặt file zip lên hosting (GitHub Releases / trang tải của mn-qronx.id.vn).
+
+## Chuông nền (báo đến hạn dù app đóng)
+
+Yêu cầu của khách: "chuông báo thông báo đến hạn và thông báo nhắc hẹn
+phải kêu trên máy kể cả khi app không mở". Giải pháp không cần sửa gì
+trên web/deploy:
+
+- **Cầu token** — MainWindow inject một script nhỏ vào mọi trang;
+  chỉ chạy trên origin `mn-qronx.id.vn`, đọc `mnq:accessToken` /
+  `mnq:refreshToken` từ localStorage và gửi về host qua
+  `window.chrome.webview.postMessage`. Host ghi vào TokenStore (DPAPI,
+  `%LOCALAPPDATA%\MNQronx\Bell\tokens.bin`) và nhắc daemon dậy.
+  Trang Google trong app bị loại — bắn null về sẽ bị hiểu nhầm thành
+  đăng xuất. Đăng xuất trong web → script gửi null → file token bị xóa
+  → daemon buông phiên (tắt chuông).
+- **Daemon** — `MNQronx.Window.exe --bell` (singleton mutex riêng, có
+  cửa sổ chính thì lui để còn web kêu đúng một nguồn). Làm y hệt
+  `AlarmContext` của web: `GET /api/v1/reminders/due` mỗi 60 giây,
+  access token hết hạn (401) thì tự refresh (server không rotate
+  refresh token nên daemon dùng chung phiên an toàn). Có reminder đến
+  hạn → toast (AUMID `MT.mnqronx.Window` qua shortcut Start Menu có
+  PKEY_AppUserModel_ID, daemon tự tạo/cập nhật) + chuông 6 nốt 120 giây;
+  mỗi nhắc kêu lại xa nhất 5 phút/lần.
+- **Tự sống** — daemon tự ghi Run key `HKCU\...\Run\MNQronxBell`
+  = `"<exe>" --bell` (cửa sổ chính ghi lại mỗi lần mở để trỏ đúng
+  chỗ exe mới). Khách gỡ sạch: đăng xuất trong app rồi xóa thư mục.
+
+Thử chuông không cần đăng nhập:
+
+```powershell
+MNQronx.Window.exe --bell-test    # toast + chuông 9 giây rồi thoát
+```
 
 ## Gói MSIX (tùy chọn, dùng khi muốn cài có biểu tượng + gỡ sạch)
 

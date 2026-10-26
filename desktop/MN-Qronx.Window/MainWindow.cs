@@ -6,6 +6,7 @@
 
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Win32;
+using System.Text.Json;
 
 namespace MNQronx.Window;
 
@@ -50,6 +51,54 @@ public sealed class MainWindow : Form
                 .CreateAsync(null, userDataFolder);
             await _web.EnsureCoreWebView2Async(environment);
             var core = _web.CoreWebView2;
+
+            // ── Cầu chuông nền ───────────────────────────────────────────
+            // Inject script nhỏ vào từng trang để đưa token đăng nhập từ
+            // localStorage của web về host app. Daemon (--bell, tự chạy cùng
+            // Windows) dùng token này để hỏi server "nhắc nhở đến hạn" kể cả
+            // khi cửa sổ app đóng. CHỈ trang mn-qronx mới đẩy: trang Google
+            // chạy trong app không có token — bắn null về sẽ bị hiểu nhầm
+            // thành "đăng xuất" và xóa nhầm phiên của daemon.
+            await core.AddScriptToExecuteOnDocumentCreatedAsync($$"""
+                (function () {
+                  try {
+                    if (!window.chrome || !window.chrome.webview) return;
+                    if (location.origin !== 'https://{{AllowedHost}}') return;
+                    window.chrome.webview.postMessage(JSON.stringify({
+                      t: 'mnqronxBell',
+                      accessToken: localStorage.getItem('mnq:accessToken'),
+                      refreshToken: localStorage.getItem('mnq:refreshToken'),
+                    }));
+                  } catch (e) { /* trang chặn script — bỏ */ }
+                })()
+                """);
+            core.WebMessageReceived += (_, e) =>
+            {
+                try
+                {
+                    using var doc = JsonDocument.Parse(e.WebMessageAsJson);
+                    if (!doc.RootElement.TryGetProperty("t", out var tEl) ||
+                        tEl.GetString() != "mnqronxBell")
+                        return;
+                    string? access = doc.RootElement.TryGetProperty("accessToken", out var a) &&
+                                     a.ValueKind == JsonValueKind.String ? a.GetString() : null;
+                    string? refresh = doc.RootElement.TryGetProperty("refreshToken", out var rv) &&
+                                      rv.ValueKind == JsonValueKind.String ? rv.GetString() : null;
+                    if (access is null && refresh is null)
+                    {
+                        TokenStore.Clear();          // khách đăng xuất → dừng chuông nền
+                        return;                      // daemon đọc được sự kiện này, khỏi đẻ thêm
+                    }
+                    TokenStore.Save(new BellTokens(access, refresh, null));
+                    BellDaemonEnsureRunning();       // token mới → daemon sẵn sàng
+                }
+                catch
+                {
+                    /* tin nhắn lạ bỏ qua */
+                }
+            };
+
+            EnsureBellDaemonRegistered();
 
             // Tiêu đề cửa sổ theo trang
             core.DocumentTitleChanged += (_, _) =>
@@ -181,6 +230,53 @@ public sealed class MainWindow : Form
         {
             System.Diagnostics.Process.Start(
                 new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch
+        {
+            /* bỏ qua */
+        }
+    }
+
+    // ── Chuông nền (daemon) ──────────────────────────────────────────
+    // Đăng ký chạy cùng Windows: Run key HKCU trỏ exe --bell. Daemon tự
+    // làm lại mỗi lần chạy nên chỉ cửa sổ app "khớp lại" giá trị.
+    private static void EnsureBellDaemonRegistered()
+    {
+        try
+        {
+            var exePath = Environment.ProcessPath;
+            if (exePath is null) return;
+            using var key = Registry.CurrentUser.CreateSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Run");
+            key.SetValue("MNQronxBell", $"\"{exePath}\" --bell");
+        }
+        catch
+        {
+            /* không ghi được — daemon vẫn sống trong phiên này */
+        }
+    }
+
+    private static void BellDaemonEnsureRunning()
+    {
+        try
+        {
+            // Daemon đang sống (đang giữ mutex riêng)? thì khỏi đẻ process
+            // thêm — script bridge bắn mỗi lần trang tạo document, không
+            // lọc sẽ spam spawn. Race nhỏ lúc daemon khởi động lần đầu:
+            // process dư thừa tự thoát bởi mutex singleton của nó.
+            if (Mutex.TryOpenExisting("MNQronx.BellDaemon", out var daemonmutex))
+            {
+                daemonmutex.Dispose();
+                return;
+            }
+            var exePath = Environment.ProcessPath;
+            if (exePath is null) return;
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exePath, "--bell")
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden,
+            });
         }
         catch
         {
