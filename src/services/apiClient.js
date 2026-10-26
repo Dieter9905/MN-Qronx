@@ -58,6 +58,27 @@ export function getDeviceId() {
   return id
 }
 
+// ── Timeout mỗi lần gọi ───────────────────────────────────────────────
+// Mạng VN thường rớt ngắn (IP nhà mạng/cấp 3 xoay vòng khiến đường TCP
+// đang dùng chết êm), fetch mặc định treo vô hạn → người dùng tưởng máy
+// chủ "đang khởi động lại". Chốt 15 giây rồi hủy, trả lỗi rõ ràng; bấm
+// thử lại là tạo kết nối mới theo IP hiện tại nên thường sống ngay.
+const REQUEST_TIMEOUT_MS = 15000
+
+function fetchWithTimeout(url, opts = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  return fetch(url, { ...opts, signal: controller.signal }).finally(() =>
+    clearTimeout(timer),
+  )
+}
+
+function networkError(err) {
+  return err?.name === 'AbortError'
+    ? new Error('Phản hồi quá chậm (quá 15 giây) — mạng có thể bị gián đoạn thoáng qua. Bấm thử lại nhé.')
+    : new Error('Không gọi được máy chủ — kiểm tra kết nối mạng rồi bấm thử lại.')
+}
+
 /**
  * Gọi endpoint thật.
  * @returns {Promise<{success:boolean, message:string, data?:any, errors?:object}>}
@@ -80,14 +101,14 @@ export async function api(method, path, { body, query } = {}) {
     headers['X-Device-Id'] = getDeviceId()
     const opts = { method, headers }
     if (body !== undefined) opts.body = JSON.stringify(body)
-    return fetch(url, opts)
+    return fetchWithTimeout(url, opts)
   }
 
   let res
   try {
     res = await doFetch(getAccessToken())
-  } catch {
-    throw new Error('Không thể kết nối server. Vui lòng kiểm tra kết nối mạng.')
+  } catch (e) {
+    throw networkError(e)
   }
 
   // Token hết hạn → refresh 1 lần rồi thử lại
@@ -96,8 +117,8 @@ export async function api(method, path, { body, query } = {}) {
     if (ok) {
       try {
         res = await doFetch(getAccessToken())
-      } catch {
-        throw new Error('Không thể kết nối server. Vui lòng kiểm tra kết nối mạng.')
+      } catch (e) {
+        throw networkError(e)
       }
     }
   }
@@ -149,7 +170,7 @@ async function refreshAccessToken() {
     return false
   }
   try {
-    const r = await fetch(`${BASE_URL}/auth/refresh-token`, {
+    const r = await fetchWithTimeout(`${BASE_URL}/auth/refresh-token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken: rt }),

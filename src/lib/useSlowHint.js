@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 
 // True khi `active` đã kéo dài quá `ms`.
-// Dùng để đổi thông báo khi chờ lâu: thay vì để người dùng nhìn spinner vô nghĩa,
-// hiện gợi ý rằng máy chủ đang khởi động (hay gặp với web service gói free).
-// Gợi ý dùng chung khi máy chủ phản hồi chậm (web service gói free bị ngủ)
+// Dùng để đổi thông báo khi chờ lâu: thay spinner vô nghĩa bằng gợi ý có
+// hành động cụ thể. Máy chủ (VPS) luôn chạy 24/7 — chậm gần như chắc chắn
+// ở chặng mạng giữa người dùng và VPS (IP nhà mạng đôi lúc xoay giữa chừng).
 export const SERVER_WAKE_HINT =
-  'Máy chủ đang khởi động lại (thường mất 30–60 giây sau một thời gian không sử dụng). Vui lòng đợi — không cần bấm lại.'
+  'Vẫn đang chờ phản hồi — mạng giữa bạn và máy chủ có thể gián đoạn thoáng qua (IP nhà mạng đôi khi xoay giữa chừng). Nếu quá 15 giây, bấm thử lại nhé.'
 
 export function useSlowHint(active, ms = 4000) {
   const [slow, setSlow] = useState(false)

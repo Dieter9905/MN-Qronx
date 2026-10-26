@@ -139,7 +139,7 @@ export default function SupportPage() {
           <WarningCircle size={26} className="text-rose-500" />
           <p className="font-bold text-navy-800 dark:text-white">{error}</p>
           <p className="text-sm text-navy-400">
-            Máy chủ có thể đang khởi động lại — bạn thử lại sau vài giây nhé.
+            Kết nối tới máy chủ bị gián đoạn — kiểm tra mạng rồi bấm thử lại nhé.
           </p>
           <button
             type="button"
