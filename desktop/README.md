@@ -1,69 +1,64 @@
 # MN-Qronx — App Windows (desktop)
 
 Cửa sổ thật cho web MN-Qronx: **C# WinForms + WebView2** (cùng engine Edge),
-đóng gói **MSIX** nộp Microsoft Store, dán lên Start/taskbar với icon riêng.
+có icon riêng trên Start/taskbar, khung cửa sổ hệ thống.
+
+Kênh phát hành chính: **portable ZIP** — khách tải về, giải nén, đúp chạy.
 
 ```
 desktop/
 ├─ MN-Qronx.Window/        # dự án C# (WinForms + WebView2)
 │  ├─ Program.cs           # vào app, khóa một instance/máy
 │  ├─ MainWindow.cs        # cửa sổ: link ngoài mở trình duyệt, F5 reload,
-│  │                       # kích thước + trang cuối lưu Registry
-│  ├─ Package.appxmanifest # nhận diện gói MSIX (Identity/Publisher/Splash…)
+│  │                       # kích thước + trang cuối lưu Registry,
+│  │                       # dữ liệu web ở %LOCALAPPDATA%\MNQronx\WebView2
+│  ├─ Package.appxmanifest # nhận diện MSIX (chỉ dùng nếu chọn gói MSIX)
 │  ├─ MN-Qronx.Window.csproj
 │  └─ Assets/
-│     ├─ logo.ico          # icon exe (sinh bằng node make-ico.mjs)
-│     └─ Manifest/         # bộ icon MSIX (sinh bằng make-manifest-icons.ps1)
-├─ make-ico.mjs            # ico từ PNG 512
-├─ make-manifest-icons.ps1 # bộ icon manifest từ public/icons
-├─ package-msix.ps1        # publish + makepri + makeappx + signtool
-└─ .dev-cert/              # chứng chỉ ký bản thử (git-ignored, không công khai)
+│     ├─ logo.ico          # icon exe (node make-ico.mjs)
+│     └─ Manifest/         # bộ icon MSIX (make-manifest-icons.ps1)
+├─ portable/               # nội dung đi kèm ZIP: hướng dẫn + script shortcut
+├─ build & gói (chỉ cần PowerShell + dotnet, không cần Windows SDK)
+│  ├─ make-ico.mjs
+│  ├─ make-manifest-icons.ps1
+│  ├─ package-portable.ps1 # ← gói ZIP phát hành
+│  └─ package-msix.ps1     # ← gói MSIX (tùy chọn)
+└─ .dev-cert/              # chứng chỉ ký thử (git-ignored)
 ```
 
-## Build & đóng gói
+## Gói ZIP cho khách (kênh chính)
 
 ```powershell
-# sinh icon cho manifest (chỉ cần lại khi đổi logo)
-pwsh -NoProfile -ExecutionPolicy Bypass -File make-manifest-icons.ps1
-
-# đóng gói (mặc định: self-contained, máy khách khỏi cài .NET)
-pwsh -NoProfile -ExecutionPolicy Bypass -File package-msix.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File package-portable.ps1
 ```
 
-Kết quả trong `dist\desktop\` (git-ignored):
+Xuất `dist\desktop\MN-Qronx-<ver>-win64.zip` (~85 MB, self-contained —
+máy Windows 10 1809+ đúp chạy luôn, không cần cài .NET). Trong zip có:
 
-| File | Dùng cho |
-|---|---|
-| `MN-Qronx-<ver>-x64.msix` | **nộp Partner Center** (không ký — Microsoft ký lúc nộp) |
-| `MN-Qronx-<ver>-x64-signed.msix` | **cài thử máy mình** (`-SignForLocalTest`) |
+- `MNQronx.Window.exe` + toàn bộ runtime
+- `Huong-dan-chay.txt` — hướng dẫn cho người dùng
+- `Tao-Shortcut-MN-Qronx.bat` — tạo shortcut Desktop + Start Menu
 
-Công cụ makeappx/makepri/signtool nằm gọn trong NuGet
-`Microsoft.Windows.SDK.BuildTools` — **máy build không cần cài Windows SDK**.
+Đóng gói sẽ tự đóng app đang mở và mở lại sau; profile WebView2 không
+bao giờ lọt vào gói (đã lọc `*.WebView2` + dữ liệu web chuyển về
+`%LOCALAPPDATA%\MNQronx\WebView2`).
 
-## Cài thử trên máy chính (kiểm tra trước khi nộp)
+Việc còn lại của việc phát hành: từ destination khách tải được —
+đặt file zip lên hosting (GitHub Releases / trang tải của mn-qronx.id.vn).
+
+## Gói MSIX (tùy chọn, dùng khi muốn cài có biểu tượng + gỡ sạch)
 
 ```powershell
-# tin chứng chỉ CN=mnqronx (chạy 1 lần, cần admin)
-Import-Certificate -FilePath desktop\.dev-cert\mnqronx-local.pfx `
-    -CertStoreLocation Cert:\LocalMachine\TrustedPeople
-
-Add-AppxPackage -Path dist\desktop\MN-Qronx-1.0.0.0-x64-signed.msix
+pwsh -NoProfile -ExecutionPolicy Bypass -File package-msix.ps1 -SignForLocalTest
 ```
 
-## Nộp Microsoft Store
-
-1. Đăng ký tài khoản nhà phát triển ([MS Store dev account](https://developer.microsoft.com/store)).
-2. Partner Center cấp **Publisher thật** (dạng `CN=ABC123…`) và quyền chọn
-   **Identity Name** gói — sửa 2 dòng trong `Package.appxmanifest`:
-   `Identity Name` + `Publisher`.
-3. Chạy lại `package-msix.ps1` → nộp file `.msix` (bản không ký) vào phần
-   Packages của submission để Microsoft ký giúp.
-4. Store dễ hỏi lại app bọc web (CDA — Content Destination App): mô tả rõ
-   phần app có lợi thế riêng (chuông nhắc hệ thống, mở cục bộ, đăng nhập
-   đã lưu) và dùng đúng ảnh chụp thật của cửa sổ.
+`dotnet publish → makepri → makeappx → signtool` (công cụ trong NuGet
+`Microsoft.Windows.SDK.BuildTools`). Cài thử: import `desktop\.dev-cert\
+mnqronx-local.pfx` vào `Cert:\LocalMachine\TrustedPeople` rồi
+`Add-AppxPackage -Path dist\desktop\MN-Qronx-<ver>-x64-signed.msix`.
 
 ## Nâng phiên bản
 
-- Đổi `Identity Version` trong `Package.appxmanifest` (vd `1.0.1.0`).
-- Đổi `AssemblyVersion`/`FileVersion` trong csproj cho khớp.
-- Script đọc version từ manifest → tên file tự đổi theo.
+- `Identity Version` trong `Package.appxmanifest` (vd `1.0.1.0`) — zip/
+  msix tự lấy tên phiên bản từ đây.
+- `AssemblyVersion`/`FileVersion` trong csproj cho khớp.

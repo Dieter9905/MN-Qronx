@@ -66,7 +66,7 @@ $stage = Join-Path $projDir "obj\$Configuration\msix-root"
 if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $stage | Out-Null
 Write-Host "2/4 Chép nội dung publish → thư mục gốc gói"
-Get-ChildItem $publishDir | Where-Object { $_.Extension -notin '.pdb', '.xml' } | ForEach-Object {
+Get-ChildItem $publishDir | Where-Object { $_.Extension -notin '.pdb', '.xml' -and $_.Name -notlike '*.WebView2' } | ForEach-Object {
     if ($_.PSIsContainer) {
         Copy-Item $_.FullName -Destination (Join-Path $stage $_.Name) -Recurse
     } else {

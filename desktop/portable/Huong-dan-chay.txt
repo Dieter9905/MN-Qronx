@@ -1,0 +1,31 @@
+        MN-Qronx cho Windows  —  bản chạy không cần cài đặt
+════════════════════════════════════════════════════════════════
+
+CÁCH CHẠY
+  1. Giải nén cả thư mục MN-Qronx-win64 ra nơi muốn dùng — khuyên để
+     ở Documents hoặc một ổ thật, đừng để trong Downloads rồi quên xóa.
+  2. Mở thư mục vừa giải nén, đúp MNQronx.Window.exe là chạy.
+  3. Muốn có icon trên Desktop & Start Menu: chạy
+     Tao-Shortcut-MN-Qronx.bat (chỉ 1 lần, không cần quyền admin).
+
+MÁY CẦN GÌ
+  • Windows 10 (từ bản 1809 — 10.0.17763) hoặc Windows 11.
+  • Bản này tự chứa đủ môi trường .NET nên đúp là chạy, máy không
+    cần cài thêm gì trước.
+  • Có kết Internet — app mở trang mn-qronx.id.vn, tài khoản và
+    dữ liệu công việc dùng chung một nguồn như website.
+
+ĐÁNG CHÚ Ý
+  • Chuông nhắc cần cửa sổ MN-Qronx vẫn mở: thu nhỏ xuống cũng được,
+    đừng tắt hẳn trong lúc cần chuông.
+  • Vị trí cửa sổ + trang đang xem tự nhớ cho lần sau.
+  • Link ra ngoài (tải file, trang khác) tự mở bằng trình duyệt
+    mặc định của máy.
+
+GỠ BỎ
+  • Xóa cả thư mục MN-Qronx-win64 là xong (app không cài rác vào
+    hệ thống).
+  • Shortcut tạo ở bước 3 cũng xóa theo tay.
+
+Để dùng bản mới: tải gói mới từ nơi bạn được cấp, thay thư mục cũ
+(dữ liệu của bạn nằm ngoài thư mục nên không mất).

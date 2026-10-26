@@ -32,7 +32,15 @@ public sealed class MainWindow : Form
             };
             Controls.Add(_web);
 
-            await _web.EnsureCoreWebView2Async();
+            // Dữ liệu web của app để trong %LOCALAPPDATA%\MNQronx\WebView2
+            // — không rải profile lên thư mục exe (nhớ đăng nhập giữa các
+            // phiên nhưng gọn gàng khi phát hành bản tải về)
+            var userDataFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "MNQronx", "WebView2");
+            var environment = await Microsoft.Web.WebView2.Core.CoreWebView2Environment
+                .CreateAsync(null, userDataFolder);
+            await _web.EnsureCoreWebView2Async(environment);
             var core = _web.CoreWebView2;
 
             // Tiêu đề cửa sổ theo trang
