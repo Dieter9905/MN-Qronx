@@ -6,6 +6,10 @@ export const app = {
     desktopBannerText: 'Web chỉ kêu khi tab đang mở. Cài bản desktop (Windows) để nhận thông báo đến hạn dù không mở MN-Qronx.',
     desktopBannerCta: 'Tải bản Windows',
     desktopBannerSkip: 'Để sau',
+    // Focus mode – bấm độ dài phiên tập trung tùy thích
+    focusDuration: 'Độ dài phiên tập trung',
+    focusHours: 'giờ',
+    focusMinutes: 'phút',
     createTask: 'Tạo công việc',
     adminArea: 'Khu vực quản trị',
     profile: 'Hồ sơ cá nhân',
@@ -146,10 +150,15 @@ export const app = {
   },
   en: {
     // Header
+    // Banner mời cài bản desktop (chuông nền chạy cả khi web đóng)
     desktopBannerTitle: 'On-time bell — even with the app closed.',
     desktopBannerText: 'The web rings only while the tab is open. Install the desktop app (Windows) to get reminders even without the browser.',
     desktopBannerCta: 'Get the Windows app',
     desktopBannerSkip: 'Later',
+    // Focus mode – pick any session length you like
+    focusDuration: 'Session length',
+    focusHours: 'hours',
+    focusMinutes: 'min',
     createTask: 'New Task',
     adminArea: 'Admin Area',
     profile: 'Profile',

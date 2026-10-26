@@ -10,17 +10,36 @@ import {
 import { useLanguage } from '../context/LanguageContext'
 import { app } from '../i18n/app'
 
-const WORK_DURATION = 25 * 60
+const DEFAULT_WORK_SECONDS = 25 * 60
+const WORK_SECONDS_KEY = 'mnq:focusWorkSeconds'
+const WORK_PRESETS = [15, 25, 40, 50, 60, 90, 120, 180] // phút — chip chọn nhanh
+const MAX_WORK_SECONDS = 8 * 60 * 60 // trần 8 giờ: giữ đồng hồ và nhiệm vụ lành lặn
 const BREAK_DURATION = 5 * 60
 const LONG_BREAK_DURATION = 15 * 60
 const SESSIONS_BEFORE_LONG = 4
+
+// Đọc độ dài phiên user bấm lần trước (localStorage), hỏng thì về 25 phút
+function loadWorkSeconds() {
+  try {
+    const saved = Number(localStorage.getItem(WORK_SECONDS_KEY))
+    if (Number.isFinite(saved) && saved >= 60 && saved <= MAX_WORK_SECONDS) {
+      return Math.round(saved)
+    }
+  } catch {
+    /* private mode/không truy cập được — dùng mặc định */
+  }
+  return DEFAULT_WORK_SECONDS
+}
 
 export default function FocusMode({ onClose }) {
   const { lang } = useLanguage()
   const t = app[lang]
 
   const [mode, setMode] = useState('work') // work | break | longBreak
-  const [timeLeft, setTimeLeft] = useState(WORK_DURATION)
+  // Độ dài phiên do người dùng BẤM TÙY THÍCH (preset hoặc gõ giờ/phút);
+  // đồng hồ còn lại tính theo biến này, nhớ qua localStorage cho lần sau.
+  const [workSeconds, setWorkSeconds] = useState(loadWorkSeconds)
+  const [timeLeft, setTimeLeft] = useState(loadWorkSeconds)
   const [isRunning, setIsRunning] = useState(false)
   const [sessions, setSessions] = useState(0)
   const [totalWorkTime, setTotalWorkTime] = useState(0)
@@ -40,7 +59,7 @@ export default function FocusMode({ onClose }) {
     }))
   )
 
-  const totalTime = mode === 'work' ? WORK_DURATION : mode === 'break' ? BREAK_DURATION : LONG_BREAK_DURATION
+  const totalTime = mode === 'work' ? workSeconds : mode === 'break' ? BREAK_DURATION : LONG_BREAK_DURATION
   const progress = ((totalTime - timeLeft) / totalTime) * 100
 
   const handleSessionComplete = useCallback(() => {
@@ -60,9 +79,9 @@ export default function FocusMode({ onClose }) {
       }
     } else {
       setMode('work')
-      setTimeLeft(WORK_DURATION)
+      setTimeLeft(workSeconds)
     }
-  }, [mode, sessions])
+  }, [mode, sessions, workSeconds])
 
   // Timer logic
   useEffect(() => {
@@ -86,7 +105,7 @@ export default function FocusMode({ onClose }) {
   const reset = () => {
     setIsRunning(false)
     setMode('work')
-    setTimeLeft(WORK_DURATION)
+    setTimeLeft(workSeconds)
     setSessions(0)
   }
 
@@ -96,9 +115,35 @@ export default function FocusMode({ onClose }) {
   }
 
   const formatTime = (s) => {
-    const m = Math.floor(s / 60)
+    const h = Math.floor(s / 3600)
+    const m = Math.floor((s % 3600) / 60)
     const sec = s % 60
-    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
+    // ≥ 1 giờ hiện 1:05:30 cho hình dạng dài; ngắn hơn giữ mm:ss quen thuộc
+    return h > 0
+      ? `${h}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
+      : `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
+  }
+
+  // ── Bấm thời lượng phiên (preset chip / gõ giờ - phút riêng) ─────
+  // Đang ở phiên work thì đồng hồ về đủ độ dài mới + dừng chạy để tự
+  // chủ động bắt đầu; phiên nghỉ giữ nguyên như gốc (5 / 15 phút).
+  const applyWorkSeconds = (sec) => {
+    const clamped = Math.min(MAX_WORK_SECONDS, Math.max(60, Math.round(sec)))
+    setWorkSeconds(clamped)
+    try {
+      localStorage.setItem(WORK_SECONDS_KEY, String(clamped))
+    } catch {
+      /* không nhớ được thì thôi */
+    }
+    if (mode === 'work') {
+      setIsRunning(false)
+      setTimeLeft(clamped)
+    }
+  }
+  const setWorkHours = (h) => applyWorkSeconds(h * 3600 + (workSeconds % 3600))
+  const setWorkMinutes = (m) => {
+    const wholeHours = Math.floor(workSeconds / 3600)
+    applyWorkSeconds(wholeHours * 3600 + m * 60)
   }
 
   const formatTotalTime = (s) => {
@@ -202,7 +247,11 @@ export default function FocusMode({ onClose }) {
 
               {/* Center content */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-5xl font-extrabold tracking-tight text-navy-900 dark:text-white font-mono">
+                <span
+                  className={`font-mono font-extrabold tracking-tight text-navy-900 dark:text-white ${
+                    timeLeft >= 3600 ? 'text-4xl' : 'text-5xl'
+                  }`}
+                >
                   {formatTime(timeLeft)}
                 </span>
                 <span className="mt-1 text-xs font-bold uppercase tracking-widest text-navy-400 dark:text-slate-500">
@@ -210,6 +259,58 @@ export default function FocusMode({ onClose }) {
                 </span>
               </div>
             </div>
+
+            {/* Độ dài phiên — chip preset + gõ giờ/phút tùy thích */}
+            {mode === 'work' && (
+              <div className="mt-5 w-full max-w-[280px]">
+                <p className="mb-2 text-center text-[10px] font-bold uppercase tracking-wider text-navy-400 dark:text-slate-500">
+                  {t.focusDuration}
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-1.5">
+                  {WORK_PRESETS.map((mins) => (
+                    <button
+                      key={mins}
+                      onClick={() => applyWorkSeconds(mins * 60)}
+                      className={`cursor-pointer rounded-lg px-2.5 py-1 text-xs font-bold transition-all active:scale-95 ${
+                        workSeconds === mins * 60
+                          ? `bg-gradient-to-r ${cfg.color} text-white shadow-sm`
+                          : 'bg-navy-100 text-navy-600 hover:bg-navy-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-2.5 flex items-center justify-center gap-2 text-xs font-semibold text-navy-500 dark:text-slate-400">
+                  <input
+                    type="number"
+                    min="0"
+                    max="8"
+                    aria-label={t.focusHours}
+                    title="0 – 8"
+                    value={Math.floor(workSeconds / 3600)}
+                    onChange={(e) =>
+                      setWorkHours(Math.min(8, Math.max(0, Number(e.target.value) || 0)))
+                    }
+                    className="w-14 cursor-pointer rounded-lg bg-white px-2 py-1 text-center text-sm font-bold text-navy-900 ring-1 ring-inset ring-navy-200 focus:ring-2 focus:ring-blue-400 focus-visible:outline-none dark:bg-slate-900 dark:text-white dark:ring-slate-600"
+                  />
+                  <span>{t.focusHours}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="59"
+                    aria-label={t.focusMinutes}
+                    title="0 – 59"
+                    value={Math.round((workSeconds % 3600) / 60)}
+                    onChange={(e) =>
+                      setWorkMinutes(Math.min(59, Math.max(0, Number(e.target.value) || 0)))
+                    }
+                    className="w-14 cursor-pointer rounded-lg bg-white px-2 py-1 text-center text-sm font-bold text-navy-900 ring-1 ring-inset ring-navy-200 focus:ring-2 focus:ring-blue-400 focus-visible:outline-none dark:bg-slate-900 dark:text-white dark:ring-slate-600"
+                  />
+                  <span>{t.focusMinutes}</span>
+                </div>
+              </div>
+            )}
 
             {/* Controls */}
             <div className="mt-6 flex items-center gap-3">

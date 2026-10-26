@@ -1,7 +1,10 @@
 # Đăng MN-Qronx Extension lên store & bán
 
-> Gói nộp sẵn: `mn-qronx-extension-1.1.0.zip` (ở gốc dự án, 10 file, đã dọn quyền
-> localhost — chỉ còn `host_permissions: https://mn-qronx.id.vn/*`).
+> Gói nộp tạo bằng `extension/package-extension.ps1` — xuất ra
+> `dist/extension/mn-qronx-extension-<version>.zip` (tự đọc version trong
+> manifest.json, tự kiểm tra manifest.json ở gốc zip + separator '/').
+> **Không nén tay** bằng Explorer/Compress-Archive: entry dùng phân cách
+> '\' hoặc thư mục bọc ngoài sẽ bị Store báo "Gói không hợp lệ".
 
 ## Hai con đường lưu ý trước
 
