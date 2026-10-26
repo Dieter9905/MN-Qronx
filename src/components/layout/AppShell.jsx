@@ -12,6 +12,7 @@ import { app } from '../../i18n/app'
 import FocusMode from '../FocusMode'
 import QuickCapture from '../QuickCapture'
 import ShortcutsModal from '../ShortcutsModal'
+import DesktopBanner from './DesktopBanner'
 
 function MobileDrawer({ open, onClose }) {
   const { lang } = useLanguage()
@@ -138,6 +139,8 @@ export default function AppShell({ title = '' }) {
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <Header title={title} onOpenDrawer={() => setDrawerOpen(true)} />
+        {/* Mời cài bản desktop để chuông báo chạy cả khi app web đóng */}
+        <DesktopBanner />
         {/* Vệt sáng chạy ngang mỗi lần chuyển mục */}
         <div className="pointer-events-none relative h-0">
           <span key={location.pathname} className="route-beam" aria-hidden="true" />

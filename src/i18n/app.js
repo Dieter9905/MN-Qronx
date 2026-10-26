@@ -1,6 +1,11 @@
 export const app = {
   vi: {
     // Header
+    // Banner mời cài bản desktop (chuông nền chạy cả khi web đóng)
+    desktopBannerTitle: 'Chuông báo kêu đúng giờ — kể cả khi app đã tắt.',
+    desktopBannerText: 'Web chỉ kêu khi tab đang mở. Cài bản desktop (Windows) để nhận thông báo đến hạn dù không mở MN-Qronx.',
+    desktopBannerCta: 'Tải bản Windows',
+    desktopBannerSkip: 'Để sau',
     createTask: 'Tạo công việc',
     adminArea: 'Khu vực quản trị',
     profile: 'Hồ sơ cá nhân',
@@ -141,6 +146,10 @@ export const app = {
   },
   en: {
     // Header
+    desktopBannerTitle: 'On-time bell — even with the app closed.',
+    desktopBannerText: 'The web rings only while the tab is open. Install the desktop app (Windows) to get reminders even without the browser.',
+    desktopBannerCta: 'Get the Windows app',
+    desktopBannerSkip: 'Later',
     createTask: 'New Task',
     adminArea: 'Admin Area',
     profile: 'Profile',

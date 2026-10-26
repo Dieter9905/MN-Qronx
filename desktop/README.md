@@ -54,8 +54,19 @@ máy Windows 10 1809+ đúp chạy luôn, không cần cài .NET). Trong zip có
 bao giờ lọt vào gói (đã lọc `*.WebView2` + dữ liệu web chuyển về
 `%LOCALAPPDATA%\MNQronx\WebView2`).
 
-Việc còn lại của việc phát hành: từ destination khách tải được —
-đặt file zip lên hosting (GitHub Releases / trang tải của mn-qronx.id.vn).
+Việc còn lại của việc phát hành: đưa file zip lên VPS production để
+link tải cố định trên site hoạt động (landing + banner trong app đều
+trỏ tới URL này):
+
+```bash
+# trên máy dev: scp file zip đã đóng gói lên VPS
+ssh root@<vps> "mkdir -p /var/www/qronx/downloads"
+scp dist/desktop/MN-Qronx-<ver>-win64.zip root@<vps>:/var/www/qronx/downloads/MN-Qronx-win64.zip
+```
+
+Frontend trỏ cố định `https://mn-qronx.id.vn/downloads/MN-Qronx-win64.zip`
+(tên không kèm version — mỗi lần phát hành chỉ thay file trên VPS,
+hằng số nằm ở `src/lib/constants.js#DESKTOP_DOWNLOAD_URL`).
 
 ## Chuông nền (báo đến hạn dù app đóng)
 

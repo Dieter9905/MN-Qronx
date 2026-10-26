@@ -29,6 +29,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { landing } from '../../i18n/landing'
+import { DESKTOP_DOWNLOAD_URL } from '../../lib/constants'
 
 // ---------- Helper ----------
 function useT() {
@@ -275,6 +276,11 @@ function Hero() {
             <a href="#tinh-nang">
               <Button variant="light" size="lg">
                 {t.heroCtaSecondary}
+              </Button>
+            </a>
+            <a href={DESKTOP_DOWNLOAD_URL} download>
+              <Button variant="light" size="lg" icon={Monitor}>
+                {t.heroDesktopCta}
               </Button>
             </a>
           </div>

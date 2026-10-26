@@ -1,5 +1,11 @@
 // Các hằng số nghiệp vụ theo BA (TaskAlarm → MN-Qronx)
 
+// Bản desktop (Windows) — chuông báo kêu cả khi app web đã đóng.
+// Tên file không kèm version để link trên landing/banner cố định;
+// mỗi lần phát hành chỉ thay file trên máy chủ (dist/desktop).
+export const DESKTOP_DOWNLOAD_URL =
+  'https://mn-qronx.id.vn/downloads/MN-Qronx-win64.zip'
+
 export const TASK_STATUS = {
   TODO: { label: 'Chưa làm', badge: 'bg-slate-100 text-slate-700 ring-slate-200' },
   IN_PROGRESS: { label: 'Đang làm', badge: 'bg-blue-50 text-blue-700 ring-blue-200' },
