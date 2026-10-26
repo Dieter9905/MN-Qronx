@@ -15,7 +15,8 @@ const POLL_ALARM = 'qronx-poll'
 const FOCUS_ALARM = 'qronx-focus-end'
 const STORE = chrome.storage.local
 const FOCUS_KEY = 'mnqFocus'
-const MAX_FOCUS_MINUTES = 180
+// Trần 8 giờ — khớp bộ chọn thời lượng bên web (480 phút)
+const MAX_FOCUS_MINUTES = 480
 
 // State bấm giờ (cũng lưu vào chrome.storage để popup đọc lại):
 // { status: 'running'|'paused', endAt (ms, khi chạy), remainingMs (khi dừng), minutes }

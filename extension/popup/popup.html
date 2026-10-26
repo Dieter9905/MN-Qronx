@@ -40,6 +40,14 @@
           <button class="ghost focus-preset" data-mins="45">45 phút</button>
           <button class="ghost focus-preset" data-mins="60">60 phút</button>
         </div>
+        <!-- Chọn độ dài tùy thích: gõ giờ + phút (tối đa 8 giờ, khớp bản web) -->
+        <div class="focus-custom">
+          <input id="focus-hours" type="number" min="0" max="8" value="0" title="0 – 8 giờ" />
+          <span>giờ</span>
+          <input id="focus-mins" type="number" min="0" max="59" value="25" title="0 – 59 phút" />
+          <span>phút</span>
+          <button id="focus-custom-btn" class="ghost" title="Bắt đầu phiên đúng độ dài đã chọn">Bắt đầu</button>
+        </div>
       </div>
     </section>
     <header>

@@ -120,9 +120,13 @@ const focusPauseBtn = $('focus-pause-btn')
 
 function fmtClock(ms) {
   const total = Math.max(0, Math.round(ms / 1000))
-  const m = Math.floor(total / 60)
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
   const s = total % 60
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  // ≥ 1 giờ hiện 1:05:30 cho gọn; ngắn hơn giữ mm:ss quen thuộc
+  return h > 0
+    ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+    : `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
 let focusTicker = null
@@ -167,10 +171,48 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 document.querySelectorAll('.focus-preset').forEach((btn) => {
   btn.addEventListener('click', () => {
+    const minutes = Number(btn.dataset.mins)
+    // Nhớ lại độ dài vừa chọn để popup mở sau tự điền + nút "Tập trung
+    // tiếp" trong notification nền dùng đúng con số này
+    STORE.set({ mnqFocusLast: minutes })
     chrome.runtime.sendMessage(
-      { type: 'focus-start', minutes: Number(btn.dataset.mins) },
+      { type: 'focus-start', minutes },
       () => watchFocus(),
     )
+  })
+})
+
+// ─── Chọn độ dài phiên tùy thích (giờ/phút, tối đa 8 giờ) ─────────────
+// Khớp bản web: trần 8 giờ (background.js cũng chốt MAX_FOCUS_MINUTES=480),
+// sàn 1 phút. Lựa chọn lưu mnqFocusLast nên background notification
+// "Tập trung tiếp" và prefill popup mở sau đều dùng cùng con số.
+const MAX_CUSTOM_MINUTES = 480
+const hoursInput = $('focus-hours')
+const minsInput = $('focus-mins')
+
+// Prefill độ dài lần trước (mnqFocusLast do popup/background ghi khi bấm/hết phiên)
+STORE.get('mnqFocusLast').then((items) => {
+  const mins = Math.round(Number(items.mnqFocusLast) || 0)
+  if (mins >= 1 && mins <= MAX_CUSTOM_MINUTES) {
+    hoursInput.value = Math.floor(mins / 60)
+    minsInput.value = mins % 60
+  }
+})
+
+function startCustomFocus() {
+  const minutes = Math.min(
+    MAX_CUSTOM_MINUTES,
+    Math.max(1, (Number(hoursInput.value) || 0) * 60 + (Number(minsInput.value) || 0)),
+  )
+  STORE.set({ mnqFocusLast: minutes })
+  chrome.runtime.sendMessage({ type: 'focus-start', minutes }, () => watchFocus())
+}
+
+$('focus-custom-btn').addEventListener('click', startCustomFocus)
+// Gõ số xong nhấn Enter cũng chạy luôn cho tiện
+;[hoursInput, minsInput].forEach((el) => {
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') startCustomFocus()
   })
 })
 
