@@ -13,6 +13,12 @@ public sealed class MainWindow : Form
 {
     private const string StartUrl = "https://mn-qronx.id.vn/app";
     private const string AllowedHost = "mn-qronx.id.vn";
+
+    // Dịch vụ đăng nhập chạy NGAY TRONG app: flow Google OAuth rồi tới
+    // mn-qronx → accounts.google.com → callback về mn-qronx. Nếu chỉ
+    // cho phép mn-qronx thì trang chọn tài khoản Google bị bắn ra trình
+    // duyệt và tìm cách đăng nhập không quay về cửa sổ này.
+    private static readonly string[] SigninHosts = { "accounts.google.com" };
     private const string RegistryKey = @"Software\MNQronx\Window";
 
     private Microsoft.Web.WebView2.WinForms.WebView2? _web;
@@ -48,21 +54,23 @@ public sealed class MainWindow : Form
                 Text = string.IsNullOrWhiteSpace(core.DocumentTitle)
                     ? "MN-Qronx" : core.DocumentTitle;
 
-            // Cửa sổ mới (redirect ĐK Google, tải file…) — đi ra trình duyệt
+            // Cửa sổ mới (popup): đăng nhập/popup site chính ở lại app,
+            // còn thật sự ra ngoài thì mở bằng trình duyệt mặc định
             core.NewWindowRequested += (_, e) =>
             {
                 e.Handled = true;
-                if (IsInternal(e.Uri))
+                if (ShouldStayInApp(e.Uri))
                     core.Navigate(e.Uri);
                 else
                     OpenInSystemBrowser(e.Uri);
             };
 
-            // Điều hướng ra ngoài app? Mở bằng trình duyệt mặc định
+            // Điều hướng ra ngoài app (không phải host chính và không phải
+            // dịch vụ đăng nhập)? Mở bằng trình duyệt mặc định
             core.NavigationStarting += (_, e) =>
             {
                 if (Uri.TryCreate(e.Uri, UriKind.Absolute, out var uri) &&
-                    !IsInternal(uri.ToString()) &&
+                    !ShouldStayInApp(uri.ToString()) &&
                     uri.Scheme is "http" or "https")
                 {
                     e.Cancel = true;
@@ -99,6 +107,16 @@ public sealed class MainWindow : Form
         return Uri.TryCreate(url, UriKind.Absolute, out var uri)
             && (uri.Host == AllowedHost || uri.Host.EndsWith($".{AllowedHost}"));
     }
+
+    // Host của dịch vụ đăng nhập (Google…) được coi như "trong app"
+    private static bool IsSigninHost(string? url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            && SigninHosts.Contains(uri.Host);
+    }
+
+    private static bool ShouldStayInApp(string? url) =>
+        IsInternal(url) || IsSigninHost(url);
 
     private static string LastUrlOr(string fallback)
     {

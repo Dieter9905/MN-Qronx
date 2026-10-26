@@ -9,8 +9,9 @@ Kênh phát hành chính: **portable ZIP** — khách tải về, giải nén, �
 desktop/
 ├─ MN-Qronx.Window/        # dự án C# (WinForms + WebView2)
 │  ├─ Program.cs           # vào app, khóa một instance/máy
-│  ├─ MainWindow.cs        # cửa sổ: link ngoài mở trình duyệt, F5 reload,
-│  │                       # kích thước + trang cuối lưu Registry,
+│  ├─ MainWindow.cs        # cửa sổ: link ngoài mở trình duyệt (trừ host
+│  │                       # đăng nhập accounts.google.com chạy trong app),
+│  │                       # F5 reload, kích thước + trang cuối lưu Registry,
 │  │                       # dữ liệu web ở %LOCALAPPDATA%\MNQronx\WebView2
 │  ├─ Package.appxmanifest # nhận diện MSIX (chỉ dùng nếu chọn gói MSIX)
 │  ├─ MN-Qronx.Window.csproj
