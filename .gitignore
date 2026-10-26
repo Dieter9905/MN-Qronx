@@ -4,6 +4,11 @@ dist/
 build/
 *.log
 
+# Desktop: build ra của .NET và chứng chỉ ký dev (nhạy cảm, không commit)
+desktop/MN-Qronx.Window/bin/
+desktop/MN-Qronx.Window/obj/
+desktop/.dev-cert/
+
 # Environment
 .env
 .env.local

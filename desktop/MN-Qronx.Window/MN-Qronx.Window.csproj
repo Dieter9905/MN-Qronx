@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Đóng gói .msix KHÔNG qua các property này (dotnet SDK thô không có
+         target đóng gói) mà chạy desktop\package-msix.ps1, dùng công cụ
+         makeappx/makepri/signtool từ gói Microsoft.Windows.SDK.BuildTools
+         bên dưới. Nhận diện gói nằm ở desktop\MN-Qronx.Window\Package.appxmanifest. -->
+
+    <ApplicationTitle>MN-Qronx</ApplicationTitle>
+    <ApplicationIcon>Assets\logo.ico</ApplicationIcon>
+    <AssemblyName>MNQronx.Window</AssemblyName>
+    <RootNamespace>MNQronx.Window</RootNamespace>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <FileVersion>1.0.0</FileVersion>
+    <Company>MN-Qronx</Company>
+    <Authors>MN-Qronx</Authors>
+
+    <!-- Đóng gói native sẵn cho x64 -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <Version>1.0.0</Version>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3124.44" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Icon manifest MSIX (Assets\Manifest, do make-manifest-icons.ps1 sinh)
+         + logo.ico của exe — cùng đi vào gói qua publish -->
+    <Content Include="Assets\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
