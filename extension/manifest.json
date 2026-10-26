@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "MN-Qronx – Nhắc việc",
   "description": "Xem việc hôm nay, nhận chuông nhắc đến hạn và bấm giờ tập trung Pomodoro ngay trên trình duyệt, kể cả khi không mở trang web.",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "permissions": ["alarms", "notifications", "storage"],
   "host_permissions": [
     "https://mn-qronx.id.vn/*"
