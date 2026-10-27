@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Brain, PaperPlaneTilt, Sparkle, Trash, Plus, CheckCircle } from '@phosphor-icons/react'
 import { useToast } from './common/Toast'
 import { createTask, getAllTasks, completeTask, deleteTask } from '../services/taskService'
@@ -72,6 +73,7 @@ function missingFields(t) {
 }
 
 export default function AiTaskChat({ onTasksCreated }) {
+  const navigate = useNavigate()
   const toast = useToast()
   const [categories, setCategories] = useState([])
   // Hội thoại được khôi phục từ lần trước (lưu theo tài khoản) — F5 không mất
@@ -227,7 +229,14 @@ export default function AiTaskChat({ onTasksCreated }) {
       pushMsg({ role: 'bot', text: `Không ${intent === TASK_COMMAND.DELETE ? 'xóa' : 'hoàn thành'} được “${task.title}”: ${res.message || 'lỗi không rõ'}.` })
       return
     }
-    setMessages((ms) => ms.map((m) => (m.id === msgId ? { ...m, command: { ...m.command, resolved: true } } : m)))
+    setMessages((ms) =>
+      ms.map((m) =>
+        m.id === msgId
+          // chỉ đánh dấu ĐÃ XỬ LÝ đúng thẻ được bấm; các thẻ còn lại vẫn bấm được
+          ? { ...m, command: { ...m.command, resolvedIds: [...(m.command.resolvedIds || []), task.id] } }
+          : m,
+      ),
+    )
     lastMentionedRef.current = task
     toast.success(doneMessage(intent, task))
     pushMsg({ role: 'bot', text: `${doneMessage(intent, task)} Bạn cần tôi làm gì nữa không?` })
@@ -235,7 +244,7 @@ export default function AiTaskChat({ onTasksCreated }) {
   }
 
   const cancelCommand = (msgId) => {
-    setMessages((ms) => ms.map((m) => (m.id === msgId ? { ...m, command: { ...m.command, resolved: true } } : m)))
+    setMessages((ms) => ms.map((m) => (m.id === msgId ? { ...m, command: { ...m.command, cancelled: true } } : m)))
     pushMsg({ role: 'bot', text: 'Đã bỏ qua. Bạn muốn tôi làm gì khác không?' })
   }
 
@@ -432,38 +441,54 @@ export default function AiTaskChat({ onTasksCreated }) {
               <p className="whitespace-pre-wrap">{m.text}</p>
               {m.command && (
                 <div className="mt-2.5 space-y-1.5">
-                  {m.command.candidates.map(({ task }) => (
-                    <div
-                      key={task.id}
-                      className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2 ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-600"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-bold text-navy-900 dark:text-white">{task.title}</p>
-                        <p className="text-[11px] text-navy-400">
-                          {task.dueAt
-                            ? new Date(task.dueAt).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
-                            : 'Không có thời hạn'}
-                          {task.status === 'COMPLETED' ? ' · đã xong' : ''}
-                        </p>
-                      </div>
-                      {m.command.resolved ? (
-                        <span className="shrink-0 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Đã xong</span>
-                      ) : m.command.expired ? (
-                        <span className="shrink-0 text-[11px] font-bold text-amber-600 dark:text-amber-400">Hết hiệu lực</span>
-                      ) : (
+                  {m.command.candidates.map(({ task }) => {
+                    const legacyDone = m.command.resolved === true // bản hội thoại cũ trước bản per-card
+                    const isDone = legacyDone || (m.command.resolvedIds || []).includes(task.id)
+                    const doneLabel = legacyDone
+                      ? 'Đã xong'
+                      : m.command.intent === TASK_COMMAND.DELETE ? 'Đã xóa' : 'Đã hoàn thành'
+                    return (
+                      <div
+                        key={task.id}
+                        className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2 ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-600"
+                      >
                         <button
                           type="button"
-                          onClick={() => executeCommand(m.id, task)}
-                          className={`shrink-0 cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-bold text-white transition ${
-                            m.command.intent === TASK_COMMAND.DELETE ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-500 hover:bg-emerald-600'
-                          }`}
+                          onClick={() => navigate(`/app/tasks/${task.id}`)}
+                          title="Xem chi tiết công việc"
+                          className="min-w-0 flex-1 cursor-pointer text-left"
                         >
-                          {m.command.intent === TASK_COMMAND.DELETE ? 'Xóa' : 'Hoàn thành'}
+                          <p className="truncate text-xs font-bold text-navy-900 group-hover:underline dark:text-white">
+                            {task.title}
+                          </p>
+                          <p className="text-[11px] text-navy-400">
+                            {task.dueAt
+                              ? new Date(task.dueAt).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+                              : 'Không có thời hạn'}
+                            {task.status === 'COMPLETED' ? ' · đã xong' : ''}
+                          </p>
                         </button>
-                      )}
-                    </div>
-                  ))}
-                  {!m.command.resolved && !m.command.expired && (
+                        {isDone ? (
+                          <span className="shrink-0 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">{doneLabel}</span>
+                        ) : m.command.cancelled ? (
+                          <span className="shrink-0 text-[11px] font-bold text-navy-400">Đã bỏ qua</span>
+                        ) : m.command.expired ? (
+                          <span className="shrink-0 text-[11px] font-bold text-amber-600 dark:text-amber-400">Hết hiệu lực</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => executeCommand(m.id, task)}
+                            className={`shrink-0 cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-bold text-white transition ${
+                              m.command.intent === TASK_COMMAND.DELETE ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-500 hover:bg-emerald-600'
+                            }`}
+                          >
+                            {m.command.intent === TASK_COMMAND.DELETE ? 'Xóa' : 'Hoàn thành'}
+                          </button>
+                        )}
+                      </div>
+                    )
+                  })}
+                  {!m.command.cancelled && !m.command.expired && m.command.resolved !== true && (
                     <button
                       type="button"
                       onClick={() => cancelCommand(m.id)}

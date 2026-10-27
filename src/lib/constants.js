@@ -8,7 +8,8 @@ export const DESKTOP_DOWNLOAD_URL =
 
 // Tiện ích Chrome trên Cửa hàng Chrome Web (CTA landing + gợi ý cài sau
 // đăng nhập). CHƯA có ID thật — dán link listing thật vào đây khi có ID.
-export const EXTENSION_STORE_URL = '' // TODO(dán link CWA thật, vd https://chromewebstore.google.com/detail/.../<ID>)
+export const EXTENSION_STORE_URL =
+  'https://chromewebstore.google.com/detail/MN-Qronx%20%E2%80%93%20Nh%E1%BA%AFc%20vi%E1%BB%87c/hnfognfdmbecbipjhcimbenkaakebbod'
 
 export const TASK_STATUS = {
   TODO: { label: 'Chưa làm', badge: 'bg-slate-100 text-slate-700 ring-slate-200' },
