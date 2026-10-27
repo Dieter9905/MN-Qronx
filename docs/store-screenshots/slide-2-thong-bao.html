@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: #0f1524; --card: #1a2236; --line: #2a3450; --text: #e8ecf6;
+    --muted: #9aa5c0; --accent: #7c8cff; --ok: #3ddc97; --warn: #ffb454; --danger: #ff6b6b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1280px; height: 800px; overflow: hidden; position: relative;
+    background: radial-gradient(900px 500px at 80% 20%, rgba(124,140,255,.25), transparent 60%),
+                radial-gradient(700px 500px at 10% 85%, rgba(61,220,151,.10), transparent 55%),
+                linear-gradient(160deg, #0d1b2a, #101a30 55%, #0d1526);
+    color: var(--text);
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    display: flex; flex-direction: column;
+  }
+  .stage { flex: 1; display: flex; align-items: center; justify-content: center; gap: 70px; padding-bottom: 96px; }
+
+  .kicker { text-transform: uppercase; letter-spacing: .28em; color: #8fa3ff; font-size: 15px; font-weight: 700; margin-bottom: 18px; }
+  .headline { font-size: 44px; font-weight: 800; line-height: 1.25; }
+  .headline em { font-style: normal; color: #9fb0ff; }
+  .sub { color: var(--muted); font-size: 18px; line-height: 1.6; margin-top: 16px; max-width: 430px; }
+
+  /* Toast Windows 11 */
+  .toast-wrap { position: relative; width: 430px; flex: none; }
+  .desktop-bar {
+    display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 14px;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+    color: var(--muted); font-size: 13px; margin-bottom: 26px;
+  }
+  .desktop-bar .clock { margin-left: auto; font-variant-numeric: tabular-nums; }
+  .ext-badge {
+    position: absolute; top: 8px; right: 260px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: var(--muted); font-size: 11px;
+  }
+  .ext-badge .ico {
+    width: 44px; height: 44px; border-radius: 12px; background: #233057; display: flex;
+    align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,.4);
+  }
+  .ext-badge .ico span { position: absolute; transform: translate(16px,-16px); background: var(--danger); color:#fff; font-size: 12px; font-weight: 700; border-radius: 10px; padding: 1px 7px; }
+  .toast {
+    background: #1c2230f2; border: 1px solid #3a4457; border-radius: 12px;
+    box-shadow: 0 30px 70px rgba(0,0,0,.6); padding: 16px 18px 14px; width: 100%;
+  }
+  .toast .head { display: flex; gap: 12px; align-items: flex-start; }
+  .toast img { width: 34px; height: 34px; border-radius: 8px; }
+  .appicon { display: inline-flex; width: 34px; height: 34px; border-radius: 8px; background: linear-gradient(135deg,#7c3aed,#8b5cf6); color: #fff; align-items: center; justify-content: center; font-size: 18px; flex: none; }
+  .toast b { font-size: 16.5px; }
+  .toast p { color: #c9d2e6; font-size: 14px; margin-top: 3px; line-height: 1.5; }
+  .toast .note { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  .toast .actions { display: flex; gap: 10px; margin-top: 12px; }
+  .toast .actions button {
+    flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #46506a;
+    background: rgba(255,255,255,.05); color: var(--text); font-size: 13.5px;
+  }
+
+  .caption {
+    position: absolute; inset: auto 0 0 0; height: 96px;
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    background: linear-gradient(180deg, rgba(13,20,38,0), rgba(9,13,26,.92) 30%);
+    font-size: 30px; font-weight: 750;
+  }
+  .caption .badge {
+    background: var(--ok); color: #08301f; border-radius: 999px; padding: 4px 16px;
+    font-size: 20px; font-weight: 700;
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div>
+      <div class="kicker">Báo thức &amp; nhắc việc</div>
+      <div class="headline">Chuông reo cả khi<br /><em>đã đóng tab web</em></div>
+      <div class="sub">Tiện ích hỏi server mỗi phút và bắn thông báo hệ thống đúng hạn — không cần mở trang mn-qronx.id.vn.</div>
+    </div>
+    <div class="toast-wrap">
+      <div class="desktop-bar"><span>🪟 Desktop</span><span class="clock">14:30 · 26/10</span></div>
+      <div class="toast">
+        <div class="head">
+          <span class="appicon">🕒</span>
+          <div>
+            <b>⏰ Nộp báo cáo tuần</b>
+            <p>Đến giờ nhắc (14:30) — bấm để mở MN-Qronx</p>
+            <div class="note">MN-Qronx – Nhắc việc &amp; Báo thức Pomodoro</div>
+          </div>
+        </div>
+        <div class="actions">
+          <button>Hoãn 10 phút</button>
+          <button>Tắt nhắc</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="caption"><span class="badge">Báo thức</span> Thông báo chuông đúng hạn, ngay cả khi đóng tab</div>
+</body>
+</html>

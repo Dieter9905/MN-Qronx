@@ -29,6 +29,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { landing } from '../../i18n/landing'
+import { EXTENSION_STORE_URL } from '../../lib/constants'
 import { DESKTOP_DOWNLOAD_URL } from '../../lib/constants'
 
 // ---------- Helper ----------
@@ -706,6 +707,13 @@ function FinalCta() {
                 {t.ctaLogin}
               </Button>
             </Link>
+            {EXTENSION_STORE_URL ? (
+              <a href={EXTENSION_STORE_URL} target="_blank" rel="noreferrer">
+                <Button variant="light" size="lg" icon={Lightning} iconWeight="bold">
+                  Cài tiện ích Chrome miễn phí
+                </Button>
+              </a>
+            ) : null}
           </div>
         </div>
       </div>

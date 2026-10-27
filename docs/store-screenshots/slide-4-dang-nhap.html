@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: #0f1524; --card: #1a2236; --line: #2a3450; --text: #e8ecf6;
+    --muted: #9aa5c0; --accent: #7c8cff; --ok: #3ddc97; --warn: #ffb454; --danger: #ff6b6b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1280px; height: 800px; overflow: hidden; position: relative;
+    background: radial-gradient(900px 500px at 25% 15%, rgba(124,140,255,.22), transparent 60%),
+                radial-gradient(700px 500px at 85% 85%, rgba(139,92,246,.14), transparent 55%),
+                linear-gradient(160deg, #0d1b2a, #101a30 55%, #0d1526);
+    color: var(--text);
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    display: flex; flex-direction: column;
+  }
+  .stage { flex: 1; display: flex; align-items: center; justify-content: center; gap: 46px; padding-bottom: 96px; }
+
+  .kicker { text-transform: uppercase; letter-spacing: .28em; color: #8fa3ff; font-size: 15px; font-weight: 700; margin-bottom: 18px; }
+  .headline { font-size: 44px; font-weight: 800; line-height: 1.25; }
+  .headline em { font-style: normal; color: #9fb0ff; }
+  .sub { color: var(--muted); font-size: 18px; line-height: 1.6; margin-top: 16px; max-width: 420px; }
+
+  .arrow { font-size: 52px; color: var(--accent); }
+
+  .win { width: 400px; border-radius: 14px; border: 1px solid var(--line); overflow: hidden; background: #0b1120; box-shadow: 0 30px 70px rgba(0,0,0,.5); flex: none; }
+  .win .bar { display: flex; align-items: center; gap: 6px; padding: 9px 12px; background: #131a2c; }
+  .win .bar i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .win .bar .r { background: #ff6b6b; } .win .bar .y { background: #ffb454; } .win .bar .g { background: #3ddc97; }
+  .win .bar .url { margin-left: 10px; color: var(--muted); font-size: 12px; background: #0d1526; border-radius: 999px; padding: 3px 12px; }
+  .win .body { padding: 18px; text-align: center; }
+  .win .body img { width: 44px; height: 44px; border-radius: 10px; margin-bottom: 8px; }
+  .win .body b { font-size: 15px; display: block; }
+  .win .body p { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+
+  .popup {
+    width: 400px; border-radius: 18px; background: var(--bg);
+    border: 1px solid var(--line); box-shadow: 0 40px 90px rgba(0,0,0,.55); flex: none;
+  }
+  .popup .bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: #0c1220; }
+  .popup .bar img { width: 20px; height: 20px; border-radius: 5px; }
+  .appicon { display: inline-flex; border-radius: 9px; background: linear-gradient(135deg,#7c3aed,#8b5cf6); color: #fff; align-items: center; justify-content: center; flex: none; }
+  .popup .form { padding: 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .popup .form input {
+    padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--card);
+    color: var(--text); font-size: 14px; outline: none;
+  }
+  .popup .form .login { padding: 10px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 650; font-size: 14px; }
+  .popup .form .hint { color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+  .popup .done { display: flex; align-items: center; gap: 10px; padding: 14px; color: var(--ok); font-size: 14px; border-top: 1px dashed var(--line); }
+
+  .caption {
+    position: absolute; inset: auto 0 0 0; height: 96px;
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    background: linear-gradient(180deg, rgba(13,20,38,0), rgba(9,13,26,.92) 30%);
+    font-size: 30px; font-weight: 750;
+  }
+  .caption .badge {
+    background: linear-gradient(90deg, #7c8cff, #a78bfa); color: #fff; border-radius: 999px; padding: 4px 16px;
+    font-size: 20px; font-weight: 700;
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="win">
+      <div class="bar"><i class="r"></i><i class="y"></i><i class="g"></i><span class="url">mn-qronx.id.vn</span></div>
+      <div class="body">
+        <span class="appicon" style="width:44px;height:44px;font-size:22px;margin-bottom:8px">🕒</span>
+        <b>Web MN-Qronx</b>
+        <p>Quản lý việc & thời gian</p>
+      </div>
+    </div>
+    <div class="arrow">⟶</div>
+    <div class="popup">
+      <div class="bar"><span class="appicon" style="width:20px;height:20px;font-size:11px;border-radius:5px">🕒</span><b style="font-size:14px">MN-Qronx</b></div>
+      <div class="form">
+        <input value="ban@email.com" readonly />
+        <input type="password" value="••••••••" readonly />
+        <button class="login">Đăng nhập</button>
+        <p class="hint">Dùng tài khoản web MN-Qronx — token lưu ngay trong trình duyệt.</p>
+      </div>
+      <div class="done">✓ Đã kết nối — nhận chuông nhắc trên mọi tab</div>
+    </div>
+    <div>
+      <div class="kicker">Cài đặt 1 phút</div>
+      <div class="headline">Đăng nhập 1 lần,<br /><em>nhận nhắc trên</em><br />mọi tab</div>
+      <div class="sub">Dùng đúng tài khoản web mn-qronx.id.vn — không cần cấu hình thêm gì.</div>
+    </div>
+  </div>
+  <div class="caption"><span class="badge">Kết nối web</span> Đăng nhập 1 lần — nhận nhắc trên mọi tab</div>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: #0f1524; --card: #1a2236; --line: #2a3450; --text: #e8ecf6;
+    --muted: #9aa5c0; --accent: #7c8cff; --ok: #3ddc97; --warn: #ffb454; --danger: #ff6b6b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1280px; height: 800px; overflow: hidden; position: relative;
+    background: radial-gradient(900px 500px at 20% 15%, rgba(124,140,255,.22), transparent 60%),
+                radial-gradient(800px 600px at 85% 80%, rgba(61,220,151,.12), transparent 55%),
+                linear-gradient(160deg, #0d1b2a, #101a30 55%, #0d1526);
+    color: var(--text);
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    display: flex; flex-direction: column;
+  }
+  .stage { flex: 1; display: flex; align-items: center; justify-content: center; gap: 70px; padding-bottom: 96px; }
+
+  /* Popup extension phóng to */
+  .popup {
+    width: 428px; border-radius: 18px; background: var(--bg);
+    border: 1px solid var(--line); box-shadow: 0 40px 90px rgba(0,0,0,.55);
+    overflow: hidden; flex: none;
+  }
+  .popup .bar {
+    display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+    border-bottom: 1px solid var(--line); color: var(--muted); font-size: 13px;
+    background: #0c1220;
+  }
+  .popup .bar img { width: 20px; height: 20px; border-radius: 5px; }
+  .appicon { display: inline-flex; width: 20px; height: 20px; border-radius: 5px; background: linear-gradient(135deg,#7c3aed,#8b5cf6); color: #fff; align-items: center; justify-content: center; font-size: 11px; flex: none; }
+  .focus-box {
+    margin: 14px; padding: 18px 14px 14px; border-radius: 12px; text-align: center;
+    background: linear-gradient(180deg, rgba(124,140,255,.18), rgba(26,34,54,.65));
+    border: 1px solid var(--line);
+  }
+  .focus-time { font-size: 56px; font-weight: 700; letter-spacing: 2px; font-variant-numeric: tabular-nums; }
+  .focus-state { color: var(--muted); font-size: 14px; margin-top: 4px; }
+  .focus-actions { display: flex; gap: 10px; justify-content: center; margin-top: 14px; }
+  .btn {
+    padding: 8px 18px; border-radius: 8px; font-size: 13.5px; border: 1px solid var(--line);
+    background: none; color: var(--muted);
+  }
+  .btn.primary { color: #fff; background: var(--accent); border-color: var(--accent); font-weight: 600; }
+  .tasks { padding: 2px 14px 14px; }
+  .task {
+    display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; margin-bottom: 8px;
+    border-radius: 10px; background: var(--card); border: 1px solid var(--line);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; flex: none; }
+  .dot.h { background: var(--warn); } .dot.u { background: var(--danger); } .dot.l { background: var(--ok); }
+  .task b { font-size: 14px; display: block; }
+  .task span { color: var(--muted); font-size: 12px; }
+
+  .kicker { text-transform: uppercase; letter-spacing: .28em; color: #8fa3ff; font-size: 15px; font-weight: 700; margin-bottom: 18px; }
+  .headline { font-size: 44px; font-weight: 800; line-height: 1.25; }
+  .headline em { font-style: normal; color: #9fb0ff; }
+  .sub { color: var(--muted); font-size: 18px; line-height: 1.6; margin-top: 16px; max-width: 400px; }
+
+  .caption {
+    position: absolute; inset: auto 0 0 0; height: 96px;
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    background: linear-gradient(180deg, rgba(13,20,38,0), rgba(9,13,26,.92) 30%);
+    font-size: 30px; font-weight: 750;
+  }
+  .caption .badge {
+    background: var(--accent); color: #fff; border-radius: 999px; padding: 4px 16px;
+    font-size: 20px; font-weight: 700;
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="popup">
+      <div class="bar"><span class="appicon">🕒</span> MN-Qronx – Công việc hôm nay</div>
+      <div class="focus-box">
+        <div class="focus-time">25:00</div>
+        <div class="focus-state">Đang tập trung 🍅 · phiên 25 phút</div>
+        <div class="focus-actions">
+          <button class="btn primary">Tạm dừng</button>
+          <button class="btn">Kết thúc</button>
+        </div>
+      </div>
+      <div class="tasks">
+        <div class="task"><span class="dot h"></span><div><b>Chuẩn bị demo khách</b><span>Hôm nay · 14:00</span></div></div>
+        <div class="task"><span class="dot u"></span><div><b>Nộp báo cáo tuần</b><span>Hôm nay · 17:30</span></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="kicker">Đồng hồ Pomodoro</div>
+      <div class="headline">Bấm giờ tập trung<br /><em>ngay trên trình duyệt</em></div>
+      <div class="sub">Chọn phiên 25/45/60 phút — đồng hồ vẫn chạy nền kể cả khi bạn đóng popup hay chuyển tab làm việc khác.</div>
+    </div>
+  </div>
+  <div class="caption"><span class="badge">Pomodoro</span> Bấm giờ tập trung ngay trên trình duyệt</div>
+</body>
+</html>

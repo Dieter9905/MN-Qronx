@@ -6,6 +6,10 @@
 export const DESKTOP_DOWNLOAD_URL =
   'https://mn-qronx.id.vn/downloads/MN-Qronx-win64.zip'
 
+// Tiện ích Chrome trên Cửa hàng Chrome Web (CTA landing + gợi ý cài sau
+// đăng nhập). CHƯA có ID thật — dán link listing thật vào đây khi có ID.
+export const EXTENSION_STORE_URL = '' // TODO(dán link CWA thật, vd https://chromewebstore.google.com/detail/.../<ID>)
+
 export const TASK_STATUS = {
   TODO: { label: 'Chưa làm', badge: 'bg-slate-100 text-slate-700 ring-slate-200' },
   IN_PROGRESS: { label: 'Đang làm', badge: 'bg-blue-50 text-blue-700 ring-blue-200' },

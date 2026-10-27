@@ -8,6 +8,7 @@ import { LanguageProvider } from './context/LanguageContext'
 import { ProtectedRoute, AdminRoute, GuestOnlyRoute } from './components/ProtectedRoute'
 import AlarmOverlay from './components/AlarmOverlay'
 import UpdateNotification from './components/UpdateNotification'
+import ExtensionPromoBar from './components/ExtensionPromoBar'
 import AppShell from './components/layout/AppShell'
 import LandingPage from './pages/guest/LandingPage'
 import LoginPage from './pages/guest/LoginPage'
@@ -145,6 +146,9 @@ export default function App() {
       
       {/* Thông báo bản cập nhật mới */}
       <UpdateNotification />
+
+      {/* Gợi ý cài tiện ích Chrome cho user đã đăng nhập */}
+      <ExtensionPromoBar />
     </AlarmProvider>
     </LanguageProvider>
     </ThemeProvider>

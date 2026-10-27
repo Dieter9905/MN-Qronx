@@ -81,7 +81,52 @@ rồi điền link vào mục Privacy của 2 store.
 ## Việc của BẠN
 
 - [ ] Đăng ký developer Chrome ($5) và Partner Center (miễn phí).
-- [ ] Chụp 2–3 screenshot 1280×800.
+- [x] Chụp screenshot 1280×800 — đã có bộ 4 ảnh trong `docs/store-screenshots/`.
 - [ ] Đưa privacy policy lên web thành URL công khai.
-- [ ] Nộp ZIP vào 2 store, điền nội dung theo mẫu.
+- [x] Nộp ZIP vào 2 store (CWA đã live), điền nội dung theo mẫu.
 - [ ] Sau khi duyệt: triển khai bước 2–4 của lộ trình bán.
+
+## 4. Chiến lược tăng lượt tải (ASO + kênh web)
+
+### Tối ưu từ khóa trên store (ASO)
+
+- **Tên listing** (giới hạn 45 ký tự, từ v1.1.3 trong manifest):
+  "MN-Qronx – Nhắc việc & Báo thức Pomodoro" — phủ các từ khóa người VN hay gõ:
+  *nhắc việc*, *báo thức*, *pomodoro*. Cập nhật đúng chuỗi này ở tab Store
+  Listing của CWA/Edge khi nộp bản 1.1.3.
+- **Mô tả ngắn** (132 ký tự): "Việc hôm nay, chuông nhắc & báo thức đúng hạn,
+  đồng hồ Pomodoro tập trung ngay trên trình duyệt – kể cả khi đóng tab web."
+- Nhắc tự nhiên các từ khóa trong phần mô tả dài: quản lý thời gian, đồng hồ
+  tập trung, nhắc deadline, todolist, kế hoạch công việc.
+
+### Bộ ảnh banner (screenshots)
+
+- Đã render sẵn 4 ảnh 1280×800 có chú thích tiếng Việt trong
+  `docs/store-screenshots/` (file `slide-*.html` là nguồn, sửa rồi chụp lại
+  bằng browser khi cần thay nội dung):
+  1. `1-pomodoro.png` — popup đang bấm giờ Pomodoro.
+  2. `2-thong-bao.png` — thông báo chuông trên desktop, nút Hoãn/Tắt.
+  3. `3-viec-hom-nay.png` — danh sách việc + chấm ưu tiên + nhắc đến giờ.
+  4. `4-dang-nhap.png` — đăng nhập 1 lần nhận nhắc mọi tab.
+- CWA cho tối đa 4.585 ảnh 1280×800; Edge tối đa 6 ảnh. Nộp cả 4 cho CWA,
+  chọn 3 ảnh đầu cho Edge.
+
+### Huy hiệu "Nhà phát triển có uy tín" (Established Publisher)
+
+- Google xét dựa trên: thời gian đăng ký account, số lượng và tần suất cập nhật,
+  tỉ lệ chấp thuận review, không vi phạm chính sách. Không xin được — phải
+  **duy trì**: mỗi tháng phát hành 1 bản nhỏ (sửa lỗi/USO ảnh mới) và luôn trả
+  lời feedback reviewer đúng hạn. Huy hiệu này giúp tăng thứ hạng tìm kiếm.
+
+### Kênh website mn-qronx.id.vn
+
+- **Nút CTA cuối landing** (section CTA): "Cài tiện ích Chrome miễn phí" — đã
+  thêm code, hiển thị khi `EXTENSION_STORE_URL` trong `src/lib/constants.js`
+  có giá trị (dán link CWA thật của listing vào hằng số này).
+- **Gợi ý sau đăng nhập**: component `src/components/ExtensionPromoBar.jsx`
+  hiện thẻ nổi góc phải-dưới cho user đã đăng nhập, có nút Cài + nút đóng
+  (nhớ localStorage). Cùng dùng hằng số `EXTENSION_STORE_URL` nên chỉ cần dán
+  link 1 chỗ là bật cả 2 CTA.
+- Duy trì gợi ý này tối thiểu 2 tuần đầu sau đăng bản mới, rồi phép người dùng
+  tắt vĩnh viễn (đã có sẵn).
+
