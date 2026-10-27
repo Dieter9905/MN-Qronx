@@ -42,12 +42,16 @@ export function EmptyState({
   description,
   action,
   className = '',
+  // Minh hoạ riêng (vẽ sẵn JSX) — bỏ qua icon mặc định nếu cung cấp
+  illustration,
 }) {
   return (
     <div className={`flex flex-col items-center justify-center gap-3 py-14 text-center ${className}`}>
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-navy-50 text-navy-300 ring-1 ring-navy-100 dark:bg-slate-800 dark:text-slate-500 dark:ring-slate-700">
-        <Icon size={30} weight="duotone" />
-      </div>
+      {illustration || (
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-navy-50 text-navy-300 ring-1 ring-navy-100 dark:bg-slate-800 dark:text-slate-500 dark:ring-slate-700">
+          <Icon size={30} weight="duotone" />
+        </div>
+      )}
       <div>
         <h3 className="font-bold text-navy-800 dark:text-white">{title}</h3>
         {description && <p className="mt-1 max-w-sm text-sm text-navy-500 dark:text-slate-400">{description}</p>}

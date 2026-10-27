@@ -84,11 +84,13 @@ export default function UpdateNotification() {
   const isLastUpdate = currentUpdateIndex >= newUpdates.length - 1
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-navy-900/60 backdrop-blur-sm dark:bg-black/70">
-      <div className="relative mx-4 w-full max-w-lg animate-scale-in">
-        <div className="overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-navy-100 dark:bg-slate-900 dark:ring-slate-700">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-navy-900/60 p-4 backdrop-blur-sm dark:bg-black/70">
+      <div className="relative w-full max-w-lg animate-scale-in">
+        {/* Khung giới hạn 90% chiều cao màn hình: đầu + chân (nút bấm) ghim cố định,
+            phần nội dung ở giữa tự cuộn — nút "Bỏ qua / Tiếp theo" luôn nhìn thấy. */}
+        <div className="flex max-h-[90dvh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-navy-100 dark:bg-slate-900 dark:ring-slate-700">
           {/* Header with gradient */}
-          <div className="relative overflow-hidden bg-brand-gradient px-6 py-6">
+          <div className="relative shrink-0 overflow-hidden bg-brand-gradient px-6 py-6">
             {/* Decorative circles */}
             <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
             <div className="absolute -bottom-4 -left-4 h-20 w-20 rounded-full bg-white/10" />
@@ -107,6 +109,8 @@ export default function UpdateNotification() {
             </div>
           </div>
 
+          {/* Nội dung có thể cuộn khi dài hơn màn hình */}
+          <div className="min-h-0 flex-1 overflow-y-auto">
           {/* Highlights */}
           <div className="border-b border-navy-100 px-6 py-4 dark:border-slate-700">
             <p className="text-xs font-bold uppercase tracking-wider text-navy-400 dark:text-slate-500">
@@ -165,10 +169,11 @@ export default function UpdateNotification() {
               </button>
             )}
           </div>
+          </div>
 
           {/* Progress dots */}
           {newUpdates.length > 1 && (
-            <div className="flex items-center justify-center gap-1.5 pb-2">
+            <div className="flex shrink-0 items-center justify-center gap-1.5 pb-2">
               {newUpdates.map((_, i) => (
                 <span
                   key={i}
@@ -180,8 +185,8 @@ export default function UpdateNotification() {
             </div>
           )}
 
-          {/* Actions */}
-          <div className="border-t border-navy-100 px-6 py-4 dark:border-slate-700">
+          {/* Actions — ghim đáy, luôn hiện dù nội dung dài */}
+          <div className="shrink-0 border-t border-navy-100 px-6 py-4 dark:border-slate-700">
             <div className="flex gap-3">
               <button
                 type="button"
