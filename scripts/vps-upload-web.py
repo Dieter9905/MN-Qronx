@@ -16,7 +16,26 @@ REMOTE_TAR = "/tmp/dist-web.tar.gz"
 WEB_ROOT = "/var/www/qronx"
 
 
+def refresh_tar() -> None:
+    """dist/ mới hơn tar thì đóng gói lại — tránh đẩy nhầm bản tar cũ."""
+    from pathlib import Path
+
+    tar = Path(LOCAL_TAR)
+    dist = Path("dist")
+    dist_marker = dist / "index.html"
+    if not dist_marker.exists():
+        return  # không có dist, dùng tar sẵn có
+    if tar.exists() and tar.stat().st_mtime >= dist_marker.stat().st_mtime:
+        return  # tar đã đóng gói sau lần build gần nhất
+    print("→ dist mới hơn tar, đóng gói lại...", flush=True)
+    import subprocess
+
+    subprocess.run(
+        ["tar", "czf", LOCAL_TAR, "-C", str(dist), "."], check=True
+    )
+
 def main() -> None:
+    refresh_tar()
     transport = paramiko.Transport((HOST, 22))
     transport.connect(username="root", password=PASS)
 

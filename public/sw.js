@@ -8,7 +8,9 @@
  *  3. Offline: giữ trang mở được khi mất mạng — app shell lưu lại, tài sản tĩnh
  *     dùng lại bản đã cache, API thì KHÔNG BAO GIỜ cache để không hiện dữ liệu cũ.
  */
-const VERSION = 'mnq-shell-v2'
+// v3: bump sau khi đổi brand — /icons/* đang cache-first nên user cũ giữ icon
+// logo cũ vô thời hạn cho tới khi VERSION đổi (activate sẽ xoá cache cũ).
+const VERSION = 'mnq-shell-v3'
 const SHELL = ['/index.html']
 
 self.addEventListener('install', (event) => {

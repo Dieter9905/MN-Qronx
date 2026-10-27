@@ -106,9 +106,9 @@ export const landing = {
     footerRegister: 'Tạo tài khoản',
     footerLogin: 'Đăng nhập',
     footerContact: 'Liên hệ',
-    footerProject: 'Đồ án quản lý thời gian',
+    footerProject: 'Quản lý thời gian',
     footerCopyright: '© 2026 MN-Qronx. All rights reserved.',
-    footerSecurity: 'Bảo mật theo chuẩn đồ án · JWT + HTTPS',
+    footerSecurity: 'Bảo mật JWT + HTTPS',
   },
   en: {
     // Nav
@@ -217,8 +217,8 @@ export const landing = {
     footerRegister: 'Create Account',
     footerLogin: 'Log In',
     footerContact: 'Contact',
-    footerProject: 'Time Management Project',
+    footerProject: 'Time Management',
     footerCopyright: '© 2026 MN-Qronx. All rights reserved.',
-    footerSecurity: 'Secured by project standards · JWT + HTTPS',
+    footerSecurity: 'Secured with JWT + HTTPS',
   },
 }

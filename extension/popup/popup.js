@@ -277,6 +277,16 @@ $('login-form').addEventListener('submit', async (e) => {
   await showTasks(tokens)
 })
 
+// ─── Đăng nhập Google (OAuth trên web) ─────────────────────────────────
+// Tài khoản tạo bằng Google không có mật khẩu nên form email bên trên
+// vô dụng với họ. Nút này mở luồng OAuth quen thuộc của web trong tab mới;
+// sau khi chọn tài khoản Google, web trả về /oauth-callback?accessToken=…
+// và oauth-capture.js (content script) gửi token về background để lưu.
+$('google-btn').addEventListener('click', () => {
+  chrome.tabs.create({ url: API_BASE + '/auth/google' })
+  window.close() // đóng popup, tab Google giữ màn chọn tài khoản
+})
+
 $('logout-btn').addEventListener('click', () => {
   chrome.runtime.sendMessage({ type: 'sign-out' }, () => {
     STORE.remove(['mnqTokens']).then(() => showLogin(true))

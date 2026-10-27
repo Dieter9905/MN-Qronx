@@ -3,9 +3,52 @@
  * Each update has version, date, changes with type (feature, fix, improvement)
  */
 
-export const APP_VERSION = '1.2.0'
+export const APP_VERSION = '1.3.0'
 
 export const updates = [
+  {
+    version: '1.3.0',
+    date: '2026-10-27',
+    title: '🧩 Tiện ích Chrome chính thức ra mắt',
+    highlights: [
+      'Tiện ích Chrome MN-Qronx đã lên Cửa hàng Chrome Web',
+      'Chuông nhắc việc kêu ngay trên máy — kể cả khi đóng tab web',
+      'Đăng nhập bằng tài khoản Google ngay trong tiện ích',
+      'Bấm giờ Pomodoro tập trung ngay trên thanh công cụ',
+    ],
+    changes: [
+      {
+        type: 'feature',
+        icon: '🧩',
+        title: 'Tiện ích Chrome (MV3)',
+        description: 'Cài 1 lần, nhận chuông nhắc việc đúng hạn trên mọi tab — kể cả khi tab web đã đóng. Có sẵn trên Chrome Web Store.',
+      },
+      {
+        type: 'feature',
+        icon: '🔐',
+        title: 'Đăng nhập Google trong tiện ích',
+        description: 'Tài khoản tạo bằng Google (OAuth) đăng nhập tiện ích chỉ với một nút bấm — dùng chung phiên Google trên web.',
+      },
+      {
+        type: 'feature',
+        icon: '🍅',
+        title: 'Bấm giờ Pomodoro',
+        description: 'Phiên tập trung 25/45/60 phút hoặc dài tuỳ ý (tối đa 8 giờ), đếm ngược trên badge và thông báo hết phiên.',
+      },
+      {
+        type: 'fix',
+        icon: '🗑️',
+        title: 'Sửa xoá công việc',
+        description: 'Đã sửa lỗi giao diện xoá 1 công việc nhưng màn hình đếm nhầm số lượng đã xoá.',
+      },
+      {
+        type: 'improvement',
+        icon: '💜',
+        title: 'Nhận diện thương hiệu mới',
+        description: 'Logo gradients mới thống nhất trên web, tiện ích, PWA và app Windows; favicon đã đổi sang bản mới.',
+      },
+    ],
+  },
   {
     version: '1.2.0',
     date: '2026-08-25',

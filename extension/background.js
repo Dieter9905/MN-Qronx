@@ -51,6 +51,34 @@ async function getDeviceId() {
   return mnqDeviceId
 }
 
+// ─── Đăng nhập Google (content script oauth-capture gửi token tới) ────
+// Tab web mở luồng OAuth của web (/auth/google → Google → callback →
+// /oauth-callback?accessToken=…&refreshToken=…). Nền nhận token, lấy hồ
+// sơ /me cho popup hiển thị tên, rồi đóng tab và poll ngay.
+async function handleGoogleOAuthTokens(accessToken, refreshToken, senderTab) {
+  if (!accessToken || !refreshToken) return { ok: false }
+  const tokens = { accessToken, refreshToken, user: null }
+  try {
+    const res = await fetch(API_BASE + '/me', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+    const payload = await res.json()
+    if (res.ok && payload?.success && payload.data?.userId != null) tokens.user = payload.data
+  } catch {
+    /* không lấy được hồ sơ vẫn dùng được token */
+  }
+  await setTokens(tokens)
+  if (senderTab?.id != null) {
+    try {
+      await chrome.tabs.remove(senderTab.id)
+    } catch {
+      /* tab có thể đã tự đóng */
+    }
+  }
+  await pollDue()
+  return { ok: true }
+}
+
 // ─── Gọi API (kèm refresh token tự động 1 lần) ────────────────────────
 
 async function api(path, { method = 'GET', body } = {}) {
@@ -475,6 +503,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
   if (msg?.type === 'focus-status') {
     sendResponse({ ok: true, state: focusState })
+    return true
+  }
+  if (msg?.type === 'oauth-tokens') {
+    handleGoogleOAuthTokens(msg.accessToken, msg.refreshToken, _sender?.tab).then((r) =>
+      sendResponse(r),
+    )
     return true
   }
   return undefined
