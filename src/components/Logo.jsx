@@ -1,35 +1,18 @@
-// Logo MN-Qronx theo brand guideline: "MN-" navy, "Q" là đồng hồ + dấu tích,
-// "ronx" gradient xanh → tím. Tagline: PLAN · DO · ON TIME
+// Logo MN-Qronx — ikon "Q đồng hồ" gradient neon (assets/brand/logo-512.png,
+// sinh lại qua scripts/gen-brand-icons.py). Dùng mọi nơi: header, landing,
+// login, sidebar…
 
 export function LogoMark({ size = 40, withRing = false }) {
   return (
-    <svg
+    <img
+      src="/icons/icon-512.png"
       width={size}
       height={size}
-      viewBox="0 0 64 64"
       role="img"
-      aria-label="Logo MN-Qronx"
-      className={withRing ? 'rounded-[30%] shadow-glow-blue' : undefined}
-    >
-      <defs>
-        <linearGradient id="mnq-mark-g" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#2563EB" />
-          <stop offset="0.55" stopColor="#06B6D4" />
-          <stop offset="1" stopColor="#8B5CF6" />
-        </linearGradient>
-      </defs>
-      <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#mnq-mark-g)" />
-      <circle cx="32" cy="32" r="20" fill="none" stroke="#fff" strokeWidth="5" />
-      <path d="M32 18v14l10 6" fill="none" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-      <path
-        d="M44 38c2.5 2.5 4 6 4 10l-3 3-2.6-4.4"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="4.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+      alt="Logo MN-Qronx"
+      draggable={false}
+      className={`shrink-0 ${withRing ? 'rounded-[30%] shadow-glow-blue' : ''}`}
+    />
   )
 }
 
