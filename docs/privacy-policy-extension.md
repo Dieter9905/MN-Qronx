@@ -34,6 +34,17 @@ MN-Qronx đang không mở.
 - **storage** — lưu token phiên và trạng thái chuông cục bộ.
 - **host permission `https://mn-qronx.id.vn/*`** — kết nối API chính chủ để
   đăng nhập, tải danh sách việc và lời nhắc của người dùng.
+- **scripting** — chèn bộ đọc thời khoá biểu vào trang TKB của trường khi
+  người dùng bấm nút trong tiện ích, để lấy các tiết học đang hiển thị cho
+  đúng tài khoản của họ.
+- **activeTab** — quyền tạm thời với tab đang mở sau thao tác của người dùng,
+  chỉ dùng để xác định trang TKB cần đọc.
+- **cookies** — chỉ đọc cookie phiên của đúng trang TKB trường mà người dùng
+  đã đồng ý cấp quyền, để máy chủ MN-Qronx tự đồng bộ lịch hằng ngày thay vì
+  bắt người dùng nhập lại mật khẩu cổng trường. Không đọc cookie trang khác.
+- **quyền tên miền tuỳ chọn (`https://*/*`)** — chỉ được cấp cho từng tên
+  miền trường cụ thể khi người dùng bấm đồng ý; tiện ích không tự xin quyền
+  đọc mọi trang web.
 
 ## Xoá dữ liệu
 

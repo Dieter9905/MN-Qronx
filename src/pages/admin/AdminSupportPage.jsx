@@ -183,14 +183,14 @@ export default function AdminSupportPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-extrabold tracking-tight text-navy-900 dark:text-white">
+        <div className="min-w-0">
+          <h1 className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-navy-900 sm:gap-2.5 sm:text-2xl dark:text-white">
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-gradient text-white">
               <Headset size={21} weight="fill" />
             </span>
             Hộp thư hỗ trợ
           </h1>
-          <p className="mt-1 text-sm font-medium text-navy-400 dark:text-slate-500">
+          <p className="mt-1 text-xs font-medium text-navy-400 sm:text-sm dark:text-slate-500">
             {pagination.total} hội thoại · ưu tiên hiển thị trước những hội thoại chưa được trả lời
           </p>
         </div>
@@ -374,7 +374,7 @@ export default function AdminSupportPage() {
               </div>
 
               {loadingThread && !thread ? (
-                <Skeleton className="h-[58vh] min-h-[360px] rounded-2xl" />
+                <Skeleton className="h-[58vh] min-h-[320px] rounded-2xl sm:min-h-[360px]" />
               ) : (
                 <SupportChatPanel
                   messages={thread?.messages || []}

@@ -58,6 +58,100 @@ function PlanMeta({ u }) {
   )
 }
 
+/** Ô chọn gói + nhãn + hạn dùng — dùng chung cho bảng và thẻ trên điện thoại. */
+function PlanSelect({ u, onChange }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <select
+          value={u.plan || 'FREE'}
+          onChange={(e) => onChange(e.target.value)}
+          aria-label={`Đổi gói của ${u.fullName}`}
+          className="h-8 cursor-pointer rounded-lg border-0 bg-navy-50 px-2.5 text-xs font-bold text-navy-700 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600"
+        >
+          <option value="FREE">Miễn phí</option>
+          <option value="PLUS">Plus</option>
+          <option value="PRO">Pro</option>
+          <option value="BUSINESS">Pro Doanh nghiệp</option>
+        </select>
+        <span
+          className={`inline-flex items-center rounded-full px-2 py-px text-[10px] font-extrabold ring-1 ring-inset ${PLAN_BADGE[u.plan || 'FREE']}`}
+        >
+          {PLAN_NAMES[u.plan || 'FREE']}
+        </span>
+      </div>
+      <PlanMeta u={u} />
+    </div>
+  )
+}
+
+/** Nhãn trạng thái tài khoản. */
+function StatusPill({ active }) {
+  if (active) {
+    return (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 ring-1 ring-inset ring-emerald-200">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+        Hoạt động
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-bold text-rose-700 ring-1 ring-inset ring-rose-200">
+      <Lock size={11} weight="bold" /> Đã khóa
+    </span>
+  )
+}
+
+/** Nút khóa/mở khóa + xóa — một chỗ duy nhất cho cả bảng và thẻ. */
+function UserActions({ u, currentUser, onLock, onDelete, className = '', fullWidth = false }) {
+  const lockDisabled = u.role === 'ADMIN'
+  const deleteDisabled = u.role === 'ADMIN' || u.id === currentUser?.id
+  return (
+    <div className={`flex items-center gap-2 ${className}`}>
+      {u.isActive ? (
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={Lock}
+          fullWidth={fullWidth}
+          disabled={lockDisabled}
+          title={lockDisabled ? 'Không thể khóa tài khoản Admin' : 'Khóa tài khoản'}
+          onClick={() => onLock({ id: u.id, name: u.fullName, isActive: true })}
+        >
+          Khóa
+        </Button>
+      ) : (
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={LockOpen}
+          fullWidth={fullWidth}
+          onClick={() => onLock({ id: u.id, name: u.fullName, isActive: false })}
+        >
+          Mở khóa
+        </Button>
+      )}
+      <Button
+        variant="danger-ghost"
+        size="sm"
+        icon={Trash}
+        fullWidth={fullWidth}
+        disabled={deleteDisabled}
+        title={
+          u.role === 'ADMIN'
+            ? 'Không thể xóa tài khoản Admin'
+            : u.id === currentUser?.id
+              ? 'Đây là tài khoản bạn đang đăng nhập'
+              : `Xóa vĩnh viễn tài khoản ${u.fullName}`
+        }
+        onClick={() => onDelete({ id: u.id, name: u.fullName, email: u.email, taskCount: u.taskCount })}
+      >
+        Xóa
+      </Button>
+    </div>
+  )
+}
+
 export default function AdminUsersPage() {
   const toast = useToast()
   const { user: currentUser } = useAuth()
@@ -186,12 +280,12 @@ export default function AdminUsersPage() {
     <div className="space-y-5 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-navy-900">Quản lý tài khoản</h1>
+          <h1 className="text-xl font-extrabold tracking-tight text-navy-900 sm:text-2xl">Quản lý tài khoản</h1>
           <p className="mt-1 text-sm font-medium text-navy-400">
             {data ? `${data.total} tài khoản` : '…'} · Quản lý tài khoản, theo dõi gói đăng ký và hạn sử dụng
           </p>
         </div>
-        <Button variant="gradient" icon={UserPlus} onClick={openCreate}>
+        <Button variant="gradient" icon={UserPlus} onClick={openCreate} className="w-full sm:w-auto">
           Thêm tài khoản
         </Button>
       </div>
@@ -240,7 +334,48 @@ export default function AdminUsersPage() {
         </div>
       ) : (
         <>
-          <div className="overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-navy-100">
+          {/* ── Điện thoại: mỗi tài khoản một thẻ ────────────────────────────
+              Bảng 6 cột không thể đọc trên màn 390px (phải kéo ngang từng dòng,
+              nút thao tác nằm ngoài khung nhìn). Thẻ gom đủ thông tin + thao tác
+              trong một khối dọc, bấm được bằng ngón tay. Bảng thật vẫn giữ cho
+              laptop/desktop từ lg trở lên. */}
+          <div className="space-y-3 lg:hidden">
+            {data.items.map((u) => (
+              <article key={u.id} className="rounded-2xl bg-white p-4 shadow-card ring-1 ring-navy-100">
+                <div className="flex items-start gap-3">
+                  <Avatar name={u.fullName} src={u.avatarUrl} size="md" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-navy-900">{u.fullName}</p>
+                        <p className="truncate text-xs text-navy-400">{u.email}</p>
+                      </div>
+                      <StatusPill active={u.isActive} />
+                    </div>
+                    <p className="mt-1.5 text-[11px] font-semibold text-navy-400">
+                      {u.taskCount} công việc · tạo {formatDate(u.createdAt)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 border-t border-navy-50 pt-3">
+                  <PlanSelect u={u} onChange={(plan) => changePlan(u, plan)} />
+                </div>
+
+                <UserActions
+                  u={u}
+                  currentUser={currentUser}
+                  onLock={setConfirm}
+                  onDelete={setConfirmDelete}
+                  className="mt-3 grid grid-cols-2 gap-2"
+                  fullWidth
+                />
+              </article>
+            ))}
+          </div>
+
+          {/* ── Desktop: bảng đầy đủ ── */}
+          <div className="hidden overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-navy-100 lg:block">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[860px] text-left">                  <thead>
                     <tr className="border-b border-navy-100 bg-navy-50/70 text-xs font-bold uppercase tracking-wider text-navy-400">
@@ -266,86 +401,20 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-4 py-3 text-sm font-semibold text-navy-600">{u.taskCount}</td>
                       <td className="px-4 py-3 align-top">
-                        <div className="flex flex-col gap-1.5">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <select
-                              value={u.plan || 'FREE'}
-                              onChange={(e) => changePlan(u, e.target.value)}
-                              aria-label={`Đổi gói của ${u.fullName}`}
-                              className="h-8 cursor-pointer rounded-lg border-0 bg-navy-50 px-2.5 text-xs font-bold text-navy-700 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600"
-                            >
-                              <option value="FREE">Miễn phí</option>
-                              <option value="PLUS">Plus</option>
-                              <option value="PRO">Pro</option>
-                              <option value="BUSINESS">Pro Doanh nghiệp</option>
-                            </select>
-                            <span className={`inline-flex items-center rounded-full px-2 py-px text-[10px] font-extrabold ring-1 ring-inset ${PLAN_BADGE[u.plan || 'FREE']}`}>
-                              {PLAN_NAMES[u.plan || 'FREE']}
-                            </span>
-                          </div>
-                          <PlanMeta u={u} />
-                        </div>
+                        <PlanSelect u={u} onChange={(plan) => changePlan(u, plan)} />
                       </td>
                       <td className="px-4 py-3 text-sm text-navy-500">{formatDate(u.createdAt)}</td>
                       <td className="px-4 py-3">
-                        {u.isActive ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 ring-1 ring-inset ring-emerald-200">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
-                            Hoạt động
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-bold text-rose-700 ring-1 ring-inset ring-rose-200">
-                            <Lock size={11} weight="bold" /> Đã khóa
-                          </span>
-                        )}
+                        <StatusPill active={u.isActive} />
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-2">
-                          {u.isActive ? (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              icon={Lock}
-                              disabled={u.role === 'ADMIN'}
-                              title={u.role === 'ADMIN' ? 'Không thể khóa tài khoản Admin' : 'Khóa tài khoản'}
-                              onClick={() => setConfirm({ id: u.id, name: u.fullName, isActive: true })}
-                            >
-                              Khóa
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              icon={LockOpen}
-                              onClick={() => setConfirm({ id: u.id, name: u.fullName, isActive: false })}
-                            >
-                              Mở khóa
-                            </Button>
-                          )}
-                          <Button
-                            variant="danger-ghost"
-                            size="sm"
-                            icon={Trash}
-                            disabled={u.role === 'ADMIN' || u.id === currentUser?.id}
-                            title={
-                              u.role === 'ADMIN'
-                                ? 'Không thể xóa tài khoản Admin'
-                                : u.id === currentUser?.id
-                                  ? 'Đây là tài khoản bạn đang đăng nhập'
-                                  : `Xóa vĩnh viễn tài khoản ${u.fullName}`
-                            }
-                            onClick={() =>
-                              setConfirmDelete({
-                                id: u.id,
-                                name: u.fullName,
-                                email: u.email,
-                                taskCount: u.taskCount,
-                              })
-                            }
-                          >
-                            Xóa
-                          </Button>
-                        </div>
+                        <UserActions
+                          u={u}
+                          currentUser={currentUser}
+                          onLock={setConfirm}
+                          onDelete={setConfirmDelete}
+                          className="justify-end"
+                        />
                       </td>
                     </tr>
                   ))}
@@ -354,7 +423,7 @@ export default function AdminUsersPage() {
             </div>
           </div>
           {totalPages > 1 && (
-            <nav className="flex items-center justify-center gap-3" aria-label="Phân trang">
+            <nav className="flex flex-wrap items-center justify-center gap-3" aria-label="Phân trang">
               <Button variant="secondary" size="sm" icon={ArrowLeft} disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
                 Trước
               </Button>

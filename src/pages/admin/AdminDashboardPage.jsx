@@ -18,14 +18,14 @@ function StatCard({ icon: Icon, label, value, tone, delay }) {
     amber: 'bg-amber-500/15 text-amber-400',
   }
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100" style={{ animationDelay: `${delay}ms` }}>
+    <div className="rounded-2xl bg-white p-4 shadow-card ring-1 ring-navy-100 sm:p-5" style={{ animationDelay: `${delay}ms` }}>
       <div className="flex items-center justify-between">
-        <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${tones[tone]}`}>
-          <Icon size={22} weight="duotone" />
+        <span className={`flex h-10 w-10 items-center justify-center rounded-xl sm:h-11 sm:w-11 ${tones[tone]}`}>
+          <Icon size={20} weight="duotone" />
         </span>
       </div>
-      <p className="mt-3 text-3xl font-extrabold tracking-tight text-navy-900">{value}</p>
-      <p className="text-sm font-semibold text-navy-500">{label}</p>
+      <p className="mt-2 text-2xl font-extrabold tracking-tight text-navy-900 sm:mt-3 sm:text-3xl">{value}</p>
+      <p className="text-xs font-semibold text-navy-500 sm:text-sm">{label}</p>
     </div>
   )
 }
@@ -70,25 +70,25 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-navy-900">Dashboard hệ thống</h1>
+        <h1 className="text-xl font-extrabold tracking-tight text-navy-900 sm:text-2xl">Dashboard hệ thống</h1>
         <p className="mt-1 text-sm font-medium text-navy-400">Tổng quan hoạt động của MN-Qronx</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatCard icon={UsersThree} label="Tổng số người dùng" value={data.totalUsers} tone="blue" delay={0} />
         <StatCard icon={UserCheck} label="Đang hoạt động" value={data.activeUsers} tone="emerald" delay={60} />
         <StatCard icon={ListChecks} label="Tổng số công việc" value={data.totalTasks} tone="purple" delay={120} />
         <StatCard icon={BellRinging} label="Thông báo hôm nay" value={data.notificationsToday} tone="amber" delay={180} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
         {/* Biểu đồ 7 ngày */}
-        <section className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100">
-          <h2 className="flex items-center gap-2 font-bold text-navy-900">
+        <section className="rounded-2xl bg-white p-4 shadow-card ring-1 ring-navy-100 sm:p-5">
+          <h2 className="flex items-center gap-2 text-sm font-bold text-navy-900 sm:text-base">
             <ChartBar size={18} weight="fill" className="text-blue-600" />
             Thông báo đã gửi – 7 ngày gần nhất
           </h2>
-          <div className="mt-5 flex h-48 items-end gap-2.5">
+          <div className="mt-4 flex h-40 items-end gap-1.5 sm:mt-5 sm:h-48 sm:gap-2.5">
             {stats.map((s, i) => (
               <div key={i} className="group flex flex-1 flex-col items-center gap-2">
                 <span className="text-xs font-bold text-navy-600">{s.count}</span>
@@ -104,8 +104,8 @@ export default function AdminDashboardPage() {
         </section>
 
         {/* Phân bố công việc */}
-        <section className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100">
-          <h2 className="flex items-center gap-2 font-bold text-navy-900">
+        <section className="rounded-2xl bg-white p-4 shadow-card ring-1 ring-navy-100 sm:p-5">
+          <h2 className="flex items-center gap-2 text-sm font-bold text-navy-900 sm:text-base">
             <ListChecks size={18} weight="fill" className="text-purple-500" />
             Phân bố trạng thái công việc
           </h2>

@@ -9,11 +9,11 @@ export const updates = [
   {
     version: '1.4.0',
     date: '2026-10-29',
-    title: '🎓 Ba chế độ trong một tài khoản + bảng công việc kiểu Jira',
+    title: '🎓 Ba chế độ trong một tài khoản + bảng công việc nhóm',
     highlights: [
       'Một tài khoản, ba không gian: Cá nhân — Lớp học — Nhóm làm việc',
       'Lớp học: đăng nhập cổng trường, thời khoá biểu tự cập nhật mỗi ngày',
-      'Nhóm: bảng kéo–thả kiểu Jira, giao việc và chọn người phụ trách',
+      'Nhóm: bảng công việc kéo–thả, giao việc và chọn người phụ trách',
       'Lịch gộp mọi nguồn: việc cá nhân, lịch học, việc nhóm, Google/Outlook',
       'Trợ lý nhỏ đi lang thang gợi ý việc cần làm trên từng trang',
     ],
@@ -35,7 +35,7 @@ export const updates = [
       {
         type: 'feature',
         icon: '🗂️',
-        title: 'Bảng công việc nhóm (Jira-lite)',
+        title: 'Bảng công việc nhóm',
         description:
           'Ba cột Cần làm / Đang làm / Hoàn thành, kéo thẻ để đổi trạng thái, chọn người phụ trách ngay trên thẻ, lọc “Của tôi” và “Chưa giao”. Chỉ mở trong chế độ Nhóm.',
       },

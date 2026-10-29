@@ -40,6 +40,23 @@
   không gửi đi đâu khác ngoài API mn-qronx.id.vn."
 - **host permission `https://mn-qronx.id.vn/*`:** "Gọi API đăng nhập và đồng bộ
   danh sách công việc/nhắc của chính người dùng MN-Qronx."
+- **`scripting`:** "Tiện ích chèn bộ đọc thời khoá biểu (`scraper/timetable.js`)
+  vào chính trang TKB của trường mà người dùng đang mở, sau khi họ bấm nút
+  “Đọc TKB”; mã chỉ đọc bảng tiết học đang hiển thị rồi gửi về tài khoản
+  MN-Qronx của chính người dùng. Chỉ khi người dùng bấm “Bật tự cập nhật” và
+  đồng ý cho một tên miền trường cụ thể, tiện ích mới đăng ký content script
+  cho đúng tên miền đó để lần sau mở trang là TKB tự đồng bộ. Không chèn mã
+  vào trang nào khác."
+- **`activeTab`:** "Cấp quyền tạm thời cho tab đang mở ngay sau thao tác bấm
+  nút của người dùng, để tiện ích biết URL hiện tại và chèn bộ đọc TKB vào
+  đúng trang trường — nhờ vậy không phải xin quyền đọc mọi trang web. Quyền
+  mất khi rời trang; không theo dõi lịch sử duyệt web."
+- **`cookies`:** "Chỉ đọc cookie của đúng trang TKB trường đang mở, sau khi
+  người dùng bấm “Kết nối bằng phiên đăng nhập” và đồng ý cấp quyền cho tên
+  miền trường đó (`chrome.permissions.request`). Cookie phiên được gửi tới
+  backend riêng của MN-Qronx để máy chủ tự tải lại TKB hằng ngày khi người
+  dùng không mở trình duyệt — nhờ vậy người dùng không phải nhập lại mật khẩu
+  cổng trường. Không đọc cookie của trang khác, không gửi cho bên thứ ba."
 - Tích chọn "I do not sell data / không bán dữ liệu người dùng".
 
 ### Store Listing

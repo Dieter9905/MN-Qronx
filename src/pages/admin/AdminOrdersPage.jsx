@@ -918,7 +918,7 @@ export default function AdminOrdersPage() {
         </div>
 
         <form
-          className="relative ml-auto w-full max-w-xs"
+          className="relative w-full max-w-xs sm:ml-auto"
           onSubmit={(e) => {
             e.preventDefault()
             setPage(1)
@@ -984,13 +984,82 @@ export default function AdminOrdersPage() {
         </section>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <Stat label="Tổng đơn khớp bộ lọc" value={data.total ?? 0} icon={Receipt} />
         <Stat label="Doanh thu trên trang này" value={formatVnd(paidTotal)} icon={Bank} />
-        <Stat label="Đang chờ thanh toán" value={data.items.filter((o) => o.status === 'PENDING').length} icon={Warning} />
+        <Stat
+          label="Đang chờ thanh toán"
+          value={data.items.filter((o) => o.status === 'PENDING').length}
+          icon={Warning}
+          className="col-span-2 sm:col-span-1"
+        />
       </div>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
+      {/* ── Điện thoại: mỗi đơn một thẻ ──────────────────────────────
+          Bảng 7 cột phải kéo ngang mới thấy số tiền/trạng thái, còn nút Xác nhận
+          nằm ngoài màn hình — đúng lúc admin đang đứng ngoài đường cần duyệt đơn.
+          Thẻ dưới đây đặt mã đơn, tiền, trạng thái và nút thao tác trong tầm ngón tay. */}
+      <div className="space-y-3 lg:hidden">
+        {loading && (
+          <div className="rounded-2xl bg-white p-6 text-center text-sm font-semibold text-navy-400 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700 dark:text-slate-500">
+            Đang tải…
+          </div>
+        )}
+        {!loading && !data.items.length && (
+          <div className="rounded-2xl bg-white p-6 text-center text-sm font-semibold text-navy-400 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700 dark:text-slate-500">
+            Không có đơn nào khớp bộ lọc.
+          </div>
+        )}
+        {!loading &&
+          data.items.map((o) => (
+            <article
+              key={o.id}
+              className="rounded-2xl bg-white p-4 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-mono text-xs font-extrabold text-navy-800 dark:text-white">{o.orderCode}</p>
+                  <p className="text-[11px] font-semibold text-navy-400 dark:text-slate-500">{o.provider}</p>
+                </div>
+                <OrderStatusBadge status={o.status} paidAt={o.paidAt} />
+              </div>
+
+              <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                <div className="min-w-0">
+                  <dt className="text-[10px] font-bold uppercase tracking-wider text-navy-400 dark:text-slate-500">
+                    Người dùng
+                  </dt>
+                  <dd className="truncate font-bold text-navy-800 dark:text-white">{o.user?.fullName || '—'}</dd>
+                  <dd className="truncate font-semibold text-navy-400 dark:text-slate-500">{o.user?.email}</dd>
+                </div>
+                <div className="min-w-0">
+                  <dt className="text-[10px] font-bold uppercase tracking-wider text-navy-400 dark:text-slate-500">Gói</dt>
+                  <dd className="font-semibold text-navy-700 dark:text-slate-200">
+                    {o.planName} · {o.cycle === 'YEARLY' ? 'năm' : 'tháng'}
+                  </dd>
+                  <dd className="font-extrabold text-navy-900 dark:text-white">{formatVnd(o.amount)}</dd>
+                </div>
+              </dl>
+
+              <p className="mt-2 text-[11px] font-semibold text-navy-400 dark:text-slate-500">
+                Tạo {formatDateTime(o.createdAt)}
+              </p>
+
+              <OrderActions
+                o={o}
+                busy={busy}
+                onConfirm={setConfirming}
+                onCancel={cancel}
+                className="mt-3"
+                fullWidth
+                grid
+              />
+            </article>
+          ))}
+      </div>
+
+      {/* ── Desktop: bảng đầy đủ ── */}
+      <div className="hidden overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700 lg:block">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-left text-sm">
             <thead className="bg-navy-50/60 text-[11px] font-bold uppercase tracking-wider text-navy-400 dark:bg-slate-900/40 dark:text-slate-500">
@@ -1035,53 +1104,13 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="px-4 py-3 font-extrabold text-navy-800 dark:text-white">{formatVnd(o.amount)}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-extrabold ring-1 ring-inset ${STATUS_BADGE[o.status]}`}>
-                        {STATUS_LABEL[o.status]}
-                      </span>
-                      {o.paidAt && (
-                        <p className="mt-1 text-[11px] font-semibold text-navy-400 dark:text-slate-500">
-                          {formatDateTime(o.paidAt)}
-                        </p>
-                      )}
+                      <OrderStatusBadge status={o.status} paidAt={o.paidAt} />
                     </td>
                     <td className="px-4 py-3 text-xs font-semibold text-navy-500 dark:text-slate-400">
                       {formatDateTime(o.createdAt)}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex justify-end gap-2">
-                        {o.status === 'PENDING' && (
-                          <>
-                            <Button size="sm" icon={CheckCircle} loading={busy === o.orderCode} onClick={() => setConfirming(o)}>
-                              Xác nhận
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-rose-600 dark:text-rose-400"
-                              icon={XCircle}
-                              onClick={() => cancel(o)}
-                            >
-                              Huỷ
-                            </Button>
-                          </>
-                        )}
-                        {(() => {
-                          const activation = activationOf(o)
-                          if (!activation) return null
-                          return (
-                            <span className="text-right">
-                              <span className="block text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                                {activation.label} ✓
-                              </span>
-                              {activation.detail && (
-                                <span className="mt-0.5 block font-mono text-[10px] font-semibold text-navy-400 dark:text-slate-500">
-                                  {activation.detail}
-                                </span>
-                              )}
-                            </span>
-                          )
-                        })()}
-                      </div>
+                      <OrderActions o={o} busy={busy} onConfirm={setConfirming} onCancel={cancel} className="justify-end" />
                     </td>
                   </tr>
                 ))}
@@ -1090,7 +1119,7 @@ export default function AdminOrdersPage() {
         </div>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-navy-100 px-4 py-3 dark:border-slate-700">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-navy-100 px-4 py-3 dark:border-slate-700">
             <p className="text-xs font-semibold text-navy-400 dark:text-slate-500">
               Trang {page}/{totalPages} · {data.total} đơn
             </p>
@@ -1120,9 +1149,67 @@ export default function AdminOrdersPage() {
   )
 }
 
-function Stat({ label, value, icon: Icon }) {
+/** Nhãn trạng thái đơn + thời điểm thanh toán (dùng cho bảng và thẻ). */
+function OrderStatusBadge({ status, paidAt }) {
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
+    <div className="shrink-0 text-right">
+      <span
+        className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-extrabold ring-1 ring-inset ${STATUS_BADGE[status]}`}
+      >
+        {STATUS_LABEL[status]}
+      </span>
+      {paidAt && (
+        <p className="mt-1 text-[11px] font-semibold text-navy-400 dark:text-slate-500">{formatDateTime(paidAt)}</p>
+      )}
+    </div>
+  )
+}
+
+/** Nút duyệt/huỷ + kết quả kích hoạt — dùng chung cho bảng (desktop) và thẻ (điện thoại). */
+function OrderActions({ o, busy, onConfirm, onCancel, className = '', fullWidth = false, grid = false }) {
+  const activation = activationOf(o)
+  return (
+    <div className={`${grid ? 'grid grid-cols-2 gap-2' : 'flex flex-wrap items-center gap-2'} ${className}`}>
+      {o.status === 'PENDING' && (
+        <>
+          <Button
+            size="sm"
+            icon={CheckCircle}
+            fullWidth={fullWidth}
+            loading={busy === o.orderCode}
+            onClick={() => onConfirm(o)}
+          >
+            Xác nhận
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            fullWidth={fullWidth}
+            className="text-rose-600 dark:text-rose-400"
+            icon={XCircle}
+            onClick={() => onCancel(o)}
+          >
+            Huỷ
+          </Button>
+        </>
+      )}
+      {activation && (
+        <span className="text-right">
+          <span className="block text-xs font-bold text-emerald-600 dark:text-emerald-400">{activation.label} ✓</span>
+          {activation.detail && (
+            <span className="mt-0.5 block font-mono text-[10px] font-semibold text-navy-400 dark:text-slate-500">
+              {activation.detail}
+            </span>
+          )}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function Stat({ label, value, icon: Icon, className = '' }) {
+  return (
+    <div className={`rounded-2xl bg-white p-4 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700 ${className}`}>
       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300">
         <Icon size={18} weight="fill" />
       </span>
@@ -1135,7 +1222,7 @@ function Stat({ label, value, icon: Icon }) {
 function ConfirmModal({ order, value, onChange, onCancel, onConfirm, loading }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-900/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-800">
+      <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-xl sm:p-6 dark:bg-slate-800">
         <h3 className="text-lg font-extrabold text-navy-900 dark:text-white">Xác nhận đã nhận tiền</h3>
         <p className="mt-1 text-sm font-semibold text-navy-500 dark:text-slate-400">
           Đơn <span className="font-mono font-extrabold">{order.orderCode}</span> · {order.planName} ·{' '}

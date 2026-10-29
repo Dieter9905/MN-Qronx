@@ -269,7 +269,7 @@ export default function BoardPage() {
               {workspace.name}
             </h1>
             <p className="mt-1 max-w-xl text-sm font-medium text-white/85">
-              Bảng công việc kiểu Jira — kéo thẻ đổi cột, chọn người phụ trách ngay trên thẻ.
+              Bảng công việc — kéo thẻ đổi cột, chọn người phụ trách ngay trên thẻ.
             </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
