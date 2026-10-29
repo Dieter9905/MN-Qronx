@@ -3,18 +3,56 @@ import taskRepo from '../repositories/taskRepo.js'
 import { calculateNextDueDate, serializeRepeatDays } from '../utils/dateUtils.js'
 import { parsePagination, paginationMeta } from '../utils/pagination.js'
 import ApiError from '../utils/ApiError.js'
+import workspaceService from './workspaceService.js'
 import { PLANS, getUserPlan, planLimit, planLimitError } from '../utils/planLimits.js'
 import { parseNagEveryMinutes, assertNagAllowed } from './nagService.js'
 import { nextTurnAssignee } from './taskShareService.js'
 
 
+// ─── Ngữ cảnh không gian làm việc ──────────────────────────────────────
+// workspace = null → Cá nhân truyền thống: task cũ (task_workspace_id = null)
+// + task thuộc personal mặc định của user → API cũ không đổi một chữ nào.
+// workspace STUDENT/TEAM → lọc chặt theo không gian, mọi thành viên đều thấy.
+async function personalWorkspaceIds(userId) {
+  const rows = await prisma.workspaceMember.findMany({
+    where: { userId, workspace: { type: 'PERSONAL' } },
+    select: { workspaceId: true },
+  })
+  return rows.map((r) => r.workspaceId)
+}
+
+function scopeWhere(userId, workspace, personalIds) {
+  if (workspace && workspace.type !== 'PERSONAL') {
+    return { taskWorkspaceId: workspace.workspaceId }
+  }
+  return {
+    userId,
+    OR: [{ taskWorkspaceId: null }, ...(personalIds.length ? [{ taskWorkspaceId: { in: personalIds } }] : [])],
+  }
+}
+
+/** Gói hiệu lực theo ngữ cảnh: nhóm dùng gói Owner không gian (chốt thiết kế). */
+async function ctxPlan(userId, workspace) {
+  if (workspace && workspace.type !== 'PERSONAL') {
+    return workspaceService.workspacePlan(workspace)
+  }
+  return getUserPlan(userId)
+}
+
+/** Không gian của một task có taskWorkspaceId (null → Cá nhân truyền thống). */
+async function workspaceOfTask(taskWorkspaceId) {
+  if (!taskWorkspaceId) return null
+  const ws = await prisma.workspace.findUnique({ where: { workspaceId: taskWorkspaceId } })
+  return ws && ws.type !== 'PERSONAL' ? ws : null
+}
+
 // ─── Find All (List + Filter + Sort + Paginate) ─────────
 
-export async function findAll(userId, query) {
+export async function findAll(userId, query, workspace = null) {
   const { skip, take, page, pageSize } = parsePagination(query)
 
   // Build where
-  const where = { userId }
+  const where = scopeWhere(userId, workspace, workspace ? [] : await personalWorkspaceIds(userId))
   if (query.status) where.status = query.status
   if (query.priority) where.priority = query.priority
   if (query.categoryId) where.categoryId = parseInt(query.categoryId)
@@ -47,8 +85,27 @@ export async function findAll(userId, query) {
 
 // ─── Create Task + Reminders (TRANSACTION) ──────────────
 
-export async function create(userId, taskData) {
-  const { title, description, categoryId, priority, dueAt, repeatType, repeatDays, reminders } = taskData
+export async function create(userId, taskData, workspace = null) {
+  const { title, description, categoryId, priority, dueAt, repeatType, repeatDays, reminders, assigneeId } = taskData
+
+  // ── Giao việc ngay khi tạo (chỉ trong không gian Nhóm) ────────────────
+  // Cá nhân/Lớp học mà gắn người làm là dữ liệu vô nghĩa (chủ việc không có
+  // đồng đội trong không gian), nên báo lỗi thay vì âm thầm bỏ qua.
+  let assignee = null
+  if (assigneeId) {
+    if (!workspace || workspace.type !== 'TEAM') {
+      throw ApiError.badRequest('Chỉ chế độ Nhóm làm việc mới giao được việc cho thành viên')
+    }
+    const mid = Number(assigneeId)
+    if (!Number.isInteger(mid) || mid <= 0) throw ApiError.badRequest('Người được giao không hợp lệ')
+    if (mid === Number(userId)) throw ApiError.badRequest('Việc này do bạn phụ trách — không cần giao lại cho chính mình')
+    const member = await prisma.workspaceMember.findFirst({
+      where: { workspaceId: workspace.workspaceId, userId: mid },
+      include: { user: { select: { userId: true, fullName: true } } },
+    })
+    if (!member) throw ApiError.badRequest('Người này không ở trong nhóm — gửi mã mời cho họ trước')
+    assignee = member.user
+  }
 
   // Validate categoryId belongs to user
   if (categoryId) {
@@ -61,8 +118,8 @@ export async function create(userId, taskData) {
     throw ApiError.badRequest('Thời điểm đến hạn phải lớn hơn thời điểm hiện tại')
   }
 
-  // Gói FREE: không được tạo công việc lặp lại
-  const plan = await getUserPlan(userId)
+  // Gói FREE: không được tạo công việc lặp lại — gói theo NGỮ CẢNH không gian
+  const plan = await ctxPlan(userId, workspace)
   if (repeatType && repeatType !== 'NONE' && !PLANS[plan]?.repeatTasks) {
     throw ApiError.badRequest(
       'Công việc lặp lại chỉ dành cho gói Plus và Pro. Nâng cấp gói để sử dụng tính năng này.'
@@ -81,10 +138,13 @@ export async function create(userId, taskData) {
     )
   }
 
-  // Gói FREE: giới hạn số công việc đang mở
+  // Giới hạn số công việc đang mở của NGỮ CẢNH này (cá nhân tách khỏi nhóm)
   const maxActive = planLimit(plan, 'activeTasks')
   if (maxActive !== Infinity) {
-    const activeCount = await taskRepo.countActive(userId)
+    const activeCount = await taskRepo.countActive(userId, {
+      workspace,
+      personalIds: workspace ? [] : await personalWorkspaceIds(userId),
+    })
     if (activeCount >= maxActive) {
       throw planLimitError({ feature: 'công việc đang mở', limit: maxActive, plan })
     }
@@ -104,6 +164,8 @@ export async function create(userId, taskData) {
     const task = await tx.task.create({
       data: {
         userId,
+        // null = Cá nhân; STUDENT/TEAM = đúng không gian trong header X-Workspace
+        taskWorkspaceId: workspace && workspace.type !== 'PERSONAL' ? workspace.workspaceId : null,
         title,
         description,
         categoryId: categoryId || null,
@@ -114,6 +176,22 @@ export async function create(userId, taskData) {
         nagEveryMinutes,
       },
     })
+
+    // Lời giao việc: dùng chung bảng task_shares với tính năng "nhờ người khác
+    // làm" để trang Việc được giao chỉ phải đọc MỘT nguồn, chuông nhắc vẫn
+    // nhắm đúng người nhận (reminderDispatchService đọc task_shares).
+    let share = null
+    if (assignee) {
+      share = await tx.taskShare.create({
+        data: {
+          taskId: task.taskId,
+          assigneeId: assignee.userId,
+          sharedById: userId,
+          note: `Giao trong nhóm ${workspace.name}`,
+        },
+        include: { assignee: { select: { userId: true, fullName: true } } },
+      })
+    }
 
     let savedReminders = []
     if (reminders?.length) {
@@ -130,14 +208,31 @@ export async function create(userId, taskData) {
       })
     }
 
-    return { task, reminders: savedReminders }
+    return { task, reminders: savedReminders, share }
+  }).then(async (result) => {
+    // Báo cho người nhận ngay: không có thông báo thì việc được giao nằm im
+    // đến khi họ tự mở app — đúng thứ app nhắc việc sinh ra để tránh.
+    if (assignee && result.share) {
+      try {
+        const { pushToUser } = await import('./pushService.js')
+        await pushToUser(assignee.userId, {
+          title: '👥 Bạn được giao một việc',
+          body: `${result.task.title} — hạn ${new Date(result.task.dueAt).toLocaleString('vi-VN')}`,
+          taskId: result.task.taskId,
+          url: '/app/assigned',
+        })
+      } catch (err) {
+        console.error('[Workspace] Không gửi được thông báo giao việc:', err.message)
+      }
+    }
+    return result
   })
 }
 
 // ─── Find By ID ─────────────────────────────────────────
 
-export async function findById(userId, taskId) {
-  const task = await taskRepo.findById(taskId, userId)
+export async function findById(userId, taskId, workspace = null) {
+  const task = await taskRepo.findByIdAccessible(taskId, userId, { workspace })
   if (!task) throw ApiError.notFound('Không tìm thấy công việc')
   return task
 }
@@ -158,9 +253,9 @@ export async function update(userId, taskId, data) {
     if (!cat) throw ApiError.badRequest('Danh mục không tồn tại')
   }
 
-  // Gói FREE: không được chuyển sang công việc lặp lại
+  // Gói FREE: không được chuyển sang công việc lặp lại — gói theo ngữ cảnh không gian
   if (data.repeatType !== undefined && data.repeatType !== 'NONE') {
-    const plan = await getUserPlan(userId)
+    const plan = await ctxPlan(userId, await workspaceOfTask(task.taskWorkspaceId))
     if (!PLANS[plan]?.repeatTasks) {
       throw ApiError.badRequest(
         'Công việc lặp lại chỉ dành cho gói Plus và Pro. Nâng cấp gói để sử dụng tính năng này.'
@@ -183,7 +278,7 @@ export async function update(userId, taskId, data) {
   if (data.priority !== undefined) updateData.priority = data.priority
   if (data.nagEveryMinutes !== undefined) {
     const nag = parseNagEveryMinutes(data.nagEveryMinutes)
-    assertNagAllowed(await getUserPlan(userId), nag)
+    assertNagAllowed(await ctxPlan(userId, await workspaceOfTask(task.taskWorkspaceId)), nag)
     updateData.nagEveryMinutes = nag
   }
   if (data.repeatType !== undefined) {
@@ -236,8 +331,12 @@ export async function emptyTrash(userId) {
 
 // ─── Complete + Repeat Logic ────────────────────────────
 
-export async function complete(userId, taskId) {
-  const task = await taskRepo.findById(taskId, userId)
+export async function complete(userId, taskId, workspace = null) {
+  // Trong không gian Nhóm, BẤT KỲ thành viên nào cũng bấm xong được việc chung
+  // (đúng kiểu Jira: người làm xong là người đóng thẻ, không phải chờ chủ việc).
+  const task = workspace
+    ? await taskRepo.findByIdAccessible(taskId, userId, { workspace })
+    : await taskRepo.findById(taskId, userId)
   if (!task) throw ApiError.notFound('Không tìm thấy công việc')
   if (task.status === 'COMPLETED' || task.status === 'CANCELLED') {
     throw ApiError.badRequest('Công việc đã kết thúc')
@@ -246,7 +345,7 @@ export async function complete(userId, taskId) {
   return prisma.$transaction(async (tx) => {
     // 1. Đánh dấu hoàn thành
     await tx.task.update({
-      where: { taskId, userId },
+      where: { taskId },
       data: { status: 'COMPLETED', completedAt: new Date() },
     })
 
@@ -266,7 +365,9 @@ export async function complete(userId, taskId) {
 
       nextTask = await tx.task.create({
         data: {
-          userId,
+          // Kỳ tiếp theo thuộc về CHỦ VIỆC (người tạo thẻ), kể cả khi thành viên
+          // khác là người bấm hoàn thành trên bảng nhóm.
+          userId: task.userId,
           categoryId: task.categoryId,
           title: task.title,
           description: task.description,
@@ -317,6 +418,101 @@ export async function complete(userId, taskId) {
 
     return { completedTask: { taskId, status: 'COMPLETED' }, nextTask }
   })
+}
+
+// ─── Bảng công việc nhóm (Jira-lite) ────────────────────
+// Ba cột duy nhất: Cần làm → Đang làm → Hoàn thành. Mọi thành viên trong nhóm
+// đều kéo được thẻ (giống Jira: người làm xong là người đóng việc), nhưng chỉ
+// hoạt động trong không gian TEAM — dùng ở Cá nhân sẽ làm lẫn dữ liệu.
+
+const BOARD_STATUSES = ['TODO', 'IN_PROGRESS', 'COMPLETED']
+
+/** Chuyển thẻ sang cột khác. */
+export async function setStatus(userId, taskId, status, workspace = null) {
+  if (!workspace || workspace.type !== 'TEAM') {
+    throw ApiError.badRequest('Bảng công việc chỉ dùng trong chế độ Nhóm làm việc')
+  }
+  if (!BOARD_STATUSES.includes(status)) {
+    throw ApiError.badRequest('Trạng thái không hợp lệ — chỉ TODO, IN_PROGRESS hoặc COMPLETED')
+  }
+
+  const task = await taskRepo.findByIdAccessible(taskId, userId, { workspace })
+  if (!task) throw ApiError.notFound('Không tìm thấy công việc')
+  if (task.status === 'CANCELLED') throw ApiError.badRequest('Việc đã hủy nên không chuyển cột được')
+  if (task.status === status) return { taskId, status }
+
+  // Hoàn thành phải đi qua complete() để giữ nguyên: sinh việc lặp kế tiếp,
+  // huỷ nhắc nhở còn lại, cộng thưởng — không viết lại logic đó ở đây.
+  if (status === 'COMPLETED') {
+    const result = await complete(userId, taskId, workspace)
+    return { taskId, status, nextTask: result.nextTask }
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.task.update({ where: { taskId }, data: { status, completedAt: null } })
+    // Kéo thẻ ra khỏi cột Hoàn thành = làm lại việc đó. Chuông của nó đã bị huỷ
+    // khi hoàn thành, nên mở lại ĐÚNG những nhắc nhở còn ở tương lai — mở cả
+    // nhắc đã qua sẽ dội chuông hàng loạt ngay khi vừa kéo thẻ.
+    if (task.status === 'COMPLETED') {
+      await tx.reminder.updateMany({
+        where: { taskId, status: 'CANCELLED', remindAt: { gt: new Date() } },
+        data: { status: 'SCHEDULED' },
+      })
+    }
+  })
+  return { taskId, status }
+}
+
+/** Gán người phụ trách (null = bỏ giao). Một người phụ trách như Jira. */
+export async function setAssignee(userId, taskId, assigneeId, workspace = null) {
+  if (!workspace || workspace.type !== 'TEAM') {
+    throw ApiError.badRequest('Giao việc trên bảng chỉ dùng trong chế độ Nhóm làm việc')
+  }
+  const task = await taskRepo.findByIdAccessible(taskId, userId, { workspace })
+  if (!task) throw ApiError.notFound('Không tìm thấy công việc')
+
+  if (assigneeId === null || assigneeId === undefined || assigneeId === '') {
+    await prisma.taskShare.deleteMany({ where: { taskId } })
+    return { taskId, assigneeId: null }
+  }
+
+  const mid = Number(assigneeId)
+  if (!Number.isInteger(mid) || mid <= 0) throw ApiError.badRequest('Người được giao không hợp lệ')
+  const member = await prisma.workspaceMember.findFirst({
+    where: { workspaceId: workspace.workspaceId, userId: mid },
+    include: { user: { select: { userId: true, fullName: true } } },
+  })
+  if (!member) throw ApiError.badRequest('Người này không ở trong nhóm — gửi mã mời cho họ trước')
+
+  await prisma.$transaction(async (tx) => {
+    // Một người phụ trách duy nhất: bỏ hết lời giao cũ rồi gán người mới.
+    await tx.taskShare.deleteMany({ where: { taskId } })
+    await tx.taskShare.create({
+      data: { taskId, assigneeId: mid, sharedById: userId, note: `Giao trong nhóm ${workspace.name}` },
+    })
+    // Việc đang luân phiên mà đổi người phụ trách thì lượt phải về người mới,
+    // không để lượt trỏ vào người vừa được thay.
+    if (task.rotateEnabled) {
+      await tx.task.update({ where: { taskId }, data: { turnAssigneeId: mid } })
+    }
+  })
+
+  // Ai tự nhận việc thì không cần tự báo cho chính mình
+  if (mid !== Number(userId)) {
+    try {
+      const { pushToUser } = await import('./pushService.js')
+      await pushToUser(mid, {
+        title: '👥 Bạn được giao một việc',
+        body: `${task.title} — hạn ${new Date(task.dueAt).toLocaleString('vi-VN')}`,
+        taskId,
+        url: '/app/assigned',
+      })
+    } catch (err) {
+      console.error('[Workspace] Không gửi được thông báo giao việc:', err.message)
+    }
+  }
+
+  return { taskId, assigneeId: mid, assignee: member.user }
 }
 
 // ─── Reopen ─────────────────────────────────────────────

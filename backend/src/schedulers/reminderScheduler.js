@@ -2,6 +2,7 @@ import cron from 'node-cron'
 import prisma from '../config/prisma.js'
 import { downgradeExpiredPlans } from '../utils/planLimits.js'
 import { syncFamilySeats } from '../services/familyService.js'
+import { syncAllExternalCalendars } from '../services/externalCalendarService.js'
 import { dispatchReminder } from '../services/reminderDispatchService.js'
 import taskRepo from '../repositories/taskRepo.js'
 
@@ -14,6 +15,19 @@ const TASK = '*/1 * * * *' // Mỗi 1 phút
 const TRASH_KEEP_DAYS = 30
 const PURGE_EVERY_MS = 24 * 60 * 60_000
 let lastPurgeAt = 0
+
+// Lịch ngoài (Google/Outlook .ics): kéo sự kiện mỗi giờ — danh mục sự kiện
+// thay đổi chậm nên 1 lần/giờ là đủ, đỡ đàm phán hàng nghìn request nhầm phế.
+cron.schedule('15 * * * *', async () => {
+  try {
+    const { ok, fail } = await syncAllExternalCalendars()
+    if (ok || fail) {
+      console.log(`[Scheduler] Đồng bộ lịch ngoài: ${ok} thành công / ${fail} lỗi`)
+    }
+  } catch (err) {
+    console.error('[Scheduler] Lỗi đồng bộ lịch ngoài:', err.message)
+  }
+})
 
 async function purgeTrashIfDue() {
   if (Date.now() - lastPurgeAt < PURGE_EVERY_MS) return

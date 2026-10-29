@@ -138,12 +138,17 @@ export const PLANS = {
       'Không giới hạn thiết bị đồng bộ',
       'Trợ lý AI không giới hạn',
       'Toàn bộ âm thanh báo thức, kể cả âm thanh riêng bạn tải lên',
+      // Hai chiều Google Calendar đã có đủ: chiều app → lịch là tệp .ics cho
+      // Google/Outlook đăng ký (calendarIcsService.js), chiều lịch → app là nhập
+      // URL .ics vào external-calendars (externalCalendarService.js), backend tự
+      // kéo sự kiện về mỗi giờ.
+      'Nhập sự kiện từ Google Calendar / Outlook: dán URL iCal của lịch bên ngoài vào MN-Qronx, sự kiện hiện ngay trên trang Lịch',
     ],
     // Không còn "AI xếp cả tuần": dịch vụ AI của MN-Qronx là model phân tích câu
     // thành công việc (thư mục ai/), không phải LLM biết lập kế hoạch — hứa thứ đó
     // là hứa suông. Kế hoạch tuần nay xếp bằng luật (plannerService.js): chạy ngay,
     // không tốn lượt, và không bao giờ bịa ra việc không có thật.
-    upcoming: ['Đồng bộ hai chiều Google Calendar (hiện đã có chiều app → lịch)'],
+    upcoming: [],
   },
 }
 

@@ -2,22 +2,40 @@ import prisma from '../config/prisma.js'
 
 // ─── Find Queries ───────────────────────────────────────
 
+// Include chi tiết dùng chung cho mọi truy vấn theo taskId (tránh lặp 4 lần)
+const TASK_DETAIL_INCLUDE = {
+  category: { select: { categoryId: true, categoryName: true, colorCode: true } },
+  subtasks: { orderBy: { displayOrder: 'asc' } },
+  reminders: { orderBy: { remindAt: 'asc' } },
+  // Người được giao việc (gói Pro) — cần cả khi sinh việc lặp kế tiếp để giữ
+  // nguyên danh sách người được giao, giống cách giữ chế độ nhắc dai.
+  shares: {
+    orderBy: { createdAt: 'asc' },
+    include: { assignee: { select: { userId: true, fullName: true, email: true, avatarUrl: true } } },
+  },
+  _count: { select: { subtasks: true, reminders: true, shares: true } },
+}
+
 async function findById(taskId, userId, { includeDeleted = false } = {}) {
   return prisma.task.findFirst({
     where: { taskId, userId, ...(includeDeleted ? {} : { deletedAt: null }) },
-    include: {
-      category: { select: { categoryId: true, categoryName: true, colorCode: true } },
-      subtasks: { orderBy: { displayOrder: 'asc' } },
-      reminders: { orderBy: { remindAt: 'asc' } },
-      // Người được giao việc (gói Pro) — cần cả khi sinh việc lặp kế tiếp để giữ
-      // nguyên danh sách người được giao, giống cách giữ chế độ nhắc dai.
-      shares: {
-        orderBy: { createdAt: 'asc' },
-        include: { assignee: { select: { userId: true, fullName: true, email: true, avatarUrl: true } } },
-      },
-      _count: { select: { subtasks: true, reminders: true, shares: true } },
-    },
+    include: TASK_DETAIL_INCLUDE,
   })
+}
+
+/**
+ * Đọc chi tiết có xét quyền theo không gian: trong STUDENT/TEAM mọi thành viên
+ * đều xem được việc của không gian (role check do middleware/giai đoạn sau lo);
+ * ngoài không gian đó thì chỉ chủ việc (đúng như API cũ).
+ */
+async function findByIdAccessible(taskId, userId, { workspace = null } = {}) {
+  if (workspace && workspace.type !== 'PERSONAL') {
+    return prisma.task.findFirst({
+      where: { taskId, taskWorkspaceId: workspace.workspaceId, deletedAt: null },
+      include: TASK_DETAIL_INCLUDE,
+    })
+  }
+  return findById(taskId, userId)
 }
 
 async function findByUser(userId, where, orderBy, skip, take) {
@@ -32,6 +50,12 @@ async function findByUser(userId, where, orderBy, skip, take) {
       take,
       include: {
         category: { select: { categoryId: true, categoryName: true, colorCode: true } },
+        // Người phụ trách: bảng công việc kiểu Jira phải hiện được avatar ai làm
+        // việc nào ngay trên thẻ, nên danh sách trả luôn shares (không chỉ _count).
+        shares: {
+          orderBy: { createdAt: 'asc' },
+          include: { assignee: { select: { userId: true, fullName: true, avatarUrl: true } } },
+        },
         _count: { select: { subtasks: true, reminders: true, shares: true } },
       },
     }),
@@ -187,10 +211,23 @@ async function hasNotificationLogs(taskId) {
 
 /**
  * Đếm số công việc đang mở (TODO / IN_PROGRESS) của user – dùng cho giới hạn gói.
+ * Có scope không gian: TASK nhóm chỉ đếm trong không gian đó (quota nhóm tách
+ * khỏi quota cá nhân — "2 gói song song" theo ngữ cảnh request).
  */
-async function countActive(userId) {
+async function countActive(userId, { workspace = null, personalIds = [] } = {}) {
+  const statusWhere = { status: { in: ['TODO', 'IN_PROGRESS'] }, deletedAt: null }
+  if (workspace && workspace.type !== 'PERSONAL') {
+    return prisma.task.count({
+      where: { taskWorkspaceId: workspace.workspaceId, ...statusWhere },
+    })
+  }
+  // Cá nhân: task cũ (taskWorkspaceId = null) + task thuộc personal mặc định
   return prisma.task.count({
-    where: { userId, status: { in: ['TODO', 'IN_PROGRESS'] }, deletedAt: null },
+    where: {
+      userId,
+      OR: [{ taskWorkspaceId: null }, ...(personalIds.length ? [{ taskWorkspaceId: { in: personalIds } }] : [])],
+      ...statusWhere,
+    },
   })
 }
 
@@ -220,6 +257,7 @@ async function findCategoryById(categoryId, userId) {
 
 export default {
   findById,
+  findByIdAccessible,
   findByUser,
   create,
   createManyReminders,

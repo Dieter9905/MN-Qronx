@@ -136,9 +136,11 @@ describe('GET /billing/products', () => {
     expect(pro.features.join(' ')).not.toMatch(/hai chiều/i)
     expect(pro.features.join(' ')).toMatch(/Trợ lý AI không giới hạn/i)
 
-    // Việc chưa làm phải được nói rõ là sắp có
-    expect(pro.upcoming.length).toBeGreaterThan(0)
-    expect(pro.upcoming.join(' ')).toMatch(/hai chiều/i)
+    // Đồng bộ hai chiều giờ đã làm xong thật (xuất .ics cho Google/Outlook +
+    // nhập URL iCal về app), nên nó thuộc danh sách ĐANG BÁN chứ không còn nằm
+    // ở "Sắp có" — hứa một tính năng đã giao là tự làm loãng giá trị gói.
+    expect(pro.features.join(' ')).toMatch(/Nhập sự kiện từ Google Calendar/i)
+    expect(pro.upcoming).toEqual([])
     expect(pro.upcoming.join(' ')).not.toMatch(/zalo/i)
 
     // Cái đã làm thật cho MỌI gói thì ghi cho mọi gói, không hứa riêng gói trả phí

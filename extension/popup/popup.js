@@ -13,8 +13,8 @@ const tasksView = $('tasks-view')
 
 // ─── API helper (bản nhỏ của src/services/apiClient.js) ───────────────
 
-async function apiFetch(path, { method = 'GET', body, token } = {}) {
-  const headers = { 'Content-Type': 'application/json' }
+async function apiFetch(path, { method = 'GET', body, token, headers: extraHeaders } = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(extraHeaders || {}) }
   if (token) headers.Authorization = `Bearer ${token}`
   let res
   try {
@@ -293,6 +293,223 @@ $('logout-btn').addEventListener('click', () => {
   })
 })
 
+// ─── Lịch học từ trang trường (OneUni-style, không lưu mật khẩu) ───────
+// Người dùng đăng nhập sẵn trên cổng trường → mở đúng trang TKB → bấm nút.
+// Extension đọc bảng HTML trong tab đó rồi gửi tiết về backend; nhờ vậy
+// trường nào có trang TKB dạng bảng cũng dùng được, không cần API riêng.
+const schoolBox = $('school-box')
+const wsSelect = $('ws-select')
+const connectSessionBtn = $('connect-session-btn')
+const scrapeBtn = $('scrape-btn')
+const autoBtn = $('auto-btn')
+const schoolStatus = $('school-status')
+
+let classWorkspaces = []
+let lastScrape = null // { origin, workspaceId, schoolName }
+
+async function loadClassWorkspaces(tokens) {
+  const res = await apiFetch('/workspaces', { token: tokens.accessToken })
+  const list = (res?.data || []).filter((m) => m.workspace?.type === 'STUDENT')
+  classWorkspaces = list.map((m) => ({ workspaceId: m.workspace.workspaceId, name: m.workspace.name }))
+  schoolBox.classList.remove('hidden')
+
+  if (!classWorkspaces.length) {
+    wsSelect.innerHTML = '<option value="">Chưa có Lớp học</option>'
+    scrapeBtn.disabled = true
+    schoolStatus.textContent = 'Tạo một Lớp học trên web (trang Lịch) trước, rồi quay lại đây.'
+    return
+  }
+  wsSelect.innerHTML = classWorkspaces
+    .map((w) => `<option value="${w.workspaceId}">${escapeHtml(w.name)}</option>`)
+    .join('')
+  const saved = (await STORE.get('mnqTkbWorkspace')).mnqTkbWorkspace
+  if (saved && classWorkspaces.some((w) => String(w.workspaceId) === String(saved))) {
+    wsSelect.value = String(saved)
+  }
+  schoolStatus.textContent = 'Mở trang thời khoá biểu của trường rồi bấm “Lấy TKB trang này”.'
+}
+
+function setSchoolStatus(text) {
+  schoolStatus.textContent = text
+}
+
+scrapeBtn.addEventListener('click', async () => {
+  const items = await STORE.get('mnqTokens')
+  const tokens = items.mnqTokens
+  if (!tokens?.accessToken) return
+  const workspaceId = wsSelect.value
+  if (!workspaceId) return setSchoolStatus('Chọn Lớp nhận TKB trước.')
+
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+  if (!tab?.url || !/^https?:/.test(tab.url)) {
+    return setSchoolStatus('Hãy mở trang thời khoá biểu của trường trong tab này trước.')
+  }
+
+  scrapeBtn.disabled = true
+  setSchoolStatus('Đang đọc bảng TKB trên trang…')
+  let result = null
+  try {
+    // Chạy scraper trong tab đang mở (quyền activeTab có từ cú bấm này)
+    await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['scraper/timetable.js'] })
+    const injected = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => (window.__mnqScrapeTimetable ? window.__mnqScrapeTimetable() : null),
+    })
+    result = injected?.[0]?.result || null
+  } catch (err) {
+    scrapeBtn.disabled = false
+    return setSchoolStatus('Không đọc được trang này: ' + (err?.message || 'lỗi không rõ'))
+  }
+  scrapeBtn.disabled = false
+
+  if (!result) return setSchoolStatus('Không chạy được bộ đọc TKB trên trang này.')
+
+  const headers = { 'X-Workspace': String(workspaceId) }
+
+  // Trang không có bảng nhưng có link .ics của trường → nhờ backend kéo
+  if (!result.ok && result.icsUrl) {
+    setSchoolStatus('Trang có file .ics — đang nhập từ link đó…')
+    await apiFetch('/student/school', {
+      method: 'POST',
+      token: tokens.accessToken,
+      headers,
+      body: { name: result.schoolName, icsUrl: result.icsUrl },
+    })
+    const imported = await apiFetch('/student/school/import', {
+      method: 'POST',
+      token: tokens.accessToken,
+      headers,
+      body: {},
+    })
+    if (imported?.success) {
+      setSchoolStatus(`Đã nhập ${imported.data?.imported ?? 0} tiết từ .ics của trường.`)
+      autoBtn.classList.remove('hidden')
+      lastScrape = { origin: new URL(tab.url).origin, workspaceId, schoolName: result.schoolName }
+    } else {
+      setSchoolStatus(imported?.message || 'Không nhập được .ics của trường.')
+    }
+    return
+  }
+
+  if (!result.ok) return setSchoolStatus(result.note || 'Không đọc được bảng TKB trên trang này.')
+
+  setSchoolStatus(`Đọc được ${result.slots.length} tiết — đang lưu…`)
+  const saved = await apiFetch('/student/school/import-slots', {
+    method: 'POST',
+    token: tokens.accessToken,
+    headers,
+    body: { schoolName: result.schoolName, sourceUrl: result.url, slots: result.slots },
+  })
+  if (saved?.success) {
+    await STORE.set({ mnqTkbWorkspace: workspaceId })
+    lastScrape = { origin: new URL(tab.url).origin, workspaceId, schoolName: result.schoolName }
+    autoBtn.classList.remove('hidden')
+    setSchoolStatus(`✅ Đã cập nhật ${saved.data?.imported ?? result.slots.length} tiết vào Lớp đang chọn.`)
+  } else {
+    setSchoolStatus(saved?.message || 'Không lưu được TKB — thử đăng nhập lại.')
+  }
+})
+
+// ─── Kết nối trường bằng PHIÊN đăng nhập (đường dự phòng cho mọi trường) ──
+// Người dùng đã đăng nhập trên cổng trường; extension gửi URL trang TKB +
+// cookie của đúng tên miền đó về server. Server tự tải lại hằng ngày, nên
+// trường không cần connector riêng và app KHÔNG lưu mật khẩu trường.
+connectSessionBtn.addEventListener('click', async () => {
+  const items = await STORE.get('mnqTokens')
+  const tokens = items.mnqTokens
+  if (!tokens?.accessToken) return
+  const workspaceId = wsSelect.value
+  if (!workspaceId) return setSchoolStatus('Chọn Lớp nhận TKB trước.')
+
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+  if (!tab?.url || !/^https:/.test(tab.url)) {
+    return setSchoolStatus('Hãy mở trang thời khoá biểu của trường (https) trong tab này trước.')
+  }
+  const origin = new URL(tab.url).origin
+
+  connectSessionBtn.disabled = true
+  setSchoolStatus('Đang xin quyền đọc phiên đăng nhập của trường…')
+  let granted = false
+  try {
+    granted = await chrome.permissions.request({ origins: [`${origin}/*`] })
+  } catch {
+    granted = false
+  }
+  if (!granted) {
+    connectSessionBtn.disabled = false
+    return setSchoolStatus('Bạn chưa cho phép đọc tên miền trường nên chưa kết nối được.')
+  }
+
+  let cookie = ''
+  try {
+    const cookies = await chrome.cookies.getAll({ url: tab.url })
+    cookie = cookies.map((c) => `${c.name}=${c.value}`).join('; ')
+  } catch {
+    cookie = ''
+  }
+  if (!cookie) {
+    connectSessionBtn.disabled = false
+    return setSchoolStatus('Không thấy cookie đăng nhập — bạn đã đăng nhập cổng trường trong tab này chưa?')
+  }
+
+  setSchoolStatus('Đang đọc TKB trên server…')
+  const schoolName = String(tab.title || new URL(tab.url).hostname).split(/[|–-]/)[0].trim().slice(0, 100)
+  const res = await apiFetch('/student/connect', {
+    method: 'POST',
+    token: tokens.accessToken,
+    headers: { 'X-Workspace': String(workspaceId) },
+    body: {
+      schoolCode: 'CUSTOM',
+      username: schoolName || origin,
+      timetableUrl: tab.url,
+      cookie,
+    },
+  })
+  connectSessionBtn.disabled = false
+
+  if (res?.success) {
+    await STORE.set({ mnqTkbWorkspace: workspaceId })
+    autoBtn.classList.add('hidden')
+    setSchoolStatus(`✅ Đã kết nối ${schoolName || origin} · ${res.data?.imported ?? 0} tiết. Server sẽ tự đồng bộ mỗi sáng.`)
+  } else {
+    setSchoolStatus(res?.message || 'Không kết nối được trang này — thử “Chỉ lấy lần này”.')
+  }
+})
+
+// Tự cập nhật: xin quyền đúng tên miền trường đang mở, rồi cắm content
+// script vào trang TKB. Mỗi lần người dùng ghé cổng trường (đã đăng nhập),
+// tiết học tự đồng bộ — không cần bấm lại, không lưu mật khẩu.
+autoBtn.addEventListener('click', async () => {
+  if (!lastScrape) return
+  const { origin, workspaceId } = lastScrape
+  let granted = false
+  try {
+    granted = await chrome.permissions.request({ origins: [`${origin}/*`] })
+  } catch {
+    granted = false
+  }
+  if (!granted) return setSchoolStatus('Bạn chưa cho phép đọc tên miền trường nên chưa bật được tự cập nhật.')
+
+  const id = 'mnq-tkb-' + origin.replace(/[^a-z0-9]/gi, '').slice(0, 40)
+  try {
+    const existing = await chrome.scripting.getRegisteredContentScripts({ ids: [id] })
+    if (existing?.length) await chrome.scripting.unregisterContentScripts({ ids: [id] })
+    await chrome.scripting.registerContentScripts([
+      {
+        id,
+        matches: [`${origin}/*`],
+        js: ['scraper/timetable.js', 'scraper/auto-sync.js'],
+        runAt: 'document_idle',
+        persistAcrossSessions: true,
+      },
+    ])
+  } catch (err) {
+    return setSchoolStatus('Không bật được tự cập nhật: ' + (err?.message || 'lỗi không rõ'))
+  }
+  await STORE.set({ mnqTkbAuto: { origin, workspaceId, schoolName: lastScrape.schoolName } })
+  setSchoolStatus('✅ Đã bật tự cập nhật: mỗi lần bạn mở trang TKB của trường, tiết học tự đồng bộ.')
+})
+
 // ─── Màn danh sách ────────────────────────────────────────────────────
 
 async function showTasks(tokens) {
@@ -302,6 +519,7 @@ async function showTasks(tokens) {
   showLogin(false)
   watchFocus()
   await loadTasks(tokens)
+  loadClassWorkspaces(tokens).catch(() => {})
 }
 
 // ─── Khởi động ────────────────────────────────────────────────────────

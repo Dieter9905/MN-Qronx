@@ -6,7 +6,7 @@ import * as taskService from '../services/taskService.js'
  * GET /api/v1/tasks
  */
 export const getTasks = catchAsync(async (req, res) => {
-  const result = await taskService.findAll(req.user.id, req.query)
+  const result = await taskService.findAll(req.user.id, req.query, req.workspace ?? null)
   success(res, 200, 'Thao tác thành công', result)
 })
 
@@ -14,7 +14,7 @@ export const getTasks = catchAsync(async (req, res) => {
  * POST /api/v1/tasks
  */
 export const createTask = catchAsync(async (req, res) => {
-  const result = await taskService.create(req.user.id, req.body)
+  const result = await taskService.create(req.user.id, req.body, req.workspace ?? null)
   success(res, 201, 'Tạo công việc thành công', result)
 })
 
@@ -23,7 +23,7 @@ export const createTask = catchAsync(async (req, res) => {
  */
 export const getTaskById = catchAsync(async (req, res) => {
   const taskId = parseInt(req.params.taskId)
-  const task = await taskService.findById(req.user.id, taskId)
+  const task = await taskService.findById(req.user.id, taskId, req.workspace ?? null)
   success(res, 200, 'Thao tác thành công', task)
 })
 
@@ -72,11 +72,35 @@ export const emptyTrash = catchAsync(async (req, res) => {
 
 /**
  * POST /api/v1/tasks/:taskId/complete
+ * Trong không gian Nhóm, thành viên nào cũng bấm xong được việc chung.
  */
 export const completeTask = catchAsync(async (req, res) => {
   const taskId = parseInt(req.params.taskId)
-  const result = await taskService.complete(req.user.id, taskId)
+  const result = await taskService.complete(req.user.id, taskId, req.workspace ?? null)
   success(res, 200, 'Đã hoàn thành công việc', result)
+})
+
+/**
+ * PUT /api/v1/tasks/:taskId/status — kéo thẻ trên bảng công việc nhóm
+ */
+export const updateTaskStatus = catchAsync(async (req, res) => {
+  const taskId = parseInt(req.params.taskId)
+  const result = await taskService.setStatus(req.user.id, taskId, req.body.status, req.workspace ?? null)
+  success(res, 200, 'Đã chuyển cột công việc', result)
+})
+
+/**
+ * PUT /api/v1/tasks/:taskId/assignee — gán / bỏ gán người phụ trách (nhóm)
+ */
+export const setTaskAssignee = catchAsync(async (req, res) => {
+  const taskId = parseInt(req.params.taskId)
+  const result = await taskService.setAssignee(
+    req.user.id,
+    taskId,
+    req.body.assigneeId ?? null,
+    req.workspace ?? null
+  )
+  success(res, 200, result.assigneeId ? 'Đã giao việc' : 'Đã bỏ người phụ trách', result)
 })
 
 /**

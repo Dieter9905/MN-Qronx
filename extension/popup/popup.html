@@ -70,6 +70,20 @@
       </div>
       <button id="logout-btn" class="ghost" title="Đăng xuất">Thoát</button>
     </header>
+    <!-- Lịch học từ trang trường: extension đọc bảng TKB trong tab đang mở.
+         Không lưu mật khẩu trường nên dùng được với mọi cổng đào tạo. -->
+    <section id="school-box" class="school-box hidden">
+      <div class="school-head">
+        <span>🎓 Lịch học từ trang trường</span>
+        <select id="ws-select" class="ws-select" title="Chọn Lớp nhận thời khoá biểu"></select>
+      </div>
+      <div class="school-actions">
+        <button type="button" id="connect-session-btn" class="ghost primary" title="Dùng phiên đăng nhập đang mở để server tự đồng bộ TKB hằng ngày">Kết nối trường này</button>
+        <button type="button" id="scrape-btn" class="ghost" title="Chỉ lấy TKB ngay lúc này, không cần server tự đồng bộ">Chỉ lấy lần này</button>
+      </div>
+      <button type="button" id="auto-btn" class="ghost hidden" title="Tự đọc lại mỗi lần bạn mở trang TKB của trường">Bật tự cập nhật</button>
+      <p id="school-status" class="school-status"></p>
+    </section>
     <main id="task-list"></main>
     <footer>
       <span class="hint">Chuông nền đang chạy tự động mỗi phút</span>

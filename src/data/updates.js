@@ -3,9 +3,65 @@
  * Each update has version, date, changes with type (feature, fix, improvement)
  */
 
-export const APP_VERSION = '1.3.0'
+export const APP_VERSION = '1.4.0'
 
 export const updates = [
+  {
+    version: '1.4.0',
+    date: '2026-10-29',
+    title: '🎓 Ba chế độ trong một tài khoản + bảng công việc kiểu Jira',
+    highlights: [
+      'Một tài khoản, ba không gian: Cá nhân — Lớp học — Nhóm làm việc',
+      'Lớp học: đăng nhập cổng trường, thời khoá biểu tự cập nhật mỗi ngày',
+      'Nhóm: bảng kéo–thả kiểu Jira, giao việc và chọn người phụ trách',
+      'Lịch gộp mọi nguồn: việc cá nhân, lịch học, việc nhóm, Google/Outlook',
+      'Trợ lý nhỏ đi lang thang gợi ý việc cần làm trên từng trang',
+    ],
+    changes: [
+      {
+        type: 'feature',
+        icon: '🎓',
+        title: 'Ba chế độ làm việc',
+        description:
+          'Cùng một tài khoản có Cá nhân (mặc định), Lớp học và Nhóm làm việc — chuyển qua lại ở sidebar, dữ liệu của mỗi chế độ tách riêng nên không lẫn việc riêng với việc nhóm.',
+      },
+      {
+        type: 'feature',
+        icon: '🏫',
+        title: 'Lịch học từ cổng trường',
+        description:
+          'Chọn trường rồi đăng nhập bằng chính tài khoản sinh viên: thời khoá biểu tự đồng bộ mỗi ngày, hiện thành lưới tiết học trong trang Lịch kèm cảnh báo trùng giờ.',
+      },
+      {
+        type: 'feature',
+        icon: '🗂️',
+        title: 'Bảng công việc nhóm (Jira-lite)',
+        description:
+          'Ba cột Cần làm / Đang làm / Hoàn thành, kéo thẻ để đổi trạng thái, chọn người phụ trách ngay trên thẻ, lọc “Của tôi” và “Chưa giao”. Chỉ mở trong chế độ Nhóm.',
+      },
+      {
+        type: 'feature',
+        icon: '📅',
+        title: 'Đồng bộ lịch hai chiều',
+        description:
+          'Dán URL iCal của Google Calendar/Outlook để kéo sự kiện về app, và xuất lịch của bạn thành tệp .ics để đăng ký ngược lại — giờ đã chạy được cả hai chiều.',
+      },
+      {
+        type: 'feature',
+        icon: '🤖',
+        title: 'Trợ lý nhỏ trên giao diện',
+        description:
+          'Một chú bot nhỏ nổi ở góc màn hình, bấm vào là hiện gợi ý đúng với trang đang mở kèm nút tắt gọn — có thể ẩn nếu bạn không thích.',
+      },
+      {
+        type: 'improvement',
+        icon: '💎',
+        title: 'Giao diện bảng nhóm mới',
+        description:
+          'Khối đầu trang chuyển sắc hiển thị nhanh số việc từng cột, ảnh thành viên và số việc quá hạn; cột trống có hình minh hoạ thay vì ô trắng.',
+      },
+    ],
+  },
   {
     version: '1.3.0',
     date: '2026-10-27',

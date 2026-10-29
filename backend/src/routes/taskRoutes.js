@@ -13,6 +13,7 @@ import {
 } from '../dto/request/reminderValidation.js'
 import subtaskRoutes from './subtaskRoutes.js'
 import reminderRoutes from './reminderRoutes.js'
+import { body } from 'express-validator'
 
 const router = Router()
 
@@ -173,6 +174,25 @@ router.get('/:taskId', auth, taskController.getTaskById)
  *       200:
  *         description: Cập nhật thành công
  */
+// ── Bảng công việc nhóm (Jira-lite) ───────────────────────
+// Đổi cột và gán người phụ trách: thao tác CHÍNH của bảng, tách khỏi PUT
+// /:taskId để không phải gửi cả công việc chỉ để kéo một thẻ sang cột khác.
+router.put(
+  '/:taskId/status',
+  auth,
+  body('status').isIn(['TODO', 'IN_PROGRESS', 'COMPLETED']).withMessage('Trạng thái không hợp lệ'),
+  validate,
+  taskController.updateTaskStatus,
+)
+
+router.put(
+  '/:taskId/assignee',
+  auth,
+  body('assigneeId').optional({ nullable: true }).isInt({ min: 1 }).withMessage('assigneeId không hợp lệ'),
+  validate,
+  taskController.setTaskAssignee,
+)
+
 router.put(
   '/:taskId',
   auth,

@@ -1,7 +1,7 @@
 {
   "name": "mn-qronx",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.4.0",
   "type": "module",
   "description": "MN-Qronx – Ứng dụng quản lý thời gian & công việc với nhắc nhở kiểu báo thức. Plan. Do. On Time.",
   "scripts": {

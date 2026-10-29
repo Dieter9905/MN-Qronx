@@ -160,6 +160,9 @@ export function transformTask(task) {
     userId: task.userId,
     categoryId: task.categoryId,
     parentTaskId: task.parentTaskId || null,
+    // Không gian làm việc (3 chế độ): null = Cá nhân; còn lại là workspace
+    // STUDENT/TEAM — frontend dùng để vẽ nhãn nguồn trên task + Dashboard filter.
+    workspaceId: task.taskWorkspaceId ?? null,
     title: task.title,
     description: task.description || '',
     priority: task.priority,

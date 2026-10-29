@@ -3,7 +3,8 @@ import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import BottomNav from './BottomNav'
-import { NAV_GROUPS } from './NavItems'
+import { NAV_GROUPS, filterNavByWorkspace } from './NavItems'
+import { useWorkspace } from '../../context/WorkspaceContext'
 import { Logo } from '../Logo'
 import { X, Lightning, Plus, Keyboard } from '@phosphor-icons/react'
 import { useTheme } from '../../context/ThemeContext'
@@ -13,10 +14,15 @@ import FocusMode from '../FocusMode'
 import QuickCapture from '../QuickCapture'
 import ShortcutsModal from '../ShortcutsModal'
 import DesktopBanner from './DesktopBanner'
+import WorkspaceSwitcher from './WorkspaceSwitcher'
+import MascotBot from '../MascotBot'
 
 function MobileDrawer({ open, onClose }) {
   const { lang } = useLanguage()
   const t = app[lang]
+  // Menu mobile dùng chung danh sách với sidebar → cùng bộ lọc theo chế độ
+  const { active } = useWorkspace()
+  const groups = filterNavByWorkspace(NAV_GROUPS, active?.workspace?.type || 'PERSONAL')
   return (
     <div className={`fixed inset-0 z-50 lg:hidden ${open ? '' : 'pointer-events-none'}`} aria-hidden={!open}>
       <div
@@ -45,7 +51,8 @@ function MobileDrawer({ open, onClose }) {
           </button>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          {NAV_GROUPS.map((group) => (
+          <WorkspaceSwitcher onNavigate={onClose} />
+          {groups.map((group) => (
             <div key={group.labelKey} className="mb-5">
               <p className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-wider text-navy-500 dark:text-slate-500">{t[group.labelKey]}</p>
               <ul className="space-y-0.5">
@@ -92,6 +99,7 @@ export default function AppShell({ title = '' }) {
   const [refreshKey, setRefreshKey] = useState(0)
   const { toggleTheme } = useTheme()
   const { toggleLang } = useLanguage()
+  const { activeId } = useWorkspace()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -148,7 +156,9 @@ export default function AppShell({ title = '' }) {
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-6 sm:px-6 lg:pb-10">
           {/* key theo đường dẫn → mỗi lần chuyển mục, trang trượt lên + mờ dần */}
           <div key={location.pathname} className="page-enter">
-            <Outlet key={refreshKey} />
+            {/* Đổi chế độ (Cá nhân/Lớp/Nhóm) cũng remount để tải lại dữ liệu
+                đúng ngữ cảnh X-Workspace. */}
+            <Outlet key={`${refreshKey}-${activeId ?? 'personal'}`} />
           </div>
         </main>
       </div>
@@ -182,6 +192,9 @@ export default function AppShell({ title = '' }) {
           <Lightning size={22} weight="fill" />
         </button>
       </div>
+
+      {/* Chú bot nhỏ đi lang thang ở góc trái dưới — bấm vào để xem gợi ý */}
+      <MascotBot />
 
       {/* Modals */}
       {focusOpen && <FocusMode onClose={() => setFocusOpen(false)} />}

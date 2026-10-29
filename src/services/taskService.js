@@ -81,6 +81,8 @@ export async function createTask(payload = {}) {
     repeatType: payload.repeatType || 'NONE',
     repeatDays: payload.repeatType === 'WEEKLY' && Array.isArray(payload.repeatDays) ? payload.repeatDays : undefined,
     reminders: (payload.reminders || []).map((r) => ({ remindAt: r.remindAt })),
+    // Chế độ Nhóm: giao việc ngay khi tạo (backend tạo luôn lời giao việc)
+    assigneeId: payload.assigneeId || undefined,
   }
   const res = await api('POST', '/tasks', { body })
   // Backend chưa tạo subtasks khi tạo task → tạo lần lượt nếu có
@@ -278,6 +280,20 @@ export async function setTaskRotation(id, payload = {}) {
 export async function revokeTaskShare(id, shareId) {
   const res = await api('DELETE', `/tasks/${id}/shares/${shareId}`)
   if (res.success) res.data = { ...res.data, task: toTask(res.data?.task) }
+  return res
+}
+
+// PUT /api/v1/tasks/{id}/status — kéo thẻ sang cột khác trên bảng công việc nhóm
+export async function setTaskStatus(id, status) {
+  const res = await api('PUT', `/tasks/${id}/status`, { body: { status } })
+  if (res.success) notifyTasksChanged()
+  return res
+}
+
+// PUT /api/v1/tasks/{id}/assignee — gán người phụ trách (null = bỏ giao)
+export async function setTaskAssignee(id, assigneeId) {
+  const res = await api('PUT', `/tasks/${id}/assignee`, { body: { assigneeId: assigneeId ?? null } })
+  if (res.success) notifyTasksChanged()
   return res
 }
 

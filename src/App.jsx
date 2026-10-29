@@ -5,6 +5,7 @@ import usePointerEffects from './hooks/usePointerEffects'
 import { AlarmProvider } from './context/AlarmContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { LanguageProvider } from './context/LanguageContext'
+import { WorkspaceProvider } from './context/WorkspaceContext'
 import { ProtectedRoute, AdminRoute, GuestOnlyRoute } from './components/ProtectedRoute'
 import AlarmOverlay from './components/AlarmOverlay'
 import UpdateNotification from './components/UpdateNotification'
@@ -25,6 +26,8 @@ import ReportsPage from './pages/user/ReportsPage'
 import PlannerPage from './pages/user/PlannerPage'
 import AssignedPage from './pages/user/AssignedPage'
 import FamilyPage from './pages/user/FamilyPage'
+import TeamPage from './pages/user/TeamPage'
+import BoardPage from './pages/user/BoardPage'
 import TaskListPage from './pages/user/TaskListPage'
 import TaskDetailPage from './pages/user/TaskDetailPage'
 import TaskFormPage from './pages/user/TaskFormPage'
@@ -98,7 +101,9 @@ export default function App() {
           path="/app"
           element={
             <ProtectedRoute>
-              <AppShell />
+              <WorkspaceProvider>
+                <AppShell />
+              </WorkspaceProvider>
             </ProtectedRoute>
           }
         >
@@ -117,6 +122,8 @@ export default function App() {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="planner" element={<PlannerPage />} />
           <Route path="assigned" element={<AssignedPage />} />
+          <Route path="team" element={<TeamPage />} />
+          <Route path="board" element={<BoardPage />} />
           <Route path="family" element={<FamilyPage />} />
           <Route path="support" element={<SupportPage />} />
           <Route path="profile" element={<ProfilePage />} />

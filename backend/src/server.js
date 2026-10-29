@@ -3,6 +3,7 @@ import './schedulers/reminderScheduler.js'
 import { runBankSyncIfDue } from './schedulers/bankSyncScheduler.js'
 import { runRenewalRemindersIfDue } from './schedulers/billingReminderScheduler.js'
 import { runWeeklyReportsIfDue } from './schedulers/weeklyReportScheduler.js'
+import { runSchoolSyncIfDue } from './schedulers/schoolSyncScheduler.js'
 import { onHealthPing } from './routes/index.js'
 import config from './config/index.js'
 
@@ -28,6 +29,10 @@ onHealthPing(() => {
   // ngay sau khi tỉnh — trễ vài giờ vẫn hơn mất cả tuần của khách Pro.
   runWeeklyReportsIfDue().catch((err) =>
     console.error('[WeeklyReport] Lỗi khi kiểm tra theo nhịp health:', err.message)
+  )
+  // TKB trường: khách kết nối tài khoản trường một lần, mỗi sáng tự cập nhật.
+  runSchoolSyncIfDue().catch((err) =>
+    console.error('[SchoolSync] Lỗi khi kiểm tra theo nhịp health:', err.message)
   )
 })
 

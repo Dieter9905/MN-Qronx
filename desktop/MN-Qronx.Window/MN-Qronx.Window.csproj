@@ -18,8 +18,8 @@
     <ApplicationIcon>Assets\logo.ico</ApplicationIcon>
     <AssemblyName>MNQronx.Window</AssemblyName>
     <RootNamespace>MNQronx.Window</RootNamespace>
-    <AssemblyVersion>1.0.0</AssemblyVersion>
-    <FileVersion>1.0.0</FileVersion>
+    <AssemblyVersion>1.1.0</AssemblyVersion>
+    <FileVersion>1.1.0</FileVersion>
     <Company>MN-Qronx</Company>
     <Authors>MN-Qronx</Authors>
 
@@ -27,7 +27,7 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>false</SelfContained>
     <PublishReadyToRun>true</PublishReadyToRun>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 

@@ -109,6 +109,23 @@ enum InvitationStatus {
   REJECTED
 }
 
+// ─── Không gian làm việc (3 chế độ sống chung trong 1 tài khoản) ──
+
+// PERSONAL: riêng tư mặc định — không bắt buộc tạo dòng, task cũ (taskWorkspaceId = null)
+// chính là ko gian này nên mọi API cũ nghĩa không đổi.
+enum WorkspaceType {
+  PERSONAL
+  STUDENT // Lớp học: lịch học import từ trường + việc theo lớp
+  TEAM    // Nhóm làm việc: phân công kiểu Jira (Owner trả gói)
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
 // ─────────────────────────────────────────────────────────
 // Models
 // ─────────────────────────────────────────────────────────
@@ -163,6 +180,9 @@ model User {
   tasks                  Task[]
   devices                Device[]
   webPushSubscriptions   WebPushSubscription[]
+  // Lịch ngoài (Google Calendar / Outlook) nhập chiều đọc bằng URL .ics —
+  // khách dán "Địa chỉ iCal riêng" một lần, backend tự kéo sự kiện về mỗi giờ.
+  externalCalendars      ExternalCalendar[]
   // Khóa riêng cho tệp lịch .ics — app lịch (Google/Outlook) đọc bằng URL có
   // khóa này chứ không được mang mật khẩu, nên khóa phải làng riêng và xoay được
   icsKey                 String?  @db.VarChar(64) @map("ics_key")
@@ -184,6 +204,9 @@ model User {
   subscriptions          Subscription[]
   paymentOrders          PaymentOrder[]
   aiUsages               AiUsage[]
+  // Không gian làm việc: một người một dòng member cho mỗi không gian (một cặp duy nhất)
+  workspaceMemberships   WorkspaceMember[]
+  ownedWorkspaces        Workspace[]       @relation("WorkspaceOwner")
 
   @@index([roleId])
   @@index([referrerId])
@@ -306,8 +329,14 @@ model Task {
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
 
+  // Không gian làm việc của công việc. null = ko gian Cá nhân mặc định
+  // (cách an toàn nhất để Task cũ giữ nguyên vị thế không cần di chuyển dữ liệu:
+  // mọi truy vấn cũ lọc null vẫn nhảy theo đúng logic mỗi cá nhân).
+  taskWorkspaceId Int?      @map("task_workspace_id")
+
   user         User        @relation(fields: [userId], references: [userId])
   category     Category?   @relation(fields: [categoryId], references: [categoryId])
+  workspace    Workspace?  @relation(fields: [taskWorkspaceId], references: [workspaceId])
   parentTask   Task?       @relation("TaskRepetition", fields: [parentTaskId], references: [taskId])
   childTasks   Task[]      @relation("TaskRepetition")
   subtasks     Subtask[]
@@ -315,6 +344,7 @@ model Task {
   // Giao việc cho người khác (Pro) — xem model TaskShare
   shares       TaskShare[]
 
+  @@index([taskWorkspaceId], map: "ix_tasks_workspace_id")
   @@index([userId, dueAt], map: "ix_tasks_user_due")
   @@index([userId, status], map: "ix_tasks_user_status")
   @@index([userId, deletedAt], map: "ix_tasks_user_deleted")
@@ -369,6 +399,57 @@ model TaskShare {
   @@index([assigneeId, doneAt], map: "ix_task_shares_assignee")
   @@index([sharedById], map: "ix_task_shares_shared_by")
   @@map("task_shares")
+}
+
+// ─── Không gian làm việc (Workspace) ─────────────────────────────
+// Sống chung trong 1 tài khoản: Cá nhân (không cần dòng), Lớp học (STUDENT)
+// và Nhóm làm việc (TEAM). Task luôn thuộc 1 ko gian; trang Lịch tổng hợp
+//童话 đa nguồn (cá nhân + lớp + nhóm + lịch ngoài Google/Outlook).
+//
+// Gói hiệu lực theo NGOO CẢNH: task Cá nhân dùng gói của user; task trong
+// STUDENT/TEAM dùng gói của OWNER không gian (workspace plan),.wallet nên
+// resolve ở runtime mỗi request (mua 1 key cho cả nhóm – mô hình Slack/Jira).
+model Workspace {
+  workspaceId Int           @id @default(autoincrement()) @map("workspace_id")
+  type        WorkspaceType
+  name        String        @db.VarChar(150)
+  ownerId     Int           @map("owner_id")
+  // Mã mời cho TEAM/STUDENT: `NL-ABCD12`. null = chưa bật mời (chỉ Owner thuộc)
+  inviteCode  String?       @unique @db.VarChar(16)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  owner   User               @relation("WorkspaceOwner", fields: [ownerId], references: [userId], onDelete: Cascade)
+  members WorkspaceMember[]
+  tasks   Task[]
+  // Không gian STUDENT gắn đúng 1 trường (lịch học) — null cho PERSONAL/TEAM
+  schoolLink    SchoolLink?
+  // Tài khoản cổng trường đã kết nối (đăng nhập hộ để tự đồng bộ TKB)
+  schoolAccount SchoolAccount?
+
+  @@index([ownerId], map: "ix_workspaces_owner")
+  @@index([type], map: "ix_workspaces_type")
+  @@map("workspaces")
+}
+
+// Một người chỉ có một slot trong một không gian — nhưng CÓ THỂ nằm nhiều
+// không gian cùng lúc (lớp có thể ở 2 trường / nhóm khác nhau): đó là
+// đích mà thiết kế toàn bộ hướng đến.
+model WorkspaceMember {
+  workspaceMemberId Int          @id @default(autoincrement()) @map("workspace_member_id")
+  workspaceId       Int          @map("workspace_id")
+  userId            Int          @map("user_id")
+  role              WorkspaceRole @default(MEMBER)
+  // Ko gian xem mặc định khi request không mang header X-Workspace
+  isDefault         Boolean      @default(false) @map("is_default")
+  createdAt         DateTime     @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [workspaceId], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@unique([workspaceId, userId], map: "ux_workspace_member_pair")
+  @@index([userId], map: "ix_workspace_members_user")
+  @@map("workspace_members")
 }
 
 // ─── Gói Pro Doanh nghiệp ────────────────────────────────────────
@@ -482,6 +563,125 @@ model NotificationLog {
   @@index([reminderId, sentAt], map: "ix_notification_logs_reminder_id")
   @@index([deviceId], map: "ix_notification_logs_device_id")
   @@map("notification_logs")
+}
+
+// ─── Lịch ngoài (nhập từ Google Calendar / Outlook qua URL .ics) ───────────
+// Khách dán URL iCal công khai (Google: Settings → Calendar settings →
+// "Secret address in iCal format"). Backend giữ cache sự kiện đã parse để
+// trang Lịch hiện ngay, không phải chờ Google mọi lần mở app.
+model ExternalCalendar {
+  externalCalendarId Int      @id @default(autoincrement()) @map("external_calendar_id")
+  userId             Int      @map("user_id")
+  name               String   @db.VarChar(120)
+  // URL .ics công khai — chỉ đọc, không có quyền ghi gì vào lịch nguồn
+  url                String   @db.VarChar(1000)
+  color              String   @db.VarChar(16) @default("#7c8cff")
+  isActive           Boolean  @default(true) @map("is_active")
+  lastSyncedAt       DateTime? @map("last_synced_at")
+  lastError          String?  @db.VarChar(300) @map("last_error")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  user     User            @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  events   ExternalEvent[]
+
+  @@index([userId], map: "ix_external_calendars_user")
+  @@map("external_calendars")
+}
+
+// Bản sao sự kiện đã parse — giữ theo uid của nguồn để cập nhật mà không trùng.
+model ExternalEvent {
+  externalEventId Int      @id @default(autoincrement()) @map("external_event_id")
+  calendarId      Int      @map("calendar_id")
+  uid             String   @db.VarChar(255)
+  title           String   @db.VarChar(300)
+  startsAt        DateTime @map("starts_at")
+  endsAt          DateTime @map("ends_at")
+  allDay          Boolean  @default(false) @map("all_day")
+
+  calendar ExternalCalendar @relation(fields: [calendarId], references: [externalCalendarId], onDelete: Cascade)
+
+  @@unique([calendarId, uid], map: "ux_external_events_cal_uid")
+  @@index([calendarId, startsAt], map: "ix_external_events_cal_start")
+  @@map("external_events")
+}
+
+// ─── Lịch học (không gian STUDENT) ──────────────────────────
+// Trường học của một lớp học (STUDENT workspace): mỗi Workspace chỉ link đúng
+// một trường. TKB import từ URL .ics công khai của trường (hoặc nhập tay) vào
+// bảng ScheduleSlot — KHÔNG ép thành Task để lịch học không lẫn vào nhắc nhở
+// cá nhân, chỉ hiển thị dạng lớp trên lưới trang Lịch.
+model SchoolLink {
+  schoolLinkId   Int      @id @default(autoincrement()) @map("school_link_id")
+  workspaceId    Int      @unique @map("workspace_id")   // 1 Workspace STUDENT = 1 trường
+  name           String   @db.VarChar(150)               // tên trường hiển thị, vd "Bách Khoa TP.HCM"
+  // URL .ics TKB công khai của trường/SGU — đồng bộ định kỳ như lịch ngoài Google
+  icsUrl         String?  @map("ics_url") @db.VarChar(1000)
+  lastSyncedAt   DateTime? @map("last_synced_at")
+  lastError      String?  @db.VarChar(300) @map("last_error")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  workspace Workspace      @relation(fields: [workspaceId], references: [workspaceId], onDelete: Cascade)
+  slots     ScheduleSlot[]
+
+  @@map("school_links")
+}
+
+// ─── Tài khoản cổng trường (đăng nhập hộ) ────────────────────────────────
+// Một Lớp (Workspace STUDENT) kết nối đúng một tài khoản trường, giống OneUni:
+// chọn trường → nhập tài khoản/mật khẩu → hệ thống tự lấy TKB hằng ngày.
+// Mật khẩu KHÔNG bao giờ trả về API; chỉ lưu bản mã hoá AES-256-GCM
+// (SCHOOL_CRED_KEY) và chỉ dùng để gọi cổng trường theo kiểu chỉ-đọc.
+model SchoolAccount {
+  schoolAccountId Int      @id @default(autoincrement()) @map("school_account_id")
+  workspaceId     Int      @unique @map("workspace_id")
+  schoolCode      String   @map("school_code") @db.VarChar(40) // HCMUT | CUSTOM…
+  username        String   @db.VarChar(120)                   // BKNetID / tài khoản trường
+  // PASSWORD: đăng nhập hộ bằng tài khoản (HCMUT).
+  // COOKIE:   trường chưa có connector — dùng phiên đăng nhập sẵn trên trình duyệt
+  //           (extension gửi cookie), KHÔNG lưu mật khẩu.
+  authType        String   @default("PASSWORD") @map("auth_type") @db.VarChar(20)
+  passwordEnc     String?  @map("password_enc") @db.VarChar(500)
+  cookieEnc       String?  @map("cookie_enc") @db.VarChar(4000)
+  timetableUrl    String?  @map("timetable_url") @db.VarChar(1000)
+  mssv            String?  @db.VarChar(30)                    // MSSV lấy từ hồ sơ trường
+  status          String   @default("CONNECTED") @db.VarChar(20) // CONNECTED | ERROR
+  lastSyncedAt    DateTime? @map("last_synced_at")
+  lastError       String?  @db.VarChar(300)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [workspaceId], onDelete: Cascade)
+
+  @@map("school_accounts")
+}
+
+// Một tiết/Tuần học: ocasión lặp hằng tuần (weekDay 1=Thứ 2 … 7=CN) hoặc ngoại
+// lệ kiểu "tiết thay đổi vào 20/10" (dateOverride không null = chỉ áp dụng ngày đó).
+model ScheduleSlot {
+  scheduleSlotId Int      @id @default(autoincrement()) @map("schedule_slot_id")
+  schoolLinkId   Int      @map("school_link_id")
+  // Tên môn — "Công nghệ phần mềm", không bắt buộc Lehrابق mã lớp
+  title          String   @db.VarChar(200)
+  room           String?  @db.VarChar(100)
+  teacher        String?  @db.VarChar(120)
+  weekDay        Int      @map("week_day")               // 1=Thứ 2 … 7=Chủ nhật
+  startTime      String   @map("start_time") @db.VarChar(5)  // "07:30"
+  endTime        String   @map("end_time") @db.VarChar(5)    // "09:15"
+  // Ngoại lệ đơn lẻ (tiết dời ngày): ngàyyyyy-mm-dd + weekDay của ngày đó
+  dateOverride   String?  @map("date_override") @db.VarChar(10)
+  // Chọn màu hiển thị trên lưới để phân biệt môn — auto theo index nếu không chỉ định
+  colorCode      String?  @map("color_code") @db.VarChar(20)
+  // Lưu uid gốc của sự kiện .ics — cập nhật/dỡ bỏ sự kiện đã có mà không trùng
+  sourceUid      String?  @map("source_uid") @db.VarChar(255)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  schoolLink SchoolLink @relation(fields: [schoolLinkId], references: [schoolLinkId], onDelete: Cascade)
+
+  @@unique([schoolLinkId, sourceUid])
+  @@index([schoolLinkId, weekDay], map: "ix_schedule_slots_school_weekday")
+  @@map("schedule_slots")
 }
 
 model CustomSound {

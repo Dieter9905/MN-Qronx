@@ -73,7 +73,16 @@ export function toTask(task) {
   // Hàm này là DANH SÁCH TRẮNG: trường nào không kể tên ở đây thì giao diện không
   // bao giờ thấy, dù máy chủ trả về đúng. Đã sập bẫy hai lần (nagEveryMinutes và
   // nagCount) nên khi máy chủ thêm trường mới cho công việc, phải thêm cả ở đây.
-  const assignees = Array.isArray(task.assignees) ? task.assignees.map(toTaskShare) : []
+  // Danh sách công việc (GET /tasks?page=…) đi qua đúng dòng dữ liệu THÔ của Prisma:
+  // người phụ trách nằm ở `shares`, không phải `assignees` (trang chi tiết thì
+  // ngược lại). Chỉ đọc một tên là bảng công việc nhóm hiện "Chưa giao" cho cả
+  // những việc đã có người — nên phải nhận cả hai.
+  const rawShares = Array.isArray(task.assignees)
+    ? task.assignees
+    : Array.isArray(task.shares)
+      ? task.shares
+      : []
+  const assignees = rawShares.map(toTaskShare)
   return {
     id: task.id ?? task.taskId,
     userId: task.userId,

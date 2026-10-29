@@ -30,7 +30,11 @@ export default function ExtensionPromoBar() {
     <div
       role="complementary"
       aria-label="Gợi ý cài tiện ích trình duyệt"
-      className="fixed bottom-4 right-4 z-40 w-[320px] overflow-hidden rounded-2xl bg-white p-4 shadow-xl ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700"
+      // Mobile: trải trọn bề rộng cách đáy 84px để không đè thanh nav dưới
+      // (BottomNav cao 65px); cụm 3 nút nổi bên phải cần chừa 132px để không đè
+      // lên thẻ. sm+ trở lên quay về dock góc phải-dưới như cũ.
+      // neo trái, hẹp hơn 280px trên mobile để cụm nút nổi không che nội dung.
+      className="fixed bottom-[84px] left-3 z-30 w-[min(280px,calc(100%-132px))] overflow-hidden rounded-2xl bg-white p-4 shadow-xl ring-1 ring-navy-100 sm:bottom-4 sm:left-auto sm:right-4 sm:z-40 sm:w-[320px] dark:bg-slate-800 dark:ring-slate-700"
     >
       <button
         type="button"

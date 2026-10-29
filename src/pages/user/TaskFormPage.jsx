@@ -16,6 +16,8 @@ import { Field, Input, Textarea, Select, SegmentedControl } from '../../componen
 import Button from '../../components/common/Button'
 import { createTask, updateTask, getTask } from '../../services/taskService'
 import { getCategories, createCategory } from '../../services/categoryService'
+import { getMembers } from '../../services/workspaceService'
+import { useWorkspace } from '../../context/WorkspaceContext'
 import Modal from '../../components/common/Modal'
 import { useToast } from '../../components/common/Toast'
 import { PageLoader } from '../../components/common/Feedback'
@@ -59,6 +61,11 @@ export default function TaskFormPage() {
   // "Nhắc dai" chỉ gói Pro — đây là điểm khác biệt rõ nhất của Pro (xem docs/billing.md)
   const canNag = isProPlan(plan)
 
+  // Chế độ Nhóm: việc tạo ra có thể giao ngay cho một thành viên khác
+  const { active } = useWorkspace()
+  const teamWorkspace = active?.workspace?.type === 'TEAM' ? active.workspace : null
+  const [teamMembers, setTeamMembers] = useState([])
+
   const [loading, setLoading] = useState(isEdit)
   const [categories, setCategories] = useState([])
   const [catModalOpen, setCatModalOpen] = useState(false)
@@ -75,6 +82,7 @@ export default function TaskFormPage() {
     reminders: [],
     nagEveryMinutes: null,
     subtasks: [],
+    assigneeId: '',
   })
   const [origDueAt, setOrigDueAt] = useState(null)
   const [errors, setErrors] = useState({})
@@ -89,6 +97,18 @@ export default function TaskFormPage() {
     loadCategories()
      
   }, [])
+
+  // Thành viên nhóm để chọn người phụ trách — chỉ tải khi đúng chế độ Nhóm
+  useEffect(() => {
+    if (!teamWorkspace) {
+      setTeamMembers([])
+      return
+    }
+    ;(async () => {
+      const res = await getMembers(teamWorkspace.workspaceId)
+      if (res.success) setTeamMembers(res.data?.members || [])
+    })()
+  }, [teamWorkspace])
 
   useEffect(() => {
     if (!isEdit) return
@@ -244,6 +264,8 @@ export default function TaskFormPage() {
           : [],
       reminders: form.reminders.filter((r) => r.remindAt).map((r) => ({ id: r.id, remindAt: new Date(r.remindAt).toISOString() })),
       nagEveryMinutes: canNag ? form.nagEveryMinutes : null,
+      // Giao việc cho thành viên nhóm (chỉ gửi khi đang ở chế độ Nhóm)
+      assigneeId: !isEdit && form.assigneeId ? Number(form.assigneeId) : undefined,
       subtasks: form.subtasks.filter((s) => s.content.trim()).map((s) => ({ id: s.id, content: s.content.trim() })),
     }
     const res = isEdit ? await updateTask(id, payload) : await createTask(payload)
@@ -347,6 +369,25 @@ export default function TaskFormPage() {
           <Field label="Mức độ ưu tiên">
             <SegmentedControl options={priorityOptions} value={form.priority} onChange={set('priority')} />
           </Field>
+
+          {/* Giao việc chỉ có nghĩa trong chế độ Nhóm (có đồng đội cùng không gian) */}
+          {teamWorkspace && !isEdit && (
+            <Field
+              label={`Người phụ trách (nhóm ${teamWorkspace.name})`}
+              hint="Để trống nếu bạn tự làm. Người được giao nhận chuông nhắc và thấy việc ở trang Việc được giao."
+            >
+              <Select value={form.assigneeId} onChange={(e) => set('assigneeId')(e.target.value)}>
+                <option value="">Tôi tự làm việc này</option>
+                {teamMembers
+                  .filter((m) => Number(m.user.userId) !== Number(user?.id ?? user?.userId))
+                  .map((m) => (
+                    <option key={m.workspaceMemberId} value={m.user.userId}>
+                      {m.user.fullName} ({m.openTasks} việc đang mở)
+                    </option>
+                  ))}
+              </Select>
+            </Field>
+          )}
           <Field label="Lặp lại">
             <SegmentedControl
               options={REPEAT_TYPE_LIST.map((r) =>

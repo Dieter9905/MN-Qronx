@@ -22,6 +22,7 @@ import { useToast } from '../../components/common/Toast'
 import { Skeleton, EmptyState } from '../../components/common/Feedback'
 import Button from '../../components/common/Button'
 import TaskItem from '../../components/TaskItem'
+import TodayBrief from '../../components/TodayBrief'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { app } from '../../i18n/app'
@@ -228,7 +229,8 @@ export default function DashboardPage() {
               </span>
             )}
             <div className="min-w-0">
-              <h1 className="truncate text-xl font-extrabold tracking-tight sm:text-2xl">
+              {/* Mobile: cho phép xuống dòng đây đủ chữ; sm+ vẫn truncate 1 dòng */}
+              <h1 className="text-lg leading-snug sm:truncate sm:text-2xl">
                 {t.welcome}, {user?.fullName}! 👋
               </h1>
               <p className="mt-0.5 text-sm font-medium text-white/75">{today}</p>
@@ -247,6 +249,9 @@ export default function DashboardPage() {
             </button>
           </div>
         )}
+
+        {/* Bản tin hôm nay: tiết học + việc đến hạn (thông báo trong web) */}
+        <TodayBrief />
 
         {billing?.plan !== 'FREE' &&
           billing?.planExpiresAt &&

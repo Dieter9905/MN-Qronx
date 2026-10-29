@@ -65,6 +65,21 @@ export function getDeviceId() {
 // thử lại là tạo kết nối mới theo IP hiện tại nên thường sống ngay.
 const REQUEST_TIMEOUT_MS = 15000
 
+// ─── Không gian đang chọn (Cá nhân / Lớp học / Nhóm) ──────────────────
+// WorkspaceContext gọi setActiveWorkspaceId() mỗi lần người dùng đổi chế độ;
+// mọi request sau đó tự mang X-Workspace để backend lọc đúng không gian.
+// null = ngữ cảnh Cá nhân mặc định (giữ nguyên hành vi cũ, kể cả extension).
+let activeWorkspaceId = null
+
+export function setActiveWorkspaceId(id) {
+  const parsed = Number(id)
+  activeWorkspaceId = Number.isInteger(parsed) && parsed > 0 ? parsed : null
+}
+
+export function getActiveWorkspaceId() {
+  return activeWorkspaceId
+}
+
 function fetchWithTimeout(url, opts = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
@@ -84,7 +99,7 @@ function networkError(err) {
  * @returns {Promise<{success:boolean, message:string, data?:any, errors?:object}>}
  *          Luôn resolve về envelope; chỉ throw khi lỗi mạng (không kết nối được server).
  */
-export async function api(method, path, { body, query } = {}) {
+export async function api(method, path, { body, query, headers: extraHeaders } = {}) {
   let url = BASE_URL + path
   if (query && Object.keys(query).length) {
     const clean = {}
@@ -99,6 +114,15 @@ export async function api(method, path, { body, query } = {}) {
     const headers = { 'Content-Type': 'application/json' }
     if (token) headers['Authorization'] = `Bearer ${token}`
     headers['X-Device-Id'] = getDeviceId()
+    // Ngữ cảnh không gian đang chọn; request nào tự truyền X-Workspace thì
+    // extraHeaders bên dưới sẽ ghi đè (ví dụ trang Lịch gọi cho từng lớp).
+    if (activeWorkspaceId) headers['X-Workspace'] = String(activeWorkspaceId)
+    // Header riêng khi cần — chủ yếu là X-Workspace (không gian Lớp/Nhóm)
+    if (extraHeaders) {
+      for (const [k, v] of Object.entries(extraHeaders)) {
+        if (v !== undefined && v !== null && v !== '') headers[k] = v
+      }
+    }
     const opts = { method, headers }
     if (body !== undefined) opts.body = JSON.stringify(body)
     return fetchWithTimeout(url, opts)

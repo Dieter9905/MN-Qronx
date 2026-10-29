@@ -1,8 +1,10 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Logo } from '../Logo'
-import { NAV_GROUPS } from './NavItems'
+import { NAV_GROUPS, filterNavByWorkspace } from './NavItems'
+import { useWorkspace } from '../../context/WorkspaceContext'
 import SupportBadge from './SupportBadge'
+import WorkspaceSwitcher from './WorkspaceSwitcher'
 import { useLanguage } from '../../context/LanguageContext'
 import { app } from '../../i18n/app'
 
@@ -16,6 +18,10 @@ export default function Sidebar() {
   const { lang } = useLanguage()
   const t = app[lang]
   const location = useLocation()
+  // Mỗi chế độ một bộ menu: Việc được giao / Cả nhóm / Nhóm làm việc chỉ có
+  // trong không gian TEAM, nên menu phải lọc lại mỗi lần đổi chế độ.
+  const { active } = useWorkspace()
+  const navGroups = filterNavByWorkspace(NAV_GROUPS, active?.workspace?.type || 'PERSONAL')
   const navRef = useRef(null)
   const [pill, setPill] = useState(null)
 
@@ -70,6 +76,9 @@ export default function Sidebar() {
           className="relative h-full overflow-y-auto px-3 py-4"
           aria-label="Điều hướng chính"
         >
+          {/* Chọn chế độ làm việc: Cá nhân / Lớp học / Nhóm */}
+          <WorkspaceSwitcher />
+
           {/* Thanh chỉ mục trượt giữa các mục */}
           {pill && (
             <span
@@ -82,7 +91,7 @@ export default function Sidebar() {
             </span>
           )}
 
-          {NAV_GROUPS.map((group) => (
+          {navGroups.map((group) => (
             <div key={group.labelKey} className="relative mb-5">
               <p className="mb-1.5 px-3 text-[11px] font-bold uppercase tracking-wider text-navy-500 dark:text-slate-500">
                 {t[group.labelKey]}
