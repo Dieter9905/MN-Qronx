@@ -130,3 +130,17 @@ rồi điền link vào mục Privacy của 2 store.
 - Duy trì gợi ý này tối thiểu 2 tuần đầu sau đăng bản mới, rồi phép người dùng
   tắt vĩnh viễn (đã có sẵn).
 
+
+## Nhật ký phát hành
+
+### Bản 1.2.1 (29/10/2026)
+
+- Gói đã đóng: `dist/extension/mn-qronx-extension-1.2.1.zip`
+  (bản tải nhanh trên máy chủ: `https://mn-qronx.id.vn/downloads/mn-qronx-extension-1.2.1.zip`).
+- Nội dung **What's new** để dán vào Dashboard:
+  > Nhắc việc nhóm và đồng bộ lịch trường: tiện ích nhận được việc nhóm được
+  > giao cho bạn, lịch học tự cập nhật từ cổng trường, và sửa lỗi hiển thị
+  > chuông khi vừa đăng nhập bằng Google.
+- Nộp bản mới: Chrome Web Store Developer Dashboard → mục MN-Qronx →
+  **Package → Upload new package** → chọn zip trên → điền What's new → Submit.
+  (Cần tài khoản developer của chủ dự án; API/CLI không thay được bước này.)
