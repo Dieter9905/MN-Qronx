@@ -13,8 +13,8 @@ import { sendEmail, isEmailConfigured } from './emailService.js'
 const REFRESH_TOKEN_EXPIRY_DAYS = 7
 const RESET_TOKEN_EXPIRY_HOURS = 1
 const VERIFY_CODE_EXPIRY_MINUTES = 10
-// Gửi lại trong khoảng này thì dùng LẠI mã vừa gửi: không tốn thêm 1 thư trong hạn
-// mức ngày của Mailjet (đang là 10) và không gửi thư trùng nhau liên tiếp — thư trùng
+// Gửi lại trong khoảng này thì dùng LẠI mã vừa gửi: không tốn thêm một thư (mỗi thư
+// đều tính vào hạn mức của nhà cung cấp dịch vụ gửi) và không gửi thư trùng nhau liên tiếp — thư trùng
 // lặp là dấu hiệu spam, ảnh hưởng trực tiếp tới việc vào Inbox Gmail.
 // Khớp với đếm ngược 60s ở RegisterPage (RESEND_SECONDS).
 const VERIFY_CODE_RESEND_COOLDOWN_SECONDS = 60
@@ -51,7 +51,7 @@ export async function sendVerificationCode(email) {
   const expiresAt = new Date(Date.now() + VERIFY_CODE_EXPIRY_MINUTES * 60 * 1000)
   await authRepo.saveVerificationCode(cleanEmail, code, expiresAt)
 
-  // Gửi email (Mailjet Send API v3.1 → dự phòng SMTP). Nếu chưa cấu hình hoặc
+  // Gửi email (Resend → dự phòng SMTP). Nếu chưa cấu hình hoặc
   // gửi lỗi → fallback: trả mã trong response để app hiển thị, đăng ký vẫn dùng được.
   let result = { sent: false }
   try {
@@ -374,7 +374,7 @@ export async function forgotPassword(email) {
 
   await authRepo.createPasswordResetRequest(user.userId, resetToken, expiresAt)
 
-  // Gửi email chứa liên kết đặt lại mật khẩu (Resend → Mailjet API → SMTP).
+  // Gửi email chứa liên kết đặt lại mật khẩu (Resend → SMTP).
   // Lỗi gửi KHÔNG được lộ ra ngoài: nếu lộ sẽ thành kênh dò xem email nào đã
   // đăng ký. Vì vậy chỉ ghi log phía server.
   const resetUrl = `${String(config.frontendUrl).replace(/\/$/, '')}/reset-password?token=${resetToken}`

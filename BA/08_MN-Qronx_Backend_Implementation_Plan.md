@@ -18,7 +18,7 @@ Backend MN-Qronx là **một monolith Node.js** theo kiến trúc phân lớp (r
 | Scheduler | node-cron | 4.x |
 | Push (Web) | web-push | 3.x |
 | Push (Mobile) | firebase-admin | 14.x |
-| Email | nodemailer — production dùng **Gmail SMTP** (`smtp.gmail.com:465`); Mailjet SMTP/API + Resend giữ làm đường dự phòng | 10.x |
+| Email | nodemailer — production dùng **Gmail SMTP** (`smtp.gmail.com:465`); Resend là đường thay thế | 10.x |
 | QR | qrcode | 1.x |
 | API docs | swagger-jsdoc + swagger-ui-express | 6.x / 5.x |
 | Env config | dotenv | 17.x |
@@ -36,7 +36,7 @@ Xem `07_MN-Qronx_Architecture.md`, mục 3. Tóm tắt các nhánh chính:
 - `src/repositories/` — task, category, reminder, device, user, admin, auth, subtask, customSound.
 - `src/schedulers/` — reminder, bankSync, billingReminder, weeklyReport.
 - `src/dto/request/` — validate theo module; `src/dto/response/apiResponse.js` — envelope.
-- `scripts/` — `db-dump.mjs`, `db-restore.mjs`, `fix-dev-db-url.mjs`, `convert-family-to-business.mjs`, `check-mail-dns.mjs`, `send-test-email.mjs`, `mailjet-status.mjs`, `verify-mailjet-domain.mjs`, `check-resend.mjs`.
+- `scripts/` — `db-dump.mjs`, `db-restore.mjs`, `fix-dev-db-url.mjs`, `convert-family-to-business.mjs`, `send-test-email.mjs`, `check-resend.mjs`.
 - `tests/` — bộ test Vitest.
 
 ## 4. Chi tiết triển khai theo giai đoạn
@@ -106,22 +106,15 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_CALLBACK_URL=http://localhost:8080/api/v1/auth/google/callback
 FRONTEND_URL=http://localhost:5173
 
-# Email – production đang dùng Gmail SMTP (App Password của Gmail chủ dự án);
-# Mailjet (API + SMTP) và Resend giữ làm đường dự phòng, không kích hoạt.
-MAIL_TRANSPORT=smtp            # auto | resend | api | smtp
+# Email – production đang dùng Gmail SMTP (App Password của Gmail chủ dự án).
+# Mailjet đã bị gỡ; chỉ còn SMTP và Resend.
+MAIL_TRANSPORT=smtp            # auto | resend | smtp
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 SMTP_USER=your-gmail-address
 SMTP_PASS=your-gmail-app-password
 SMTP_SECURE=true
 EMAIL_FROM=MN-Qronx <your-gmail-address>
-MAILJET_API_KEY=your-mailjet-api-key
-MAILJET_SECRET_KEY=your-mailjet-secret-key
-MAILJET_SANDBOX=false
-MAILJET_OWNERSHIP_HOST=mailjet._93f3b17d
-MAIL_HOURLY_LIMIT=10
-MAIL_DAILY_LIMIT=10
-MAIL_QUOTA_TZ=Asia/Ho_Chi_Minh
 RESEND_API_KEY=
 RESEND_FROM=
 

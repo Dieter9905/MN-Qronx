@@ -11,15 +11,11 @@ export default defineConfig({
     // Dọn tài khoản test cả trước và sau khi chạy: DATABASE_URL đang trỏ vào
     // Postgres production nên nếu không dọn ở cuối thì rác cứ tích lại.
     globalSetup: ['./tests/globalSetup.js'],
-    // Cấu hình gửi thư cố định cho test: có API key để luôn đi nhánh Mailjet API,
-    // và TẮT mọi cửa sổ hạn mức để mỗi lần gửi chỉ có 1 request
-    // (mailQuota.test.js tự bật lại cửa sổ cần kiểm tra).
+    // Không đặt khoá gửi thư nào: mặc định mọi lần gửi rơi vào nhánh "chưa cấu
+    // hình" (log ra console, không gọi mạng). Test nào cần kiểm tra Resend/SMTP
+    // thì tự chỉnh config trong file của nó.
     env: {
-      MAIL_TRANSPORT: 'api',
-      MAILJET_API_KEY: 'test-api-key',
-      MAILJET_SECRET_KEY: 'test-secret-key',
-      MAIL_HOURLY_LIMIT: '0',
-      MAIL_DAILY_LIMIT: '0',
+      MAIL_TRANSPORT: 'auto',
     },
   },
 })

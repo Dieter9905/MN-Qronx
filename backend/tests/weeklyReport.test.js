@@ -14,9 +14,8 @@ import { isSendWindow } from '../src/schedulers/weeklyReportScheduler.js'
 // Vì sao phải test kỹ:
 //   • Thư gửi cho KHÁCH THẬT, không thu hồi được — nội dung sai (số liệu của người
 //     khác, chữ "undefined") là mất mặt ngay trong hộp thư của khách.
-//   • Tài khoản Mailjet của MN-Qronx đang bị giới hạn 10 thư/giờ: gặp trần phải
-//     DỪNG, không được thử lại liên tục, nếu không mỗi thư bị từ chối là một điểm
-//     trừ khi họ xét duyệt tài khoản.
+//   • Nhà cung cấp gửi thư có hạn mức: gặp trần phải DỪNG, không được thử lại liên
+//     tục, nếu không mỗi thư bị từ chối đều làm tên miền bị đánh giá xấu.
 //   • Cron và nhịp /health cùng gọi hàm gửi → phải chứng minh mỗi khách chỉ nhận
 //     đúng một thư mỗi tuần.
 //
@@ -503,11 +502,11 @@ describe('Báo cáo tuần — gửi thử cho chính mình', () => {
 
     const result = await sendTestWeeklyReport(u.userId, {
       mailer: async () => {
-        throw new Error('Mailjet API lỗi')
+        throw new Error('SMTP lỗi')
       },
     })
     expect(result.sent).toBe(false)
-    expect(result.reason).toContain('Mailjet')
+    expect(result.reason).toContain('SMTP')
     // Vẫn có nội dung để khách đọc
     expect(result.preview).toContain('Đây là báo cáo tuần MN-Qronx')
   })

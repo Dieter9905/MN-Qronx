@@ -8,19 +8,6 @@ const required = (key) => {
   return val
 }
 
-/**
- * Hạn mức gửi thư (theo giờ / theo ngày).
- * Mặc định 10 vì tài khoản Mailjet đang ở giai đoạn duyệt tạm (probation):
- * dashboard ghi "10 emails per hour", mail hỗ trợ lại ghi 10 thư/ngày.
- * Đặt biến tương ứng = 0 để TẮT kiểm tra cửa sổ đó (sau khi Mailjet gỡ giới hạn).
- */
-const parseLimit = (value) => {
-  if (value === undefined || String(value).trim() === '') return 10
-  const n = Number(value)
-  if (!Number.isInteger(n) || n < 0) return 10
-  return n
-}
-
 /** Số nguyên không âm; để trống hoặc sai định dạng thì dùng giá trị mặc định. */
 const parseIntOr = (value, fallback) => {
   if (value === undefined || String(value).trim() === '') return fallback
@@ -67,24 +54,13 @@ const config = {
     secure: process.env.SMTP_SECURE === 'true',
   },
 
-  // Mailjet Send API v3.1 (HTTPS 443) — xem docs/email-domain-setup.md
-  // transport: 'auto' (Resend → Mailjet API → SMTP) | 'resend' | 'api' | 'smtp'
+  // Đường gửi thư — xem docs/email-domain-setup.md
+  // transport: 'auto' (Resend → SMTP) | 'resend' | 'smtp'
   mail: {
     transport: (process.env.MAIL_TRANSPORT || 'auto').toLowerCase(),
-    apiUrl: process.env.MAILJET_API_URL || 'https://api.mailjet.com/v3.1/send',
-    apiKey: process.env.MAILJET_API_KEY || process.env.SMTP_USER || '',
-    secretKey: process.env.MAILJET_SECRET_KEY || process.env.SMTP_PASS || '',
-    sandbox: process.env.MAILJET_SANDBOX === 'true',
-    timeoutMs: parseInt(process.env.MAILJET_TIMEOUT_MS, 10) || 15000,
-    // Endpoint REST v3 (đọc thống kê: statcounters, sender, domain…)
-    restUrl: process.env.MAILJET_REST_URL || 'https://api.mailjet.com/v3/REST',
-    // Hạn mức gửi + múi giờ dùng để xác định "một giờ"/"một ngày" (Mailjet reset theo giờ)
-    hourlyLimit: parseLimit(process.env.MAIL_HOURLY_LIMIT),
-    dailyLimit: parseLimit(process.env.MAIL_DAILY_LIMIT),
-    quotaTimezone: process.env.MAIL_QUOTA_TZ || 'Asia/Ho_Chi_Minh',
   },
 
-  // Resend (https://resend.com) — gửi qua HTTPS, dùng khi Mailjet bị khoá.
+  // Resend (https://resend.com) — gửi qua HTTPS, có mã lỗi thật.
   // Cần xác thực tên miền gửi bằng bản ghi DNS: xem docs/email-domain-setup.md (mục Resend).
   resend: {
     apiKey: process.env.RESEND_API_KEY || '',

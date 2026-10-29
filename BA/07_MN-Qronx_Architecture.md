@@ -9,14 +9,14 @@ MN-Qronx là hệ thống **Monolithic Backend + Web SPA (PWA)**, dùng một RE
 | Thành phần | Công nghệ | Ghi chú |
 |---|---|---|
 | Backend API | Node.js 20+ · Express 5 · Prisma 6 (PostgreSQL) · jsonwebtoken + bcryptjs · express-validator 7 · node-cron 4 | 1 service monolith |
-| Tích hợp backend | `web-push` (VAPID) · `firebase-admin` (FCM) · `nodemailer` (đang dùng **Gmail SMTP**; Mailjet/Resend giữ làm đường dự phòng) · `qrcode` · `swagger-jsdoc`/`swagger-ui-express` | Cổng gửi thông báo/email tập trung |
+| Tích hợp backend | `web-push` (VAPID) · `firebase-admin` (FCM) · `nodemailer` (đang dùng **Gmail SMTP**; Resend là đường thay thế) · `qrcode` · `swagger-jsdoc`/`swagger-ui-express` | Cổng gửi thông báo/email tập trung |
 | Web Frontend | React 18 · Vite 5 · React Router DOM v6 · TailwindCSS 3 · Phosphor Icons · Context API | SPA + PWA (service worker, manifest) |
 | App di động (kế hoạch) | Tái dùng lớp `services/` và luật validate | Kênh FCM đã sẵn ở backend |
 | Database | PostgreSQL (Prisma) — **Postgres 16 cài trên chính VPS, localhost only** | Xem `04_MN-Qronx_database_design.md` |
 | Tiện ích trình duyệt | Chrome/Edge **Manifest V3** (`extension/`) | Dùng chính REST API; service worker kiểm tra nhắc mỗi 1 phút, bắn chuông trình duyệt — xem `10_Extension_MV3.md` |
 | Trợ lý AI | Inference server riêng (thư mục `ai/`) | Model phân tích câu → công việc |
 | Thanh toán | VietQR + webhook SePay/Casso + API ngân hàng (SePay/ACB) + Google Play (kế hoạch) | Trang quản trị cấu hình ngay trong app |
-| Email | **Gmail SMTP** (`smtp.gmail.com:465`, App Password) — Mailjet/Resend dự phòng, không kích hoạt | Thư vào hộp chính nhờ SPF/DKIM/DMARC của `mn-qronx.id.vn` |
+| Email | **Gmail SMTP** (`smtp.gmail.com:465`, App Password) — Resend là đường thay thế | Thư vào hộp chính nhờ SPF/DKIM/DMARC của `mn-qronx.id.vn` |
 | Triển khai | **VPS riêng Ubuntu 24.04**: Nginx + systemd `mn-qronx` + PostgreSQL 16 cài trên chính VPS | Public tại `https://mn-qronx.id.vn` (Certbot) |
 
 ## 2. Sơ đồ kiến trúc tổng thể
@@ -37,7 +37,7 @@ flowchart TB
         REPO["Repository Layer<br/>(Prisma Client)"]
         SCHED["Schedulers<br/>reminder (1 phút) · bankSync · billingReminder · weeklyReport"]
         NOTI["Notification: pushService (Web Push) + fcmSender"]
-        MAIL["Email: nodemailer Gmail SMTP<br/>+ Mailjet/Resend dự phòng + mailQuota"]
+        MAIL["Email: nodemailer Gmail SMTP<br/>+ Resend thay thế"]
         AIPROXY["AI proxy → inference server"]
         BILL["Billing: VietQR + webhook + bank API"]
     end
@@ -50,7 +50,7 @@ flowchart TB
         WEBPUSH["Web Push (VAPID)"]
         FCM["Firebase Cloud Messaging"]
         BANK["Ngân hàng / SePay · Casso"]
-        MAILSV["Gmail SMTP (Mailjet / Resend dự phòng)"]
+        MAILSV["Gmail SMTP / Resend"]
         AISRV["AI inference server"]
         GOOG["Google OAuth"]
     end
@@ -277,6 +277,6 @@ flowchart LR
 - ❌ Không microservice; Notification/AI/Billing là module trong cùng monolith.
 - ❌ Không message queue (Kafka/RabbitMQ); cron quét DB là đủ ở quy mô hiện tại.
 - ❌ Không WebSocket hai chiều giữa các thiết bị; đồng bộ theo pull (client gọi lại API khi mở app hoặc sau khi nhận push).
-- ❌ Không tự xây hạ tầng push/email riêng; dùng Web Push chuẩn, FCM, Gmail SMTP (Mailjet/Resend chỉ là đường dự phòng).
+- ❌ Không tự xây hạ tầng push/email riêng; dùng Web Push chuẩn, FCM, Gmail SMTP (Resend chỉ là đường thay thế).
 - ❌ Không dùng AI cho tính năng lập kế hoạch (kế hoạch tuần làm bằng luật để không bịa việc).
 - ❌ Không lưu file trên dịch vụ ngoài: ảnh hỗ trợ và âm thanh riêng lưu thẳng trong DB.

@@ -93,12 +93,13 @@ quá tải và 3 việc nên làm trước). Nội dung dựng từ chính `repo
 (`backend/src/services/weeklyReportService.js`, hẹn giờ ở
 `schedulers/weeklyReportScheduler.js`: Thứ 2, 07:00–10:00 giờ VN).
 
-> ⚠️ **Hạn mức gửi thư là ràng buộc thật của tính năng này.** Tài khoản Mailjet đang ở
-giai đoạn duyệt tạm: **10 thư/giờ và 10 thư/ngày** (`services/mailQuota.js`). Vì vậy
-mỗi lượt chỉ gửi một lô 4 thư; chạm trần là DỪNG ngay và lượt sau (15 phút) gửi tiếp,
-không thử lại liên tục — mỗi thư bị từ chối là một điểm trừ khi Mailjet xét duyệt. Khi
-số khách Pro vượt ~10 người, **phải** xin Mailjet gỡ giới hạn hoặc chuyển sang Resend
-/ SMTP riêng trước, nếu không phần lớn khách sẽ không nhận được thư.
+> ⚠️ **Hạn mức gửi thư là ràng buộc thật của tính năng này.** Hạn mức nay do nhà cung
+cấp đường gửi quyết định (Resend gói miễn phí: 100 thư/ngày · 3.000/tháng; SMTP hộp
+thư thường vài trăm thư/ngày). Vì vậy mỗi lượt chỉ gửi một lô 4 thư; chạm trần là DỪNG
+ngay và lượt sau (15 phút) gửi tiếp, không thử lại liên tục — gửi dồn khi đã chạm trần
+chỉ làm tên miền bị đánh giá xấu. Khi số khách Pro vượt hạn mức của đường đang dùng,
+phải nâng gói Resend hoặc chuyển sang SMTP riêng trước, nếu không phần lớn khách sẽ
+không nhận được thư.
 >
 > Cột `users.weekly_report_sent_at` là chốt chặn chống gửi trùng (cron và nhịp
 > `/health` cùng gọi hàm gửi, máy chủ Render ngủ nên cron có thể không chạy). Khách

@@ -15,11 +15,10 @@ import { isPlanExpired, PRO_PLANS, planIsPro } from '../utils/planLimits.js'
  * Đây cũng là thứ khiến gói Pro "cảm thấy" được mỗi tuần dù khách không mở web.
  *
  * Ba ràng buộc phải nhớ khi sửa file này:
- *  1. **Hạn mức gửi thư rất chặt.** Tài khoản Mailjet của MN-Qronx đang trong giai
- *     đoạn duyệt tạm: 10 thư/giờ và 10 thư/ngày (xem services/mailQuota.js). Vì vậy
- *     mỗi lượt chỉ gửi một lô nhỏ, gặp lỗi hạn mức là DỪNG ngay và để lượt sau gửi
- *     tiếp — tuyệt đối không thử lại trong vòng lặp, mỗi thư bị từ chối là một tín
- *     hiệu xấu khi Mailjet xét duyệt tài khoản.
+ *  1. **Hạn mức gửi thư của nhà cung cấp.** Dù đi Resend hay SMTP, mỗi lượt chỉ
+ *     gửi một lô nhỏ; gặp lỗi hạn mức (429) là DỪNG ngay và để lượt sau gửi tiếp —
+ *     tuyệt đối không thử lại trong vòng lặp, vì thư bị từ chối liên tục làm giảm
+ *     uy tín tên miền gửi.
  *  2. **Không gửi trùng.** Cột weeklyReportSentAt là chốt chặn: cron chạy mỗi 15
  *     phút và nhịp /health cũng gọi, nên phải chắc mỗi khách đúng một thư mỗi tuần.
  *  3. **Không làm phiền người không muốn.** weeklyReportEnabled = false là im lặng
@@ -35,7 +34,7 @@ export const WEEKLY_REPORT_DAYS = 7
 /** Khoảng cách tối thiểu giữa hai thư cho cùng một người (ngày). */
 export const WEEKLY_REPORT_MIN_GAP_DAYS = 6
 
-/** Số thư tối đa mỗi lượt gửi — nhỏ để không đụng trần 10 thư/giờ của Mailjet. */
+/** Số thư tối đa mỗi lượt gửi — nhỏ để không đụng trần gửi của nhà cung cấp dịch vụ. */
 export const DEFAULT_BATCH = 4
 
 export const WEB_BASE_URL = (process.env.WEB_BASE_URL || 'https://www.mn-qronx.id.vn').replace(/\/+$/, '')
@@ -309,8 +308,8 @@ export async function sendWeeklyReports({
       }
       result.sent += 1
     } catch (err) {
-      // Hết hạn mức gửi thư → DỪNG cả lượt, không thử người tiếp theo: mỗi thư bị
-      // Mailjet từ chối là một tín hiệu xấu khi họ xét duyệt tài khoản.
+      // Hết hạn mức gửi thư → DỪNG cả lượt, không thử người tiếp theo: gửi dồn khi
+      // đã chạm trần chỉ làm nhà cung cấp chặn thêm.
       if (err?.code === 'quota-exceeded' || err?.status === 429) {
         result.quotaReached = true
         result.skipped = recipients.length - result.sent

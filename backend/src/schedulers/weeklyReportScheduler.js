@@ -7,8 +7,8 @@ import { sendWeeklyReports, DEFAULT_BATCH } from '../services/weeklyReportServic
 //
 // Chạy mỗi 15 phút và tự quyết định, giống nhắc gia hạn gói:
 //   • chỉ làm trong khung giờ trên, chỉ ngày thứ 2;
-//   • mỗi lượt gửi một lô nhỏ (DEFAULT_BATCH) vì tài khoản Mailjet đang bị giới hạn
-//     10 thư/giờ — gặp trần thì dừng và các lượt sau gửi tiếp;
+//   • mỗi lượt gửi một lô nhỏ (DEFAULT_BATCH) — gặp trần hạn mức của nhà cung cấp
+//     dịch vụ gửi thư thì dừng và các lượt sau gửi tiếp;
 //   • cột weeklyReportSentAt bảo đảm mỗi khách đúng MỘT thư mỗi tuần, dù cron và
 //     nhịp /health gọi bao nhiêu lần.
 //

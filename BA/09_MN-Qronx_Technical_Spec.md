@@ -132,8 +132,8 @@ await authRepo.deleteRefreshTokens(userId)   // thu hồi mọi phiên
 
 ### 3.4. Email xác nhận / đặt lại mật khẩu
 
-- Gửi qua `emailService.sendEmail()` — chọn đường theo `MAIL_TRANSPORT` (`auto` → Resend → Mailjet API → SMTP). Production hiện cấu hình `MAIL_TRANSPORT=smtp` với **Gmail SMTP** nên thư luôn đi qua đường SMTP.
-- Kiểm tra hạn mức (`mailQuota`) trước khi gửi; nếu chưa cấu hình dịch vụ, môi trường dev trả mã trong response để test.
+- Gửi qua `emailService.sendEmail()` — chọn đường theo `MAIL_TRANSPORT` (`auto` → Resend → SMTP). Production hiện cấu hình `MAIL_TRANSPORT=smtp` với **Gmail SMTP** nên thư luôn đi qua đường SMTP.
+- Nếu chưa cấu hình đường gửi nào, môi trường dev trả mã trong response để test.
 
 ---
 

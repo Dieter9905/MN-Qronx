@@ -75,7 +75,7 @@ Các mục dưới đây **cố ý** không nằm trong phiên bản hiện tạ
 - Nếu người dùng từ chối quyền thông báo, hệ thống chỉ hiển thị nhắc nhở trong ứng dụng khi tab đang mở.
 - Admin là vai trò quản trị duy nhất, tạo bằng seed data hoặc do admin hiện có tạo thêm.
 - Khoá VAPID (Web Push) có thể cấu hình qua biến môi trường; nếu thiếu, hệ thống **tự sinh và lưu trong bảng `app_settings`**.
-- Việc gửi email dùng **Gmail SMTP** (`smtp.gmail.com:465`, App Password của tài khoản Gmail chủ dự án) để thư xác thực vào hộp chính; đường Resend/Mailjet chỉ còn là đường dự phòng. Hàm kiểm tra hạn mức gửi chỉ áp dụng cho Mailjet (10 thư/ngày) — không có tác dụng khi đi qua Gmail SMTP.
+- Việc gửi email dùng **Gmail SMTP** (`smtp.gmail.com:465`, App Password của tài khoản Gmail chủ dự án) để thư xác thực vào hộp chính; đường Resend chỉ còn là đường thay thế. Mailjet đã bị gỡ hoàn toàn — hạn mức gửi nay do nhà cung cấp đường gửi quyết định.
 - Giao dịch ngân hàng được đối soát tự động (webhook SePay/Casso hoặc API ngân hàng) và/hoặc xác nhận thủ công bởi admin.
 - Hạ tầng chạy trên **VPS riêng (Ubuntu 24.04, 103.77.209.154)** 24/7: systemd service `mn-qronx` cho backend, Nginx + Certbot cho HTTPS tại `mn-qronx.id.vn`, PostgreSQL 16 cài trên chính VPS. Đã bỏ Render/Vercel; móc làm việc định kỳ theo nhịp `/health` được giữ lại làm cơ chế dự phòng cho cron trong cùng tiến trình.
 

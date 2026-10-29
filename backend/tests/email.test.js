@@ -1,34 +1,46 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
-import {
-  buildApiMessage,
-  parseAddress,
-  normalizeRecipients,
-  sendEmail,
-  MailjetSendError,
-  resolveTransport,
-  isApiConfigured,
-  isResendConfigured,
-} from '../src/services/emailService.js'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import config from '../src/config/index.js'
+import { parseAddress, normalizeRecipients, resolveTransport, isResendConfigured, isSmtpConfigured, sendEmail } from '../src/services/emailService.js'
 
-// Giả lập phản hồi của Mailjet Send API v3.1
-const okResponse = (overrides = {}) => ({
-  ok: true,
-  status: 200,
-  text: async () =>
-    JSON.stringify({
-      Messages: [
-        {
-          Status: 'success',
-          To: [{ Email: 'a@example.com', MessageUUID: 'uuid-1', MessageID: 456, MessageHref: 'https://api.mailjet.com/v3/message/456' }],
-          ...overrides,
-        },
-      ],
-    }),
+// Giả lập nodemailer để test đường SMTP mà không mở kết nối thật.
+const sendMail = vi.fn(async () => ({ messageId: 'smtp-message-1' }))
+vi.mock('nodemailer', () => ({
+  default: { createTransport: () => ({ sendMail }) },
+}))
+
+const ORIGINAL = {
+  transport: config.mail.transport,
+  resendKey: config.resend.apiKey,
+  smtpHost: config.smtp.host,
+  smtpUser: config.smtp.user,
+  smtpPass: config.smtp.pass,
+}
+
+beforeEach(() => {
+  sendMail.mockClear()
+  config.resend.apiKey = ''
+  config.smtp.host = ''
+  config.smtp.user = ''
+  config.smtp.pass = ''
+  config.mail.transport = 'auto'
 })
 
 afterEach(() => {
+  config.mail.transport = ORIGINAL.transport
+  config.resend.apiKey = ORIGINAL.resendKey
+  config.smtp.host = ORIGINAL.smtpHost
+  config.smtp.user = ORIGINAL.smtpUser
+  config.smtp.pass = ORIGINAL.smtpPass
   vi.unstubAllGlobals()
 })
+
+const withSmtp = () => {
+  config.smtp.host = 'smtp.example.com'
+  config.smtp.port = 465
+  config.smtp.secure = true
+  config.smtp.user = 'no-reply@mn-qronx.id.vn'
+  config.smtp.pass = 'secret'
+}
 
 describe('parseAddress', () => {
   it('tách tên và email từ chuỗi có ngoặc nhọn', () => {
@@ -56,38 +68,41 @@ describe('normalizeRecipients', () => {
   })
 })
 
-describe('buildApiMessage', () => {
-  const base = { to: 'nguoinhan@example.com', subject: 'Xin chào', text: 'Nội dung', html: '<p>Nội dung</p>' }
-
-  it('có đủ From/To/Subject/TextPart/HTMLPart theo tài liệu v3.1', () => {
-    const msg = buildApiMessage(base)
-    expect(msg.To).toEqual([{ Email: 'nguoinhan@example.com' }])
-    expect(msg.Subject).toBe('Xin chào')
-    expect(msg.TextPart).toBe('Nội dung')
-    expect(msg.HTMLPart).toBe('<p>Nội dung</p>')
-    expect(msg.From.Email).toBeTruthy()
+describe('chọn đường gửi (chỉ còn Resend và SMTP)', () => {
+  it('chưa cấu hình gì → none', () => {
+    expect(isResendConfigured()).toBe(false)
+    expect(isSmtpConfigured()).toBe(false)
+    expect(resolveTransport()).toBe('none')
   })
 
-  it('thêm Cc/Bcc/ReplyTo khi được truyền', () => {
-    const msg = buildApiMessage({ ...base, cc: 'cc@example.com', bcc: 'bcc@example.com', replyTo: 'hoi@example.com' })
-    expect(msg.Cc).toEqual([{ Email: 'cc@example.com' }])
-    expect(msg.Bcc).toEqual([{ Email: 'bcc@example.com' }])
-    expect(msg.ReplyTo).toEqual({ Email: 'hoi@example.com' })
+  it('chỉ có SMTP → smtp', () => {
+    withSmtp()
+    expect(resolveTransport()).toBe('smtp')
   })
 
-  it('dùng TemplateID thì KHÔNG kèm TextPart/HTMLPart', () => {
-    const msg = buildApiMessage({ ...base, templateId: '1234', templateVariables: { name: 'Minh' } })
-    expect(msg.TemplateID).toBe(1234)
-    expect(msg.Variables).toEqual({ name: 'Minh' })
-    expect(msg.TextPart).toBeUndefined()
-    expect(msg.HTMLPart).toBeUndefined()
+  it('có cả hai ở chế độ auto → ưu tiên Resend', () => {
+    withSmtp()
+    config.resend.apiKey = 're_test_key'
+    expect(resolveTransport()).toBe('resend')
+  })
+
+  it('MAIL_TRANSPORT=smtp buộc đi SMTP dù có key Resend', () => {
+    withSmtp()
+    config.resend.apiKey = 're_test_key'
+    config.mail.transport = 'smtp'
+    expect(resolveTransport()).toBe('smtp')
+  })
+
+  it('MAIL_TRANSPORT=resend nhưng chưa có key → none', () => {
+    withSmtp()
+    config.mail.transport = 'resend'
+    expect(resolveTransport()).toBe('none')
   })
 })
 
-describe('sendEmail qua Mailjet Send API v3.1', () => {
-  it('gửi thành công và trả về messageId trong response', async () => {
-    const fetchMock = vi.fn(async () => okResponse())
-    vi.stubGlobal('fetch', fetchMock)
+describe('sendEmail qua SMTP', () => {
+  it('gửi thành công và trả về via/messageId', async () => {
+    withSmtp()
 
     const result = await sendEmail({
       to: 'nguoinhan@example.com',
@@ -96,59 +111,43 @@ describe('sendEmail qua Mailjet Send API v3.1', () => {
       html: '<b>123456</b>',
     })
 
-    expect(result).toMatchObject({ sent: true, via: 'api', messageId: '456', accepted: 1 })
+    expect(result).toMatchObject({ sent: true, via: 'smtp', messageId: 'smtp-message-1' })
+    expect(sendMail).toHaveBeenCalledTimes(1)
 
-    const [url, opts] = fetchMock.mock.calls[0]
-    expect(url).toContain('/v3.1/send')
-    expect(opts.method).toBe('POST')
-    expect(opts.headers.Authorization).toMatch(/^Basic /)
-    const body = JSON.parse(opts.body)
-    expect(body.Messages[0].To).toEqual([{ Email: 'nguoinhan@example.com' }])
-    expect(body.Messages[0].Subject).toBe('Mã xác nhận')
+    const arg = sendMail.mock.calls[0][0]
+    expect(arg.to).toBe('nguoinhan@example.com')
+    expect(arg.subject).toBe('Mã xác nhận')
+    expect(arg.text).toBe('Mã của bạn là 123456')
+    expect(arg.html).toBe('<b>123456</b>')
+    // Reply-To mặc định trùng tài khoản gửi để thư hệ thống không bị coi là bulk
+    expect(arg.replyTo).toBe('no-reply@mn-qronx.id.vn')
   })
 
-  it('tài khoản bị khoá (401 mj-0001) → ném lỗi có mã và gợi ý xử lý', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => ({
-        ok: false,
-        status: 401,
-        text: async () =>
-          JSON.stringify({
-            ErrorIdentifier: 'x',
-            ErrorCode: 'mj-0001',
-            StatusCode: 401,
-            ErrorMessage: 'Your account has been temporarily blocked.',
-          }),
-      })),
-    )
+  it('gộp mảng người nhận thành chuỗi và giữ cc/bcc', async () => {
+    withSmtp()
 
-    await expect(sendEmail({ to: 'a@example.com', subject: 's', text: 't' })).rejects.toBeInstanceOf(MailjetSendError)
-
-    await sendEmail({ to: 'a@example.com', subject: 's', text: 't' }).catch((err) => {
-      expect(err.code).toBe('mj-0001')
-      expect(err.hint).toMatch(/tạm khoá/i)
+    await sendEmail({
+      to: ['a@example.com', 'b@example.com'],
+      cc: ['cc@example.com'],
+      bcc: 'bcc@example.com',
+      subject: 's',
+      text: 't',
     })
-  })
 
-  it('Mailjet trả Status khác success → ném lỗi', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => ({
-        ok: true,
-        status: 200,
-        text: async () => JSON.stringify({ Messages: [{ Status: 'error', Errors: ['From không hợp lệ'] }] }),
-      })),
-    )
-
-    await expect(sendEmail({ to: 'a@example.com', subject: 's', text: 't' })).rejects.toBeInstanceOf(MailjetSendError)
+    const arg = sendMail.mock.calls[0][0]
+    expect(arg.to).toBe('a@example.com, b@example.com')
+    expect(arg.cc).toBe('cc@example.com')
+    expect(arg.bcc).toBe('bcc@example.com')
   })
 })
 
-describe('chọn đường gửi', () => {
-  it('chưa có RESEND_API_KEY → dùng Mailjet API khi đã có key (MAIL_TRANSPORT=auto)', () => {
-    expect(isResendConfigured()).toBe(false)
-    expect(isApiConfigured()).toBe(true)
-    expect(resolveTransport()).toBe('api')
+describe('sendEmail khi chưa cấu hình', () => {
+  it('trả sent:false kèm nội dung để phía gọi hiển thị mã xác nhận', async () => {
+    const result = await sendEmail({ to: 'a@example.com', subject: 's', text: 'Mã: 123456' })
+
+    expect(result.sent).toBe(false)
+    expect(result.smtpMissing).toBe(true)
+    expect(result.devLog).toBe('Mã: 123456')
+    expect(sendMail).not.toHaveBeenCalled()
   })
 })

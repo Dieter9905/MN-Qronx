@@ -45,18 +45,15 @@ npm run seed
 npm run dev
 ```
 
-### 3. Kiểm tra gửi thư (Mailjet)
+### 3. Kiểm tra gửi thư
 
 ```bash
-npm run mail:status           # cấu hình + tên miền/sender + số thư đã gửi hôm nay
-npm run mail:check            # đối chiếu SPF/DKIM trong DNS
-npm run mail:send -- ban@example.com            # gửi thật
-npm run mail:send -- ban@example.com --sandbox  # chỉ kiểm tra payload
+npm run mail:test -- ban@example.com   # gửi thử qua đường đang cấu hình
+npm run mail:resend                    # xác thực tên miền + in bản ghi DNS cho Resend
 ```
 
-> Tài khoản Mailjet đang ở giai đoạn duyệt tạm: dashboard ghi **10 thư/giờ**, mail hỗ trợ
-> ghi **10 thư/ngày**. App tự chặn khi chạm một trong hai ngưỡng
-> (`MAIL_HOURLY_LIMIT` / `MAIL_DAILY_LIMIT`, đặt 0 để tắt) — chi tiết trong
+> Chỉ còn hai đường gửi: **Resend** (API HTTPS) và **SMTP**. `MAIL_TRANSPORT=auto`
+> dùng Resend nếu có `RESEND_API_KEY`, không thì SMTP. Chi tiết và cách khắc phục:
 > [docs/email-domain-setup.md](../docs/email-domain-setup.md).
 
 ### 4. Test

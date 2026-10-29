@@ -1,7 +1,7 @@
 /**
  * Kiểm tra tên miền gửi đã xác thực với Resend chưa, và in ra CHÍNH XÁC bản ghi
- * DNS cần thêm — có đối chiếu với DNS thật (giống công cụ mail:check của Mailjet,
- * nhờ vậy phát hiện được cả trường hợp gõ thiếu ký tự hoặc sai tên host).
+ * DNS cần thêm — có đối chiếu với DNS thật, nhờ vậy phát hiện được cả trường hợp
+ * gõ thiếu ký tự hoặc sai tên host.
  *
  * Dùng:
  *   node scripts/check-resend.mjs           # chỉ xem trạng thái
@@ -135,7 +135,7 @@ async function main() {
       if (answers.length && !found) {
         console.log(`      DNS đang có      : ${answers.map((a) => norm(a).slice(0, 70)).join(' | ')}`)
         console.log('      \u26a0\ufe0f  Giá trị khác với Resend yêu cầu — nhiều panel bỏ qua thay đổi khi SỬA;')
-        console.log('          hãy XOÁ hẳn bản ghi cũ rồi THÊM LẠI (đây là lỗi đã gặp với Mailjet).')
+        console.log('          hãy XOÁ hẳn bản ghi cũ rồi THÊM LẠI bản ghi đúng giá trị.')
       }
     }
   }
