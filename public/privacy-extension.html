@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chính sách quyền riêng tư – MN-Qronx Extension</title>
+  <meta name="description" content="MN-Qronx Extension xử lý dữ liệu nào, xin quyền gì và vì sao — chính sách quyền riêng tư đầy đủ." />
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f1524; color: #e8ecf6;
+      font: 16px/1.7 system-ui, -apple-system, 'Segoe UI', sans-serif;
+      padding: 48px 20px 80px;
+    }
+    main { max-width: 780px; margin: 0 auto; }
+    h1 { font-size: 26px; margin-bottom: 6px; }
+    h2 { font-size: 19px; margin: 34px 0 10px; }
+    p, li { color: #c3cbdd; }
+    ul { padding-left: 22px; margin: 8px 0; }
+    li { margin: 6px 0; }
+    .muted { color: #9aa5c0; font-size: 14px; }
+    strong { color: #fff; }
+    a { color: #7c8cff; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 14px; background: rgba(255,255,255,.08);
+      padding: 1px 6px; border-radius: 6px; color: #dfe6ff;
+    }
+    .badge {
+      display: inline-block; padding: 4px 12px; border-radius: 999px;
+      background: linear-gradient(90deg, #2563eb, #8b5cf6); color: #fff;
+      font-size: 13px; font-weight: 600; margin-bottom: 18px;
+    }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.09); vertical-align: top; }
+    th { color: #fff; font-size: 14px; }
+    td { color: #c3cbdd; font-size: 15px; }
+    td:first-child { white-space: nowrap; }
+    @media print {
+      body { background: #fff; color: #111; }
+      p, li, td { color: #333; } strong, th { color: #000; } h2 { color: #000; }
+      .badge { color: #000; background: #eee; }
+      a { color: #000; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <span class="badge">MN-Qronx</span>
+  <h1>Chính sách quyền riêng tư — MN-Qronx Extension</h1>
+  <p class="muted">Tiện ích Chrome/Edge “MN-Qronx – Nhắc việc &amp; Báo thức Pomodoro”. Cập nhật lần cuối: 30/10/2026.</p>
+
+  <p>MN-Qronx Extension giúp người dùng xem công việc hôm nay của họ trên nền MN-Qronx
+  (<a href="https://mn-qronx.id.vn">https://mn-qronx.id.vn</a>), nhận chuông báo đúng giờ nhắc ngay
+  trên trình duyệt kể cả khi trang web đang đóng, và — với người dùng ở chế độ Lớp học — nhập thời
+  khoá biểu từ cổng trường của chính họ. Trang này nói rõ dữ liệu nào được xử lý, quyền nào được xin
+  và vì sao.</p>
+
+  <h2>1. Dữ liệu tiện ích xử lý</h2>
+  <ul>
+    <li><strong>Email và mật khẩu</strong> — chỉ dùng để đăng nhập vào API của MN-Qronx. Mật khẩu
+    không được lưu lại; tiện ích chỉ giữ <strong>token phiên</strong> (access/refresh token) do API
+    trả về.</li>
+    <li><strong>Danh sách công việc và lời nhắc</strong> — tải từ API MN-Qronx để hiển thị danh sách
+    việc hôm nay và bắn chuông đúng giờ.</li>
+    <li><strong>Cài đặt tiện ích</strong> (trạng thái chuông, mốc thời gian đã chuông, lớp đang chọn)
+    — lưu cục bộ trong trình duyệt của người dùng.</li>
+    <li><strong>Thời khoá biểu</strong> — chỉ khi người dùng bấm nút đọc TKB: tiện ích đọc bảng tiết
+    học trên trang trường đang mở, hoặc gửi cookie phiên của đúng tên miền trường đó về máy chủ
+    MN-Qronx để tự đồng bộ lịch mỗi ngày. Cookie được mã hoá khi lưu; <strong>mật khẩu cổng trường
+    không bao giờ được lưu</strong>.</li>
+  </ul>
+
+  <h2>2. Dữ liệu KHÔNG bị sử dụng</h2>
+  <ul>
+    <li>Không bán, cho thuê hay chia sẻ dữ liệu người dùng cho bên thứ ba.</li>
+    <li>Không thu thập lịch sử duyệt web, không đọc nội dung các trang web khác, không theo dõi hành
+    vi ngoài phạm vi nêu trên.</li>
+    <li>Dữ liệu chỉ đi tới hai nơi: trình duyệt của người dùng và backend chính chủ của MN-Qronx
+    (<code>https://mn-qronx.id.vn</code>).</li>
+    <li>Không dùng dữ liệu để xác định khả năng thanh toán hay cho mục đích tín dụng.</li>
+  </ul>
+
+  <h2>3. Quyền hạn xin và mục đích</h2>
+  <table>
+    <thead>
+      <tr><th>Quyền</th><th>Dùng để làm gì</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>alarms</strong></td>
+        <td>Kiểm tra lời nhắc đến giờ mỗi phút để bắn chuông đúng hạn.</td>
+      </tr>
+      <tr>
+        <td><strong>notifications</strong></td>
+        <td>Hiện thông báo chuông kèm nút “Hoãn 10 phút” và “Tắt nhắc”. Không dùng cho quảng cáo.</td>
+      </tr>
+      <tr>
+        <td><strong>storage</strong></td>
+        <td>Lưu token phiên và trạng thái chuông ngay trên máy người dùng.</td>
+      </tr>
+      <tr>
+        <td><strong>host quyền<br><code>https://mn-qronx.id.vn/*</code></strong></td>
+        <td>Gọi API chính chủ để đăng nhập, tải danh sách việc và lời nhắc của chính người dùng.</td>
+      </tr>
+      <tr>
+        <td><strong>scripting</strong></td>
+        <td>Chèn bộ đọc thời khoá biểu vào trang TKB của trường khi người dùng bấm nút trong tiện
+        ích. Chỉ khi người dùng bật “Tự cập nhật” và đồng ý cho một tên miền trường cụ thể, tiện ích
+        mới đăng ký content script cho đúng tên miền đó. Không chèn mã vào trang nào khác.</td>
+      </tr>
+      <tr>
+        <td><strong>activeTab</strong></td>
+        <td>Quyền tạm thời với tab đang mở ngay sau thao tác của người dùng, chỉ để biết trang nào
+        cần đọc TKB. Mất khi rời trang; không theo dõi lịch sử duyệt web.</td>
+      </tr>
+      <tr>
+        <td><strong>cookies</strong></td>
+        <td>Chỉ đọc cookie phiên của đúng trang TKB trường mà người dùng đã đồng ý cấp quyền, để máy
+        chủ MN-Qronx tự đồng bộ lịch hằng ngày thay vì bắt người dùng nhập lại mật khẩu cổng trường.
+        Không đọc cookie của trang khác.</td>
+      </tr>
+      <tr>
+        <td><strong>host tuỳ chọn<br><code>https://*/*</code></strong></td>
+        <td>Chỉ được cấp cho từng tên miền trường cụ thể khi người dùng bấm đồng ý; tiện ích không tự
+        xin quyền đọc mọi trang web.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>4. Xoá dữ liệu</h2>
+  <ul>
+    <li>Bấm “Thoát” trong tiện ích để xoá token khỏi trình duyệt.</li>
+    <li>Gỡ tiện ích để xoá toàn bộ dữ liệu lưu cục bộ.</li>
+    <li>Muốn xoá hẳn tài khoản cùng dữ liệu trên máy chủ, liên hệ địa chỉ bên dưới.</li>
+  </ul>
+
+  <h2>5. Liên hệ</h2>
+  <p>Chủ sở hữu: <strong>MN-Qronx</strong> — <a href="https://mn-qronx.id.vn">mn-qronx.id.vn</a> ·
+  Email: <strong>minhnhat13246@gmail.com</strong></p>
+  <p class="muted">Chính sách chung cho cả trang web và tiện ích:
+  <a href="/privacy.html">/privacy.html</a>.</p>
+</main>
+</body>
+</html>

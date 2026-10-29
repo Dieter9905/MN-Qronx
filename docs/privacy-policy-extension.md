@@ -1,8 +1,9 @@
 # Chính sách quyền riêng tư — MN-Qronx Extension
 
-> Bản nháp để đưa lên web thành trang công khai (ví dụ
-> `https://mn-qronx.id.vn/privacy-extension`), rồi điền URL vào cả Chrome Web
-> Store và Edge Add-ons. Ngày cập nhật: 26/10/2026.
+> **Bản đang sống: <https://mn-qronx.id.vn/privacy-extension>** — đây là nội dung
+> nguồn của trang tĩnh `public/privacy-extension.html` (nginx có location riêng
+> `= /privacy-extension`). Khi sửa chính sách, sửa cả hai nơi và cập nhật ngày.
+> Ngày cập nhật: 30/10/2026.
 
 MN-Qronx Extension giúp người dùng xem công việc hôm nay của họ trên nền
 MN-Qronx và nhận thông báo chuông ngay trên trình duyệt, kể cả khi trang web

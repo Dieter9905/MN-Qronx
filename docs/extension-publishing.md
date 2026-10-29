@@ -67,10 +67,20 @@
 
 ### Privacy policy URL (bắt buộc)
 
-Cả 2 store đều yêu cầu một URL chính sách quyền riêng tư công khai. Mẫu bản
-policy đã viết trong [privacy-policy-extension.md](privacy-policy-extension.md)
-— đưa lên web thành trang công khai (ví dụ `https://mn-qronx.id.vn/privacy-extension`)
-rồi điền link vào mục Privacy của 2 store.
+Cả 2 store đều yêu cầu một URL chính sách quyền riêng tư công khai. Bản đang
+sống: **<https://mn-qronx.id.vn/privacy-extension>** — dán đúng URL này vào mục
+Privacy của Chrome Web Store và Edge Add-ons.
+
+Trang đó là file tĩnh `public/privacy-extension.html` (nginx có location riêng
+`= /privacy-extension` để trả file này thay vì rơi vào SPA fallback — nếu thiếu
+location đó, URL sẽ trả về trang chủ ứng dụng và hồ sơ bị coi là không có
+chính sách). Trang gộp cả web + tiện ích ở `/privacy.html`; nội dung nguồn nằm
+trong [privacy-policy-extension.md](privacy-policy-extension.md) — sửa ở đó rồi
+cập nhật lại HTML khi chính sách thay đổi.
+
+> Lưu ý khi bổ sung quyền mới trong `manifest.json`: phải thêm quyền đó vào cả
+> trang policy này lẫn phần giải trình từng quyền ở tab Privacy, nếu không hồ sơ
+> dễ bị từ chối vì “chính sách không khớp quyền đang xin”.
 
 ## 2. Edge Add-ons (Microsoft — miễn phí)
 
@@ -97,10 +107,15 @@ rồi điền link vào mục Privacy của 2 store.
 
 ## Việc của BẠN
 
-- [ ] Đăng ký developer Chrome ($5) và Partner Center (miễn phí).
+- [x] Đăng ký developer Chrome ($5) — extension đã public: ID
+  `hnfognfdmbecbipjhcimbenkaakebbod`.
 - [x] Chụp screenshot 1280×800 — đã có bộ 4 ảnh trong `docs/store-screenshots/`.
-- [ ] Đưa privacy policy lên web thành URL công khai.
-- [x] Nộp ZIP vào 2 store (CWA đã live), điền nội dung theo mẫu.
+- [x] Đưa privacy policy lên web: <https://mn-qronx.id.vn/privacy-extension>
+  (kiểm tra: trang phải có tiêu đề “Chính sách quyền riêng tư – MN-Qronx Extension”).
+- [x] Nộp ZIP vào Chrome Web Store (bản 1.2.1 đã live).
+- [ ] Dán giải trình `scripting` / `activeTab` / `cookies` (mục trên) vào tab
+  Privacy rồi bấm **Gửi để xem xét** — form đang để trống 3 ô này.
+- [ ] Partner Center → nộp Edge Add-ons (chưa làm, dùng chung file ZIP).
 - [ ] Sau khi duyệt: triển khai bước 2–4 của lộ trình bán.
 
 ## 4. Chiến lược tăng lượt tải (ASO + kênh web)

@@ -26,3 +26,9 @@ Thumbs.db
 
 # SSH key deploy VPS - nhạy cảm, tuyệt đối không commit
 .deploy/
+
+# File tạm sinh ra khi build/kiểm tra (không phải mã nguồn)
+dist-web.tar.gz
+tmp-*.png
+tmp-*.svg
+backend/.tmp-*
