@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "MN-Qronx – Nhắc việc & Báo thức Pomodoro",
   "description": "Việc hôm nay, chuông nhắc & báo thức đúng hạn, đồng hồ Pomodoro tập trung ngay trên trình duyệt – kể cả khi đóng tab web.",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "permissions": ["alarms", "notifications", "storage", "scripting", "activeTab", "cookies"],
   "optional_host_permissions": ["https://*/*"],
   "host_permissions": [

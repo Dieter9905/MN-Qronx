@@ -349,6 +349,15 @@ scrapeBtn.addEventListener('click', async () => {
   }
 
   scrapeBtn.disabled = true
+  await scrapeAndImport(tokens, workspaceId, tab)
+  scrapeBtn.disabled = false
+})
+
+// Chụp bảng TKB ngay trong tab đang mở rồi đưa thẳng lên server. Dùng cho
+// “Lấy TKB trang này” và làm đường dự phòng khi “Kết nối trường này” không
+// tìm thấy cookie phiên nào (một số cổng giữ phiên kiểu khác, ví dụ token
+// nằm trong localStorage — server không tự tải được, nhưng đọc tại chỗ thì OK).
+async function scrapeAndImport(tokens, workspaceId, tab) {
   setSchoolStatus('Đang đọc bảng TKB trên trang…')
   let result = null
   try {
@@ -360,12 +369,14 @@ scrapeBtn.addEventListener('click', async () => {
     })
     result = injected?.[0]?.result || null
   } catch (err) {
-    scrapeBtn.disabled = false
-    return setSchoolStatus('Không đọc được trang này: ' + (err?.message || 'lỗi không rõ'))
+    setSchoolStatus('Không đọc được trang này: ' + (err?.message || 'lỗi không rõ'))
+    return false
   }
-  scrapeBtn.disabled = false
 
-  if (!result) return setSchoolStatus('Không chạy được bộ đọc TKB trên trang này.')
+  if (!result) {
+    setSchoolStatus('Không chạy được bộ đọc TKB trên trang này.')
+    return false
+  }
 
   const headers = { 'X-Workspace': String(workspaceId) }
 
@@ -388,13 +399,16 @@ scrapeBtn.addEventListener('click', async () => {
       setSchoolStatus(`Đã nhập ${imported.data?.imported ?? 0} tiết từ .ics của trường.`)
       autoBtn.classList.remove('hidden')
       lastScrape = { origin: new URL(tab.url).origin, workspaceId, schoolName: result.schoolName }
-    } else {
-      setSchoolStatus(imported?.message || 'Không nhập được .ics của trường.')
+      return true
     }
-    return
+    setSchoolStatus(imported?.message || 'Không nhập được .ics của trường.')
+    return false
   }
 
-  if (!result.ok) return setSchoolStatus(result.note || 'Không đọc được bảng TKB trên trang này.')
+  if (!result.ok) {
+    setSchoolStatus(result.note || 'Không đọc được bảng TKB trên trang này.')
+    return false
+  }
 
   setSchoolStatus(`Đọc được ${result.slots.length} tiết — đang lưu…`)
   const saved = await apiFetch('/student/school/import-slots', {
@@ -403,15 +417,79 @@ scrapeBtn.addEventListener('click', async () => {
     headers,
     body: { schoolName: result.schoolName, sourceUrl: result.url, slots: result.slots },
   })
-  if (saved?.success) {
-    await STORE.set({ mnqTkbWorkspace: workspaceId })
-    lastScrape = { origin: new URL(tab.url).origin, workspaceId, schoolName: result.schoolName }
-    autoBtn.classList.remove('hidden')
-    setSchoolStatus(`✅ Đã cập nhật ${saved.data?.imported ?? result.slots.length} tiết vào Lớp đang chọn.`)
-  } else {
+  if (!saved?.success) {
     setSchoolStatus(saved?.message || 'Không lưu được TKB — thử đăng nhập lại.')
+    return false
   }
+  await STORE.set({ mnqTkbWorkspace: workspaceId })
+  lastScrape = { origin: new URL(tab.url).origin, workspaceId, schoolName: result.schoolName }
+  autoBtn.classList.remove('hidden')
+  setSchoolStatus(`✅ Đã cập nhật ${saved.data?.imported ?? result.slots.length} tiết vào Lớp đang chọn.`)
+  return true
 })
+
+// ─── Thu thập TOÀN BỘ cookie phiên của trang trường ──────────────────────
+// getAll({url}) cũ chỉ hỏi 1 kiểu — dễ trượt mất phiên:
+//   • Cookie HttpOnly của cổng .NET (ASP.NET_SessionId): chỉ chrome.cookies thấy
+//   • Cookie Partitioned (CHIPS) của trình duyệt mới: phải hỏi kèm
+//     partitionKey.topLevelUrl, không thìgetAll mặc định KHÔNG trả
+//   • Cookie SSO đặt trên domain cha (.ntt.edu.vn): phải dò theo domain đó
+//   • Cookie nhìn thấy từ JS (phi HttpOnly): đọc qua document.cookie của tab
+// Gom tất cả nguồn, cookie gắn đúng host xếp trước, ghép thành header chuẩn.
+async function collectSchoolCookies(tab) {
+  const u = new URL(tab.url)
+  const labels = u.hostname.split('.')
+  const domains = [...new Set([
+    u.hostname,
+    labels.length > 2 ? labels.slice(-3).join('.') : u.hostname,
+    labels.length > 2 ? labels.slice(-2).join('.') : u.hostname,
+  ])]
+
+  const byKey = new Map()
+  const put = (c) => {
+    if (!c?.name) return
+    const key = `${c.domain ?? ''}|${c.name}|${c.path ?? ''}|${c.storeId ?? ''}`
+    // Cookie gắn đúng host đang mở là phiên "nguyên" nhất — ưu tiên đứng đầu
+    const weight = String(c.domain ?? '').endsWith(u.hostname) ? 0 : 1
+    const prev = byKey.get(key)
+    if (!prev || weight < prev.weight) byKey.set(key, { ...c, weight })
+  }
+
+  const queries = [{ url: u.origin + '/' }, { url: tab.url }]
+  for (const domain of domains) queries.push({ domain })
+  // Cookie Partitioned chỉ hiện khi hỏi đúng topLevelUrl — trình duyệt cũ
+  // không nhận trường này sẽ ném lỗi → bắt và bỏ qua lần dò đó
+  queries.push({ url: u.origin + '/', partitionKey: { topLevelUrl: u.origin } })
+  queries.push({ url: tab.url, partitionKey: { topLevelUrl: u.origin } })
+
+  for (const q of queries) {
+    try {
+      for (const c of await chrome.cookies.getAll(q)) put(c)
+    } catch {
+      /* kiểu dò này không dùng được trên trình duyệt này — bỏ qua */
+    }
+  }
+
+  // Cookie nhìn thấy được từ JS trong tab (phi HttpOnly) — activeTab còn hiệu
+  // lực từ chính cú bấm nút của người dùng, nên executeScript không xin thêm
+  try {
+    const inj = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => document.cookie,
+    })
+    for (const pair of String(inj?.[0]?.result || '').split(';')) {
+      const m = pair.trim().match(/^([^=]+)=(.*)$/)
+      if (m) put({ name: m[1], value: m[2], domain: u.hostname, path: '/', weight: 2 })
+    }
+  } catch {
+    /* không cắm được script vào tab — bỏ qua */
+  }
+
+  return [...byKey.values()]
+    .sort((a, b) => a.weight - b.weight)
+    .map((c) => `${c.name}=${c.value}`)
+    .join('; ')
+}
 
 // ─── Kết nối trường bằng PHIÊN đăng nhập (đường dự phòng cho mọi trường) ──
 // Người dùng đã đăng nhập trên cổng trường; extension gửi URL trang TKB +
@@ -443,16 +521,17 @@ connectSessionBtn.addEventListener('click', async () => {
     return setSchoolStatus('Bạn chưa cho phép đọc tên miền trường nên chưa kết nối được.')
   }
 
-  let cookie = ''
-  try {
-    const cookies = await chrome.cookies.getAll({ url: tab.url })
-    cookie = cookies.map((c) => `${c.name}=${c.value}`).join('; ')
-  } catch {
-    cookie = ''
-  }
+  setSchoolStatus('Đang gom cookie phiên của trường…')
+  const cookie = await collectSchoolCookies(tab)
   if (!cookie) {
     connectSessionBtn.disabled = false
-    return setSchoolStatus('Không thấy cookie đăng nhập — bạn đã đăng nhập cổng trường trong tab này chưa?')
+    // Cổng trường giữ phiên mà không thấy cookie nào (một số cổng để token
+    // trong localStorage thay vì cookie) → server không thể tự tải TKB hàng
+    // ngày, NHƯNG vẫn chụp được TKB ngay trong tab. Tự chuyển sang đường đó
+    // thay vì báo lỗi để người dùng chôn chân ở màn hình nửa vời.
+    setSchoolStatus('Không thấy cookie phiên (trang giữ phiên theo kiểu khác) — thử chụp TKB ngay trong tab…')
+    await scrapeAndImport(tokens, workspaceId, tab)
+    return
   }
 
   setSchoolStatus('Đang đọc TKB trên server…')
