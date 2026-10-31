@@ -39,6 +39,17 @@ app.get('/docs.json', (req, res) => {
   res.send(swaggerSpec)
 })
 
+// ── HTTP cache: API KHÔNG BAO GIỜ được cache ───────────────
+// Express mặc định gắn ETag vào mọi JSON mà KHÔNG gửi Cache-Control — trình
+// duyệt tự ý lưu và revalidate (If-None-Match) → 304 → dùng lại body CŨ. Thật:
+// body 401 "hết hạn phiên" nằm trong cache, người dùng vừa đăng nhập bằng
+// Google xong nhạn /me trả 304 ngay giây đầu → app tưởng chưa đăng nhập →
+// clearSession đá về /login ("văng ra"). no-store diệt tận gốc mọi 304 của API.
+app.use('/api/v1', (req, res, next) => {
+  res.set('Cache-Control', 'no-store')
+  next()
+})
+
 // ── API routes (all under /api/v1) ────────────────────────
 app.use(transformResponse)
 app.use('/api/v1', routes)

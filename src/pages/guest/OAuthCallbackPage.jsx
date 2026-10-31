@@ -25,10 +25,26 @@ export default function OAuthCallbackPage() {
     }
 
     setSession({ accessToken, refreshToken, user: null })
-    refresh().then((u) => {
+    ;(async () => {
+      // Người dùng vừa được Google trả token về — /me hụt một nhịp (đường
+      // truyền yếu) không đáng để đá về /login ngay. Thử tối đa 2 lần trước
+      // khi chịu lỗi; fetchCurrentUser trả null khi /me xác nhận không hợp lệ.
+      let user = null
+      for (let attempt = 0; attempt < 2 && !user; attempt += 1) {
+        try {
+          user = await refresh()
+        } catch {
+          /* đường truyền chập chờn — thử lại */
+        }
+        if (!user && attempt === 0) await new Promise((r) => setTimeout(r, 600))
+      }
+      if (!user) {
+        fail()
+        return
+      }
       // Admin → khu vực quản trị, người dùng thường → app
-      navigate(u?.role === 'ADMIN' ? '/admin' : '/app', { replace: true })
-    })
+      navigate(user.role === 'ADMIN' ? '/admin' : '/app', { replace: true })
+    })()
   }, [navigate, refresh])
 
   return (
