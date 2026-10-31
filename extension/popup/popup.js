@@ -282,7 +282,10 @@ $('login-form').addEventListener('submit', async (e) => {
 // vô dụng với họ. Nút này mở luồng OAuth quen thuộc của web trong tab mới;
 // sau khi chọn tài khoản Google, web trả về /oauth-callback?accessToken=…
 // và oauth-capture.js (content script) gửi token về background để lưu.
-$('google-btn').addEventListener('click', () => {
+$('google-btn').addEventListener('click', async () => {
+  // Đánh dấu đây là luồng do tiện ích mở: oauth-capture.js chỉ đóng tab khi
+  // thấy dấu này, nhờ vậy đăng nhập Google trên web không bị mất tab.
+  await STORE.set({ mnqOAuthPending: Date.now() })
   chrome.tabs.create({ url: API_BASE + '/auth/google' })
   window.close() // đóng popup, tab Google giữ màn chọn tài khoản
 })

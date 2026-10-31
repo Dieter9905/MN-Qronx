@@ -55,7 +55,7 @@ async function getDeviceId() {
 // Tab web mở luồng OAuth của web (/auth/google → Google → callback →
 // /oauth-callback?accessToken=…&refreshToken=…). Nền nhận token, lấy hồ
 // sơ /me cho popup hiển thị tên, rồi đóng tab và poll ngay.
-async function handleGoogleOAuthTokens(accessToken, refreshToken, senderTab) {
+async function handleGoogleOAuthTokens(accessToken, refreshToken, senderTab, fromExtension) {
   if (!accessToken || !refreshToken) return { ok: false }
   const tokens = { accessToken, refreshToken, user: null }
   try {
@@ -68,7 +68,9 @@ async function handleGoogleOAuthTokens(accessToken, refreshToken, senderTab) {
     /* không lấy được hồ sơ vẫn dùng được token */
   }
   await setTokens(tokens)
-  if (senderTab?.id != null) {
+  // Chỉ đóng tab khi chính tiện ích mở luồng OAuth. Tab của người dùng đang
+  // đăng nhập trên web mà bị đóng thì họ mất luôn phiên vừa tạo.
+  if (fromExtension && senderTab?.id != null) {
     try {
       await chrome.tabs.remove(senderTab.id)
     } catch {
@@ -506,9 +508,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true
   }
   if (msg?.type === 'oauth-tokens') {
-    handleGoogleOAuthTokens(msg.accessToken, msg.refreshToken, _sender?.tab).then((r) =>
-      sendResponse(r),
-    )
+    handleGoogleOAuthTokens(
+      msg.accessToken,
+      msg.refreshToken,
+      _sender?.tab,
+      msg.fromExtension === true,
+    ).then((r) => sendResponse(r))
     return true
   }
   return undefined
