@@ -12,7 +12,10 @@
 // dấu đó (và còn mới) mới được đóng tab / hiện thông báo.
 
 const PENDING_KEY = 'mnqOAuthPending'
-const PENDING_TTL_MS = 5 * 60 * 1000
+// 90 giây là đủ cho màn chọn tài khoản Google. Đặt dài hơn (5 phút từng dùng)
+// dễ dính flag CŨ: bấm Google ở tiện ích rồi đổi ý đăng nhập ở web trong vài
+// phút kế — web bị oan coi là "luồng của tiện ích" rồi nhận được lệnh close.
+const PENDING_TTL_MS = 90 * 1000
 
 const params = new URLSearchParams(location.search)
 const accessToken = params.get('accessToken')
@@ -22,7 +25,9 @@ if (accessToken && refreshToken) {
   chrome.storage.local.get(PENDING_KEY, (items) => {
     const startedAt = Number(items?.[PENDING_KEY]) || 0
     const fromExtension = startedAt > 0 && Date.now() - startedAt < PENDING_TTL_MS
-    if (fromExtension) chrome.storage.local.remove(PENDING_KEY)
+    // Xoá flag ẢNH HƯỞNG ngay cả khi là luồng web: flag rác sống dai sẽ oan
+    // một lần đăng nhập web sau đó là "luồng của tiện ích" → tab web bị close.
+    chrome.storage.local.remove(PENDING_KEY)
 
     chrome.runtime.sendMessage(
       { type: 'oauth-tokens', accessToken, refreshToken, fromExtension },

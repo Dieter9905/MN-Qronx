@@ -11,6 +11,12 @@ import errorHandler from './middleware/errorHandler.js'
 
 const app = express()
 
+// Tắt ETag của Express: với Cache-Control: no-store phía dưới, mọi response
+// API không còn validator → trình duyệt không gửi được If-None-Match → KHÔNG
+// BAO GIỜ nhận 304 để cùng lại body cũ (kể cả entry cũ đã cài trong cache từ
+// trước khi có no-store — từng thật: /me 304 trả 401 cũ → tự đăng xuất).
+app.set('etag', false)
+
 // ── Security & parsing middleware ──────────────────────────
 app.use(helmet({ contentSecurityPolicy: false }))
 app.use(cors())
