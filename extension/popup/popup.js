@@ -426,7 +426,7 @@ async function scrapeAndImport(tokens, workspaceId, tab) {
   autoBtn.classList.remove('hidden')
   setSchoolStatus(`✅ Đã cập nhật ${saved.data?.imported ?? result.slots.length} tiết vào Lớp đang chọn.`)
   return true
-})
+}
 
 // ─── Thu thập TOÀN BỘ cookie phiên của trang trường ──────────────────────
 // getAll({url}) cũ chỉ hỏi 1 kiểu — dễ trượt mất phiên:
