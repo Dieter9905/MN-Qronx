@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   CalendarDots,
   WarningCircle,
@@ -81,6 +81,7 @@ export default function DashboardPage() {
   const { lang } = useLanguage()
   const t = app[lang]
   const toast = useToast()
+  const navigate = useNavigate()
   // Hiện số liệu đã lưu NGAY khi mở, rồi làm mới ở chế độ ngầm: web service gói
   // free của Render có thể đang khởi động 30–60 giây, trước đây màn hình chỉ có
   // skeleton trong suốt thời gian đó, còn nếu request đầu thất bại thì `data`
@@ -164,6 +165,20 @@ export default function DashboardPage() {
     (task, i, arr) => arr.findIndex((x) => x.id === task.id) === i
   )
 
+  // Bàn học trong phòng: 2 món thật — ô trái nhặt việc quá hạn đầu (món đã sáng
+  // đèn), ô giữa nhặt việc hôm nay đầu để cảnh giữ hai sắc; chỉ khi không có
+  // việc hạn hôm nay nào khác mới bơm thêm quá hạn thứ hai vào ô giữa. Kho
+  // hoàn thành chỉ bằng số (API không trả danh sách) → sticker tích dùng đúng
+  // số đó. Thuần hiển thị, không đổi logic API.
+  const firstOverdue = data.overdueTasks?.[0]
+  const firstTodayNotThat = data.todayTasks?.find((x) => x.id !== firstOverdue?.id)
+  const roomCardsRaw = [firstOverdue, firstTodayNotThat ?? data.overdueTasks?.[1]].filter(Boolean)
+  const roomCards = roomCardsRaw.map((task) => ({
+    id: task.id,
+    title: task.title,
+    tone: task.overdue ? 'due' : 'today',
+  }))
+
   const initials = String(user?.fullName || '')
     .split(' ')
     .map((w) => w[0])
@@ -226,7 +241,14 @@ export default function DashboardPage() {
           className="relative overflow-hidden rounded-[1.8rem] bg-room-oat/30 ring-1 ring-room-acorn/25"
         >
           <div className="room-wallpaper px-1 pb-1 pt-3 sm:px-4 sm:pt-4">
-            <RoomScene t={t} app />
+            {/* Món việc trên bàn là phím thật: bấm mở đúng chi tiết việc đó */}
+            <RoomScene
+              t={t}
+              app
+              cards={roomCards}
+              completedCount={data.completedCount}
+              onTaskClick={(task) => navigate(`/app/tasks/${task.id}`)}
+            />
           </div>
           {/* Bệ bàn: bảng tên + số của hôm nay, nằm ngay dưới mép bàn trong cảnh */}
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 bg-room-acorn/45 px-4 py-2 text-room-paper">

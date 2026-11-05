@@ -791,6 +791,22 @@ body:has(.room-world)::-webkit-scrollbar-thumb {
   animation: roomGlowPulse 2.6s ease-in-out infinite;
 }
 
+/* Bàn học tương tác (M3): món việc trên bàn là phím thật — rơ chuột món đồ
+   nhỉnh lên, viền card đậm nét như sờ vào. Chuyển động trạng thái (hover),
+   không phải authored motion riêng. `transform-box` cần cho SVG <g>. */
+.room-world .desk-task {
+  transform-box: fill-box;
+  transform-origin: 50% 92%;
+  transition: transform 0.18s ease;
+}
+.room-world .desk-task:hover {
+  transform: translateY(-2.5px);
+}
+.room-world .desk-task:hover .desk-card {
+  stroke: rgb(var(--room-acorn));
+  stroke-width: 2.5;
+}
+
 /* Giấy dán tường của phòng trong /app: chấm Acorn thưa, cùng họ chấm với
    dot-divider — chỉ đủ tạo chất liệu, không tranh chữ với nội dung. */
 .room-wallpaper {

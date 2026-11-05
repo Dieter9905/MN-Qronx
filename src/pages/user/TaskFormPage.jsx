@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Bell,
+  BellRinging,
   Clock,
   Plus,
   Trash,
@@ -11,16 +12,14 @@ import {
   Check,
   Alarm,
   LockSimple,
+  CircleNotch,
 } from '@phosphor-icons/react'
-import { Field, Input, Textarea, Select, SegmentedControl } from '../../components/common/Inputs'
-import Button from '../../components/common/Button'
 import { createTask, updateTask, getTask } from '../../services/taskService'
 import { getCategories, createCategory } from '../../services/categoryService'
 import { getMembers } from '../../services/workspaceService'
 import { useWorkspace } from '../../context/WorkspaceContext'
 import Modal from '../../components/common/Modal'
 import { useToast } from '../../components/common/Toast'
-import { PageLoader } from '../../components/common/Feedback'
 import { useAuth } from '../../context/AuthContext'
 import {
   PRIORITY,
@@ -33,6 +32,15 @@ import {
   isPaidPlan,
 } from '../../lib/constants'
 import { ColorPicker } from '../../components/common/Inputs'
+import {
+  RoomField,
+  RoomInput,
+  RoomSegmented,
+  RoomSelect,
+  RoomTextarea,
+  RoomButton,
+  RoomCard,
+} from '../../components/common/RoomUI'
 import { toDate, addMinutes } from '../../lib/format'
 
 function toLocalInputValue(date) {
@@ -48,6 +56,12 @@ const PRESET_REMINDERS = [
   { label: 'Trước 30 phút', offset: -30 },
   { label: 'Trước 1 giờ', offset: -60 },
 ]
+
+// Viên chip nhỏ không nhấn được (đếm số, nhãn PRO) — thẻ giấy nổi trên khay Oat
+const countChipCls =
+  'rounded-full bg-room-oat/70 px-2 py-0.5 text-xs font-bold text-room-ink/60'
+const proChipCls =
+  'rounded-full bg-room-oat/70 px-2 py-0.5 text-[11px] font-bold text-room-ink/70 ring-1 ring-room-acorn/30'
 
 export default function TaskFormPage() {
   const { id } = useParams()
@@ -95,7 +109,7 @@ export default function TaskFormPage() {
 
   useEffect(() => {
     loadCategories()
-     
+
   }, [])
 
   // Thành viên nhóm để chọn người phụ trách — chỉ tải khi đúng chế độ Nhóm
@@ -297,7 +311,16 @@ export default function TaskFormPage() {
     loadCategories()
   }
 
-  if (loading) return <PageLoader label="Đang tải biểu mẫu…" />
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-24">
+        <span role="status" aria-label="Đang tải">
+          <CircleNotch size={28} className="animate-spin text-room-acorn" weight="bold" />
+        </span>
+        <p className="text-sm font-semibold text-room-ink/60">Đang tải biểu mẫu…</p>
+      </div>
+    )
+  }
 
   const priorityOptions = ['URGENT', 'HIGH', 'MEDIUM', 'LOW'].map((p) => ({
     value: p,
@@ -309,23 +332,29 @@ export default function TaskFormPage() {
     ),
   }))
 
+  // Chips lùi sẵn của nhắc nhở + vien chọn Nhắc dai — cùng một da pill Oat
+  const chipInactiveCls =
+    'cursor-pointer rounded-full bg-room-oat/45 px-3.5 py-1.5 text-xs font-bold text-room-ink/80 ring-1 ring-inset ring-room-acorn/20 transition hover:bg-room-oat/75'
+  const chipActiveCls =
+    'cursor-pointer rounded-full bg-room-acorn px-3.5 py-1.5 text-xs font-bold text-room-paper ring-1 ring-inset ring-room-acorn/40 transition'
+
   return (
     <div className="mx-auto max-w-3xl animate-fade-in">
-      <Link to={isEdit ? `/app/tasks/${id}` : '/app/tasks'} className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-500 transition hover:text-blue-600">
+      <Link to={isEdit ? `/app/tasks/${id}` : '/app/tasks'} className="inline-flex items-center gap-1.5 text-sm font-bold text-room-ink/60 transition hover:text-room-acorn">
         <ArrowLeft size={16} weight="bold" /> {isEdit ? 'Quay lại chi tiết' : 'Quay lại danh sách'}
       </Link>
-      <h1 className="page-title dark:text-white mt-4">{isEdit ? 'Sửa công việc' : 'Tạo công việc mới'}</h1>
-      <p className="mt-1 text-sm font-medium text-navy-400 dark:text-slate-500">
+      <h1 className="mt-4 font-display text-2xl font-bold text-room-ink">{isEdit ? 'Sửa công việc' : 'Tạo công việc mới'}</h1>
+      <p className="mt-1 text-sm font-semibold text-room-ink/55">
         {isEdit ? 'Cập nhật thông tin và nhắc nhở của công việc.' : 'Nhập tiêu đề, thời hạn và nhắc nhở. Chỉ vài bước là xong.'}
       </p>
 
       <form onSubmit={onSubmit} noValidate className="mt-6 space-y-5 pb-10">
         {/* Thông tin cơ bản */}
-        <section className="card space-y-4 p-5 sm:p-6">
-          <h2 className="font-bold text-navy-900 dark:text-white">Thông tin cơ bản</h2>
-          <Field label="Tiêu đề công việc" required error={errors.title}>
+        <RoomCard className="space-y-4 p-5 sm:p-6">
+          <h2 className="font-display font-bold text-room-ink">Thông tin cơ bản</h2>
+          <RoomField label="Tiêu đề công việc" required error={errors.title}>
             {(fid) => (
-              <Input
+              <RoomInput
                 id={fid}
                 value={form.title}
                 onChange={(e) => set('title')(e.target.value)}
@@ -334,29 +363,29 @@ export default function TaskFormPage() {
                 autoFocus={!isEdit}
               />
             )}
-          </Field>
-          <Field label="Mô tả" hint="Tùy chọn – mô tả chi tiết công việc cần làm">
+          </RoomField>
+          <RoomField label="Mô tả" hint="Tùy chọn – mô tả chi tiết công việc cần làm">
             {(fid) => (
-              <Textarea id={fid} value={form.description} onChange={(e) => set('description')(e.target.value)} placeholder="Mô tả chi tiết công việc…" />
+              <RoomTextarea id={fid} value={form.description} onChange={(e) => set('description')(e.target.value)} placeholder="Mô tả chi tiết công việc…" />
             )}
-          </Field>
+          </RoomField>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Danh mục">
+            <RoomField label="Danh mục">
               <div className="flex gap-2">
-                <Select value={form.categoryId} onChange={(e) => set('categoryId')(e.target.value)} className="flex-1">
+                <RoomSelect value={form.categoryId} onChange={(e) => set('categoryId')(e.target.value)} className="flex-1">
                   <option value="">Không phân loại</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
-                </Select>
-                <Button variant="secondary" size="icon" aria-label="Tạo danh mục mới" onClick={() => setCatModalOpen(true)}>
+                </RoomSelect>
+                <RoomButton variant="secondary" size="icon" aria-label="Tạo danh mục mới" onClick={() => setCatModalOpen(true)}>
                   <FolderSimple size={18} weight="bold" />
-                </Button>
+                </RoomButton>
               </div>
-            </Field>
-            <Field label="Thời điểm đến hạn" required error={errors.dueAt}>
+            </RoomField>
+            <RoomField label="Thời điểm đến hạn" required error={errors.dueAt}>
               {(fid) => (
-                <Input
+                <RoomInput
                   id={fid}
                   type="datetime-local"
                   value={form.dueAt}
@@ -364,19 +393,19 @@ export default function TaskFormPage() {
                   invalid={!!errors.dueAt}
                 />
               )}
-            </Field>
+            </RoomField>
           </div>
-          <Field label="Mức độ ưu tiên">
-            <SegmentedControl options={priorityOptions} value={form.priority} onChange={set('priority')} />
-          </Field>
+          <RoomField label="Mức độ ưu tiên">
+            <RoomSegmented options={priorityOptions} value={form.priority} onChange={set('priority')} />
+          </RoomField>
 
           {/* Giao việc chỉ có nghĩa trong chế độ Nhóm (có đồng đội cùng không gian) */}
           {teamWorkspace && !isEdit && (
-            <Field
+            <RoomField
               label={`Người phụ trách (nhóm ${teamWorkspace.name})`}
               hint="Để trống nếu bạn tự làm. Người được giao nhận chuông nhắc và thấy việc ở trang Việc được giao."
             >
-              <Select value={form.assigneeId} onChange={(e) => set('assigneeId')(e.target.value)}>
+              <RoomSelect value={form.assigneeId} onChange={(e) => set('assigneeId')(e.target.value)}>
                 <option value="">Tôi tự làm việc này</option>
                 {teamMembers
                   .filter((m) => Number(m.user.userId) !== Number(user?.id ?? user?.userId))
@@ -385,11 +414,11 @@ export default function TaskFormPage() {
                       {m.user.fullName} ({m.openTasks} việc đang mở)
                     </option>
                   ))}
-              </Select>
-            </Field>
+              </RoomSelect>
+            </RoomField>
           )}
-          <Field label="Lặp lại">
-            <SegmentedControl
+          <RoomField label="Lặp lại">
+            <RoomSegmented
               options={REPEAT_TYPE_LIST.map((r) =>
                 canRepeat || r.value === 'NONE'
                   ? { value: r.value, label: r.label }
@@ -400,7 +429,7 @@ export default function TaskFormPage() {
             />
             {form.repeatType === 'WEEKLY' && canRepeat && (
               <div className="mt-3">
-                <p className="text-xs font-semibold text-navy-500 dark:text-slate-400">Lặp lại vào những ngày nào trong tuần?</p>
+                <p className="text-xs font-bold text-room-ink/60">Lặp lại vào những ngày nào trong tuần?</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {WEEKDAYS.map((day) => {
                     const active = form.repeatDays.includes(day.value)
@@ -414,8 +443,8 @@ export default function TaskFormPage() {
                         title={day.long}
                         className={`flex h-10 w-12 cursor-pointer items-center justify-center rounded-xl text-sm font-bold transition ${
                           active
-                            ? 'bg-brand-gradient text-white shadow-md'
-                            : 'bg-navy-50 text-navy-600 ring-1 ring-inset ring-navy-100 hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-200 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-300'
+                            ? 'bg-room-acorn text-room-paper ring-1 ring-inset ring-room-acorn/40'
+                            : 'bg-room-oat/45 text-room-ink/80 ring-1 ring-inset ring-room-acorn/20 hover:bg-room-oat/75'
                         }`}
                       >
                         {day.label}
@@ -424,30 +453,31 @@ export default function TaskFormPage() {
                   })}
                 </div>
                 {!form.repeatDays.length && (
-                  <p className="mt-2 text-xs font-medium text-navy-400 dark:text-slate-500">
+                  <p className="mt-2 text-xs font-semibold text-room-ink/50">
                     Chưa chọn ngày – sẽ lặp lại vào đúng thứ của ngày đến hạn.
                   </p>
                 )}
               </div>
             )}
             {!canRepeat && (
-              <p className="mt-2 text-xs font-medium text-amber-600 dark:text-amber-400">
-                💡 Công việc lặp lại là tính năng của gói Plus/Pro.{' '}
+              <p className="mt-2 inline-flex flex-wrap items-center gap-1.5 text-xs font-bold text-room-ink/65">
+                <BellRinging size={14} weight="bold" className="text-room-bell" />
+                Công việc lặp lại là tính năng của gói Plus/Pro.{' '}
                 <Link to="/app/billing" className="font-bold underline">
                   Nâng cấp ngay
                 </Link>
               </p>
             )}
-          </Field>
-        </section>
+          </RoomField>
+        </RoomCard>
 
         {/* Nhắc nhở */}
-        <section className="card p-5 sm:p-6">
+        <RoomCard className="p-5 sm:p-6">
           <div className="flex items-center justify-between">
-            <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-              <Bell size={19} weight="fill" className="text-amber-500 dark:text-amber-400" />
+            <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
+              <Bell size={19} weight="fill" className="text-room-bell" />
               Nhắc nhở
-              <span className="rounded-full bg-navy-100 px-2 py-0.5 text-xs font-bold text-navy-500 dark:bg-slate-700 dark:text-slate-400">
+              <span className={countChipCls}>
                 {form.reminders.length}/{reminderLimit}
               </span>
             </h2>
@@ -459,33 +489,32 @@ export default function TaskFormPage() {
                 type="button"
                 onClick={() => addPresetReminder(p.offset)}
                 disabled={form.reminders.length >= reminderLimit}
-                className="cursor-pointer rounded-full bg-navy-50 px-3.5 py-1.5 text-xs font-bold text-navy-700 ring-1 ring-inset ring-navy-100 transition hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400"
+                className={`${chipInactiveCls} disabled:cursor-not-allowed disabled:opacity-40`}
               >
                 + {p.label}
               </button>
             ))}
           </div>
           {errors.reminders && (
-            <p role="alert" className="mt-2 text-xs font-medium text-rose-600">{errors.reminders}</p>
+            <p role="alert" className="mt-2 text-xs font-bold text-room-ink">{errors.reminders}</p>
           )}
           {form.reminders.length > 0 && (
             <ul className="mt-4 space-y-2">
               {form.reminders.map((r, i) => (
-                <li key={i} className="flex items-center gap-2">                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
-                      <Clock size={16} weight="bold" />
-                    </span>
-                  <input
+                <li key={i} className="flex items-center gap-2">
+                  <Clock size={16} weight="bold" className="shrink-0 text-room-bell" />
+                  <RoomInput
                     type="datetime-local"
                     value={r.remindAt}
                     onChange={(e) => updateReminder(i, e.target.value)}
                     aria-label={`Thời điểm nhắc nhở ${i + 1}`}
-                    className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600 dark:focus:bg-slate-600"
+                    className="h-11 flex-1"
                   />
                   <button
                     type="button"
                     onClick={() => removeReminder(i)}
                     aria-label="Xóa nhắc nhở"
-                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-navy-400 transition hover:bg-rose-50 hover:text-rose-500"
+                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/35 transition hover:bg-room-oat/70 hover:text-room-acorn"
                   >
                     <Trash size={16} />
                   </button>
@@ -494,24 +523,24 @@ export default function TaskFormPage() {
             </ul>
           )}
           {form.reminders.length === 0 && (
-            <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">
+            <p className="mt-3 text-xs font-semibold text-room-ink/50">
               Chưa có nhắc nhở – MN-Qronx sẽ không báo thức cho công việc này.
             </p>
           )}
-        </section>
+        </RoomCard>
 
         {/* Nhắc dai (gói Pro) */}
-        <section className="card p-5 sm:p-6">
+        <RoomCard className="p-5 sm:p-6">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-              <Alarm size={19} weight="fill" className="text-rose-500 dark:text-rose-400" />
+            <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
+              <Alarm size={19} weight="fill" className="text-room-bell" />
               Nhắc dai tới khi xong
             </h2>
-            <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-bold text-violet-700 ring-1 ring-inset ring-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:ring-violet-700">
+            <span className={proChipCls}>
               PRO
             </span>
           </div>
-          <p className="mt-2 text-xs text-navy-500 dark:text-slate-400">
+          <p className="mt-2 text-xs font-semibold text-room-ink/55">
             Việc chưa xong thì chuông tự kêu lại (tối đa 10 lần). Bấm “Xong” là thôi nhắc —
             dành cho việc không được phép quên.
           </p>
@@ -521,11 +550,7 @@ export default function TaskFormPage() {
               <button
                 type="button"
                 onClick={() => set('nagEveryMinutes')(null)}
-                className={`cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 ring-inset transition ${
-                  form.nagEveryMinutes === null
-                    ? 'bg-navy-800 text-white ring-navy-800 dark:bg-slate-200 dark:text-slate-900 dark:ring-slate-200'
-                    : 'bg-navy-50 text-navy-700 ring-navy-100 hover:bg-blue-50 hover:text-blue-700 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600'
-                }`}
+                className={form.nagEveryMinutes === null ? chipActiveCls : chipInactiveCls}
               >
                 Tắt
               </button>
@@ -534,19 +559,15 @@ export default function TaskFormPage() {
                   key={o.value}
                   type="button"
                   onClick={() => set('nagEveryMinutes')(o.value)}
-                  className={`cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-bold ring-1 ring-inset transition ${
-                    form.nagEveryMinutes === o.value
-                      ? 'bg-rose-600 text-white ring-rose-600'
-                      : 'bg-navy-50 text-navy-700 ring-navy-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600'
-                  }`}
+                  className={form.nagEveryMinutes === o.value ? chipActiveCls : chipInactiveCls}
                 >
                   {o.label}
                 </button>
               ))}
             </div>
           ) : (
-            <div className="mt-3 rounded-xl bg-navy-50 p-3 ring-1 ring-inset ring-navy-100 dark:bg-slate-700/60 dark:ring-slate-600">
-              <p className="flex items-start gap-2 text-xs font-medium text-navy-500 dark:text-slate-300">
+            <div className="mt-3 rounded-xl bg-room-oat/45 p-3 ring-1 ring-inset ring-room-acorn/15">
+              <p className="flex items-start gap-2 text-xs font-semibold text-room-ink/70">
                 <LockSimple size={15} className="mt-0.5 shrink-0" />
                 <span>
                   Gói hiện tại chỉ nhắc một lần. Nâng cấp Pro để chuông nhắc lại tới khi bạn
@@ -558,31 +579,31 @@ export default function TaskFormPage() {
               </p>
             </div>
           )}
-        </section>
+        </RoomCard>
 
         {/* Việc con */}
-        <section className="card p-5 sm:p-6">
-          <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-            <ListChecks size={19} weight="fill" className="text-blue-600 dark:text-blue-400" />
-            Việc con <span className="text-xs font-medium text-navy-400 dark:text-slate-500">(tùy chọn)</span>
+        <RoomCard className="p-5 sm:p-6">
+          <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
+            <ListChecks size={19} weight="fill" className="text-room-acorn" />
+            Việc con <span className="text-xs font-semibold text-room-ink/50">(tùy chọn)</span>
           </h2>
           {form.subtasks.length > 0 && (
             <ul className="mt-3 space-y-2">
               {form.subtasks.map((s, i) => (
                 <li key={i} className="flex items-center gap-2">
-                  <input
+                  <RoomInput
                     type="text"
                     value={s.content}
                     onChange={(e) => updateSubtask(i, e.target.value)}
                     placeholder={`Việc con ${i + 1}`}
                     aria-label={`Việc con ${i + 1}`}
-                    className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3.5 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600 dark:focus:bg-slate-600"
+                    className="h-11 flex-1"
                   />
                   <button
                     type="button"
                     onClick={() => removeSubtaskRow(i)}
                     aria-label="Xóa việc con"
-                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-navy-400 transition hover:bg-rose-50 hover:text-rose-500"
+                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/35 transition hover:bg-room-oat/70 hover:text-room-acorn"
                   >
                     <Trash size={16} />
                   </button>
@@ -590,19 +611,19 @@ export default function TaskFormPage() {
               ))}
             </ul>
           )}
-          <Button variant="ghost" size="sm" icon={Plus} onClick={addSubtaskRow} className="mt-3">
+          <RoomButton variant="secondary" size="sm" icon={Plus} onClick={addSubtaskRow} className="mt-3">
             Thêm việc con
-          </Button>
-        </section>
+          </RoomButton>
+        </RoomCard>
 
         {/* Hành động */}
-        <div className="sticky bottom-20 z-20 flex flex-col-reverse gap-2 rounded-2xl bg-white/95 p-3 shadow-card-hover ring-1 ring-navy-100 backdrop-blur sm:flex-row sm:justify-end lg:bottom-4">
+        <div className="sticky bottom-20 z-20 flex flex-col-reverse gap-2 rounded-2xl bg-room-paper p-3 ring-1 ring-room-acorn/25 shadow-[0_18px_30px_-20px_rgb(0_0_0/0.35)] sm:flex-row sm:justify-end lg:bottom-4">
           <Link to={isEdit ? `/app/tasks/${id}` : '/app/tasks'} className="sm:inline-block">
-            <Button variant="secondary" fullWidth className="sm:w-auto">Hủy</Button>
+            <RoomButton variant="secondary" fullWidth className="sm:w-auto">Hủy</RoomButton>
           </Link>
-          <Button type="submit" variant="gradient" size="lg" loading={saving} icon={Check}>
+          <RoomButton type="submit" size="lg" loading={saving} icon={Check}>
             {isEdit ? 'Lưu thay đổi' : 'Tạo công việc'}
-          </Button>
+          </RoomButton>
         </div>
       </form>
 
@@ -613,17 +634,18 @@ export default function TaskFormPage() {
         title="Tạo danh mục mới"
         description="Nhóm công việc theo lĩnh vực: Học tập, Công việc, Cá nhân…"
         size="sm"
+        skin="room"
         footer={
           <>
-            <Button variant="secondary" onClick={() => setCatModalOpen(false)}>Hủy</Button>
-            <Button variant="gradient" icon={Check} onClick={quickCreateCategory}>Tạo danh mục</Button>
+            <RoomButton variant="secondary" onClick={() => setCatModalOpen(false)}>Hủy</RoomButton>
+            <RoomButton icon={Check} onClick={quickCreateCategory}>Tạo danh mục</RoomButton>
           </>
         }
       >
         <form onSubmit={quickCreateCategory} className="space-y-4">
-          <Field label="Tên danh mục" required>
+          <RoomField label="Tên danh mục" required>
             {(fid) => (
-              <Input
+              <RoomInput
                 id={fid}
                 value={newCat.name}
                 onChange={(e) => setNewCat((c) => ({ ...c, name: e.target.value }))}
@@ -631,10 +653,10 @@ export default function TaskFormPage() {
                 autoFocus
               />
             )}
-          </Field>
-          <Field label="Màu hiển thị">
+          </RoomField>
+          <RoomField label="Màu hiển thị">
             <ColorPicker colors={CATEGORY_COLORS} value={newCat.color} onChange={(color) => setNewCat((c) => ({ ...c, color }))} />
-          </Field>
+          </RoomField>
         </form>
       </Modal>
     </div>

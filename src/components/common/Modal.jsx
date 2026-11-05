@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from '@phosphor-icons/react'
 import Button from './Button'
+import { RoomButton } from './RoomUI'
 
 export default function Modal({
   open,
@@ -12,7 +13,12 @@ export default function Modal({
   footer,
   size = 'md',
   hideClose = false,
+  // skin="room" = da phòng cho các modal mở trong thế giới phòng (M3):
+  // giấy Paper + ring Acorn, KHÔNG backdrop-blur (craft floor — no glass).
+  // Mặc định 'classic' giữ nguyên bản navy cho mọi nơi khác.
+  skin = 'classic',
 }) {
+  const room = skin === 'room'
   const panelRef = useRef(null)
   const previousFocus = useRef(null)
   // onClose thường được truyền inline (hàm mới mỗi lần render cha) → giữ qua ref
@@ -68,26 +74,44 @@ export default function Modal({
       aria-label={title}
     >
       <div
-        className="absolute inset-0 bg-navy-900/50 backdrop-blur-sm animate-fade-in"
+        className={`absolute inset-0 animate-fade-in ${
+          room ? 'bg-room-ink/45' : 'bg-navy-900/50 backdrop-blur-sm'
+        }`}
         onClick={onClose}
         aria-hidden="true"
       />
       <div
         ref={panelRef}
-        className={`relative w-full ${sizes[size]} max-h-[92dvh] overflow-y-auto rounded-t-2xl bg-white shadow-2xl animate-slide-up dark:bg-slate-800 sm:rounded-2xl ${size === 'sm' ? 'sm:animate-scale-in' : 'sm:animate-slide-up'}`}
+        className={`relative w-full ${sizes[size]} max-h-[92dvh] overflow-y-auto ${
+          room
+            ? 'rounded-t-2xl bg-room-paper ring-1 ring-room-acorn/25 animate-slide-up sm:rounded-2xl'
+            : 'rounded-t-2xl bg-white shadow-2xl animate-slide-up dark:bg-slate-800 sm:rounded-2xl'
+        } ${size === 'sm' ? 'sm:animate-scale-in' : 'sm:animate-slide-up'}`}
       >
         {(title || !hideClose) && (
-          <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-navy-100 bg-white/95 px-5 py-4 backdrop-blur dark:border-slate-700 dark:bg-slate-800/95">
+          <div
+            className={`sticky top-0 z-10 flex items-start justify-between gap-4 px-5 py-4 ${
+              room ? 'border-b border-room-acorn/15 bg-room-paper' : 'border-b border-navy-100 bg-white/95 backdrop-blur dark:border-slate-700 dark:bg-slate-800/95'
+            }`}
+          >
             <div>
-              {title && <h2 className="text-lg font-bold text-navy-900 dark:text-white">{title}</h2>}
-              {description && <p className="mt-0.5 text-sm text-navy-500 dark:text-slate-400">{description}</p>}
+              {title && <h2 className={`text-lg font-bold ${room ? 'text-room-ink' : 'text-navy-900 dark:text-white'}`}>{title}</h2>}
+              {description && (
+                <p className={`mt-0.5 text-sm ${room ? 'font-semibold text-room-ink/60' : 'text-navy-500 dark:text-slate-400'}`}>
+                  {description}
+                </p>
+              )}
             </div>
             {!hideClose && onClose && (
               <button
                 type="button"
                 onClick={onClose}
                 aria-label="Đóng"
-                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-navy-400 transition hover:bg-navy-100 hover:text-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                className={`flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 ${
+                  room
+                    ? 'text-room-ink/50 hover:bg-room-oat/70 focus-visible:ring-room-acorn'
+                    : 'text-navy-400 hover:bg-navy-100 hover:text-navy-700 focus-visible:ring-blue-500'
+                }`}
               >
                 <X size={18} weight="bold" />
               </button>
@@ -96,7 +120,13 @@ export default function Modal({
         )}
         <div className="px-5 py-4">{children}</div>
         {footer && (
-          <div className="sticky bottom-0 flex justify-end gap-3 border-t border-navy-100 bg-white/95 px-5 py-4 backdrop-blur dark:border-slate-700 dark:bg-slate-800/95">
+          <div
+            className={`sticky bottom-0 flex justify-end gap-3 border-t px-5 py-4 ${
+              room
+                ? 'border-room-acorn/15 bg-room-paper'
+                : 'border-navy-100 bg-white/95 backdrop-blur dark:border-slate-700 dark:bg-slate-800/95'
+            }`}
+          >
             {footer}
           </div>
         )}
@@ -116,17 +146,33 @@ export function ConfirmDialog({
   cancelLabel = 'Hủy',
   danger = false,
   loading = false,
+  skin = 'classic',
 }) {
+  const room = skin === 'room'
   return (
-    <Modal open={open} onClose={onClose} size="sm" title={title}>
-      <p className="text-sm leading-relaxed text-navy-600 dark:text-slate-300">{message}</p>
+    <Modal open={open} onClose={onClose} size="sm" title={title} skin={skin}>
+      <p className={room ? 'text-sm font-semibold leading-relaxed text-room-ink/80' : 'text-sm leading-relaxed text-navy-600 dark:text-slate-300'}>
+        {message}
+      </p>
       <div className="mt-5 flex justify-end gap-3">
-        <Button variant="secondary" onClick={onClose} disabled={loading}>
-          {cancelLabel}
-        </Button>
-        <Button variant={danger ? 'danger' : 'primary'} onClick={onConfirm} loading={loading}>
-          {confirmLabel}
-        </Button>
+        {room ? (
+          <RoomButton variant="secondary" onClick={onClose} disabled={loading}>
+            {cancelLabel}
+          </RoomButton>
+        ) : (
+          <Button variant="secondary" onClick={onClose} disabled={loading}>
+            {cancelLabel}
+          </Button>
+        )}
+        {room ? (
+          <RoomButton variant={danger ? 'danger' : 'primary'} onClick={onConfirm} loading={loading}>
+            {confirmLabel}
+          </RoomButton>
+        ) : (
+          <Button variant={danger ? 'danger' : 'primary'} onClick={onConfirm} loading={loading}>
+            {confirmLabel}
+          </Button>
+        )}
       </div>
     </Modal>
   )

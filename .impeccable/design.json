@@ -1,52 +1,282 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-05T04:15:00Z",
+  "generatedAt": "2026-11-05T07:30:00Z",
   "title": "Design System: MN-Qronx — Phòng mini-hompy",
   "extensions": {
     "colorMeta": {
-      "porcelain": { "role": "neutral", "displayName": "Porcelain", "canonical": "rgb(var(--room-paper) / <alpha>) = 255 246 236; .dark = 43 35 30 (#2B231E)", "tonalRamp": ["#0d0b08", "#272320", "#443f39", "#645c54", "#877f76", "#b2a9a0", "#dad3cc", "#f2eee9"] },
-      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "rgb(var(--room-ink) / <alpha>) = 74 59 44; .dark = 233 222 208", "tonalRamp": ["#100a05", "#29231c", "#493d32", "#6a5a4a", "#8e7d6c", "#b9a796", "#e0d2c4", "#f6ede3"] },
-      "acorn": { "role": "primary", "displayName": "Acorn", "canonical": "rgb(var(--room-acorn) / <alpha>) = 139 111 78; .dark = 199 168 133", "tonalRamp": ["#130901", "#2d2214", "#4f3c25", "#735838", "#977b59", "#c3a582", "#e7d0b5", "#fcecda"] },
-      "oat": { "role": "neutral", "displayName": "Oat", "canonical": "rgb(var(--room-oat) / <alpha>) = 234 220 199; .dark = 62 52 43", "tonalRamp": ["#0f0a05", "#28231b", "#473e32", "#685c49", "#8b7e6b", "#b6a995", "#ddd3c3", "#f4ede3"] },
-      "moss": { "role": "neutral", "displayName": "Moss", "canonical": "rgb(var(--room-moss) / <alpha>) = 220 232 223; .dark = 55 69 58", "tonalRamp": ["#080c09", "#212522", "#3b423c", "#566159", "#79837b", "#a3aea6", "#ced7d0", "#eaf0ec"] },
-      "sage": { "role": "neutral", "displayName": "Sage", "canonical": "rgb(var(--room-sage) / <alpha>) = 169 196 177; .dark = 97 124 104", "tonalRamp": ["#050e08", "#1d2720", "#334539", "#4c6454", "#6e8876", "#98b3a0", "#c6dacc", "#e5f3e9"] },
-      "rain": { "role": "neutral", "displayName": "Rain", "canonical": "rgb(var(--room-rain) / <alpha>) = 183 199 214; .dark = 116 132 148", "tonalRamp": ["#070c11", "#1f252a", "#37414a", "#515f6d", "#738290", "#9dadbc", "#cad6e1", "#e7f0f7"] },
-      "sky": { "role": "neutral", "displayName": "Sky", "canonical": "rgb(var(--room-sky) / <alpha>) = 185 202 218; .dark = 40 50 68", "tonalRamp": ["#070c11", "#1e252b", "#37414b", "#51606d", "#738291", "#9dadbd", "#c9d6e2", "#e7f0f8"] },
-      "blush": { "role": "tertiary", "displayName": "Blush (due-only)", "canonical": "rgb(var(--room-blush) / <alpha>) = 245 201 207; .dark = 243 183 190", "tonalRamp": ["#140709", "#2f1f21", "#52373b", "#775258", "#9c747a", "#c89ea4", "#eccbcf", "#ffe8eb"] },
-      "bell": { "role": "secondary", "displayName": "Bell gold", "canonical": "rgb(var(--room-bell) / <alpha>) = 226 176 92; .dark = 232 191 118", "tonalRamp": ["#180600", "#332000", "#583900", "#815300", "#a67618", "#d3a14d", "#f4ce92", "#ffebc3"] }
+      "porcelain": {
+        "role": "neutral",
+        "displayName": "Porcelain",
+        "canonical": "rgb(var(--room-paper) / <alpha>) = 255 246 236; .dark = 43 35 30 (#2B231E)",
+        "tonalRamp": [
+          "#0d0b08",
+          "#272320",
+          "#443f39",
+          "#645c54",
+          "#877f76",
+          "#b2a9a0",
+          "#dad3cc",
+          "#f2eee9"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "rgb(var(--room-ink) / <alpha>) = 74 59 44; .dark = 233 222 208",
+        "tonalRamp": [
+          "#100a05",
+          "#29231c",
+          "#493d32",
+          "#6a5a4a",
+          "#8e7d6c",
+          "#b9a796",
+          "#e0d2c4",
+          "#f6ede3"
+        ]
+      },
+      "acorn": {
+        "role": "primary",
+        "displayName": "Acorn",
+        "canonical": "rgb(var(--room-acorn) / <alpha>) = 139 111 78; .dark = 199 168 133",
+        "tonalRamp": [
+          "#130901",
+          "#2d2214",
+          "#4f3c25",
+          "#735838",
+          "#977b59",
+          "#c3a582",
+          "#e7d0b5",
+          "#fcecda"
+        ]
+      },
+      "oat": {
+        "role": "neutral",
+        "displayName": "Oat",
+        "canonical": "rgb(var(--room-oat) / <alpha>) = 234 220 199; .dark = 62 52 43",
+        "tonalRamp": [
+          "#0f0a05",
+          "#28231b",
+          "#473e32",
+          "#685c49",
+          "#8b7e6b",
+          "#b6a995",
+          "#ddd3c3",
+          "#f4ede3"
+        ]
+      },
+      "moss": {
+        "role": "neutral",
+        "displayName": "Moss",
+        "canonical": "rgb(var(--room-moss) / <alpha>) = 220 232 223; .dark = 55 69 58",
+        "tonalRamp": [
+          "#080c09",
+          "#212522",
+          "#3b423c",
+          "#566159",
+          "#79837b",
+          "#a3aea6",
+          "#ced7d0",
+          "#eaf0ec"
+        ]
+      },
+      "sage": {
+        "role": "neutral",
+        "displayName": "Sage",
+        "canonical": "rgb(var(--room-sage) / <alpha>) = 169 196 177; .dark = 97 124 104",
+        "tonalRamp": [
+          "#050e08",
+          "#1d2720",
+          "#334539",
+          "#4c6454",
+          "#6e8876",
+          "#98b3a0",
+          "#c6dacc",
+          "#e5f3e9"
+        ]
+      },
+      "rain": {
+        "role": "neutral",
+        "displayName": "Rain",
+        "canonical": "rgb(var(--room-rain) / <alpha>) = 183 199 214; .dark = 116 132 148",
+        "tonalRamp": [
+          "#070c11",
+          "#1f252a",
+          "#37414a",
+          "#515f6d",
+          "#738290",
+          "#9dadbc",
+          "#cad6e1",
+          "#e7f0f7"
+        ]
+      },
+      "sky": {
+        "role": "neutral",
+        "displayName": "Sky",
+        "canonical": "rgb(var(--room-sky) / <alpha>) = 185 202 218; .dark = 40 50 68",
+        "tonalRamp": [
+          "#070c11",
+          "#1e252b",
+          "#37414b",
+          "#51606d",
+          "#738291",
+          "#9dadbd",
+          "#c9d6e2",
+          "#e7f0f8"
+        ]
+      },
+      "blush": {
+        "role": "tertiary",
+        "displayName": "Blush (due-only)",
+        "canonical": "rgb(var(--room-blush) / <alpha>) = 245 201 207; .dark = 243 183 190",
+        "tonalRamp": [
+          "#140709",
+          "#2f1f21",
+          "#52373b",
+          "#775258",
+          "#9c747a",
+          "#c89ea4",
+          "#eccbcf",
+          "#ffe8eb"
+        ]
+      },
+      "bell": {
+        "role": "secondary",
+        "displayName": "Bell gold",
+        "canonical": "rgb(var(--room-bell) / <alpha>) = 226 176 92; .dark = 232 191 118",
+        "tonalRamp": [
+          "#180600",
+          "#332000",
+          "#583900",
+          "#815300",
+          "#a67618",
+          "#d3a14d",
+          "#f4ce92",
+          "#ffebc3"
+        ]
+      }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display", "purpose": "Hero + section headings in Baloo 2; sits at 400 — the face is round-heavy by construction. Second heading line is Acorn." },
-      "headline": { "displayName": "Headline", "purpose": "Section titles 1.875–2.25rem, Baloo 2 400, leading tight, text-balance." },
-      "title": { "displayName": "Title", "purpose": "Card, drawer, rail titles; Baloo 2 700 at 15px." },
-      "body": { "displayName": "Body", "purpose": "All reading copy in Nunito; 15px sections / 13px cards, leading relaxed, max-w-md hero prose. The auth gate adds the field-copy scale: 13px bold labels, 12px bold errors / semibold hints, 14px input text." },
-      "label": { "displayName": "Label", "purpose": "Pill vocabulary: MẪU/DEMO chips, toggles, nameplates — Nunito 900 at 11px with tracking." },
-      "utility": { "displayName": "Utility", "purpose": "Validate-at-ship micro steps of the M2 shell & dashboard (20 advisory findings, all recorded intentional): 10px chips (Pro/PLAN_BADGE/lang/BottomNav/WorkspaceSwitcher/SupportBadge labels), 12–12.5px annotation copy, 13px paper-pill buttons and the welcome sub-line, 2rem Baloo streak figure. Only for secondary labels and data figures; never headings. The #7c8cff fallback dot (TodayBrief lesson color) stays from the original build, outside the room token set." }
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero + section headings in Baloo 2; sits at 400 — the face is round-heavy by construction. Second heading line is Acorn."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section titles 1.875–2.25rem, Baloo 2 400, leading tight, text-balance."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card, drawer, rail titles; Baloo 2 700 at 15px."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All reading copy in Nunito; 15px sections / 13px cards, leading relaxed, max-w-md hero prose. The auth gate adds the field-copy scale: 13px bold labels, 12px bold errors / semibold hints, 14px input text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Pill vocabulary: MẪU/DEMO chips, toggles, nameplates — Nunito 900 at 11px with tracking."
+      },
+      "utility": {
+        "displayName": "Utility",
+        "purpose": "Validate-at-ship micro steps of the M2 shell & dashboard (20 advisory findings, all recorded intentional): 10px chips (Pro/PLAN_BADGE/lang/BottomNav/WorkspaceSwitcher/SupportBadge labels), 12–12.5px annotation copy, 13px paper-pill buttons and the welcome sub-line, 2rem Baloo streak figure. Only for secondary labels and data figures; never headings. The #7c8cff fallback dot (TodayBrief lesson color) stays from the original build, outside the room token set."
+      }
     },
     "shadows": [
-      { "name": "raised-action", "value": "0 14px 26px -12px rgb(0 0 0 / 0.30)", "purpose": "Paper weight under primary Acorn pills (CTAs); nav-scope tighter variant 0 8px 18px -8px / 0.30." },
-      { "name": "floating-card", "value": "0 14px 30px -18px rgb(0 0 0 / 0.25)", "purpose": "Float under the taped task card and rail furniture." },
-      { "name": "nav-weight", "value": "0 12px 28px -18px rgb(0 0 0 / 0.35)", "purpose": "Lift for the floating pill nav (plus ring shadow 1px Acorn/30)." },
-      { "name": "pin-shadow", "value": "0 3px 6px rgb(0 0 0 / 0.28)", "purpose": "Hand-set weight under wooden clothesline pins only." },
-      { "name": "due-blush-glow", "value": "radial-gradient(circle, rgba(245,201,207,0.9) 0%, rgba(245,201,207,0.35) 60%, transparent 100%)", "purpose": "Diegetic breathing light of the due item (roomGlowPulse 2.6s) — the only glow in light mode." },
-      { "name": "lamp-warm", "value": "radial-gradient(circle, rgba(238,203,138,0.85) 0%, rgba(238,203,138,0.3) 55%, transparent 100%); opacity 0 → 0.55 in .dark", "purpose": "Evening lamp light (dark-only, 0.6s fade); never shown in light mode. The auth wall re-draws the same #EECB8A constant as a flatter wash: rgb(238 203 138 / 0.5) 0% → 0.15 55% through the same 0.55 veil." },
-      { "name": "field-focus-halo", "value": "0 0 0 4px rgb(var(--room-acorn) / 0.12) beneath the inset ring deepened to 2px rgb(var(--room-acorn)); field lifts translateY(-1px)", "purpose": "Focus response of room form fields — exists only while the field is focused; never a resting shadow." }
+      {
+        "name": "raised-action",
+        "value": "0 14px 26px -12px rgb(0 0 0 / 0.30)",
+        "purpose": "Paper weight under primary Acorn pills (CTAs); nav-scope tighter variant 0 8px 18px -8px / 0.30."
+      },
+      {
+        "name": "floating-card",
+        "value": "0 14px 30px -18px rgb(0 0 0 / 0.25)",
+        "purpose": "Float under the taped task card and rail furniture."
+      },
+      {
+        "name": "nav-weight",
+        "value": "0 12px 28px -18px rgb(0 0 0 / 0.35)",
+        "purpose": "Lift for the floating pill nav (plus ring shadow 1px Acorn/30)."
+      },
+      {
+        "name": "pin-shadow",
+        "value": "0 3px 6px rgb(0 0 0 / 0.28)",
+        "purpose": "Hand-set weight under wooden clothesline pins only."
+      },
+      {
+        "name": "due-blush-glow",
+        "value": "radial-gradient(circle, rgba(245,201,207,0.9) 0%, rgba(245,201,207,0.35) 60%, transparent 100%)",
+        "purpose": "Diegetic breathing light of the due item (roomGlowPulse 2.6s) — the only glow in light mode."
+      },
+      {
+        "name": "lamp-warm",
+        "value": "radial-gradient(circle, rgba(238,203,138,0.85) 0%, rgba(238,203,138,0.3) 55%, transparent 100%); opacity 0 → 0.55 in .dark",
+        "purpose": "Evening lamp light (dark-only, 0.6s fade); never shown in light mode. The auth wall re-draws the same #EECB8A constant as a flatter wash: rgb(238 203 138 / 0.5) 0% → 0.15 55% through the same 0.55 veil."
+      },
+      {
+        "name": "field-focus-halo",
+        "value": "0 0 0 4px rgb(var(--room-acorn) / 0.12) beneath the inset ring deepened to 2px rgb(var(--room-acorn)); field lifts translateY(-1px)",
+        "purpose": "Focus response of room form fields — exists only while the field is focused; never a resting shadow."
+      }
     ],
     "motion": [
-      { "name": "ease-out-soft", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "House easing for all transitions, reveals, and pops." },
-      { "name": "reveal-rise", "value": "opacity 0→1, translateY(30px) scale(0.97)→0/1, 0.8s both; IntersectionObserver threshold 0.15, fires once", "purpose": "Scroll reveal of sections and rails." },
-      { "name": "hover-lift", "value": "translateY(-2px), 200ms ease-out-soft", "purpose": "Raised actions lift on hover; the world stays otherwise still." },
-      { "name": "due-glow-pulse", "value": "opacity 0.85 ↔ 0.45, 2.6s ease-in-out infinite", "purpose": "Breathing of the Blush due-light around the lit task." },
-      { "name": "bell-swing", "value": "rotate -12° ↔ 12°, 0.9s ease-in-out infinite (fill-box, origin 50% 95%)", "purpose": "Desk bell shake while the demo circuit rings." },
-      { "name": "toast-pop", "value": "opacity 0→1, translateY(8px) scale(0.9)→none, 0.4s ease-out-soft both", "purpose": "The (mẫu) confirmation appears beside the ringing bell." },
-      { "name": "theme-crossfade", "value": "background-color 300ms; room-only layers 450ms; lamp 600ms", "purpose": "Day/night regrade of the room." },
-      { "name": "control-shift", "value": "all properties 200ms cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Tailwind-native state ramp of RoomUI controls (field ring/halo, pill brightness and translate) — quick mechanical feedback, distinct from the house reveal easing." }
+      {
+        "name": "ease-out-soft",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "House easing for all transitions, reveals, and pops."
+      },
+      {
+        "name": "reveal-rise",
+        "value": "opacity 0→1, translateY(30px) scale(0.97)→0/1, 0.8s both; IntersectionObserver threshold 0.15, fires once",
+        "purpose": "Scroll reveal of sections and rails."
+      },
+      {
+        "name": "hover-lift",
+        "value": "translateY(-2px), 200ms ease-out-soft",
+        "purpose": "Raised actions lift on hover; the world stays otherwise still."
+      },
+      {
+        "name": "due-glow-pulse",
+        "value": "opacity 0.85 ↔ 0.45, 2.6s ease-in-out infinite",
+        "purpose": "Breathing of the Blush due-light around the lit task."
+      },
+      {
+        "name": "bell-swing",
+        "value": "rotate -12° ↔ 12°, 0.9s ease-in-out infinite (fill-box, origin 50% 95%)",
+        "purpose": "Desk bell shake while the demo circuit rings."
+      },
+      {
+        "name": "toast-pop",
+        "value": "opacity 0→1, translateY(8px) scale(0.9)→none, 0.4s ease-out-soft both",
+        "purpose": "The (mẫu) confirmation appears beside the ringing bell."
+      },
+      {
+        "name": "theme-crossfade",
+        "value": "background-color 300ms; room-only layers 450ms; lamp 600ms",
+        "purpose": "Day/night regrade of the room."
+      },
+      {
+        "name": "control-shift",
+        "value": "all properties 200ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Tailwind-native state ramp of RoomUI controls (field ring/halo, pill brightness and translate) — quick mechanical feedback, distinct from the house reveal easing."
+      }
     ],
     "breakpoints": [
-      { "name": "sm", "value": "640px" },
-      { "name": "md", "value": "768px" },
-      { "name": "lg", "value": "1024px" },
-      { "name": "xl", "value": "1280px" }
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
     ]
   },
   "components": [
@@ -145,6 +375,46 @@
       "description": "Form feedback told as weather: error on Rain/30, success on Sage/45, dev-code note on Moss/70 — all under one Acorn/25 hairline, Ink copy, no rose, no red, no emoji.",
       "html": "<div class=\"ds-panel ds-panel-error\" role=\"alert\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 8v5\"/><path d=\"M12 16h.01\"/></svg><span>Đăng nhập bằng Google thất bại. Vui lòng thử lại.</span></div><div class=\"ds-panel ds-panel-success\" role=\"status\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8.5 12.5l2.5 2.5 4.5-5\"/></svg><span>Mật khẩu của bạn đã được cập nhật. Hãy đăng nhập để tiếp tục.</span></div><div class=\"ds-panel ds-panel-note\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.8c.7.5 1 1.3 1 2.2h5a2.9 2.9 0 0 1 1-2.2A6 6 0 0 0 12 3z\"/></svg><span>Chưa gửi được email – mã xác nhận của bạn là <b>123456</b></span></div>",
       "css": ".ds-panel{display:flex;align-items:flex-start;gap:10px;border-radius:16px;font-family:'Nunito','Plus Jakarta Sans',sans-serif;color:rgb(var(--room-ink));}.ds-panel svg{flex:0 0 auto;margin-top:2px;}.ds-panel-error{background:rgb(var(--room-rain) / 0.3);padding:14px;font-size:14px;font-weight:700;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-panel-success{background:rgb(var(--room-sage) / 0.45);padding:20px;font-size:14px;font-weight:700;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);margin-top:12px;}.ds-panel-note{background:rgb(var(--room-moss) / 0.7);padding:12px 16px;font-size:13px;font-weight:600;line-height:1.625;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);margin-top:12px;}.ds-panel-note svg{color:rgb(var(--room-acorn));}.ds-panel-note b{letter-spacing:0.1em;}"
+    },
+    {
+      "name": "Desk Task Button (SVG hotspot)",
+      "kind": "button",
+      "refersTo": "desk-task",
+      "description": "Interactive task card on the study desk (M3): a real task becomes the room prop. Only runs in /app when the dashboard passes cards/completedCount/onTaskClick; the landing keeps the static demo art. Geometry is slot-fixed (two task slots + one completed sticker / ghost slot). States: due = Blush card + due-glow circle, today = Paper card, empty slot = dashed Acorn/45 outline card; completedCount <= 0 turns the check-sticker slot into a ghost too. Hover -2.5px lift with stroke deepening to full Acorn (a state ramp, not an authored motion). Keyboard: Enter/Space opens the task, focus shows the world's dashed Acorn outline.",
+      "html": "<svg viewBox=\"0 150 640 440\"><g class=\"desk-task\" role=\"button\" tabindex=\"0\" aria-label=\"Mở chi tiết công việc: {title}\"><title>{title} · quá hạn?</title><circle class=\"room-due-glow\" r=\"40\" fill=\"url(#qronx-due-glow)\"/><rect class=\"desk-card\" x=\"380\" y=\"392\" width=\"52\" height=\"66\" rx=\"9\" fill=\"rgb(var(--room-blush))\"/></g></svg>",
+      "css": ".room-world .desk-task{transform-box:fill-box;transform-origin:50% 92%;transition:transform .18s ease;cursor:pointer;}.room-world .desk-task:hover{transform:translateY(-2.5px);}.room-world .desk-task:hover .desk-card{stroke:rgb(var(--room-acorn));stroke-width:2.5;}"
+    },
+    {
+      "name": "Paper Room Card (RoomCard)",
+      "kind": "container",
+      "refersTo": "room-card",
+      "description": "Section vessel of /app pages (list toolbar, form sections, detail cards): flat Porcelain sheet, ring 1 Acorn/25, no padding baked in, no dark: overrides — the --room-* token block carries both day and night.",
+      "html": "<section class=\"ds-room-card\">…</section>",
+      "css": ".ds-room-card{background:rgb(var(--room-paper));border-radius:16px;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);}"
+    },
+    {
+      "name": "Room Segmented Control",
+      "kind": "control",
+      "refersTo": "room-segmented",
+      "description": "Choice tray of the room (priority, repeat type): Oat/70 tray with hairline Acorn/15 ring; the selected pill is a raised Porcelain chip with ring Acorn/30 and a small paper weight; disabled entries at 40%; selected text stays Ink — never a gradient, never white-on-color.",
+      "html": "<div role=\"radiogroup\" class=\"ds-room-seg\"><button role=\"radio\" aria-checked=\"true\">Không lặp</button><button role=\"radio\">Hằng tuần</button></div>",
+      "css": ".ds-room-seg{display:inline-flex;flex-wrap:wrap;gap:4px;padding:4px;border-radius:12px;background:rgb(var(--room-oat) / 0.7);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.15);}.ds-room-seg [role=radio]{border-radius:8px;padding:6px 14px;font-weight:700;color:rgb(var(--room-ink) / 0.55);cursor:pointer;transition:all .2s cubic-bezier(0.16,1,0.3,1);}.ds-room-seg [role=radio][aria-checked=true]{background:rgb(var(--room-paper));color:rgb(var(--room-ink));box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.3),0 6px 12px -8px rgb(0 0 0 / 0.25);}"
+    },
+    {
+      "name": "Room Toggle",
+      "kind": "control",
+      "refersTo": "room-toggle",
+      "description": "The room switch (used in detail page for rotation enable): row highlight turns Oat/60 on hover; the track is Acorn with a paper knob when on, Oat with Acorn/20 ring when off; label and description read at Ink alpha steps.",
+      "html": "<button role=\"switch\" aria-checked=\"true\"><span>Luân phiên mỗi kỳ</span><span class=\"ds-room-toggle-track\"></span></button>",
+      "css": ".ds-room-toggle-track{position:relative;display:inline-flex;width:44px;height:24px;border-radius:999px;background:rgb(var(--room-acorn));box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.4);}.ds-room-toggle-track::after{content:\"\";position:absolute;top:2px;left:22px;width:20px;height:20px;border-radius:999px;background:rgb(var(--room-paper));box-shadow:0 1px 3px rgb(0 0 0 / 0.3);}"
+    },
+    {
+      "name": "Rain Confirm Pill (RoomButton danger)",
+      "kind": "button",
+      "refersTo": "room-btn-danger",
+      "description": "Destructive confirmation in the room (confirm delete/cancel of a task): a Rain pill with Ink text and a Rain ring — the world has no rose; Rain says \"drain/wait\", the honest tone for deleting. Hover only brightens.",
+      "html": "<button class=\"ds-room-btn-danger\">Xóa</button>",
+      "css": "button.ds-room-btn-danger{background:rgb(var(--room-rain));color:rgb(var(--room-ink));border:none;border-radius:999px;padding:10px 20px;font-family:'Baloo 2','Nunito',sans-serif;font-weight:700;cursor:pointer;transition:filter .2s ease;}button.ds-room-btn-danger:hover{filter:brightness(0.97);}"
     }
   ],
   "narrative": {
@@ -163,16 +433,56 @@
       "Product truth is a design rule: real clock, real date, labeled demo numbers, unchanged routes (/ /app /login /register /pricing, anchors #tinh-nang #cach-hoat-dong #gioi-thieu #lien-he)."
     ],
     "rules": [
-      { "name": "The Acorn-Pen Rule", "body": "One pen draws the world. Strokes, rings, seams, dividers, focus outlines, and scrollbars are all rgb(var(--room-acorn)) at varying alpha (0.15–0.9); furniture fields (Oat/Moss/Sage/Rain/Sky) are fills only and never draw outlines.", "section": "colors" },
-      { "name": "The Due-Only Blush Rule", "body": "Blush earns its space by meaning: on UI surfaces it marks the due state exclusively — the lit task, its breathing glow, and honest-demo MẪU chips. If a Blush element doesn't tell you something is due, it doesn't belong on app chrome.", "section": "colors" },
-      { "name": "The Warm-Night Rule", "body": "Dark mode is the same room at night: Porcelain turns to warm #2B231E, and the lamp (#EECB8A radial, .lamp-glow, dark-only) lights the desk. Never regrade this world onto navy, slate, or blue-black grounds.", "section": "colors" },
-      { "name": "The Round-Heavy Rule", "body": "Baloo 2 carries identity even resting at 400 — never letter-space-tighten it, never set headings in uppercase, and never substitute a system display face; Nunito alone carries reading copy.", "section": "typography" },
-      { "name": "The Dotted Seam Rule", "body": "Page sections part on the dotted seam — dot-divider (3px strip of spaced Acorn dots, 16px rhythm), echoed by peer dotted rules (list leaders, dotted underlines, dashed frames). Solid hairlines stay inside a single footer; they never replace the page's dotted doctrine.", "section": "layout" },
-      { "name": "The Host Rule", "body": "Every viewport names its host — the room in the hero, the cabinet in features, the clothesline in how-it-works — and all surrounding copy serves it. No equal-card wall outside the one waived cabinet shell (see Do's and Don'ts).", "section": "layout" },
-      { "name": "The Paper-Weight Rule", "body": "Surfaces are flat paper at rest; soft black diffuse shadows belong only under raised pills and floating taped cards (a touched field may flash the one focus halo — a response, not a resting shadow) — never colored, never drop-shadowed into \"3D card\" territory, and the only breathing glow is diegetic room light (Blush due-glow, night lamp).", "section": "elevation" },
-      { "name": "The Rain-Is-Neutral Rule", "body": "Rain handles error, pending and waiting as neutral weather: an invalid field rings Rain (rest, hover and focus alike), a server error sits on Rain/30 with a bold Ink sentence and a WarningCircle — no rose, no red, never a red field. Color alarm stays the exclusive property of the due state (Blush).", "section": "colors" },
-      { "name": "The Solid-Wordmark Rule", "body": "In room surfaces the logotype is plain token lettering — WorldLogo: Baloo 2 700, \"MN-\" Ink / \"Q\" Acorn / \"ronx\" Ink, solid color, no gradient and no glow; the gradient logotype stays quarantined in the old shell's Logo.jsx and never enters room surfaces.", "section": "typography" },
-      { "name": "The Doorway Rule", "body": "The auth gate is one room, not a second shell: no card-on-canvas, no glass — the split screen is drawn only by the vertical dotted cord (w-[3px], the same 1.6px dots in a 3×16px column at Acorn/50, wrapper at 80% opacity). Below lg there is no door at all: the form sits alone on the paper under a 30px logo.", "section": "layout" }
+      {
+        "name": "The Acorn-Pen Rule",
+        "body": "One pen draws the world. Strokes, rings, seams, dividers, focus outlines, and scrollbars are all rgb(var(--room-acorn)) at varying alpha (0.15–0.9); furniture fields (Oat/Moss/Sage/Rain/Sky) are fills only and never draw outlines.",
+        "section": "colors"
+      },
+      {
+        "name": "The Due-Only Blush Rule",
+        "body": "Blush earns its space by meaning: on UI surfaces it marks the due state exclusively — the lit task, its breathing glow, and honest-demo MẪU chips. If a Blush element doesn't tell you something is due, it doesn't belong on app chrome.",
+        "section": "colors"
+      },
+      {
+        "name": "The Warm-Night Rule",
+        "body": "Dark mode is the same room at night: Porcelain turns to warm #2B231E, and the lamp (#EECB8A radial, .lamp-glow, dark-only) lights the desk. Never regrade this world onto navy, slate, or blue-black grounds.",
+        "section": "colors"
+      },
+      {
+        "name": "The Round-Heavy Rule",
+        "body": "Baloo 2 carries identity even resting at 400 — never letter-space-tighten it, never set headings in uppercase, and never substitute a system display face; Nunito alone carries reading copy.",
+        "section": "typography"
+      },
+      {
+        "name": "The Dotted Seam Rule",
+        "body": "Page sections part on the dotted seam — dot-divider (3px strip of spaced Acorn dots, 16px rhythm), echoed by peer dotted rules (list leaders, dotted underlines, dashed frames). Solid hairlines stay inside a single footer; they never replace the page's dotted doctrine.",
+        "section": "layout"
+      },
+      {
+        "name": "The Host Rule",
+        "body": "Every viewport names its host — the room in the hero, the cabinet in features, the clothesline in how-it-works — and all surrounding copy serves it. No equal-card wall outside the one waived cabinet shell (see Do's and Don'ts).",
+        "section": "layout"
+      },
+      {
+        "name": "The Paper-Weight Rule",
+        "body": "Surfaces are flat paper at rest; soft black diffuse shadows belong only under raised pills and floating taped cards (a touched field may flash the one focus halo — a response, not a resting shadow) — never colored, never drop-shadowed into \"3D card\" territory, and the only breathing glow is diegetic room light (Blush due-glow, night lamp).",
+        "section": "elevation"
+      },
+      {
+        "name": "The Rain-Is-Neutral Rule",
+        "body": "Rain handles error, pending and waiting as neutral weather: an invalid field rings Rain (rest, hover and focus alike), a server error sits on Rain/30 with a bold Ink sentence and a WarningCircle — no rose, no red, never a red field. Color alarm stays the exclusive property of the due state (Blush).",
+        "section": "colors"
+      },
+      {
+        "name": "The Solid-Wordmark Rule",
+        "body": "In room surfaces the logotype is plain token lettering — WorldLogo: Baloo 2 700, \"MN-\" Ink / \"Q\" Acorn / \"ronx\" Ink, solid color, no gradient and no glow; the gradient logotype stays quarantined in the old shell's Logo.jsx and never enters room surfaces.",
+        "section": "typography"
+      },
+      {
+        "name": "The Doorway Rule",
+        "body": "The auth gate is one room, not a second shell: no card-on-canvas, no glass — the split screen is drawn only by the vertical dotted cord (w-[3px], the same 1.6px dots in a 3×16px column at Acorn/50, wrapper at 80% opacity). Below lg there is no door at all: the form sits alone on the paper under a 30px logo.",
+        "section": "layout"
+      }
     ],
     "dos": [
       "Do wrap room-world pages in .room-world and theme everything through room.* Tailwind tokens (bg-room-moss/70, ring-room-acorn/25) so light/dark switch from the single --room-* variable block; never hardcode navy/slate inside it.",

@@ -306,6 +306,17 @@ Dữ liệu trong ảnh (chụp 5/11) là dữ liệu thật của tài khoản 
 
 Kết thúc mốc: reviewer fresh chấm **SHIP** (trên 5 raster cùng bảng trên). Hai vòng fix trước đó: round 1 — toast key, rail Oat→`Rain/30`, ExtensionPromoBar & UpdateNotification về da phòng (bỏ emoji/gradient/kicker/stagger), lỗi `isActive` trong MobileDrawer, WorldLogo `whitespace-nowrap`, Sidebar measure thêm MutationObserver + `document.fonts.ready`; round 2 — zero-guard cho pill (Sidebar + BottomNav) và gỡ trượt pill trong `.room-world`.
 
+## Bàn học thành phím + trang Công việc (mốc M3)
+
+Đúng luật M2: đây vẫn là **Operate** — logic/API/chuỗi không đụng, chỉ da đổi về token phòng.
+
+- **Bàn học tương tác:** `RoomScene` nhận thêm `cards` (tối đa 2 món `{id, title, tone}` — ô trái nhặt việc quá hạn đầu, ô giữa nhặt việc hạn hôm nay, thiếu việc hôm nay mới bơm quá hạn thứ hai), `completedCount` và `onTaskClick`. Món thật → `<g role="button" tabindex="0">` với `aria-label "Mở chi tiết công việc: …"` + tooltip `<title>`; bấm/Enter/Space mở đúng trang chi tiết việc. Landing không truyền props nên cảnh tĩnh giữ nguyên 100%. Trạng thái slot trung thực: có việc quá hạn = thẻ Blush + quầng `room-due-glow`; việc hôm nay = thẻ Paper; **ô trống = nét đứt Acorn/45** (không dựng thẻ giả); `completedCount ≤ 0` thì sticker dấu tích cũng biến thành nét đứt — không vẽ điều không có. Hover nhỉnh −2.5px + viền đậm nét (ramp trạng thái, không phải authored motion mới).
+- **Trang Công việc (list/chi tiết/form):** toàn bộ navy token đổi thành giấy phòng — `page-title`/`card` → room Ink + `RoomCard` (ring Acorn/25); selects trên khay Oat/45, mũi tên hằn Acorn; thanh tìm kiếm/lọc/sắp xếp giữ đúng bộ options cũ. TaskItem bật `skin="room"` (đã có sẵn từ M2). Thùng rác toàn trang dùng **Rain trung tính** (badge đếm, viền mở) — không rose. Xác nhận hủy/xóa → `ConfirmDialog skin="room"` + **pill Rain** (RoomButton `danger` — thế giới không có màu đỏ, Rain nói "chờ dẹp"). Nút hoàn thành chính = Acorn pill; mở lại = secondary.
+- **Chỉ chip, không badge navy:** trang chi tiết vẽ lại nhãn bằng dữ liệu gốc của `TASK_STATUS/OVERDUE_STATUS/PRIORITY` — quá hạn `on-blush` trên Blush/45, chờ/đang làm Ink alpha trên Oat/60, hoàn thành Sage/45 với dấu Check, nhãn ưu tiên giữ dot màu dữ liệu (không phải màu skin). "Nhắc dai" và chuông báo thức mang **Bell gold** (khoảnh khắc chuông, không phải field).
+- **Form da phòng:** `RoomField/RoomInput/RoomTextarea/RoomSelect/RoomSegmented/RoomToggle` (thành viên mới của `RoomUI`, nguyên tắc additive như M2 — mặc định navy không đổi); viền chọn giờ/viết con đều h-11; chip nhãn PRO/đếm = Oat/70; **viên chọn trái/luân phiên = Acorn (text paper)**; liên kết "💡"emoji của nhắc lặp đổi thành icon `BellRinging` (craft floor: không emoji làm icon). Thanh hành động dưới cùng chỉ là **giấy đặc + ring Acorn/25** — không `backdrop-blur` (no glass).
+- **Modal da phòng:** `Modal` nhận `skin="room"` (additive): tấm giấy Porcelain + ring Acorn/25, header/footer dải phẳng Acorn/15, **backdrop `bg-room-ink/45` không blur**; mặc định 'classic' giữ nguyên bản navy cho chỗ khác.
+- **Không "đặt khi chưa có":** số hiển thị trên phòng lấy từ `getDashboard` (tổng `deskRows` đã dedupe, `completedCount` từ máy chủ). Trang mới chưa làm (Lịch, Kế hoạch tuần, Báo cáo…) vẫn navy — mở đúng trạng thái hiện tại, không paint-over.
+
 ## Do's and Don'ts
 
 ### Do:

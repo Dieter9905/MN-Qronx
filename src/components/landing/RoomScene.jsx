@@ -34,7 +34,13 @@ const wallR = (u, h) => ({ x: 380 + 230 * u, y: 350 + 118 * u - h })
 
 // `app` = bản dùng trong /app: cùng căn phòng nhưng của chính người dùng —
 // không có nút demo chuông, không có thẻ "(mẫu)" của landing, đồng hồ vẫn chạy.
-export default function RoomScene({ t, app = false }) {
+// `cards` (app): danh sách món việc thật đặt lên bàn học — tối đa 2 ô, mỗi món
+// { id, title, tone: 'due' | 'today' }; pass gì thì từ đó thành phím thật:
+// bấm vào mở đúng trang chi tiết việc. Không truyền (landing) → bàn học là
+// cảnh tĩnh như cũ, không đụng gì.
+// `completedCount`: kho đã hoàn thành — sticker dấu tích chỉ hiện khi > 0
+// thay vì dựng sẵn cho đẹp rồi sai sự thật.
+export default function RoomScene({ t, app = false, cards = null, completedCount = 0, onTaskClick }) {
   const now = useClock()
 
   // ----- Mạch demo chuông: idle → lit (việc sáng đèn) → ring (chuông lắc + toast) -----
@@ -56,6 +62,19 @@ export default function RoomScene({ t, app = false }) {
   }
   const ringing = demo === 'ring'
 
+  // ----- Bàn học tương tác: ô nào có việc thật thì thành phím, ô trống vẽ nét đứt -----
+  const hasCards = Boolean(app && cards)
+  const slot1 = hasCards ? cards[0] ?? null : null
+  const slot2 = hasCards ? cards[1] ?? null : null
+  const hasCompleted = hasCards && completedCount > 0
+  const openTask = (task) => onTaskClick?.(task)
+  const taskKey = (task) => (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      openTask(task)
+    }
+  }
+
   return (
     <div className={`relative mx-auto w-full ${app ? 'max-w-[560px]' : 'max-w-[780px]'}`}>
       {/* Nhãn nhỏ tại góc — bằng chứng sản phẩm: đồng hồ chạy giờ thật */}
@@ -66,8 +85,17 @@ export default function RoomScene({ t, app = false }) {
       )}
 
       {/* Trong /app thu cảnh lại (cắt bớt trần + sàn) để phòng không chiếm hết
-          màn hình làm việc; landing vẫn giữ nguyên khung rộng. */}
-      <svg viewBox={app ? '0 150 640 440' : '0 115 640 500'} className="h-auto w-full" role="img" aria-hidden="true">
+          màn hình làm việc; landing vẫn giữ nguyên khung rộng.
+          Cảnh thật chiếm x∈[150..612] — khung app chọn tâm x≈380 (trung điểm
+          cảnh, thay vì 320 của mặt vẽ) nên căn phòng nằm giữa ô, không trượt
+          phải để dải trống 150px bên trái như trước.
+          Có phím thật thì bỏ role="img"/aria-hidden để món việc đọc được. */}
+      <svg
+        viewBox={app ? '100 150 560 440' : '0 115 640 500'}
+        className="h-auto w-full"
+        role={hasCards ? undefined : 'img'}
+        aria-hidden={hasCards ? undefined : 'true'}
+      >
         <defs>
           <radialGradient id="qronx-due-glow">
             <stop offset="0%" stopColor="#F5C9CF" stopOpacity="0.9" />
@@ -357,34 +385,143 @@ export default function RoomScene({ t, app = false }) {
         <polygon points="368,452 448,493 448,519 368,478" fill="rgb(var(--room-acorn) / 0.45)" />
         <polygon points="448,493 592,419 592,445 448,519" fill="rgb(var(--room-acorn) / 0.6)" />
 
-        {/* Món việc 1 — ĐẾN HẠN (sáng đèn, quầng blush nhịp nhàng) */}
-        <g className={demo !== 'idle' ? 'opacity-100' : ''}>
-          <circle cx="406" cy="424" r="40" fill="url(#qronx-due-glow)" className="room-due-glow" />
-        </g>
-        <ellipse cx="406" cy="462" rx="30" ry="10" fill="rgb(var(--room-acorn) / 0.18)" />
-        <rect x="380" y="392" width="52" height="66" rx="9" fill="rgb(var(--room-blush))" stroke="rgb(var(--room-acorn) / 0.9)" strokeWidth="2" />
-        <rect x="392" y="387" width="28" height="11" rx="4" fill="rgb(var(--room-paper) / 0.85)" stroke="rgb(var(--room-acorn) / 0.4)" strokeWidth="1.4" />
-        <rect x="389" y="416" width="34" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.4)" />
-        <rect x="389" y="429" width="24" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.4)" />
-        {/* đinh ghim */}
-        <circle cx="406" cy="398" r="3.4" fill="rgb(var(--room-paper))" stroke="rgb(var(--room-acorn) / 0.8)" strokeWidth="1.6" />
+        {/* Món việc 1 — ô trái: quá hạn (Blush, sáng đèn trừng phạt) / hôm nay / trống */}
+        {slot1 ? (
+          <g
+            role="button"
+            tabIndex={0}
+            onClick={() => openTask(slot1)}
+            onKeyDown={taskKey(slot1)}
+            className="desk-task cursor-pointer"
+            aria-label={`Mở chi tiết công việc: ${slot1.title}`}
+          >
+            <title>
+              {`${slot1.title}${slot1.tone === 'due' ? ' · quá hạn' : ''}`}
+            </title>
+            {slot1.tone === 'due' && (
+              <circle cx="406" cy="424" r="40" fill="url(#qronx-due-glow)" className="room-due-glow" />
+            )}
+            <ellipse cx="406" cy="462" rx="30" ry="10" fill="rgb(var(--room-acorn) / 0.18)" />
+            <rect
+              className="desk-card"
+              x="380" y="392" width="52" height="66" rx="9"
+              fill={slot1.tone === 'due' ? 'rgb(var(--room-blush))' : 'rgb(var(--room-paper))'}
+              stroke="rgb(var(--room-acorn) / 0.9)" strokeWidth="2"
+            />
+            <rect
+              x="392" y="387" width="28" height="11" rx="4"
+              fill={slot1.tone === 'due' ? 'rgb(var(--room-paper) / 0.85)' : 'rgb(var(--room-oat))'}
+              stroke="rgb(var(--room-acorn) / 0.4)" strokeWidth="1.4"
+            />
+            <rect x="389" y="416" width="34" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.4)" />
+            <rect x="389" y="429" width="24" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.4)" />
+            {/* đinh ghim */}
+            <circle cx="406" cy="398" r="3.4" fill="rgb(var(--room-paper))" stroke="rgb(var(--room-acorn) / 0.8)" strokeWidth="1.6" />
+          </g>
+        ) : (
+          <>
+            {hasCards && (
+              <g aria-hidden="true" opacity="0.5">
+                <rect
+                  x="380" y="392" width="52" height="66" rx="9"
+                  fill="rgb(var(--room-oat))" fillOpacity="0.45"
+                  stroke="rgb(var(--room-acorn) / 0.45)" strokeWidth="2" strokeDasharray="5 6"
+                />
+                <rect x="389" y="418" width="34" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.35)" />
+                <rect x="389" y="431" width="24" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.3)" />
+              </g>
+            )}
+          </>
+        )}
+        {!hasCards && (
+          <>
+            <circle cx="406" cy="424" r="40" fill="url(#qronx-due-glow)" className="room-due-glow" />
+            <ellipse cx="406" cy="462" rx="30" ry="10" fill="rgb(var(--room-acorn) / 0.18)" />
+            <rect x="380" y="392" width="52" height="66" rx="9" fill="rgb(var(--room-blush))" stroke="rgb(var(--room-acorn) / 0.9)" strokeWidth="2" />
+            <rect x="392" y="387" width="28" height="11" rx="4" fill="rgb(var(--room-paper) / 0.85)" stroke="rgb(var(--room-acorn) / 0.4)" strokeWidth="1.4" />
+            <rect x="389" y="416" width="34" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.4)" />
+            <rect x="389" y="429" width="24" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.4)" />
+            <circle cx="406" cy="398" r="3.4" fill="rgb(var(--room-paper))" stroke="rgb(var(--room-acorn) / 0.8)" strokeWidth="1.6" />
+          </>
+        )}
 
-        {/* Món việc 2 — sắp tới */}
-        <ellipse cx="477" cy="450" rx="27" ry="9" fill="rgb(var(--room-acorn) / 0.15)" />
-        <rect x="452" y="380" width="50" height="64" rx="9" fill="rgb(var(--room-paper))" stroke="rgb(var(--room-acorn) / 0.85)" strokeWidth="2" />
-        <rect x="463" y="375" width="26" height="10" rx="4" fill="rgb(var(--room-oat))" stroke="rgb(var(--room-acorn) / 0.4)" strokeWidth="1.4" />
-        <rect x="461" y="403" width="32" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.35)" />
-        <rect x="461" y="416" width="22" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.35)" />
-        <circle cx="477" cy="386" r="3.2" fill="rgb(var(--room-paper))" stroke="rgb(var(--room-acorn) / 0.8)" strokeWidth="1.6" />
+        {/* Món việc 2 — ô giữa: việc hôm nay (giấy) / quá hạn còn / trống */}
+        {slot2 ? (
+          <g
+            role="button"
+            tabIndex={0}
+            onClick={() => openTask(slot2)}
+            onKeyDown={taskKey(slot2)}
+            className="desk-task cursor-pointer"
+            aria-label={`Mở chi tiết công việc: ${slot2.title}`}
+          >
+            <title>
+              {`${slot2.title}${slot2.tone === 'due' ? ' · quá hạn' : ''}`}
+            </title>
+            {slot2.tone === 'due' && (
+              <circle cx="477" cy="414" r="36" fill="url(#qronx-due-glow)" className="room-due-glow" />
+            )}
+            <ellipse cx="477" cy="450" rx="27" ry="9" fill="rgb(var(--room-acorn) / 0.15)" />
+            <rect
+              className="desk-card"
+              x="452" y="380" width="50" height="64" rx="9"
+              fill={slot2.tone === 'due' ? 'rgb(var(--room-blush))' : 'rgb(var(--room-paper))'}
+              stroke="rgb(var(--room-acorn) / 0.85)" strokeWidth="2"
+            />
+            <rect
+              x="463" y="375" width="26" height="10" rx="4"
+              fill={slot2.tone === 'due' ? 'rgb(var(--room-paper) / 0.85)' : 'rgb(var(--room-oat))'}
+              stroke="rgb(var(--room-acorn) / 0.4)" strokeWidth="1.4"
+            />
+            <rect x="461" y="403" width="32" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.35)" />
+            <rect x="461" y="416" width="22" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.35)" />
+            <circle cx="477" cy="386" r="3.2" fill="rgb(var(--room-paper))" stroke="rgb(var(--room-acorn) / 0.8)" strokeWidth="1.6" />
+          </g>
+        ) : hasCards ? (
+          <g aria-hidden="true" opacity="0.5">
+            <rect
+              x="452" y="380" width="50" height="64" rx="9"
+              fill="rgb(var(--room-oat))" fillOpacity="0.45"
+              stroke="rgb(var(--room-acorn) / 0.45)" strokeWidth="2" strokeDasharray="5 6"
+            />
+            <rect x="461" y="405" width="32" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.35)" />
+            <rect x="461" y="418" width="22" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.3)" />
+          </g>
+        ) : (
+          <>
+            <ellipse cx="477" cy="450" rx="27" ry="9" fill="rgb(var(--room-acorn) / 0.15)" />
+            <rect x="452" y="380" width="50" height="64" rx="9" fill="rgb(var(--room-paper))" stroke="rgb(var(--room-acorn) / 0.85)" strokeWidth="2" />
+            <rect x="463" y="375" width="26" height="10" rx="4" fill="rgb(var(--room-oat))" stroke="rgb(var(--room-acorn) / 0.4)" strokeWidth="1.4" />
+            <rect x="461" y="403" width="32" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.35)" />
+            <rect x="461" y="416" width="22" height="4.5" rx="2.2" fill="rgb(var(--room-acorn) / 0.35)" />
+            <circle cx="477" cy="386" r="3.2" fill="rgb(var(--room-paper))" stroke="rgb(var(--room-acorn) / 0.8)" strokeWidth="1.6" />
+          </>
+        )}
 
-        {/* Món việc 3 — đã hoàn thành (dấu tích) */}
+        {/* Món việc 3 — ô phải: sticker dấu tích khi kho có hoàn thành, trống thì nét đứt */}
         <ellipse cx="535" cy="425" rx="24" ry="8" fill="rgb(var(--room-acorn) / 0.15)" />
-        <g transform="rotate(2 535 386)">
-          <rect x="512" y="360" width="46" height="58" rx="9" fill="rgb(var(--room-paper))" stroke="rgb(var(--room-acorn) / 0.85)" strokeWidth="2" />
-          <circle cx="535" cy="384" r="9" fill="rgb(var(--room-sage))" stroke="rgb(var(--room-acorn) / 0.7)" strokeWidth="1.8" />
-          <path d="M 530.5 384.5 L 534 388.5 L 540 380.5" stroke="rgb(var(--room-ink))" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          <rect x="521" y="403" width="28" height="4" rx="2" fill="rgb(var(--room-acorn) / 0.35)" />
-        </g>
+        {hasCards && !hasCompleted ? (
+          <g aria-hidden="true" opacity="0.45">
+            <g transform="rotate(2 535 386)">
+              <rect
+                x="512" y="360" width="46" height="58" rx="9"
+                fill="rgb(var(--room-oat))" fillOpacity="0.45"
+                stroke="rgb(var(--room-acorn) / 0.45)" strokeWidth="2" strokeDasharray="5 6"
+              />
+              <rect x="521" y="399" width="28" height="4" rx="2" fill="rgb(var(--room-acorn) / 0.3)" />
+            </g>
+          </g>
+        ) : (
+          <g transform="rotate(2 535 386)">
+            {hasCompleted && (
+              <title>{`Đã hoàn thành ${completedCount} công việc`}</title>
+            )}
+            <rect x="512" y="360" width="46" height="58" rx="9" fill="rgb(var(--room-paper))" stroke="rgb(var(--room-acorn) / 0.85)" strokeWidth="2" />
+            <circle cx="535" cy="384" r="9" fill="rgb(var(--room-sage))" stroke="rgb(var(--room-acorn) / 0.7)" strokeWidth="1.8" />
+            <path d="M 530.5 384.5 L 534 388.5 L 540 380.5" stroke="rgb(var(--room-ink))" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            <rect x="521" y="403" width="28" height="4" rx="2" fill="rgb(var(--room-acorn) / 0.35)" />
+          </g>
+        )}
 
         {/* Chuông để bàn (khoảnh khắc: đổ chuông khi việc đến hạn) */}
         <ellipse cx="374" cy="452" rx="28" ry="9" fill="rgb(var(--room-acorn) / 0.18)" />

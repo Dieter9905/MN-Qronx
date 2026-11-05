@@ -21,6 +21,7 @@ import {
   PaperPlaneTilt,
   SealCheck,
   ArrowsClockwise,
+  CircleNotch,
 } from '@phosphor-icons/react'
 import {
   getTask,
@@ -38,13 +39,10 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { addReminder, removeReminder } from '../../services/reminderService'
 import { useToast } from '../../components/common/Toast'
-import { PageLoader, EmptyState } from '../../components/common/Feedback'
-import Button from '../../components/common/Button'
-import { StatusBadge, PriorityBadge, CategoryBadge } from '../../components/common/Badge'
-import { ConfirmDialog } from '../../components/common/Modal'
-import { Toggle, Select } from '../../components/common/Inputs'
+import { RoomButton, RoomCard, RoomInput, RoomSelect, RoomToggle, RoomEmpty } from '../../components/common/RoomUI'
+import { TASK_STATUS, OVERDUE_STATUS, PRIORITY, repeatSummary, isProPlan } from '../../lib/constants'
 import { formatDateTime, formatRelativeDay, effectiveStatus, isOverdue } from '../../lib/format'
-import { repeatSummary, isProPlan } from '../../lib/constants'
+import { ConfirmDialog } from '../../components/common/Modal'
 
 export default function TaskDetailPage() {
   const { id } = useParams()
@@ -83,12 +81,24 @@ export default function TaskDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
-  if (loading) return <PageLoader label="Đang tải chi tiết công việc…" />
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-24">
+        <span role="status" aria-label="Đang tải">
+          <CircleNotch size={28} className="animate-spin text-room-acorn" weight="bold" />
+        </span>
+        <p className="text-sm font-semibold text-room-ink/60">Đang tải chi tiết công việc…</p>
+      </div>
+    )
+  }
   if (!task) return null
 
   const status = effectiveStatus(task)
   const closed = task.status === 'COMPLETED' || task.status === 'CANCELLED'
   const completedSub = task.subtasks.filter((s) => s.isCompleted).length
+  const late = status === 'OVERDUE'
+  const statusInfo = late ? OVERDUE_STATUS : TASK_STATUS[task.status]
+  const priorityInfo = PRIORITY[task.priority]
 
   const handleComplete = async () => {
     setBusy(true)
@@ -256,40 +266,65 @@ export default function TaskDetailPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 animate-fade-in">
-      <Link to="/app/tasks" className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-500 transition hover:text-blue-600">
+      <Link to="/app/tasks" className="inline-flex items-center gap-1.5 text-sm font-bold text-room-ink/60 transition hover:text-room-acorn">
         <ArrowLeft size={16} weight="bold" /> Quay lại danh sách
       </Link>
 
       {/* Header */}
-      <div className="card relative p-5 sm:p-6">
+      <RoomCard className="relative p-5 sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge status={status} />
-              <PriorityBadge priority={task.priority} />
-              {task.category && <CategoryBadge category={task.category} />}
+              {/* Da phòng: nhãn trạng thái/ưu tiên trên thẻ giấy — Blush cho đến hạn,
+                  Rain chỉ là trung tính, Sage khi xong (mục đích cá nhân giữ đúng
+                  dữ liệu TASK_STATUS/PRIORITY, không đụng điệu navy dùng chỗ khác) */}
+              {late ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-room-blush/45 px-2.5 py-0.5 text-xs font-extrabold on-blush ring-1 ring-room-acorn/20 dark:bg-room-blush/30">
+                  <Alarm size={12} weight="bold" /> {statusInfo.label}
+                </span>
+              ) : statusInfo && !closed ? (
+                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-extrabold text-room-ink/45 bg-room-oat/60">
+                  {statusInfo.label}
+                </span>
+              ) : task.status === 'COMPLETED' ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-room-sage/45 px-2.5 py-0.5 text-xs font-extrabold text-room-ink">
+                  <Check size={12} weight="bold" /> {statusInfo.label}
+                </span>
+              ) : null}
+              {priorityInfo && (
+                <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold text-room-ink/55 bg-room-oat/60">
+                  <span className={`h-1.5 w-1.5 rounded-full ${priorityInfo.dot}`} aria-hidden="true" />
+                  {priorityInfo.label}
+                </span>
+              )}
+              {task.category && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-room-oat/60 px-2.5 py-0.5 text-xs font-bold text-room-ink/70">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: task.category.color }} aria-hidden="true" />
+                  {task.category.name}
+                </span>
+              )}
             </div>
-            <h1 className={`mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl ${task.status === 'COMPLETED' ? 'text-navy-300 line-through dark:text-slate-500' : 'text-navy-900 dark:text-white'}`}>
+            <h1 className={`mt-3 font-display text-2xl font-extrabold tracking-tight sm:text-3xl ${task.status === 'COMPLETED' ? 'text-room-ink/45 line-through' : 'text-room-ink'}`}>
               {task.title}
             </h1>
-            <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium text-navy-500 dark:text-slate-400">
+            <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-semibold text-room-ink/60">
               <span className="inline-flex items-center gap-1.5">
-                <CalendarCheck size={16} weight="bold" className="text-blue-600" />
+                <CalendarCheck size={16} weight="bold" className="text-room-acorn" />
                 {formatRelativeDay(task.dueAt)} · {formatDateTime(task.dueAt)}
               </span>
               {task.repeatType !== 'NONE' && (
-                <span className="inline-flex items-center gap-1.5 text-purple-600">
+                <span className="inline-flex items-center gap-1.5 text-room-ink/50">
                   <Repeat size={16} weight="bold" /> Lặp lại: {repeatSummary(task.repeatType, task.repeatDays)}
                 </span>
               )}
               {task.nagEveryMinutes ? (
-                <span className="inline-flex items-center gap-1.5 font-bold text-rose-600 dark:text-rose-400">
+                <span className="inline-flex items-center gap-1.5 font-bold text-room-bell">
                   <Alarm size={16} weight="bold" /> Nhắc dai mỗi {task.nagEveryMinutes} phút tới khi xong
                 </span>
               ) : null}
             </p>
             {isOverdue(task) && (
-              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-200">
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-room-blush/45 px-3 py-1 text-xs font-extrabold on-blush ring-1 ring-room-acorn/20 dark:bg-room-blush/30">
                 <Clock size={13} weight="bold" /> Công việc đã quá hạn
               </p>
             )}
@@ -301,12 +336,12 @@ export default function TaskDetailPage() {
               aria-haspopup="menu"
               aria-expanded={menuOpen}
               aria-label="Hành động công việc"
-              className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-navy-500 transition hover:bg-navy-50 dark:text-slate-400 dark:hover:bg-slate-700"
+              className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-room-ink/55 transition hover:bg-room-oat/70"
             >
               <DotsThree size={24} weight="bold" />
             </button>
             {menuOpen && (
-              <div role="menu" className="absolute right-0 top-11 z-20 w-48 overflow-hidden rounded-xl bg-white py-1.5 shadow-2xl ring-1 ring-navy-100 animate-scale-in dark:bg-slate-800 dark:ring-slate-700">
+              <div role="menu" className="absolute right-0 top-11 z-20 w-48 overflow-hidden rounded-xl bg-room-paper py-1.5 ring-1 ring-room-acorn/25 animate-scale-in">
                 <button role="menuitem" type="button" onClick={() => { setMenuOpen(false); navigate(`/app/tasks/${task.id}/edit`) }} className="menu-item">
                   <PencilSimple size={17} weight="bold" /> Sửa công việc
                 </button>
@@ -315,7 +350,7 @@ export default function TaskDetailPage() {
                     role="menuitem"
                     type="button"
                     onClick={() => { setMenuOpen(false); setConfirm({ type: 'cancel', title: 'Hủy công việc', message: `Hủy công việc “${task.title}”? Các nhắc nhở chưa kích hoạt sẽ bị hủy.` }) }}
-                    className="menu-item text-amber-600 hover:bg-amber-50"
+                    className="menu-item text-room-ink/80 hover:!text-room-bell"
                   >
                     <Prohibit size={17} weight="bold" /> Hủy công việc
                   </button>
@@ -324,7 +359,7 @@ export default function TaskDetailPage() {
                   role="menuitem"
                   type="button"
                   onClick={() => { setMenuOpen(false); setConfirm({ type: 'delete', title: 'Xóa công việc', message: `Xóa công việc “${task.title}”? Hành động này không thể hoàn tác.`, danger: true }) }}
-                  className="menu-item text-rose-600 hover:bg-rose-50"
+                  className="menu-item text-room-ink/80 hover:!text-room-acorn"
                 >
                   <Trash size={17} weight="bold" /> Xóa công việc
                 </button>
@@ -334,63 +369,65 @@ export default function TaskDetailPage() {
         </div>
 
         {task.description && (
-          <div className="mt-5 rounded-xl bg-navy-50/70 p-4 dark:bg-slate-900/50">
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-navy-700 dark:text-slate-300">{task.description}</p>
+          <div className="mt-5 rounded-xl bg-room-oat/45 p-4">
+            <p className="whitespace-pre-wrap text-sm font-semibold leading-relaxed text-room-ink/85">{task.description}</p>
           </div>
         )}
 
         {/* Nút hoàn thành */}
         <div className="mt-6">
           {closed ? (
-            <Button variant="secondary" fullWidth size="lg" icon={Repeat} onClick={handleReopen} loading={busy}>
+            <RoomButton variant="secondary" fullWidth size="lg" icon={Repeat} onClick={handleReopen} loading={busy}>
               Mở lại công việc
-            </Button>
+            </RoomButton>
           ) : (
-            <Button variant="gradient" fullWidth size="lg" icon={CheckCircle} onClick={handleComplete} loading={busy}>
+            <RoomButton fullWidth size="lg" icon={CheckCircle} onClick={handleComplete} loading={busy}>
               Đánh dấu hoàn thành
-            </Button>
+            </RoomButton>
           )}
         </div>
-      </div>
+      </RoomCard>
 
       {/* Việc con */}
-      <section className="card p-5 sm:p-6">
-        <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-          <ListChecks size={19} weight="fill" className="text-blue-600 dark:text-blue-400" />
+      <RoomCard className="p-5 sm:p-6">
+        <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
+          <ListChecks size={19} weight="fill" className="text-room-acorn" />
           Việc con
           {task.subtasks.length > 0 && (
-            <span className="rounded-full bg-navy-100 px-2 py-0.5 text-xs font-bold text-navy-500 dark:bg-slate-700 dark:text-slate-400">
+            <span className="rounded-full bg-room-oat/70 px-2 py-0.5 text-xs font-bold text-room-ink/60">
               {completedSub}/{task.subtasks.length}
             </span>
           )}
         </h2>
         {task.subtasks.length > 0 && (
-          <div className="mb-3 mt-1 h-1.5 overflow-hidden rounded-full bg-navy-100 dark:bg-slate-700">
+          <div className="mb-3 mt-1 h-1.5 overflow-hidden rounded-full bg-room-oat">
             <div
-              className="h-full rounded-full bg-brand-gradient transition-all duration-300"
+              className="h-full rounded-full bg-room-acorn transition-all duration-300"
               style={{ width: `${(completedSub / task.subtasks.length) * 100}%` }}
             />
           </div>
         )}
         <ul className="mt-3 space-y-1.5">
           {task.subtasks.map((sub) => (
-            <li key={sub.id} className="group flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-navy-50 dark:hover:bg-slate-700/50">
+            <li key={sub.id} className="group flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-room-oat/50">
               <button
                 type="button"
                 onClick={() => onToggleSub(sub)}
                 aria-label={sub.isCompleted ? `Mở lại: ${sub.content}` : `Hoàn thành: ${sub.content}`}
                 className={`flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition ${
-                  sub.isCompleted ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-navy-200 text-transparent hover:border-blue-500'
+                  sub.isCompleted
+                    ? 'border-room-sage bg-room-sage text-room-paper'
+                    : 'border-room-acorn/50 text-transparent hover:border-room-acorn'
                 }`}
               >
                 <Check size={11} weight="bold" />
               </button>
-              <p className={`flex-1 text-sm ${sub.isCompleted ? 'text-navy-300 line-through dark:text-slate-500' : 'text-navy-800 dark:text-slate-200'}`}>{sub.content}</p>
+              <p className={`flex-1 text-sm font-semibold ${sub.isCompleted ? 'text-room-ink/40 line-through' : 'text-room-ink/85'}`}>{sub.content}</p>
               <button
                 type="button"
                 onClick={() => onDeleteSub(sub)}
                 aria-label={`Xóa việc con: ${sub.content}`}
-                className="cursor-pointer rounded-md p-1.5 text-navy-300 opacity-0 transition hover:bg-rose-50 hover:text-rose-500 focus-visible:opacity-100 group-hover:opacity-100 dark:hover:bg-rose-900/30"
+                className="cursor-pointer rounded-md p-1.5 text-room-ink/30 opacity-0 transition hover:bg-room-oat/70 hover:text-room-acorn focus-visible:opacity-100 group-hover:opacity-100"
               >
                 <X size={15} weight="bold" />
               </button>
@@ -399,41 +436,39 @@ export default function TaskDetailPage() {
         </ul>
         {!closed && (
           <form onSubmit={onAddSubtask} className="mt-3 flex gap-2">
-            <input
+            <RoomInput
               type="text"
               value={subtaskInput}
               onChange={(e) => setSubtaskInput(e.target.value)}
               placeholder="Thêm việc con, nhấn Enter…"
               aria-label="Thêm việc con"
-              className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3.5 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 transition placeholder:text-navy-300 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600 dark:placeholder:text-slate-400 dark:focus:bg-slate-600"
+              className="h-11 flex-1"
             />
-            <Button type="submit" variant="secondary" icon={Plus} size="icon" aria-label="Thêm việc con" />
+            <RoomButton type="submit" variant="secondary" icon={Plus} size="icon" aria-label="Thêm việc con" />
           </form>
         )}
         {task.subtasks.length === 0 && !closed && (
-          <p className="mt-2 text-xs text-navy-400">Chia nhỏ công việc thành các bước để dễ hoàn thành hơn.</p>
+          <p className="mt-2 text-xs font-semibold text-room-ink/50">Chia nhỏ công việc thành các bước để dễ hoàn thành hơn.</p>
         )}
-      </section>
+      </RoomCard>
 
       {/* Nhắc nhở */}
-      <section className="card p-5 sm:p-6">
-        <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-          <Bell size={19} weight="fill" className="text-amber-500 dark:text-amber-400" />
+      <RoomCard className="p-5 sm:p-6">
+        <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
+          <Bell size={19} weight="fill" className="text-room-bell" />
           Nhắc nhở
-          <span className="rounded-full bg-navy-100 px-2 py-0.5 text-xs font-bold text-navy-500 dark:bg-slate-700 dark:text-slate-400">
+          <span className="rounded-full bg-room-oat/70 px-2 py-0.5 text-xs font-bold text-room-ink/60">
             {task.reminders.filter((r) => r.status === 'SCHEDULED').length}/5
           </span>
         </h2>
         {task.reminders.length > 0 ? (
           <ul className="mt-3 space-y-2">
             {task.reminders.map((r) => (
-              <li key={r.id} className="flex items-center gap-3 rounded-xl bg-navy-50/70 px-3.5 py-2.5 dark:bg-slate-900/50">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
-                  <Clock size={17} weight="bold" />
-                </span>
+              <li key={r.id} className="flex items-center gap-3 rounded-xl bg-room-oat/50 px-3.5 py-2.5">
+                <Clock size={17} weight="bold" className="shrink-0 text-room-bell" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-navy-800 dark:text-slate-200">{formatDateTime(r.remindAt)}</p>
-                  <p className="text-xs text-navy-400 dark:text-slate-500">
+                  <p className="text-sm font-bold text-room-ink/85">{formatDateTime(r.remindAt)}</p>
+                  <p className="text-xs font-semibold text-room-ink/50">
                     {r.status === 'SCHEDULED' ? 'Sẽ báo thức đúng giờ' : r.status === 'CANCELLED' ? 'Đã bị hủy' : r.status === 'DISMISSED' ? 'Đã tắt' : 'Đã kích hoạt'}
                     {r.nagCount > 0 ? ` · đã nhắc lại ${r.nagCount} lần vì việc chưa xong` : ''}
                     {r.snoozeCount > 0 && ` · Đã hoãn ${r.snoozeCount} lần`}
@@ -444,7 +479,7 @@ export default function TaskDetailPage() {
                     type="button"
                     onClick={() => onDeleteReminder(r)}
                     aria-label="Xóa nhắc nhở"
-                    className="cursor-pointer rounded-md p-1.5 text-navy-300 transition hover:bg-rose-50 hover:text-rose-500"
+                    className="cursor-pointer rounded-md p-1.5 text-room-ink/30 transition hover:bg-room-oat/70 hover:text-room-acorn"
                   >
                     <Trash size={16} />
                   </button>
@@ -453,48 +488,54 @@ export default function TaskDetailPage() {
             ))}
           </ul>
         ) : (
-          <EmptyState icon={Bell} title="Chưa có nhắc nhở" description="Thêm nhắc nhở để MN-Qronx báo thức bạn đúng giờ." className="py-8" />
+          <RoomEmpty
+            icon={Bell}
+            title="Chưa có nhắc nhở"
+            description="Thêm nhắc nhở để MN-Qronx báo thức bạn đúng giờ."
+            className="py-8"
+          />
         )}
         {!closed && task.reminders.filter((r) => r.status === 'SCHEDULED').length < 5 && (
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">              <input
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <RoomInput
               type="datetime-local"
               value={reminderTime}
               onChange={(e) => setReminderTime(e.target.value)}
               aria-label="Chọn thời điểm nhắc nhở"
-              className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3.5 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600 dark:focus:bg-slate-600"
+              className="h-11 flex-1"
             />
-            <Button variant="secondary" icon={Plus} onClick={onAddReminder}>
+            <RoomButton variant="secondary" icon={Plus} onClick={onAddReminder}>
               Thêm nhắc nhở
-            </Button>
+            </RoomButton>
           </div>
         )}
-        {closed && <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">Công việc đã đóng – không thể thêm nhắc nhở mới.</p>}
-      </section>
+        {closed && <p className="mt-3 text-xs font-semibold text-room-ink/50">Công việc đã đóng – không thể thêm nhắc nhở mới.</p>}
+      </RoomCard>
 
       {/* Nhờ người khác làm (Pro) */}
-      <section className="card p-5 sm:p-6">
+      <RoomCard className="p-5 sm:p-6">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-            <Users size={19} weight="fill" className="text-violet-600 dark:text-violet-400" />
+          <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
+            <Users size={19} weight="fill" className="text-room-acorn" />
             Nhờ người khác làm
           </h2>
-          <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-bold text-violet-700 ring-1 ring-inset ring-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:ring-violet-700">
+          <span className="rounded-full bg-room-oat/70 px-2 py-0.5 text-[11px] font-bold text-room-ink/70 ring-1 ring-room-acorn/30">
             PRO
           </span>
           {assignees.length > 0 && (
-            <span className="rounded-full bg-navy-100 px-2 py-0.5 text-xs font-bold text-navy-500 dark:bg-slate-700 dark:text-slate-400">
+            <span className="rounded-full bg-room-oat/70 px-2 py-0.5 text-xs font-bold text-room-ink/60">
               {doneCount}/{assignees.length} đã xong
             </span>
           )}
         </div>
-        <p className="mt-2 text-xs text-navy-500 dark:text-slate-400">
+        <p className="mt-2 text-xs font-semibold text-room-ink/55">
           Người bạn nhờ <strong>không cần trả phí</strong>. Họ vẫn nhận chuông nhắc như việc của
           chính mình, còn bạn nhận thông báo ngay khi họ báo xong.
         </p>
 
         {!isPro ? (
-          <div className="mt-3 rounded-xl bg-navy-50 p-3 ring-1 ring-inset ring-navy-100 dark:bg-slate-700/60 dark:ring-slate-600">
-            <p className="flex items-start gap-2 text-xs font-medium text-navy-500 dark:text-slate-300">
+          <div className="mt-3 rounded-xl bg-room-oat/45 p-3 ring-1 ring-inset ring-room-acorn/15">
+            <p className="flex items-start gap-2 text-xs font-semibold text-room-ink/70">
               <LockSimple size={15} className="mt-0.5 shrink-0" />
               <span>
                 Gói hiện tại chỉ làm được việc của một mình bạn. Nâng cấp Pro để nhờ người thân
@@ -512,22 +553,16 @@ export default function TaskDetailPage() {
                 {assignees.map((s) => (
                   <li
                     key={s.shareId}
-                    className="flex items-center gap-3 rounded-xl bg-navy-50/70 px-3.5 py-2.5 dark:bg-slate-900/50"
+                    className="flex items-center gap-3 rounded-xl bg-room-oat/50 px-3.5 py-2.5"
                   >
-                    <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                        s.doneAt
-                          ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
-                          : 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400'
-                      }`}
-                    >
-                      {s.doneAt ? <SealCheck size={17} weight="bold" /> : <Users size={17} weight="bold" />}
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 ring-room-acorn/25 bg-room-paper">
+                      {s.doneAt ? <SealCheck size={17} weight="bold" className="text-room-sage" /> : <Users size={17} weight="bold" className="text-room-ink/55" />}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-navy-800 dark:text-slate-200">
+                      <p className="truncate text-sm font-bold text-room-ink/85">
                         {s.assignee?.fullName || 'Người được giao'}
                       </p>
-                      <p className="truncate text-xs text-navy-400 dark:text-slate-500">
+                      <p className="truncate text-xs font-semibold text-room-ink/50">
                         {s.doneAt
                           ? `Đã báo xong ${formatDateTime(s.doneAt)}`
                           : s.assignee?.email || 'Chưa báo xong'}
@@ -539,7 +574,7 @@ export default function TaskDetailPage() {
                       onClick={() => onRevokeShare(s)}
                       disabled={shareBusy}
                       aria-label={`Thu hồi việc đã giao cho ${s.assignee?.fullName || ''}`}
-                      className="cursor-pointer rounded-md p-1.5 text-navy-300 transition hover:bg-rose-50 hover:text-rose-500 disabled:opacity-50 dark:hover:bg-rose-900/30"
+                      className="cursor-pointer rounded-md p-1.5 text-room-ink/30 transition hover:bg-room-oat/70 hover:text-room-acorn disabled:opacity-50"
                     >
                       <X size={16} weight="bold" />
                     </button>
@@ -551,7 +586,7 @@ export default function TaskDetailPage() {
             {!closed && assignees.length < 5 && (
               <form onSubmit={onShare} className="mt-4 space-y-2">
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <input
+                  <RoomInput
                     type="email"
                     value={shareEmail}
                     onChange={(e) => {
@@ -560,23 +595,23 @@ export default function TaskDetailPage() {
                     }}
                     placeholder="Email người bạn muốn nhờ…"
                     aria-label="Email người được giao việc"
-                    className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3.5 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 transition placeholder:text-navy-300 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600 dark:placeholder:text-slate-400 dark:focus:bg-slate-600"
+                    className="h-11 flex-1"
                   />
-                  <input
+                  <RoomInput
                     type="text"
                     value={shareNote}
                     onChange={(e) => setShareNote(e.target.value)}
                     maxLength={255}
                     placeholder="Lời nhắn (không bắt buộc)"
                     aria-label="Lời nhắn kèm theo"
-                    className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3.5 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 transition placeholder:text-navy-300 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600 dark:placeholder:text-slate-400 dark:focus:bg-slate-600"
+                    className="h-11 flex-1"
                   />
-                  <Button type="submit" variant="secondary" icon={PaperPlaneTilt} loading={shareBusy}>
+                  <RoomButton type="submit" variant="secondary" icon={PaperPlaneTilt} loading={shareBusy}>
                     Giao việc
-                  </Button>
+                  </RoomButton>
                 </div>
                 {shareHint && (
-                  <p className="rounded-xl bg-amber-50 p-2.5 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:ring-amber-800">
+                  <p className="rounded-xl bg-room-rain/30 p-2.5 text-xs font-bold text-room-ink/75 ring-1 ring-inset ring-room-rain">
                     {shareHint}
                   </p>
                 )}
@@ -587,8 +622,8 @@ export default function TaskDetailPage() {
                 cùng nhận chuông rồi cùng đoán, và việc rơi vào tay người không
                 biết mình có việc. */}
             {!closed && task.repeatType !== 'NONE' && assignees.length >= 2 && (
-              <div className="mt-4 rounded-xl bg-navy-50/70 p-3 ring-1 ring-inset ring-navy-100 dark:bg-slate-900/50 dark:ring-slate-700">
-                <Toggle
+              <div className="mt-4 rounded-xl bg-room-oat/40 p-3 ring-1 ring-inset ring-room-acorn/15">
+                <RoomToggle
                   checked={rotation.enabled}
                   onChange={(next) => onRotation({ enabled: next })}
                   disabled={rotationBusy}
@@ -596,17 +631,17 @@ export default function TaskDetailPage() {
                   description="Mỗi kỳ một người chịu trách nhiệm, xoay vòng theo thứ tự đã giao. Chuông chỉ nhắc người đến lượt."
                 />
                 {rotation.enabled && (
-                  <div className="mt-1 space-y-2.5 border-t border-navy-100 px-1 pt-3 dark:border-slate-700">
-                    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-navy-700 dark:text-slate-200">
-                      <ArrowsClockwise size={14} weight="bold" className="text-violet-600 dark:text-violet-400" />
+                  <div className="mt-1 space-y-2.5 border-t border-room-acorn/15 px-1 pt-3">
+                    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-bold text-room-ink/80">
+                      <ArrowsClockwise size={14} weight="bold" className="text-room-acorn" />
                       Kỳ này: <strong>{turnName || 'chưa chọn ai'}</strong>
                       {nextTurnName && (
-                        <span className="font-medium text-navy-400 dark:text-slate-500">
+                        <span className="font-semibold text-room-ink/50">
                           · kỳ sau: {nextTurnName}
                         </span>
                       )}
                     </p>
-                    <Select
+                    <RoomSelect
                       value={rotation.turnAssigneeId ?? ''}
                       onChange={(e) => onRotation({ assigneeId: Number(e.target.value) })}
                       disabled={rotationBusy}
@@ -618,8 +653,8 @@ export default function TaskDetailPage() {
                           {s.assignee?.fullName || 'Người được giao'}
                         </option>
                       ))}
-                    </Select>
-                    <p className="text-[11px] leading-relaxed text-navy-400 dark:text-slate-500">
+                    </RoomSelect>
+                    <p className="text-[11px] font-semibold leading-relaxed text-room-ink/50">
                       Đổi người ở đây chỉ áp dụng cho kỳ này — kỳ sau vẫn xoay đúng thứ tự
                       (tuần này con ốm thì mẹ làm, tuần sau vẫn đến lượt con).
                     </p>
@@ -628,7 +663,7 @@ export default function TaskDetailPage() {
               </div>
             )}
             {!closed && assignees.length >= 2 && task.repeatType === 'NONE' && (
-              <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">
+              <p className="mt-3 text-xs font-semibold text-room-ink/50">
                 Muốn mỗi kỳ một người làm?{' '}
                 <Link to={`/app/tasks/${task.id}/edit`} className="font-bold underline">
                   Bật lặp lại
@@ -637,20 +672,21 @@ export default function TaskDetailPage() {
               </p>
             )}
             {closed && (
-              <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">
+              <p className="mt-3 text-xs font-semibold text-room-ink/50">
                 Công việc đã kết thúc nên không giao thêm được.
               </p>
             )}
             {!closed && assignees.length >= 5 && (
-              <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">
+              <p className="mt-3 text-xs font-semibold text-room-ink/50">
                 Một việc chỉ giao được cho tối đa 5 người.
               </p>
             )}
           </>
         )}
-      </section>
+      </RoomCard>
 
       <ConfirmDialog
+        skin="room"
         open={!!confirm}
         onClose={() => setConfirm(null)}
         onConfirm={runAction}
