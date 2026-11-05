@@ -13,8 +13,13 @@ import {
   ListChecks,
   CalendarBlank,
 } from '@phosphor-icons/react'
-import Button from '../../components/common/Button'
-import { Skeleton, ErrorNotice, EmptyState } from '../../components/common/Feedback'
+import {
+  RoomButton,
+  RoomCard,
+  RoomEmpty,
+  RoomSegmented,
+  RoomSkeleton,
+} from '../../components/common/RoomUI'
 import { useToast } from '../../components/common/Toast'
 import { useAuth } from '../../context/AuthContext'
 import { useCachedQuery } from '../../lib/useCachedQuery'
@@ -41,11 +46,31 @@ const CAPACITIES = [
 ]
 
 function PriorityChip({ item }) {
-  const tone = PRIORITY[item.priority]?.badge || 'bg-navy-50 text-navy-700 ring-navy-200'
+  const p = PRIORITY[item.priority]
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ring-inset ${tone}`}>
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-room-oat/60 px-2.5 py-0.5 text-[11px] font-bold text-room-ink/55">
+      <span className={`h-1.5 w-1.5 rounded-full ${p?.dot || 'bg-room-ink/40'}`} aria-hidden="true" />
       {item.priorityLabel}
     </span>
+  )
+}
+
+// Khối lỗi da phòng — Rain trung tính thay ErrorNotice rose của Feedback
+// (thế giới phòng không có màu đỏ; Rain nói "chờ/xem lại từ bên ngoài")
+function RoomErrorNotice({ message, onRetry, className = '' }) {
+  return (
+    <div className={`flex flex-wrap items-center justify-between gap-2 rounded-xl bg-room-rain/30 p-4 ring-1 ring-room-rain ${className}`}>
+      <p className="text-sm font-semibold text-room-ink/85">{message}</p>
+      {onRetry && (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="cursor-pointer rounded-xl bg-room-paper px-3 py-2 text-sm font-bold text-room-ink ring-1 ring-inset ring-room-acorn/25 transition hover:bg-room-oat/75"
+        >
+          Thử lại
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -53,25 +78,25 @@ function LockedPanel() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="flex flex-wrap items-center gap-2 text-2xl font-extrabold tracking-tight text-navy-900 dark:text-white">
+        <h1 className="flex flex-wrap items-center gap-2 font-display text-2xl font-bold text-room-ink">
           Kế hoạch tuần
-          <span className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-white">
+          <span className="rounded-full bg-room-oat/70 px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-room-ink/60 ring-1 ring-inset ring-room-acorn/25">
             Pro
           </span>
         </h1>
-        <p className="mt-1 text-sm text-navy-500 dark:text-slate-400">
+        <p className="mt-1 text-sm font-semibold text-room-ink/55">
           Mỗi ngày nên làm việc nào — và biết trước khi tuần bị quá tải.
         </p>
       </div>
 
-      <div className="card p-6">
+      <RoomCard className="p-6">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100 dark:bg-violet-900/30 dark:text-violet-300 dark:ring-violet-800/50">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-room-oat/45 text-room-acorn ring-1 ring-inset ring-room-acorn/25">
             <LockSimple size={22} weight="duotone" />
           </span>
           <div>
-            <h2 className="font-bold text-navy-900 dark:text-white">Kế hoạch tuần là tính năng của gói Pro</h2>
-            <p className="mt-1 text-sm text-navy-500 dark:text-slate-400">
+            <h2 className="font-display font-bold text-room-ink">Kế hoạch tuần là tính năng của gói Pro</h2>
+            <p className="mt-1 text-sm font-semibold text-room-ink/55">
               Nâng cấp Pro để app tự xếp việc vào từng ngày và cảnh báo khi bạn nhận nhiều hơn sức mình.
             </p>
           </div>
@@ -88,20 +113,20 @@ function LockedPanel() {
           ].map((f) => (
             <li
               key={f.text}
-              className="flex items-start gap-2.5 rounded-xl bg-navy-50 p-3 ring-1 ring-inset ring-navy-100 dark:bg-slate-700/40 dark:ring-slate-600"
+              className="flex items-start gap-2.5 rounded-xl bg-room-oat/35 p-3 ring-1 ring-inset ring-room-acorn/15"
             >
-              <f.icon size={18} weight="duotone" className="mt-0.5 shrink-0 text-violet-500 dark:text-violet-300" />
-              <span className="text-xs font-medium leading-relaxed text-navy-600 dark:text-slate-300">{f.text}</span>
+              <f.icon size={18} weight="duotone" className="mt-0.5 shrink-0 text-room-acorn" />
+              <span className="text-xs font-semibold leading-relaxed text-room-ink/60">{f.text}</span>
             </li>
           ))}
         </ul>
 
         <Link to="/app/billing" className="mt-5 inline-block">
-          <Button variant="gradient" icon={Sparkle}>
+          <RoomButton icon={Sparkle}>
             Nâng cấp Pro
-          </Button>
+          </RoomButton>
         </Link>
-      </div>
+      </RoomCard>
     </div>
   )
 }
@@ -172,76 +197,61 @@ export default function PlannerPage() {
   if (loading && !data) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-28" />
+        <RoomSkeleton className="h-8 w-64" />
+        <RoomSkeleton className="h-28" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-44" />
+            <RoomSkeleton key={i} className="h-44" />
           ))}
         </div>
       </div>
     )
   }
 
-  if (error && !data) return <ErrorNotice message={error} onRetry={reload} />
+  if (error && !data) return <RoomErrorNotice message={error} onRetry={reload} />
 
   return (
     <div className="space-y-6">
       {/* ── Đầu trang + chọn sức mình ── */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="flex flex-wrap items-center gap-2 text-2xl font-extrabold tracking-tight text-navy-900 dark:text-white">
-            <CalendarCheck size={26} weight="duotone" className="text-violet-600 dark:text-violet-400" />
+          <h1 className="flex flex-wrap items-center gap-2 font-display text-2xl font-bold text-room-ink">
+            <CalendarCheck size={26} weight="duotone" className="text-room-acorn" />
             Kế hoạch tuần
-            <span className="rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-white">
+            <span className="rounded-full bg-room-oat/70 px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-room-ink/60 ring-1 ring-inset ring-room-acorn/25">
               Pro
             </span>
           </h1>
-          <p className="mt-1 text-sm text-navy-500 dark:text-slate-400">
+          <p className="mt-1 text-sm font-semibold text-room-ink/50">
             {data?.range?.from?.split('-').reverse().join('/')} → {data?.range?.to?.split('-').reverse().join('/')}
             {slow && ' · máy chủ đang khởi động…'}
           </p>
         </div>
 
         <div className="no-print flex flex-wrap items-center gap-2">
-          <div className="flex rounded-xl bg-navy-100 p-1 dark:bg-slate-700">
-            {CAPACITIES.map((c) => (
-              <button
-                key={c.value}
-                type="button"
-                onClick={() => setCapacity(c.value)}
-                className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                  capacity === c.value
-                    ? 'bg-white text-navy-900 shadow-sm dark:bg-slate-900 dark:text-white'
-                    : 'text-navy-500 hover:text-navy-800 dark:text-slate-300'
-                }`}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-          <Button variant="secondary" size="sm" icon={ArrowClockwise} onClick={reload}>
+          <RoomSegmented options={CAPACITIES} value={capacity} onChange={setCapacity} size="sm" />
+          <RoomButton variant="secondary" size="sm" icon={ArrowClockwise} onClick={reload}>
             Xếp lại
-          </Button>
+          </RoomButton>
         </div>
       </div>
 
-      {error && data && <ErrorNotice message={`${error} — đang hiện kế hoạch lần trước.`} onRetry={reload} />}
+      {error && data && <RoomErrorNotice message={`${error} — đang hiện kế hoạch lần trước.`} onRetry={reload} />}
 
       {/* ── Quá tải hay không: phần quan trọng nhất của trang ── */}
       {summary && (
         <section
-          className={`card overflow-hidden border-0 p-5 text-white sm:p-6 ${
+          className={`overflow-hidden rounded-2xl p-5 ring-1 sm:p-6 ${
             summary.overloaded
-              ? 'bg-gradient-to-br from-amber-500 via-orange-600 to-rose-600'
-              : 'bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700'
+              ? 'bg-room-bell/25 ring-room-bell/40'
+              : 'bg-room-sage/25 ring-room-acorn/20'
           }`}
         >
-          <p className="flex items-start gap-3 text-sm font-semibold leading-relaxed sm:text-base">
+          <p className="flex items-start gap-3 text-sm font-semibold leading-relaxed text-room-ink sm:text-base">
             {summary.overloaded ? (
-              <WarningCircle size={22} weight="fill" className="mt-0.5 shrink-0 text-amber-100" />
+              <WarningCircle size={22} weight="fill" className="mt-0.5 shrink-0 text-room-bell" />
             ) : (
-              <CheckCircle size={22} weight="fill" className="mt-0.5 shrink-0 text-emerald-100" />
+              <CheckCircle size={22} weight="fill" className="mt-0.5 shrink-0 text-room-acorn" />
             )}
             <span>
               {summary.overloaded ? (
@@ -262,11 +272,11 @@ export default function PlannerPage() {
           </p>
 
           <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
-            <span className="rounded-full bg-white/20 px-3 py-1">Quá hạn: {summary.overdueCount}</span>
-            <span className="rounded-full bg-white/20 px-3 py-1">Đến hạn hôm nay: {summary.dueTodayCount}</span>
-            <span className="rounded-full bg-white/20 px-3 py-1">Đã xếp: {summary.planned}/{summary.seats}</span>
+            <span className="rounded-full bg-room-paper px-3 py-1 text-room-ink/70">Quá hạn: {summary.overdueCount}</span>
+            <span className="rounded-full bg-room-paper px-3 py-1 text-room-ink/70">Đến hạn hôm nay: {summary.dueTodayCount}</span>
+            <span className="rounded-full bg-room-paper px-3 py-1 text-room-ink/70">Đã xếp: {summary.planned}/{summary.seats}</span>
             {summary.laterCount > 0 && (
-              <span className="rounded-full bg-white/20 px-3 py-1">Tuần sau: {summary.laterCount} việc</span>
+              <span className="rounded-full bg-room-paper px-3 py-1 text-room-ink/70">Tuần sau: {summary.laterCount} việc</span>
             )}
           </div>
         </section>
@@ -274,38 +284,38 @@ export default function PlannerPage() {
 
       {/* ── Việc sẽ trễ nếu giữ nhịp này ── */}
       {data?.atRisk?.length > 0 && (
-        <section className="card border-l-4 border-l-rose-500 p-5 sm:p-6">
-          <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-            <WarningCircle size={19} weight="fill" className="text-rose-600 dark:text-rose-400" />
+        <section className="rounded-2xl bg-room-paper p-5 ring-1 ring-room-bell/40 sm:p-6">
+          <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
+            <WarningCircle size={19} weight="fill" className="text-room-bell" />
             Sẽ trễ hạn nếu giữ kế hoạch này ({data.atRisk.length} việc)
           </h2>
-          <p className="mt-1 text-xs text-navy-500 dark:text-slate-400">
+          <p className="mt-1 text-xs font-semibold text-room-ink/55">
             Dời hạn chỉ nên bấm khi hạn thật sự linh động — nếu là việc phải xong đúng hạn thì hãy dồn vào hôm nay.
           </p>
-          <ul className="mt-3 divide-y divide-navy-100 dark:divide-slate-700">
+          <ul className="mt-3 divide-y divide-room-acorn/15">
             {data.atRisk.slice(0, 10).map((r) => (
               <li key={r.taskId} className="flex flex-wrap items-center gap-2 py-3">
                 <Link
                   to={`/app/tasks/${r.taskId}`}
-                  className="flex-1 font-semibold text-navy-800 hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400"
+                  className="flex-1 font-semibold text-room-ink/85 transition hover:text-room-acorn"
                 >
                   {r.title}
                 </Link>
                 <PriorityChip item={r} />
-                <span className="rounded-full bg-rose-600 px-2.5 py-0.5 text-[11px] font-extrabold text-white">
+                <span className="rounded-full bg-room-bell/25 px-2.5 py-0.5 text-[11px] font-extrabold text-room-ink ring-1 ring-inset ring-room-bell/50">
                   Trễ {r.willBeLateDays} ngày
                 </span>
-                <span className="text-[11px] text-navy-400 dark:text-slate-500">
+                <span className="text-[11px] font-semibold text-room-ink/45">
                   {r.plannedFor ? `dự kiến ${r.plannedFor.split('-').reverse().join('/')}` : 'không còn chỗ trong tuần'}
                 </span>
-                <Button
+                <RoomButton
                   variant="secondary"
-                  size="xs"
+                  size="sm"
                   loading={busyId === r.taskId}
                   onClick={() => move(r, nextDeadline(r.dueAt), `Đã dời hạn: ${r.title}`)}
                 >
                   Dời hạn 3 ngày
-                </Button>
+                </RoomButton>
               </li>
             ))}
           </ul>
@@ -313,22 +323,23 @@ export default function PlannerPage() {
       )}
 
       {/* ── Giờ vàng ── */}
-      {data?.goldenHour?.hour !== null && (
-        <section className="card flex flex-wrap items-center gap-3 p-4 sm:p-5">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 ring-1 ring-inset ring-amber-100 dark:bg-amber-900/30 dark:text-amber-300 dark:ring-amber-800/50">
-            <Clock size={20} weight="duotone" />
+      {data?.goldenHour?.hour != null && (
+        <RoomCard className="flex flex-wrap items-center gap-3 p-4 sm:p-5">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-room-bell/25 ring-1 ring-inset ring-room-bell/40">
+            <Clock size={20} weight="duotone" className="text-room-bell" />
           </span>
-          <p className="text-sm text-navy-600 dark:text-slate-300">
+          <p className="text-sm font-semibold text-room-ink/70">
             Giờ vàng của bạn là{' '}
-            <strong className="font-extrabold text-navy-900 dark:text-white">{data.goldenHour.hour}h</strong> — hãy đặt
+            <strong className="font-extrabold text-room-ink">{data.goldenHour.hour}h</strong> — hãy đặt
             việc trọng tâm của mỗi ngày (việc đầu tiên) vào khoảng đó.
           </p>
-        </section>
+        </RoomCard>
       )}
 
       {/* ── 7 ngày ── */}
       {summary?.openCount === 0 && data?.laterCount === 0 ? (
-        <EmptyState
+        <RoomEmpty
+          icon={CalendarBlank}
           title="Chưa có việc nào cần làm trong tuần này"
           description="Tạo vài công việc có hạn trong tuần là app tự xếp lịch cho bạn."
         />
@@ -337,22 +348,22 @@ export default function PlannerPage() {
           {days.map((day) => (
             <section
               key={day.date}
-              className={`card p-4 ${
-                day.isToday ? 'ring-2 ring-violet-300 dark:ring-violet-700' : ''
+              className={`rounded-2xl bg-room-paper p-4 ${
+                day.isToday ? 'ring-2 ring-room-acorn' : 'ring-1 ring-room-acorn/25'
               }`}
             >
               <div className="flex items-center justify-between">
-                <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
+                <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
                   {day.isToday ? 'Hôm nay' : day.weekday}
-                  <span className="text-xs font-semibold text-navy-400 dark:text-slate-500">
+                  <span className="text-xs font-semibold text-room-ink/45">
                     {day.dayNumber}/{day.month}
                   </span>
                 </h2>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[11px] font-extrabold ${
                     day.load >= day.capacity
-                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
-                      : 'bg-navy-100 text-navy-600 dark:bg-slate-700 dark:text-slate-300'
+                      ? 'bg-room-bell/25 text-room-ink ring-1 ring-inset ring-room-acorn/20'
+                      : 'bg-room-oat/70 text-room-ink/60'
                   }`}
                 >
                   {day.load}/{day.capacity}
@@ -360,13 +371,13 @@ export default function PlannerPage() {
               </div>
 
               {day.items.length === 0 ? (
-                <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">Ngày này trống.</p>
+                <p className="mt-3 text-xs font-semibold text-room-ink/45">Ngày này trống.</p>
               ) : (
                 <ul className="mt-3 space-y-2">
                   {day.items.map((item) => (
                     <li
                       key={item.taskId}
-                      className="rounded-xl bg-navy-50/70 p-3 ring-1 ring-inset ring-navy-100 dark:bg-slate-700/40 dark:ring-slate-600"
+                      className="rounded-xl bg-room-oat/40 p-3 ring-1 ring-inset ring-room-acorn/15"
                     >
                       <div className="flex items-start gap-2">
                         <button
@@ -374,42 +385,42 @@ export default function PlannerPage() {
                           onClick={() => markDone(item)}
                           disabled={busyId === item.taskId}
                           title="Đánh dấu đã xong"
-                          className="mt-0.5 shrink-0 cursor-pointer text-navy-300 transition hover:text-emerald-500 disabled:opacity-50 dark:text-slate-500"
+                          className="mt-0.5 shrink-0 cursor-pointer text-room-ink/30 transition hover:text-room-sage disabled:opacity-50"
                         >
                           <CheckCircle size={18} weight="bold" />
                         </button>
                         <div className="min-w-0 flex-1">
                           <Link
                             to={`/app/tasks/${item.taskId}`}
-                            className={`block truncate text-sm font-semibold hover:text-blue-600 dark:hover:text-blue-400 ${
-                              item.focus ? 'text-navy-900 dark:text-white' : 'text-navy-700 dark:text-slate-200'
+                            className={`block truncate text-sm font-semibold transition hover:text-room-acorn ${
+                              item.focus ? 'text-room-ink' : 'text-room-ink/75'
                             }`}
                             title={item.title}
                           >
-                            {item.focus && <Sparkle size={11} weight="fill" className="mr-1 inline text-amber-500" />}
+                            {item.focus && <Sparkle size={11} weight="fill" className="mr-1 inline text-room-bell" />}
                             {item.title}
                           </Link>
                           <div className="mt-1 flex flex-wrap items-center gap-1.5">
                             <PriorityChip item={item} />
                             {item.overdue && (
-                              <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-extrabold text-white">
+                              <span className="rounded-full bg-room-blush/45 px-2 py-0.5 text-[10px] font-extrabold on-blush ring-1 ring-room-acorn/20 dark:bg-room-blush/30">
                                 {/* Việc hết hạn trong ngày hôm nay: "Quá hạn 0 ngày" đọc rất vô nghĩa */}
                                 {item.daysLate > 0 ? `Quá hạn ${item.daysLate} ngày` : 'Quá hạn hôm nay'}
                               </span>
                             )}
                             {!item.overdue && item.willBeLateDays > 0 && (
-                              <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-extrabold text-white">
+                              <span className="rounded-full bg-room-bell/25 px-2 py-0.5 text-[10px] font-extrabold text-room-ink ring-1 ring-inset ring-room-bell/50">
                                 Trễ {item.willBeLateDays} ngày
                               </span>
                             )}
                             {item.nagEveryMinutes && (
-                              <span className="flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-600 dark:bg-rose-900/30 dark:text-rose-300">
+                              <span className="flex items-center gap-1 rounded-full bg-room-bell/20 px-2 py-0.5 text-[10px] font-bold text-room-bell">
                                 <Alarm size={10} weight="fill" />
                                 {item.nagEveryMinutes} phút
                               </span>
                             )}
                             {item.categoryName && (
-                              <span className="rounded-full bg-navy-100 px-2 py-0.5 text-[10px] font-semibold text-navy-500 dark:bg-slate-600 dark:text-slate-300">
+                              <span className="rounded-full bg-room-oat/60 px-2 py-0.5 text-[10px] font-semibold text-room-ink/55">
                                 {item.categoryName}
                               </span>
                             )}
@@ -423,7 +434,7 @@ export default function PlannerPage() {
                             type="button"
                             disabled={busyId === item.taskId}
                             onClick={() => move(item, tomorrowMorning(), `Đã dời sang mai: ${item.title}`)}
-                            className="cursor-pointer rounded-lg px-2 py-1 text-[11px] font-bold text-navy-500 ring-1 ring-inset ring-navy-200 transition hover:bg-white hover:text-navy-800 disabled:opacity-50 dark:text-slate-300 dark:ring-slate-600 dark:hover:bg-slate-700"
+                            className="cursor-pointer rounded-xl px-2.5 py-1 text-[11px] font-bold text-room-ink/60 ring-1 ring-inset ring-room-acorn/25 transition hover:bg-room-oat/75 hover:text-room-ink disabled:opacity-50"
                           >
                             Dời sang mai
                           </button>
@@ -440,32 +451,32 @@ export default function PlannerPage() {
 
       {/* ── Tuần sau ── */}
       {data?.later?.length > 0 && (
-        <section className="card p-5 sm:p-6">
-          <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-            <CalendarBlank size={19} weight="fill" className="text-cyan-600 dark:text-cyan-400" />
+        <RoomCard className="p-5 sm:p-6">
+          <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
+            <CalendarBlank size={19} weight="fill" className="text-room-rain" />
             Tuần sau chưa đưa vào kế hoạch ({data.laterCount} việc)
           </h2>
-          <ul className="mt-3 divide-y divide-navy-100 dark:divide-slate-700">
+          <ul className="mt-3 divide-y divide-room-acorn/15">
             {data.later.map((t) => (
               <li key={t.taskId} className="flex flex-wrap items-center gap-2 py-2.5">
                 <Link
                   to={`/app/tasks/${t.taskId}`}
-                  className="flex-1 text-sm font-semibold text-navy-700 hover:text-blue-600 dark:text-slate-200 dark:hover:text-blue-400"
+                  className="flex-1 text-sm font-semibold text-room-ink/75 transition hover:text-room-acorn"
                 >
                   {t.title}
                 </Link>
                 <PriorityChip item={t} />
-                <span className="text-[11px] text-navy-400 dark:text-slate-500">
+                <span className="text-[11px] font-semibold text-room-ink/45">
                   Hạn {new Date(t.dueAt).toLocaleDateString('vi-VN')}
                 </span>
-                <ArrowRight size={14} className="text-navy-300 dark:text-slate-600" />
+                <ArrowRight size={14} className="text-room-ink/25" />
               </li>
             ))}
           </ul>
-        </section>
+        </RoomCard>
       )}
 
-      <p className="text-center text-[11px] text-navy-400 dark:text-slate-500">
+      <p className="text-center text-[11px] font-semibold text-room-ink/40">
         Cách xếp: việc quá hạn lên ngày đầu, mỗi việc còn lại nằm đúng ngày đến hạn — ngày nào hết chỗ thì việc dồn
         sang ngày sau và được cảnh báo là sẽ trễ (app không tự đẩy việc chưa tới hạn lên trước). Chỉ tính công việc
         đang mở, theo giờ Việt Nam; số việc mỗi ngày lưu trên thiết bị này.

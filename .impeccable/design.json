@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-05T09:05:00Z",
+  "generatedAt": "2026-11-05T11:20:00Z",
   "title": "Design System: MN-Qronx — Phòng mini-hompy",
   "extensions": {
     "colorMeta": {
@@ -455,6 +455,70 @@
       "description": "Compact management-panel field of the room (M4): paper sheet + Acorn/25 ring at py-2 density (vs h-11 RoomField of forms) because the panels stack many small fields; same tokens as RoomInput — placeholder Ink/30, hover ring Acorn/45, focus ring-2 Acorn. Selects use the shared Acorn arrow (ROOM_ARROW_URL) on an Oat/45 tray.",
       "html": "<input class=\"ds-room-field\" placeholder=\"VD: Lớp CNTT K19\"/>",
       "css": ".ds-room-field{width:100%;border-radius:12px;background:rgb(var(--room-paper));color:rgb(var(--room-ink));padding:8px 12px;font-size:14px;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-room-field::placeholder{color:rgb(var(--room-ink) / 0.3);}.ds-room-field:focus{outline:none;box-shadow:inset 0 0 0 2px rgb(var(--room-acorn));}"
+    },
+    {
+      "name": "Room Planner Verdict Panel",
+      "kind": "panel",
+      "refersTo": "room-planner-summary",
+      "description": "The one big statement of the Weekly Planner (M5): the tone IS the verdict. Overloaded week = Bell/25 sheet + Bell/40 ring + Ink text; fit week = Sage/25 + Acorn/20 ring. Facts sit on paper chips (bg-room-paper, Ink/70). Never the old white-on-gradient banner; never Blush — this is a forecast, not a due moment.",
+      "html": "<section class=\"ds-room-verdict ds-room-verdict--fit\">Tuần này vừa sức: 4 việc cần làm…</section>",
+      "css": ".ds-room-verdict{border-radius:16px;padding:20px 24px;font-weight:700;font-size:14px;line-height:1.6;color:rgb(var(--room-ink));}.ds-room-verdict--fit{background:rgb(var(--room-sage) / 0.25);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);}.ds-room-verdict--over{background:rgb(var(--room-bell) / 0.25);box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.4);}.ds-verdict-chip{display:inline-flex;border-radius:999px;background:rgb(var(--room-paper));color:rgb(var(--room-ink) / 0.7);padding:4px 12px;font-size:12px;font-weight:800;}"
+    },
+    {
+      "name": "Room At-Risk Row (Bell)",
+      "kind": "list-item",
+      "refersTo": "room-at-risk",
+      "description": "\"Sẽ trễ hạn\" list of the planner (M5): the panel is room-paper with a Bell/40 ring (forecast of lateness = Bell, not Blush/rose); each row = link + priority chip + \"Trễ X ngày\" pill (Bell/25, Bell/50 ring, Ink text) + a secondary RoomButton \"Dời hạn 3 ngày\". Day-card twin warnings reuse the same twinned chips (bell \"Trễ\", blush \"Quá hạn\").",
+      "html": "<li class=\"ds-room-at-risk\"><a>Nộp báo cáo tuần</a><span class=\"ds-late-pill\">Trễ 2 ngày</span><button class=\"ds-late-btn\">Dời hạn 3 ngày</button></li>",
+      "css": ".ds-room-at-risk{display:flex;align-items:center;gap:8px;padding:12px 0;font-weight:700;color:rgb(var(--room-ink) / 0.85);border-bottom:1px solid rgb(var(--room-acorn) / 0.15);}.ds-late-pill{border-radius:999px;background:rgb(var(--room-bell) / 0.25);color:rgb(var(--room-ink));padding:2px 10px;font-size:11px;font-weight:800;box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.5);}.ds-late-btn{border-radius:999px;color:rgb(var(--room-ink));padding:6px 14px;font-size:13px;font-weight:800;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.4);}"
+    },
+    {
+      "name": "Room Golden Hour Dish",
+      "kind": "dish",
+      "refersTo": "room-golden-dish",
+      "description": "Golden-hour moments (M5 — planner banner + reports HourStrip + reports stat): a Bell/25 dish with Bell/40 ring and a duotone Clock icon in full Bell. In the HourStrip the golden cell gets ring-2 full Bell over the solid Acorn bar; opacity 0.35→1 encodes volume. Bell is reserved for bells: nag chains, golden hour, at-risk forecasts.",
+      "html": "<span class=\"ds-golden-dish\"><svg width=\"20\" height=\"20\"/>11h</span>",
+      "css": ".ds-golden-dish{display:inline-flex;width:40px;height:40px;align-items:center;justify-content:center;border-radius:12px;background:rgb(var(--room-bell) / 0.25);box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.4);color:rgb(var(--room-bell));}"
+    },
+    {
+      "name": "Room Report Stat Card",
+      "kind": "card",
+      "refersTo": "room-stat-card",
+      "description": "Statistic card of the Report page (M5): room-paper section with a tone-coded icon dish — completed = Sage/45 + Acorn/20 ring; streak + on-time chains = Bell/25 + Bell/40; currently overdue = Blush/45 + on-blush ink; neutral counters = Oat/60 + Acorn/15. Number in Baloo (font-display), label Ink/55, sub Ink/45, hover deepens ring to Acorn/50. Solid tone, no gradient.",
+      "html": "<section class=\"ds-report-stat\"><span class=\"ds-report-stat-ico ds-t-sage\">✓</span><b>27</b><p>Việc đã hoàn thành</p></section>",
+      "css": ".ds-report-stat{background:rgb(var(--room-paper));border-radius:16px;padding:16px 20px;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-report-stat-ico{display:inline-flex;width:40px;height:40px;align-items:center;justify-content:center;border-radius:12px;color:rgb(var(--room-ink));}.ds-t-sage{background:rgb(var(--room-sage) / 0.45);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);}.ds-t-bell{background:rgb(var(--room-bell) / 0.25);box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.4);}.ds-t-blush{background:rgb(var(--room-blush) / 0.45);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);}.ds-t-oat{background:rgb(var(--room-oat) / 0.6);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.15);}.ds-report-stat b{display:block;margin-top:12px;font-family:\"Baloo 2\",\"Nunito\",sans-serif;font-size:30px;font-weight:700;color:rgb(var(--room-ink));}.ds-report-stat p{margin:0;font-size:14px;font-weight:700;color:rgb(var(--room-ink) / 0.55);}"
+    },
+    {
+      "name": "Room CSS Bar Chart (Acorn)",
+      "kind": "chart",
+      "refersTo": "room-bar-chart",
+      "description": "Hand-rolled CSS charts of the Report page (M5): daily bars = solid Acorn rounded-top columns (empty day = Oat/50 stub, hover deepens 5%); weekday rows and category bars = Oat/60 track + solid Acorn fill (category fill && dot keep the user’s category color, fallback #8b6f4e); hour strip = Acorn cells with opacity ramp, golden hour ring-2 Bell. Tooltip is a room-ink slab with paper text — never violet→fuchsia gradients.",
+      "html": "<div class=\"ds-room-bars\"><span style=\"--h:70%\"></span><span style=\"--h:30%\"></span><span class=\"ds-empty\"></span></div>",
+      "css": ".ds-room-bars{display:flex;align-items:flex-end;gap:3px;height:160px;}.ds-room-bars span{flex:1;height:var(--h);border-radius:6px 6px 0 0;background:rgb(var(--room-acorn));}.ds-room-bars .ds-empty{height:2px;background:rgb(var(--room-oat) / 0.5);}.ds-track{background:rgb(var(--room-oat) / 0.6);border-radius:999px;height:10px;overflow:hidden;}.ds-fill{display:block;height:100%;border-radius:999px;background:rgb(var(--room-acorn));}"
+    },
+    {
+      "name": "Room Notification Action Chip",
+      "kind": "chip",
+      "refersTo": "room-notify-chip",
+      "description": "Alarm-history outcome chips (M5, NotificationHistoryPage): \"Đã gửi\" is the bell striking — Bell/25 + Bell/40 ring; \"Đã hoãn\" (waiting) = Rain/40 + Rain ring; \"Đã tắt\" (neutral end) = Oat/60 + Acorn/20; \"Đã hủy\" = Rain/60. Labels come from NOTIFICATION_ACTION so strings stay; only paint changes. The bell tile on each row is the same Bell/25 dish.",
+      "html": "<span class=\"ds-room-notify\">Đã gửi</span>",
+      "css": ".ds-room-notify{display:inline-flex;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:800;color:rgb(var(--room-ink) / 0.75);background:rgb(var(--room-bell) / 0.25);box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.4);}.ds-room-notify--rain{background:rgb(var(--room-rain) / 0.4);box-shadow:inset 0 0 0 1px rgb(var(--room-rain));color:rgb(var(--room-ink) / 0.7);}.ds-room-notify--oat{background:rgb(var(--room-oat) / 0.6);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);}"
+    },
+    {
+      "name": "Room Category Tile",
+      "kind": "card",
+      "refersTo": "room-category-tile",
+      "description": "Category tile (M5, CategoriesPage): room-paper section, hover ring Acorn/50; the disc keeps the user’s category color as data with a soft black/10 inner ring; edit/hide icon buttons sit in room-ink/35 and wake on hover with Oat/75; \"Đã ẩn\" = Oat/70 pill at Ink/55; the task-count track is Oat/70 with the category color as fill. Modal uses skin=\"room\" with RoomField/RoomInput and a swatch picker whose selected ring is full Acorn on paper offset (data swatches untouched).",
+      "html": "<section class=\"ds-cat-tile\"><span class=\"ds-cat-disc\"/><h3>Gia đình</h3><div class=\"ds-cat-track\"><i style=\"background:#9c27b0\"></i></div></section>",
+      "css": ".ds-cat-tile{background:rgb(var(--room-paper));border-radius:16px;padding:20px;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-cat-disc{display:inline-flex;width:48px;height:48px;border-radius:16px;box-shadow:inset 0 0 0 1px rgb(0 0 0 / 0.1);}.ds-cat-track{height:6px;border-radius:999px;background:rgb(var(--room-oat) / 0.7);}.ds-cat-track i{display:block;height:100%;border-radius:999px;}"
+    },
+    {
+      "name": "Room Streak Hero",
+      "kind": "panel",
+      "refersTo": "room-streak-hero",
+      "description": "Rewards hero (M5): a paper room-card instead of the old navy→slate gradient with blur orbs. Flame dish = Bell/25 + Bell/40 with full-Bell flame; \"ngày liên tiếp\" label in Bell; points tray = Oat/50 + Acorn/20 ring (no backdrop-blur) with a paper \"Gói của tôi\" pill; 7-day strip: filled day = Bell/40 + Bell/50 ring, today = Oat/50 ring Acorn/25, missed = Rain/40 at Ink/35. Progress bar of redeem tiers is solid Acorn (PRO at full, PLUS at 75%), tier sheets Oat/35 (PRO: Oat/55 + Acorn/35), Sparkle in Bell.",
+      "html": "<div class=\"ds-streak\"><span class=\"ds-streak-flame\">🔥</span><span class=\"ds-strip-day ds-filled\">T5</span></div>",
+      "css": ".ds-streak{background:rgb(var(--room-paper));border-radius:16px;padding:24px;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-streak-flame{display:inline-flex;width:80px;height:80px;align-items:center;justify-content:center;border-radius:16px;background:rgb(var(--room-bell) / 0.25);box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.4);}.ds-strip-day{display:inline-flex;width:44px;flex-direction:column;align-items:center;border-radius:12px;padding:8px 0;color:rgb(var(--room-ink) / 0.35);background:rgb(var(--room-rain) / 0.4);}.ds-strip-day.ds-filled{background:rgb(var(--room-bell) / 0.4);box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.5);color:rgb(var(--room-ink));}"
     }
   ],
   "narrative": {
