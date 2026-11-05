@@ -1,4 +1,3 @@
-import { useId } from 'react'
 import { Link } from 'react-router-dom'
 import {
   CalendarDots,
@@ -19,66 +18,25 @@ import { getMyBilling } from '../../services/billingService'
 import { useCachedQuery } from '../../lib/useCachedQuery'
 import { SERVER_WAKE_HINT } from '../../lib/useSlowHint'
 import { useToast } from '../../components/common/Toast'
-import { Skeleton, EmptyState } from '../../components/common/Feedback'
-import Button from '../../components/common/Button'
+import { RoomButton, RoomDots } from '../../components/common/RoomUI'
 import TaskItem from '../../components/TaskItem'
 import TodayBrief from '../../components/TodayBrief'
+import RoomScene from '../../components/landing/RoomScene'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { app } from '../../i18n/app'
 import { formatDate } from '../../lib/format'
 
-// Icon thẻ thống kê — gradient riêng từng ô: xanh/teal/tím/cam như bản mẫu.
-const STAT_TONES = {
-  blue: 'from-blue-500 to-blue-700',
-  teal: 'from-teal-400 to-emerald-600',
-  purple: 'from-violet-500 to-purple-700',
-  orange: 'from-orange-400 to-amber-600',
-}
-
-// Thẻ "Công việc hôm nay / Quá hạn / Đã hoàn thành / Sắp tới" — bố cục dọc:
-// icon gradient trên, chữ & số bên dưới chiếm trọn bề rộng nên không bị bóp chữ
-// kể cả khi lưới 4 cột hẹp lại, mũi tên chỉ hiện khi hover như bản mẫu.
-function StatCard({ icon: Icon, label, value, sub, tone, to, delay }) {
-  return (
-    <Link
-      to={to}
-      className={`group flex flex-col gap-2 rounded-2xl p-4 text-white shadow-card transition-all duration-200 hover:shadow-card-hover bg-gradient-to-br ${STAT_TONES[tone]}`}
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <span className="flex items-center justify-between">
-        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 ring-1 ring-white/30">
-          <Icon size={24} weight="duotone" className="text-white" />
-        </span>
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/0 opacity-60 transition group-hover:bg-white/20 group-hover:opacity-100">
-          <ArrowRight size={15} weight="bold" />
-        </span>
-      </span>
-      <span className="mt-1 block truncate text-sm font-semibold leading-snug">{label}</span>
-      <span className="block text-3xl font-extrabold leading-none tracking-tight">{value}</span>
-      <span className="block truncate text-xs font-medium text-white/85">{sub}</span>
-    </Link>
-  )
-}
-
-// Vòng tròn tiến độ (SVG stroke-dasharray) — % hoàn thành chung bảng Thống kê nhanh.
+// Vòng tròn tiến độ (SVG stroke-dasharray) — % hoàn thành chung bảng Thống kê
+// nhanh. Da phòng: nét Acorn thuần thay dải 3 màu gradient (giữ đúng logic %).
 function ProgressRing({ percent, label }) {
-  // Dùng useId để nhiều vòng tròn không xung đột id của gradient SVG.
-  const uid = useId().replace(/:/g, '')
   const r = 54
   const c = 2 * Math.PI * r
   const filled = (Math.min(100, Math.max(0, percent)) / 100) * c
   return (
     <div className="relative h-32 w-32 shrink-0">
       <svg viewBox="0 0 128 128" className="h-full w-full">
-        <defs>
-          <linearGradient id={`ring-${uid}`} gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="128" y2="128">
-            <stop offset="0%" stopColor="#25C1C9" />
-            <stop offset="50%" stopColor="#5B7CFA" />
-            <stop offset="100%" stopColor="#9B6BFA" />
-          </linearGradient>
-        </defs>
-        <circle cx="64" cy="64" r={r} fill="none" strokeWidth="10" className="stroke-navy-100 dark:stroke-slate-700" />
+        <circle cx="64" cy="64" r={r} fill="none" strokeWidth="10" className="stroke-room-acorn/15" />
         <circle
           cx="64"
           cy="64"
@@ -86,29 +44,35 @@ function ProgressRing({ percent, label }) {
           fill="none"
           strokeWidth="10"
           strokeLinecap="round"
-          stroke={`url(#ring-${uid})`}
+          transform="rotate(-90 64 64)"
           strokeDasharray={`${filled} ${c - filled}`}
+          className="stroke-room-acorn"
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-extrabold text-navy-900 dark:text-white">{percent}%</span>
-        <span className="text-xs text-navy-400 dark:text-slate-500">{label}</span>
+        <span className="font-display text-2xl font-bold text-room-ink">{percent}%</span>
+        <span className="text-xs font-semibold text-room-ink/50">{label}</span>
       </div>
     </div>
   )
 }
 
-// Minh hoạ trạng thái trống: icon trong thẻ to + vài chấm lấp lánh như bản mẫu.
-function IllEmpty({ icon: Icon, tint = 'text-blue-200 dark:text-blue-500/60' }) {
+// Ô số trong tủ phải: cùng dữ liệu, cùng đích như 4 thẻ thống kê cũ —
+// da phòng: số Baloo + nhãn trên thẻ giấy nhỏ, không gradient.
+function OverviewCell({ icon: Icon, label, value, to }) {
   return (
-    <div className="relative mx-auto w-fit py-2">
-      <span className={`flex h-24 w-24 items-center justify-center rounded-3xl bg-navy-50 dark:bg-slate-800/60 ${tint}`}>
-        <Icon size={72} weight="duotone" />
+    <Link
+      to={to}
+      className="group flex items-center justify-between gap-2 rounded-xl bg-room-paper px-3.5 py-3 ring-1 ring-room-acorn/20 transition-colors hover:ring-room-acorn/45"
+    >
+      <span className="min-w-0">
+        {/* Tay nắm ngăn kéo: chi tiết đồ đạc, không phải icon trang trí */}
+        <span aria-hidden="true" className="mb-1.5 block h-1 w-6 rounded-full bg-room-acorn/30" />
+        <span className="block font-display text-2xl font-bold leading-none text-room-ink">{value}</span>
+        <span className="mt-1 block truncate text-[11.5px] font-bold text-room-ink/55">{label}</span>
       </span>
-      <Sparkle size={14} weight="fill" className="absolute -top-1 right-3 text-amber-300" />
-      <Sparkle size={10} weight="fill" className="absolute bottom-2 -left-2 text-blue-300" />
-      <Sparkle size={12} weight="fill" className="absolute -right-4 top-8 text-purple-300" />
-    </div>
+      <Icon size={17} weight="bold" className="shrink-0 text-room-ink/30 transition group-hover:text-room-acorn" />
+    </Link>
   )
 }
 
@@ -140,24 +104,19 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-36 rounded-3xl" />
-        <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-          {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-28" />
-          ))}
-        </div>
-        <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
-          <div className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-2">
-              <Skeleton className="h-72 rounded-2xl" />
-              <Skeleton className="h-72 rounded-2xl" />
-            </div>
+      <div className="space-y-4">
+        <div className="h-14 animate-pulse rounded-2xl bg-room-oat/70" />
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="space-y-4">
+            <div className="h-64 animate-pulse rounded-2xl bg-room-oat/70" />
           </div>
-          <Skeleton className="h-72 rounded-2xl" />
+          <div className="space-y-4">
+            <div className="h-40 animate-pulse rounded-2xl bg-room-oat/70" />
+            <div className="h-64 animate-pulse rounded-2xl bg-room-oat/70" />
+          </div>
         </div>
         {slow && (
-          <p className="text-center text-xs leading-relaxed text-navy-400 dark:text-slate-500">
+          <p className="text-center text-xs font-semibold leading-relaxed text-room-ink/50">
             {SERVER_WAKE_HINT}
           </p>
         )}
@@ -167,18 +126,18 @@ export default function DashboardPage() {
 
   if (!data) {
     return (
-      <div className="space-y-6 animate-fade-in">
-        <EmptyState
-          icon={WarningCircle}
-          title="Chưa tải được dữ liệu"
-          description={error || 'Không nhận được phản hồi từ máy chủ.'}
-          action={
-            <Button variant="gradient" onClick={reload}>
-              Thử lại
-            </Button>
-          }
-        />
-        <p className="text-center text-xs leading-relaxed text-navy-400 dark:text-slate-500">
+      <div className="space-y-4">
+        <div className="flex flex-col items-center gap-3 rounded-2xl bg-room-rain/30 px-6 py-10 text-center ring-1 ring-room-rain">
+          <WarningCircle size={40} weight="regular" className="text-room-ink/70" />
+          <p className="font-display text-lg font-bold text-room-ink">Chưa tải được dữ liệu</p>
+          <p className="max-w-sm text-sm font-semibold text-room-ink/70">
+            {error || 'Không nhận được phản hồi từ máy chủ.'}
+          </p>
+          <RoomButton variant="secondary" size="sm" onClick={reload}>
+            Thử lại
+          </RoomButton>
+        </div>
+        <p className="text-center text-xs font-semibold leading-relaxed text-room-ink/50">
           {SERVER_WAKE_HINT}
         </p>
       </div>
@@ -188,13 +147,22 @@ export default function DashboardPage() {
   // ===== Số liệu cho bảng "Thống kê nhanh" =====
   const total = data.todayCount + data.overdueCount + data.upcomingCount + data.completedCount
   const percent = total > 0 ? Math.round((data.completedCount / total) * 100) : 0
+  // Điểm chú giải đổi sang token phòng: series trạng thái của thế giới
+  // (Sage = xong, Bell = hôm nay, Rain = quá hạn, Acorn = tổng) — vẫn đọc đúng.
   const legend = [
-    { dot: 'bg-emerald-500', label: t.legendCompleted, value: data.completedCount },
-    { dot: 'bg-blue-500', label: t.legendToday, value: data.todayCount },
-    { dot: 'bg-orange-400', label: t.legendOverdue, value: data.overdueCount },
-    { dot: 'bg-slate-400', label: t.legendTotal, value: total },
+    { dot: 'bg-room-sage', label: t.legendCompleted, value: data.completedCount },
+    { dot: 'bg-room-bell', label: t.legendToday, value: data.todayCount },
+    { dot: 'bg-room-rain', label: t.legendOverdue, value: data.overdueCount },
+    { dot: 'bg-room-acorn/50', label: t.legendTotal, value: total },
   ]
   const unreadReward = true // chưa nhấn Nhận thưởng hôm nay — API chưa có cờ riêng, luôn gợi ý
+
+  // Bàn trái: việc quá hạn đi trước (món đồ đã sáng đèn), rồi việc có hạn hôm
+  // nay. Giao nhau (việc hạn hôm nay giờ đã trôi) chỉ ghi một hàng — dedupe
+  // theo id, thuần hiển thị, không đổi logic API.
+  const deskRows = [...data.overdueTasks, ...data.todayTasks].filter(
+    (task, i, arr) => arr.findIndex((x) => x.id === task.id) === i
+  )
 
   const initials = String(user?.fullName || '')
     .split(' ')
@@ -204,47 +172,83 @@ export default function DashboardPage() {
     .toUpperCase()
 
   return (
-    <div className="animate-fade-in grid gap-6 xl:grid-cols-[1fr_320px]">
-      {/* ─── CỘT CHÍNH ─────────────────────────────────────── */}
-      <div className="space-y-5">
-        {/* Banner chào hỏi: nền trời đêm + avatar + trích dẫn */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0d1236] via-[#1a1a55] to-[#321b6b] px-6 py-6 text-white shadow-card sm:px-8 sm:py-7">
-          {/* sao + dải sáng trang trí */}
-          <span className="pointer-events-none absolute -right-10 top-0 h-40 w-40 rounded-full bg-orange-500/25 blur-2xl" />
-          <span className="pointer-events-none absolute -bottom-14 right-24 h-44 w-44 rounded-[100%] rotate-45 bg-blue-400/15 blur-xl" />
-          <span className="pointer-events-none absolute right-6 top-5 h-1.5 w-1.5 rounded-full bg-amber-200/80" />
-          <span className="pointer-events-none absolute right-16 top-12 h-1 w-1 rounded-full bg-white/70" />
-          <span className="pointer-events-none absolute right-28 top-8 h-1.5 w-1.5 rounded-full bg-blue-200/60" />
-
-          <div className="relative flex items-center gap-4 sm:gap-5">
+    <div className="animate-fade-in grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+      {/* ─── MẶT BÀN (cánh trái) ──────────────────────────── */}
+      <div className="space-y-4">
+        {/* Dòng chào: một dòng chữ trên mặt bàn, không banner nền tối */}
+        <section className="flex flex-wrap items-center justify-between gap-3 px-1">
+          <div className="flex items-center gap-3">
             {user?.avatarUrl ? (
-              <img src={user.avatarUrl} alt="" className="h-16 w-16 rounded-full object-cover ring-2 ring-white/40 sm:h-20 sm:w-20" />
+              <img src={user.avatarUrl} alt="" className="h-11 w-11 rounded-full object-cover" />
             ) : (
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-violet-600 ring-2 ring-white/40 sm:h-20 sm:w-20">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-room-oat font-display text-sm font-bold text-room-ink ring-1 ring-room-acorn/25">
                 {initials ? (
-                  <span className="text-xl font-extrabold sm:text-2xl">{initials}</span>
+                  initials
                 ) : (
-                  <UserCircle size={36} weight="duotone" />
+                  <UserCircle size={24} weight="bold" />
                 )}
               </span>
             )}
             <div className="min-w-0">
-              {/* Mobile: cho phép xuống dòng đây đủ chữ; sm+ vẫn truncate 1 dòng */}
-              <h1 className="text-lg leading-snug sm:truncate sm:text-2xl">
-                {t.welcome}, {user?.fullName}! 👋
+              {/* Mobile: cho phép xuống dòng chữ đủ nghĩa; sm+ vắn gọn một dòng */}
+              <h1 className="font-display text-xl font-bold leading-snug text-room-ink">
+                <span className="sm:truncate">{t.welcome}, {user?.fullName}!</span>
               </h1>
-              <p className="mt-0.5 text-sm font-medium text-white/75">{today}</p>
-              <p className="mt-2 hidden text-xs italic leading-relaxed text-white/60 sm:block">
-                “{t.dashQuote}”
-              </p>
+              <p className="mt-0.5 text-[13px] font-semibold text-room-ink/55">{today}</p>
             </div>
+          </div>
+          <p className="hidden max-w-xs text-right text-xs italic leading-relaxed text-room-ink/50 lg:block">
+            “{t.dashQuote}”
+          </p>
+        </section>
+
+        {/* Rail quá hạn: THỨ ĐẦU TIÊN chạm mắt bên bàn trái khi món đồ đã
+            trôi hạn (contract brief — trước phòng, trước lịch). */}
+        {data.overdueCount > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-room-rain/30 px-4 py-3 ring-1 ring-room-rain">
+            <span className="flex items-center gap-2.5 text-sm font-bold text-room-ink">
+              <WarningCircle size={19} weight="bold" className="text-room-acorn" />
+              {t.overdueTasks}: {data.overdueCount} {t.overdueTasksCount}
+            </span>
+            <Link
+              to="/app/tasks"
+              className="flex items-center gap-1 text-xs font-bold text-room-ink transition hover:text-room-acorn"
+            >
+              {t.viewAll} <ArrowRight size={13} weight="bold" />
+            </Link>
+          </div>
+        )}
+
+        {/* Căn phòng của bạn: đúng cảnh ở landing (cửa sổ, kệ, bàn học, đồng hồ
+            chạy giờ thật), giờ kèm số liệu thật của chính bạn trên bệ bàn. */}
+        <section
+          aria-label={t.roomWallLabel}
+          className="relative overflow-hidden rounded-[1.8rem] bg-room-oat/30 ring-1 ring-room-acorn/25"
+        >
+          <div className="room-wallpaper px-1 pb-1 pt-3 sm:px-4 sm:pt-4">
+            <RoomScene t={t} app />
+          </div>
+          {/* Bệ bàn: bảng tên + số của hôm nay, nằm ngay dưới mép bàn trong cảnh */}
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 bg-room-acorn/45 px-4 py-2 text-room-paper">
+            <p className="flex items-center gap-2 font-display text-[13px] font-bold">
+              <UserCircle size={16} weight="bold" />
+              {t.roomYourRoom} {user?.fullName}
+            </p>
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] font-bold">
+              <span>{data.todayCount} · {t.todayCount}</span>
+              <span>{data.overdueCount} · {t.overdue}</span>
+            </p>
           </div>
         </section>
 
         {error && (
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:ring-amber-800/50">
-            <span>Số liệu có thể chưa mới nhất — {error}</span>
-            <button type="button" onClick={reload} className="font-bold underline">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-room-rain/30 px-4 py-3 text-sm text-room-ink ring-1 ring-room-rain">
+            <span className="font-semibold">Số liệu có thể chưa mới nhất — {error}</span>
+            <button
+              type="button"
+              onClick={reload}
+              className="cursor-pointer font-bold underline decoration-room-acorn decoration-2 underline-offset-4 transition hover:text-room-acorn"
+            >
               Thử lại
             </button>
           </div>
@@ -259,227 +263,195 @@ export default function DashboardPage() {
           billing.daysLeft <= 7 && (
             <Link
               to="/app/billing"
-              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-amber-50 px-4 py-3.5 ring-1 ring-inset ring-amber-200 transition hover:bg-amber-100 dark:bg-amber-900/20 dark:ring-amber-800/50 dark:hover:bg-amber-900/30"
+              className="group flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-room-oat/50 px-4 py-3.5 ring-1 ring-room-acorn/20 transition hover:bg-room-oat/70"
             >
               <span className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300">
-                  <BellRinging size={20} weight="duotone" />
-                </span>
+                <BellRinging size={20} weight="bold" className="text-room-acorn" />
                 <span>
-                  <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                  <p className="text-sm font-bold text-room-ink">
                     {billing.daysLeft > 0
                       ? `Gói ${billing.planName} còn ${billing.daysLeft} ngày nữa là hết hạn`
                       : `Gói ${billing.planName} hết hạn hôm nay`}
                   </p>
-                  <p className="text-xs font-medium text-amber-700 dark:text-amber-300/80">
+                  <p className="text-xs font-semibold text-room-ink/65">
                     Hạn {formatDate(billing.planExpiresAt)} — chuyển khoản không tự gia hạn nên bạn cần mua kỳ mới để giữ
                     nguyên quyền lợi.
                   </p>
                 </span>
               </span>
-              <span className="flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-bold text-white">
+              <span className="flex items-center gap-1.5 rounded-full bg-room-paper px-3.5 py-2 text-xs font-bold text-room-ink ring-1 ring-room-acorn/30 transition group-hover:bg-room-oat/60">
                 Gia hạn ngay <ArrowRight size={14} weight="bold" />
               </span>
             </Link>
           )}
 
-        {/* 4 thẻ thống kê hàng ngang */}
-        <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-          <StatCard icon={CalendarDots} label={t.todayCount} value={data.todayCount} sub={t.todayCountSub} tone="blue" to="/app/tasks" delay={0} />
-          <StatCard icon={WarningCircle} label={t.overdue} value={data.overdueCount} sub={t.overdueSub} tone="teal" to="/app/tasks" delay={60} />
-          <StatCard icon={CheckCircle} label={t.completed} value={data.completedCount} sub={t.completedSub} tone="purple" to="/app/tasks" delay={120} />
-          <StatCard icon={Sparkle} label={t.upcoming} value={data.upcomingCount} sub={t.upcomingSub} tone="orange" to="/app/calendar" delay={180} />
-        </div>
-
-        {/* Phần thưởng đăng nhập: chuỗi ngày + điểm */}
-        <Link
-          to="/app/rewards"
-          className="group flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl bg-gradient-to-r from-[#3a1d3d] via-[#3f1f4d] to-[#251a55] p-5 text-white ring-1 ring-inset ring-white/10 transition hover:shadow-lg hover:shadow-purple-900/30"
-        >
-          <div className="flex items-center gap-4">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 shadow-lg">
-              <Flame size={30} weight="fill" />
-            </span>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-orange-200">{t.loginReward}</p>
-              <p className="mt-0.5 text-lg font-extrabold">
-                🔥 {user?.loginStreak ?? 0} {t.streakDays} · {user?.points ?? 0} {t.pointsUnit}
-              </p>
-              <p className="text-xs font-medium text-white/70">{t.loginRewardDesc}</p>
-            </div>
+        {/* Panel Việc hôm nay (+ việc quá hạn đi trước): mặt bàn chính —
+            hoàn thành ngay từ hàng, hàng trôi hạn tự nhiên là Blush */}
+        {/* Mặt bàn chính: thẻ giấy phẳng — signature tape chỉ sống một lần
+            trên sticker tủ phải (contract), không dán thứ hai */}
+        <section className="relative rounded-2xl bg-room-paper px-4 py-4 shadow-[0_18px_34px_-22px_rgb(0_0_0/0.25)] ring-1 ring-room-acorn/25 sm:px-5 sm:py-5">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="flex items-baseline gap-2.5">
+              <span className="font-display text-lg font-bold text-room-ink">{t.todaySchedule}</span>
+              <span className="font-display text-lg font-bold leading-none text-room-acorn">{deskRows.length}</span>
+            </h2>
+            <Link
+              to="/app/tasks"
+              className="flex items-center gap-1 text-xs font-bold text-room-ink transition hover:text-room-acorn"
+            >
+              {t.viewAll} <ArrowRight size={13} weight="bold" />
+            </Link>
           </div>
-          <span className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2.5 text-sm font-bold text-slate-900 shadow transition group-hover:brightness-110">
-            <Gift size={17} weight="duotone" /> {t.claimReward}
-          </span>
-        </Link>
-
-        <div className="grid gap-5 lg:grid-cols-2">
-          {/* Công việc hôm nay */}
-          <section className="card p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-                  <CalendarDots size={20} weight="duotone" />
-                </span>
-                {t.todaySchedule}
-              </h2>
-              <Link to="/app/tasks" className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline">
-                {t.viewAll} <ArrowRight size={13} weight="bold" />
-              </Link>
-            </div>
-            <div className="mt-4 space-y-2.5">
-              {data.todayTasks.length === 0 ? (
-                <EmptyState
-                  illustration={<IllEmpty icon={CalendarDots} />}
-                  title={t.emptyToday}
-                  description={t.emptyTodayDesc}
-                  action={
-                    <Link to="/app/tasks/new">
-                      <Button variant="gradient" size="sm" icon={Plus}>
-                        {t.createNew}
-                      </Button>
-                    </Link>
-                  }
+          <RoomDots className="mt-3" />
+          <div className="mt-2 space-y-0.5">
+            {deskRows.length === 0 ? (
+              <div className="flex flex-col items-center gap-2.5 py-10 text-center">
+                <CheckCircle size={44} weight="regular" className="text-room-sage" />
+                <p className="font-display text-[15px] font-bold text-room-ink">{t.emptyToday}</p>
+                <p className="max-w-xs text-[13px] font-semibold leading-relaxed text-room-ink/60">
+                  {t.emptyTodayDesc}
+                </p>
+                <Link to="/app/tasks/new">
+                  <RoomButton variant="secondary" size="sm" icon={Plus}>
+                    {t.createNew}
+                  </RoomButton>
+                </Link>
+              </div>
+            ) : (
+              deskRows.map((task, i) => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  onToggleComplete={toggleComplete}
+                  skin="room"
+                  glowing={data.overdueCount > 0 && i === 0}
                 />
-              ) : (
-                data.todayTasks.map((t) => (
-                  <TaskItem key={t.id} task={t} onToggleComplete={toggleComplete} />
-                ))
-              )}
-            </div>
-          </section>
-
-          {/* Quá hạn */}
-          <section className="card p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400">
-                  <WarningCircle size={20} weight="duotone" />
-                </span>
-                {t.overdueTasks}
-              </h2>
-              <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-700 ring-1 ring-inset ring-amber-200">
-                {data.overdueCount} {t.overdueTasksCount}
-              </span>
-            </div>
-            <div className="mt-4 space-y-2.5">
-              {data.overdueTasks.length === 0 ? (
-                <EmptyState
-                  illustration={<IllEmpty icon={CheckCircle} tint="text-slate-200 dark:text-slate-500/60" />}
-                  title={t.noOverdue}
-                  description={t.noOverdueDesc}
-                  className="py-10"
-                />
-              ) : (
-                data.overdueTasks.map((t) => (
-                  <TaskItem key={t.id} task={t} onToggleComplete={toggleComplete} />
-                ))
-              )}
-            </div>
-          </section>
-        </div>
-
-        {/* Nhắc nhở gợi ý */}
-        <div className="flex flex-col items-start justify-between gap-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 p-5 text-white dark:bg-slate-800 sm:flex-row sm:items-center">
-          <div className="flex items-start gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-gradient">
-              <BellRinging size={22} weight="bold" className="animate-alarm-bell" />
-            </span>
-            <div>
-              <p className="font-bold">{t.tryAlarm}</p>
-              <p className="mt-0.5 text-sm text-blue-100">
-                {t.tryAlarmDesc}
-              </p>
-            </div>
+              ))
+            )}
           </div>
-          <Link to="/app/tasks">
-            <Button variant="gradient" size="sm" icon={BellRinging}>
-              {t.tryAlarmBtn}
-            </Button>
-          </Link>
-        </div>
+        </section>
       </div>
 
-      {/* ─── CỘT PHẢI ───────────────────────────────────────── */}
-      <aside className="space-y-5">
-        {/* Thống kê nhanh: vòng tròn % + chú giải */}
-        <section className="card p-4 sm:p-5">
+      {/* ─── TỦ THÔNG TIN (cánh phải) ─────────────────────── */}
+      <aside className="space-y-4">
+        {/* Sticker dán tape "Nhật ký đúng hạn": signature duy nhất của phòng */}
+        <div className="relative rounded-2xl bg-room-paper/85 px-5 pb-5 pt-6 shadow-[0_14px_30px_-18px_rgb(0_0_0/0.25)] ring-1 ring-room-acorn/25">
+          <span
+            aria-hidden="true"
+            className="absolute -top-2.5 left-6 h-3 w-12 rotate-[-5deg] rounded-[3px] bg-room-oat/90 ring-1 ring-room-acorn/20"
+          />
+          <p className="text-[12px] font-bold text-room-ink/55">{t.loginReward}</p>
+          <div className="mt-1.5 flex items-end gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center">
+              <Flame size={27} weight="bold" className="text-room-bell" />
+            </span>
+            <span className="font-display text-[2rem] font-bold leading-none text-room-ink">
+              {user?.loginStreak ?? 0}
+            </span>
+            <span className="pb-0.5 text-sm font-bold text-room-ink/60">{t.streakDays}</span>
+          </div>
+          <p className="mt-2.5 text-[13px] leading-relaxed text-room-ink/65">
+            <span className="font-bold text-room-ink">{user?.points ?? 0} {t.pointsUnit}</span> ·{' '}
+            {t.loginRewardDesc}
+          </p>
+          <Link
+            to="/app/rewards"
+            className="group mt-3.5 flex h-9 items-center justify-center gap-2 rounded-full text-[13px] font-bold text-room-ink ring-1 ring-room-acorn/40 transition hover:bg-room-oat/60"
+          >
+            <Gift size={16} weight="bold" /> {t.claimReward}
+          </Link>
+        </div>
+
+        {/* Tổng quan ngày hôm nay: 4 ngăn kéo của tủ, cùng 4 số/4 đích như cũ */}
+        <section>
+          <div className="grid grid-cols-2 gap-2.5">
+            <OverviewCell icon={CalendarDots} label={t.todayCount} value={data.todayCount} to="/app/tasks" />
+            <OverviewCell icon={WarningCircle} label={t.overdue} value={data.overdueCount} to="/app/tasks" />
+            <OverviewCell icon={CheckCircle} label={t.completed} value={data.completedCount} to="/app/tasks" />
+            <OverviewCell icon={Sparkle} label={t.upcoming} value={data.upcomingCount} to="/app/calendar" />
+          </div>
+        </section>
+
+        {/* Thống kê nhanh: vòng % nét Acorn + chú giải (giữ logic tính %) */}
+        <section className="rounded-2xl bg-room-paper p-4 shadow-[0_18px_34px_-22px_rgb(0_0_0/0.25)] ring-1 ring-room-acorn/25 sm:p-5">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="flex items-center gap-2 text-sm font-bold text-navy-900 dark:text-white">
-              <CalendarDots size={18} weight="fill" className="text-blue-500" />
+            <h2 className="flex items-center gap-2 font-display text-[15px] font-bold text-room-ink">
+              <CalendarDots size={17} weight="bold" className="text-room-acorn" />
               {t.quickStats}
             </h2>
-            <span className="rounded-lg bg-navy-50 px-2.5 py-1 text-[11px] font-bold text-navy-500 ring-1 ring-inset ring-navy-100 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
+            <span className="rounded-full bg-room-oat/70 px-2.5 py-1 text-[11px] font-bold text-room-ink/60">
               {t.range7}
             </span>
           </div>
-          <div className="mt-4 flex items-center justify-center">
+          {/* Vòng % và chú giải đứng cạnh nhau từ sm: tủ phải vốn dài hơn bàn
+              trái, xếp dọc thì cánh tủ cao thêm ~110px và bỏ trống cả cột trái. */}
+          <div className="mt-3 flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-4">
             <ProgressRing percent={percent} label={t.completed} />
+            <ul className="w-full min-w-0 space-y-1.5 text-sm">
+              {legend.map((row) => (
+                <li key={row.label} className="flex items-center gap-2">
+                  <span className={`h-2 w-2 shrink-0 rounded-full ${row.dot}`} />
+                  <span className="flex-1 font-semibold text-room-ink/70">{row.label}</span>
+                  <span className="font-display font-bold tabular-nums text-room-ink">{row.value}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <ul className="mt-4 space-y-1.5 text-sm">
-            {legend.map((row) => (
-              <li key={row.label} className="flex items-center gap-2">
-                <span className={`h-2 w-2 shrink-0 rounded-full ${row.dot}`} />
-                <span className="flex-1 text-navy-600 dark:text-slate-300">{row.label}</span>
-                <span className="font-bold tabular-nums text-navy-900 dark:text-white">{row.value}</span>
-              </li>
-            ))}
-          </ul>
         </section>
 
-        {/* Trợ lý AI */}
+        {/* Trợ lý AI: hàng nhỏ trong tủ */}
         <Link
           to="/app/ai"
-          className="card group flex items-center gap-4 p-4 transition hover:shadow-card-hover sm:p-5"
+          className="group flex items-center gap-3.5 rounded-2xl bg-room-paper p-4 shadow-[0_18px_34px_-22px_rgb(0_0_0/0.25)] ring-1 ring-room-acorn/25 transition hover:ring-room-acorn/45"
         >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
-            <Brain size={24} weight="duotone" />
-          </span>
+          <Brain size={22} weight="bold" className="shrink-0 text-room-acorn" />
           <span className="min-w-0 flex-1">
-            <span className="block font-bold text-brand-purple dark:text-indigo-300">{t.aiAssistant}</span>
-            <span className="mt-0.5 block truncate text-xs font-medium text-navy-400 dark:text-slate-500">{t.aiQuickDesc}</span>
+            <span className="block font-display text-[15px] font-bold text-room-ink">{t.aiAssistant}</span>
+            <span className="mt-0.5 block truncate text-[12px] font-semibold text-room-ink/55">{t.aiQuickDesc}</span>
           </span>
-          <ArrowRight size={16} weight="bold" className="shrink-0 text-navy-300 transition group-hover:translate-x-0.5 dark:text-slate-500" />
+          <ArrowRight size={16} weight="bold" className="shrink-0 text-room-ink/30 transition group-hover:translate-x-0.5 group-hover:text-room-acorn" />
         </Link>
 
-        {/* Gợi ý động lực */}
-        <div className="card relative overflow-hidden p-4 sm:p-5">
-          <span className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-blue-400/10 blur-2xl" />
-          <div className="relative flex items-start gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 text-white">
-              <Mountains size={24} weight="duotone" />
-            </span>
+        {/* Note Moss: gợi động lực + mời thử chuông (copy giữ nguyên vai) */}
+        <div className="rounded-2xl bg-room-moss/60 px-4 py-3.5 ring-1 ring-room-acorn/20">
+          <div className="flex items-start gap-3">
+            <Mountains size={20} weight="bold" className="mt-0.5 shrink-0 text-room-acorn" />
             <div>
-              <p className="font-bold text-navy-900 dark:text-white">{t.motivationTitle}</p>
-              <p className="mt-0.5 text-xs leading-relaxed text-navy-400 dark:text-slate-500">{t.motivationDesc}</p>
+              <p className="font-display text-[15px] font-bold text-room-ink">{t.motivationTitle}</p>
+              <p className="mt-0.5 text-[12.5px] font-semibold leading-relaxed text-room-ink/70">{t.motivationDesc}</p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-2xl bg-room-moss/60 px-4 py-3.5 ring-1 ring-room-acorn/20 group/try">
+          <div className="flex items-start gap-3">
+            <BellRinging size={20} weight="bold" className="mt-0.5 shrink-0 text-room-bell" />
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-[15px] font-bold text-room-ink">{t.tryAlarm}</p>
+              <p className="mt-0.5 text-[12.5px] font-semibold leading-relaxed text-room-ink/70">{t.tryAlarmDesc}</p>
+              <Link
+                to="/app/tasks"
+                className="mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold text-room-ink ring-1 ring-room-acorn/40 transition hover:bg-room-oat/60"
+              >
+                {t.tryAlarmBtn} <ArrowRight size={12} weight="bold" />
+              </Link>
             </div>
           </div>
         </div>
 
-        {/* Thẻ nhận thưởng mỗi ngày */}
-        <div className="card relative overflow-hidden p-4 sm:p-5">
-          <span className="pointer-events-none absolute -right-10 -bottom-12 h-32 w-32 rounded-full bg-purple-400/10 blur-2xl" />
-          <div className="relative">
-            <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white">
-                <BellRinging size={22} weight="duotone" />
-              </span>
-              <div>
-                <p className="font-bold text-navy-900 dark:text-white">
-                  {t.dailyReward} 🎁
-                </p>
-                <p className="mt-0.5 text-xs leading-relaxed text-navy-400 dark:text-slate-500">{t.loginRewardDesc}</p>
-              </div>
-            </div>
-            <Link
-              to="/app/rewards"
-              className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 py-2.5 text-sm font-bold text-white shadow transition hover:brightness-110"
-            >
-              <Gift size={16} weight="duotone" /> {t.claimNow}
-              {unreadReward && <span className="h-2 w-2 rounded-full bg-amber-300" />}
-            </Link>
-          </div>
-        </div>
+        {/* Thẻ nhận thưởng mỗi ngày: hàng nhỏ cuối tủ (🎁 → icon Gift) */}
+        <Link
+          to="/app/rewards"
+          className="group flex items-center gap-3 rounded-2xl bg-room-paper p-4 shadow-[0_18px_34px_-22px_rgb(0_0_0/0.25)] ring-1 ring-room-acorn/25 transition hover:ring-room-acorn/45"
+        >
+          <Gift size={20} weight="bold" className="shrink-0 text-room-acorn" />
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-[15px] font-bold text-room-ink">{t.dailyReward}</span>
+            <span className="mt-0.5 flex items-center gap-1.5 text-xs font-bold text-room-acorn">
+              {t.claimNow} <ArrowRight size={12} weight="bold" />
+              {unreadReward && <span className="ml-0.5 h-2 w-2 rounded-full bg-room-bell" />}
+            </span>
+          </span>
+        </Link>
       </aside>
     </div>
   )

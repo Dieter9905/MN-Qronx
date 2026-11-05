@@ -11,10 +11,10 @@ import {
   GoogleLogo,
   Gift,
   ShieldCheck,
+  Lightbulb,
 } from '@phosphor-icons/react'
 import AuthLayout from '../../components/AuthLayout'
-import { Field, Input } from '../../components/common/Inputs'
-import Button from '../../components/common/Button'
+import { RoomField, RoomInput, RoomButton, RoomDots } from '../../components/common/RoomUI'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
 import { API_BASE_URL } from '../../services/apiClient'
@@ -121,8 +121,8 @@ export default function RegisterPage() {
       subtitle="Bắt đầu quản lý thời gian và công việc đúng hạn với MN-Qronx – miễn phí."
     >
       {serverError && (
-        <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-xl bg-rose-50 p-3.5 text-sm font-medium text-rose-700 ring-1 ring-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:ring-rose-800/50">
-          <WarningCircle size={18} className="mt-0.5 shrink-0" weight="fill" />
+        <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-2xl bg-room-rain/30 p-3.5 text-sm font-bold text-room-ink ring-1 ring-room-acorn/25">
+          <WarningCircle size={18} className="mt-0.5 shrink-0" weight="bold" />
           {serverError}
         </div>
       )}
@@ -130,11 +130,11 @@ export default function RegisterPage() {
       <form onSubmit={onSubmit} noValidate className="space-y-4">
         {/* Email + nút gửi mã */}
         <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-          <Field label="Email" required error={errors.email}>
+          <RoomField label="Email" required error={errors.email}>
             {(id) => (
               <div className="relative">
-                <EnvelopeSimple size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
-                <Input
+                <EnvelopeSimple size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+                <RoomInput
                   id={id}
                   type="email"
                   autoComplete="email"
@@ -146,31 +146,35 @@ export default function RegisterPage() {
                 />
               </div>
             )}
-          </Field>
+          </RoomField>
           <div className="sm:pt-6">
             {resendIn > 0 ? (
-              <Button type="button" variant="secondary" size="md" fullWidth disabled>
+              <RoomButton type="button" variant="secondary" size="md" fullWidth disabled>
                 Gửi lại sau {resendIn}s
-              </Button>
+              </RoomButton>
             ) : (
-              <Button type="button" variant="secondary" size="md" fullWidth loading={sendingCode} icon={EnvelopeSimple} onClick={onSendCode}>
+              <RoomButton type="button" variant="secondary" size="md" fullWidth loading={sendingCode} icon={EnvelopeSimple} onClick={onSendCode}>
                 Gửi mã xác nhận
-              </Button>
+              </RoomButton>
             )}
           </div>
         </div>
 
         {devCode && (
-          <div className="rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:ring-amber-800/50">
-            💡 Chưa gửi được email – mã xác nhận của bạn là <b className="tracking-widest">{devCode}</b>
+          <div className="flex items-start gap-2.5 rounded-2xl bg-room-moss/70 px-4 py-3 text-[13px] font-semibold leading-relaxed text-room-ink ring-1 ring-room-acorn/25">
+            <Lightbulb size={16} weight="bold" className="mt-0.5 shrink-0 text-room-acorn" />
+            <span>
+              Chưa gửi được email – mã xác nhận của bạn là{' '}
+              <b className="tracking-widest">{devCode}</b>
+            </span>
           </div>
         )}
 
-        <Field label="Mã xác nhận" required error={errors.verificationCode} hint="Nhập mã 6 chữ số đã gửi đến email của bạn">
+        <RoomField label="Mã xác nhận" required error={errors.verificationCode} hint="Nhập mã 6 chữ số đã gửi đến email của bạn">
           {(id) => (
             <div className="relative">
-              <ShieldCheck size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
-              <Input
+              <ShieldCheck size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+              <RoomInput
                 id={id}
                 inputMode="numeric"
                 autoComplete="one-time-code"
@@ -183,13 +187,13 @@ export default function RegisterPage() {
               />
             </div>
           )}
-        </Field>
+        </RoomField>
 
-        <Field label="Họ tên" required error={errors.fullName}>
+        <RoomField label="Họ tên" required error={errors.fullName}>
           {(id) => (
             <div className="relative">
-              <User size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
-              <Input
+              <User size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+              <RoomInput
                 id={id}
                 autoComplete="name"
                 placeholder="Nguyễn Văn A"
@@ -200,14 +204,14 @@ export default function RegisterPage() {
               />
             </div>
           )}
-        </Field>
+        </RoomField>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Mật khẩu" required error={errors.password} hint="Tối thiểu 6 ký tự">
+          <RoomField label="Mật khẩu" required error={errors.password} hint="Tối thiểu 6 ký tự">
             {(id) => (
               <div className="relative">
-                <Lock size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
-                <Input
+                <Lock size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+                <RoomInput
                   id={id}
                   type={showPw ? 'text' : 'password'}
                   autoComplete="new-password"
@@ -221,16 +225,16 @@ export default function RegisterPage() {
                   type="button"
                   onClick={() => setShowPw((s) => !s)}
                   aria-label={showPw ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-1 text-navy-400 hover:text-navy-700"
+                  className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-room-ink/45 transition hover:text-room-acorn"
                 >
                   {showPw ? <EyeSlash size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             )}
-          </Field>
-          <Field label="Xác nhận mật khẩu" required error={errors.confirmPassword}>
+          </RoomField>
+          <RoomField label="Xác nhận mật khẩu" required error={errors.confirmPassword}>
             {(id) => (
-              <Input
+              <RoomInput
                 id={id}
                 type={showPw ? 'text' : 'password'}
                 autoComplete="new-password"
@@ -240,14 +244,14 @@ export default function RegisterPage() {
                 invalid={!!errors.confirmPassword}
               />
             )}
-          </Field>
+          </RoomField>
         </div>
 
-        <Field label="Mã giới thiệu (tùy chọn)" error={errors.inviteCode} hint="Nhập mã bạn bè gửi để cả hai nhận thưởng">
+        <RoomField label="Mã giới thiệu (tùy chọn)" error={errors.inviteCode} hint="Nhập mã bạn bè gửi để cả hai nhận thưởng">
           {(id) => (
             <div className="relative">
-              <Gift size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
-              <Input
+              <Gift size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+              <RoomInput
                 id={id}
                 autoComplete="off"
                 placeholder="VD: ABC123"
@@ -258,20 +262,20 @@ export default function RegisterPage() {
               />
             </div>
           )}
-        </Field>
+        </RoomField>
 
-        <Button type="submit" variant="gradient" fullWidth size="lg" loading={loading} icon={UserCirclePlus}>
+        <RoomButton type="submit" variant="primary" fullWidth size="lg" loading={loading} icon={UserCirclePlus}>
           Đăng ký
-        </Button>
+        </RoomButton>
       </form>
 
       <div className="mt-6 flex items-center gap-3">
-        <span className="h-px flex-1 bg-navy-100 dark:bg-slate-700" />
-        <span className="text-xs font-bold uppercase tracking-wider text-navy-300 dark:text-slate-500">Hoặc</span>
-        <span className="h-px flex-1 bg-navy-100 dark:bg-slate-700" />
+        <RoomDots />
+        <span className="text-xs font-bold text-room-ink/60">Hoặc</span>
+        <RoomDots />
       </div>
       <div className="mt-4">
-        <Button
+        <RoomButton
           type="button"
           variant="secondary"
           fullWidth
@@ -282,12 +286,15 @@ export default function RegisterPage() {
           }}
         >
           Đăng ký bằng Google
-        </Button>
+        </RoomButton>
       </div>
 
-      <p className="mt-6 text-center text-sm text-navy-500 dark:text-slate-400">
+      <p className="mt-6 text-center text-sm font-semibold text-room-ink/75">
         Đã có tài khoản?{' '}
-        <Link to="/login" className="font-semibold text-blue-600 hover:underline">
+        <Link
+          to="/login"
+          className="font-bold text-room-ink underline decoration-room-acorn/40 decoration-dotted decoration-2 underline-offset-4 transition hover:text-room-acorn"
+        >
           Đăng nhập
         </Link>
       </p>

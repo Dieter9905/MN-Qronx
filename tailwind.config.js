@@ -6,6 +6,9 @@ export default {
     extend: {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        // Thế giới phòng mini-hompy: hiển thị Baloo 2 (tròn nặng), thân Nunito
+        display: ['"Baloo 2"', 'Nunito', 'sans-serif'],
+        body: ['Nunito', '"Plus Jakarta Sans"', 'sans-serif'],
       },
       colors: {
         // MN-Qronx brand palette (brand guidelines)
@@ -27,6 +30,19 @@ export default {
           blue: '#2563EB',
           cyan: '#06B6D4',
           purple: '#8B5CF6',
+        },
+        // Phòng mini-hompy — giá trị RGB nằm ở biến CSS --room-* (đổi theo sáng/tối)
+        room: {
+          paper: 'rgb(var(--room-paper) / <alpha-value>)',
+          ink: 'rgb(var(--room-ink) / <alpha-value>)',
+          acorn: 'rgb(var(--room-acorn) / <alpha-value>)',
+          oat: 'rgb(var(--room-oat) / <alpha-value>)',
+          moss: 'rgb(var(--room-moss) / <alpha-value>)',
+          sage: 'rgb(var(--room-sage) / <alpha-value>)',
+          rain: 'rgb(var(--room-rain) / <alpha-value>)',
+          blush: 'rgb(var(--room-blush) / <alpha-value>)',
+          bell: 'rgb(var(--room-bell) / <alpha-value>)',
+          sky: 'rgb(var(--room-sky) / <alpha-value>)',
         },
       },
       backgroundImage: {

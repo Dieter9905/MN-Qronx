@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { setSession } from '../../services/session'
 import { useAuth } from '../../context/AuthContext'
-import { Logo } from '../../components/Logo'
+import WorldLogo from '../../components/WorldLogo'
 
 export default function OAuthCallbackPage() {
   const navigate = useNavigate()
@@ -48,10 +48,10 @@ export default function OAuthCallbackPage() {
   }, [navigate, refresh])
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-navy-50 px-6 dark:bg-navy-950">
-      <Logo size={48} />
-      <div className="mt-8 h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
-      <p className="mt-5 text-sm font-semibold text-navy-500 dark:text-slate-400">Đang đăng nhập bằng Google…</p>
+    <div className="room-world flex min-h-dvh flex-col items-center justify-center bg-room-paper px-6">
+      <WorldLogo size={44} />
+      <div className="mt-8 h-10 w-10 animate-spin rounded-full border-4 border-room-acorn border-t-transparent" />
+      <p className="mt-5 text-sm font-semibold text-room-ink/70">Đang đăng nhập bằng Google…</p>
     </div>
   )
 }

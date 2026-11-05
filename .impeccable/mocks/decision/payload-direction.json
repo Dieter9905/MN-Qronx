@@ -1,0 +1,163 @@
+{
+  "title": "Chọn thế giới hình ảnh cho MN-Qronx",
+  "question": "Vòng quay đã định cho 'Đồng hồ báo thức để bàn'. Giữ nó, chọn một phương án khác, hoặc quay lại.",
+  "options": [
+    {
+      "id": "assigned",
+      "kind": "assigned",
+      "label": "Đồng hồ báo thức để bàn",
+      "kicker": "THE ROLL",
+      "lineage": "Đồng hồ để bàn LED 7 đoạn, vỏ nhựa có gân, thập niên 70–90",
+      "thesis": "Trang chủ là một chiếc máy chuông thật: giờ chạy LED, việc đến hạn đổ chuông, snooze là nút bấm có con số đếm.",
+      "palette": ["#0F1013", "#FF3B30", "#FFB020", "#EFEAD8"],
+      "materials": ["LED 7 đoạn đỏ/amber", "vỏ nhựa đúc có gân", "núm xoay + phím cứng 2 trạng thái", "kính mờ trước mặt số"],
+      "viewport": "Mở web thấy đúng một mặt máy: đồng hồ LED khổng lồ chạy giờ thật, hàng việc sắp kêu nằm dưới nó, nút 'Đặt báo thức cho việc đầu tiên' nằm như núm xoay gốc.",
+      "risk": "Dễ thành đồ cổ trang trí nếu chỉ mượn vỏ; mọi con số phải nằm trên cùng một lưới LED thì mặt máy mới giữ nhịp.",
+      "raised": [
+        {
+          "from": "challenger-movida",
+          "raise": "Một nét người mỗi ngày: tựa trang (ngày + số việc sắp kêu) được 'viết tay' lên máy đúng một nét duy nhất, phần còn lại là thiết bị."
+        },
+        {
+          "from": "challenger-akari",
+          "raise": "Tầng chờ gập mờ: việc chưa tới giờ nằm phẳng như pho giấy gấp dưới mặt số, sáng dần đúng lúc chuông đổ."
+        },
+        {
+          "from": "challenger-azulejo",
+          "raise": "Khung kề viền xếp thứ tự: nội dung dày của tuần chia thành các ô khung rõ ranh giới, khe giữa các ô đóng vai mạch gạch."
+        },
+        {
+          "from": "challenger-oscilloscope",
+          "raise": "Mọi con số đo trên cùng một thước: mỗi giá trị snap vào lưới phân đoạn LED chung, không có chú số nào tự do."
+        },
+        {
+          "from": "challenger-cyworld",
+          "raise": "Máy nhớ bạn: tên gọi, số lần hoãn, chọn sáng/tối sống lại đúng như lần trước — không reset mỗi lần mở."
+        }
+      ],
+      "html": ".impeccable/mocks/decision/assigned.html"
+    },
+    {
+      "id": "pick-bang-den",
+      "kind": "pick",
+      "label": "Bảng đen lớp học",
+      "kicker": "IMPECCABLE'S PICK",
+      "lineage": "Bảng đen phấn + chuông trường, lớp học Việt Nam",
+      "thesis": "Trang chủ là tấm bảng đen nơi phấn chỉ ghi đúng việc: đến hạn khoanh đỏ, đã xong phẩy mờ, chuông đồng ở góc đổ khi tới giờ.",
+      "palette": ["#20302A", "#F4EFE3", "#E4572E", "#F2C744"],
+      "materials": ["phấn trắng + phấn màu", "khung gỗ dính bụi phấn", "chuông đồng"],
+      "viewport": "Mở web thấy bảng đen đầy khung: dòng phấn 'Hôm nay còn 3 việc đến hạn', từng việc viết tay, một nét phấn đỏ khoanh nút 'Đặt báo thức cho việc này'.",
+      "risk": "Cảm giác thân quen cao nhất nhưng dễ trượt thành chủ đề nhà trường rẻ tiền nếu vết phấn làm giả lố."
+    },
+    {
+      "id": "challenger-busytown",
+      "kind": "challenger",
+      "catalogId": "graphic-worlds-publishing-busytown-cross-section",
+      "label": "Cảnh cắt ngang ngày học",
+      "verdict": "competitive",
+      "lineage": "trang cắt ngang sách tranh Busy Town",
+      "thesis": "Ngày của bạn là một cảnh cắt ngang: lớp học là ngôi nhà mất tường, mỗi việc dán nhãn thật, toà nào tới giờ toà đó đổ chuông.",
+      "palette": ["#F6F1E7", "#D93B2B", "#F2B01E", "#2F6B3A"],
+      "materials": ["gouache phẳng trên giấy trắng", "nhãn nhỏ kèm chỉ mảnh"],
+      "viewport": "Mở web thấy cảnh lớn trải ngang: con đường thời gian chạy xuyên trang, các toà việc có nhãn thật, một toà đang đổ chuông đỏ.",
+      "case": "Ghép mượt: việc thành nhãn thật, chuông thành toà đỏ kêu to; thua nhẹ trục độ rõ vì vui làm mờ độ gấp của deadline.",
+      "risk": "Dễ thành tranh minh hoạ dễ thương: việc trễ phải đáng sợ, không chỉ đáng yêu.",
+      "hero": "https://impeccable.style/worlds/cards/graphic-worlds-publishing-busytown-cross-section-hero.webp",
+      "html": ".impeccable/mocks/decision/challenger-busytown.html"
+    },
+    {
+      "id": "challenger-movida",
+      "kind": "challenger",
+      "catalogId": "posters-covers-sleeves-movida-scene-magazine",
+      "label": "Bìa tạp chí Movida",
+      "verdict": "declined",
+      "lineage": "bìa tạp chí Madrid hậu độc quyền, thập niên 80",
+      "thesis": "Mỗi ngày ra mắt như một bìa tạp chí: chân dung flash-lit cắt sát, tựa vẽ tay, dòng tin rải bốn hướng mực huỳnh quang.",
+      "palette": ["#F4F1E4", "#FF3FA4", "#00E86B"],
+      "materials": ["in rẻ mực lệch mép", "bìa giấy giá rẻ"],
+      "viewport": "Mở web thấy một bìa nhuộm đèn flash: việc hôm nay là các dòng tin rải nghiêng, tựa 'Plan. Do. On Time.' vẽ tay.",
+      "risk": "Chữ rải bốn hướng khác baseline phá trật tự đọc của trang deadline.",
+      "case": "Thua cả hai trục: rải chữ mất trật tự đọc, và sinh viên không nhận mình trong bìa tạp chí flash-lit.",
+      "kept": "Một nét người mỗi ngày.",
+      "hero": "https://impeccable.style/worlds/cards/posters-covers-sleeves-movida-scene-magazine-hero.webp"
+    },
+    {
+      "id": "challenger-akari",
+      "kind": "challenger",
+      "catalogId": "paper-folds-pleats-deployable-akari-light-sculpture",
+      "label": "Lồng đèn giấy Akari",
+      "verdict": "declined",
+      "lineage": "lồng đèn washi trên khung tre",
+      "thesis": "Lịch của bạn là một căn phòng mờ với những khối sáng: việc sắp tới là đèn đang thắp, việc để sau gập phẳng chờ.",
+      "palette": ["#F3E7D3", "#C9A26B", "#2B2B28"],
+      "materials": ["washi tỏa sáng từ trong", "gai tre"],
+      "viewport": "Mở web thấy một phòng mờ: khối đèn việc đầu tiên sáng, các khối khác gập phẳng chờ dọc theo tường.",
+      "risk": "Đèn mềm khó giữ độ gấp của deadline; căn phòng dễ thành nền êm vô lực.",
+      "case": "Thua cả hai trục: độ gấp của deadline phai trong căn phòng êm hạ, người dùng không nhận mình ở đây.",
+      "kept": "Một khối sáng duy nhất nhất thời điểm; các khối còn lại gập chờ.",
+      "hero": "https://impeccable.style/worlds/cards/paper-folds-pleats-deployable-akari-light-sculpture-hero.webp"
+    },
+    {
+      "id": "challenger-azulejo",
+      "kind": "challenger",
+      "catalogId": "architecture-places-azulejo-station-hall",
+      "label": "Sảnh ga azulejo",
+      "verdict": "declined",
+      "lineage": "sảnh ga lát gạch cobalt trên trắng",
+      "thesis": "Cả tuần trải như bức tường gạch: từng ngày là một khung tranh viền cuộn, khe gạch hiện nguyên luôn lộ rõ.",
+      "palette": ["#F5F2EA", "#1F4E9C", "#E8B23C"],
+      "materials": ["men lam trên gạch trắng", "viền cuộn vàng rỉ"],
+      "viewport": "Mở web thấy tường gạch: tuần này là dải khung kề viền, cột giờ chạy men theo mạch gạch.",
+      "risk": "Gạch hoàn toàn xa đời sinh viên; dễ thành nền hoa văn vô nghĩa khi panel phụ tính lẫn vào nhau.",
+      "case": "Thua trục nhận diện: cobalt đẹp nhưng quá xa cuộc đời sinh viên; trục rõ giữ được nhưng chuông chưa gấp hơn.",
+      "kept": "Khe gạch trên mọi bề mặt là cấu trúc, không phải trang trí.",
+      "hero": "https://impeccable.style/worlds/cards/architecture-places-azulejo-station-hall-hero.webp"
+    },
+    {
+      "id": "challenger-oscilloscope",
+      "kind": "challenger",
+      "catalogId": "scientific-notation-oscilloscope-signal-bench",
+      "label": "Máy đo tín hiệu của tuần",
+      "verdict": "declined",
+      "lineage": "màn CRT oscilloscope trên bàn thí nghiệm",
+      "thesis": "Tuần của bạn là một tín hiệu: mỗi việc là vạch xanh chạy trên graticule, việc đến hạn là điểm trigger đứng hình.",
+      "palette": ["#0B0F0D", "#3AE67C", "#FFB000"],
+      "materials": ["phosphor trên kính", "núm detent kim loại"],
+      "viewport": "Mở web thấy một màn CRT: vạch tín hiệu chạy qua tuần, điểm trigger đỏ đứng hình đúng lúc cảnh báo trước hạn.",
+      "risk": "Cùng họ máy với đồng hồ nên không thắng trục nhận diện; dễ trượt thành gadget lạnh.",
+      "case": "Thua cả hai trục: cùng dòng thiết bị đo nên không thăng trục nhận diện hơn, trục rõ cũng chưa thắng.",
+      "kept": "Mọi thứ trên màn hình đo trên cùng một lưới chia độ.",
+      "hero": "https://impeccable.style/worlds/cards/scientific-notation-oscilloscope-signal-bench-hero.webp"
+    },
+    {
+      "id": "challenger-cyworld",
+      "kind": "challenger",
+      "catalogId": "cyworld-minihompy-room",
+      "label": "Phòng mini-hompy",
+      "verdict": "declined",
+      "lineage": "phòng isometric minihompy, nâng nghĩa năm 2000",
+      "thesis": "Trang của bạn là một phòng nhỏ có thể bày: mỗi việc là một món đồ đặt xuống, đến hạn thì món đồ turn sáng.",
+      "palette": ["#FFEEF3", "#8CD9C3", "#F6A7C1"],
+      "materials": ["isometric dán sticker", "kệ nhỏ trắng"],
+      "viewport": "Mở web thấy phòng isometric: việc tới hạn là ngọn đèn sáng trên bàn học, chuông điện đặt ngay cạnh.",
+      "risk": "Mục vui dễ thành game, trong khi deadline thì phải sợ chứ không chơi.",
+      "case": "Thua trục rõ: phòng nhỏ trang trí không đủ gánh danh sách deadline cần gấp; trục nhận diện không bù nổi.",
+      "kept": "Không gian nhận dạng của chủ nhân sống dai dẳng.",
+      "hero": "https://impeccable.style/worlds/cards/cyworld-minihompy-room-hero.webp"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code" },
+  "canon": true,
+  "canonCard": {
+    "kind": "canon",
+    "label": "Chuẩn ngành: hero gradient + 3 thẻ",
+    "thesis": "Trang kiểu SaaS an toàn: hero xanh–tím, ba thẻ tính năng thẳng hàng, một nút CTA — bản web hiện tại nhưng làm đúng kỹ thuật.",
+    "palette": ["#FFFFFF", "#111827", "#2563EB", "#7C3AED"],
+    "materials": ["grid sạch", "ảnh sản phẩm chụp gọn"],
+    "viewport": "Hero ba dòng chữ + hàng ba thẻ cùng cỡ dưới chân — dáng dấp ai cũng từng thấy.",
+    "risk": "Vẻ an toàn chính là lý do khách quên trang ngay: không khác gì trăm trang hàng xóm.",
+    "html": ".impeccable/mocks/decision/canon.html"
+  },
+  "steer": true
+}

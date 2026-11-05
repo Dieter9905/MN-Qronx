@@ -1,0 +1,28 @@
+{
+  "buildPath": "code",
+  "reason": "Decision round seed:62cebed9a676ee7e ANSWER: buildPath code, buildPathFlipped false; harness has no image generation (no toggle offered)",
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "src/pages/guest/LandingPage.jsx"
+        ],
+        "createdAt": "2026-11-03T18:19:26.221Z",
+        "reason": "Direction contract commits the cabinet-with-six-drawers features structure; the six uniform drawer paddings inside ONE cabinet shell are an intentional shell exception, confirmed by the finishing reviewer (disposition ship)"
+      },
+      {
+        "rule": "shape-assembled-illustration",
+        "value": "*",
+        "files": [
+          "src/components/landing/RoomScene.jsx"
+        ],
+        "createdAt": "2026-11-03T18:19:26.262Z",
+        "reason": "The isometric minihompy room is the world's chosen centerpiece: an authored 100+-primitive flat-vector scene by design, confirmed by the finishing reviewer (disposition ship)"
+      }
+    ]
+  }
+}

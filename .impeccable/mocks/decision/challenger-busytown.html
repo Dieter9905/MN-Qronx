@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="UTF-8">
+<style>
+* { box-sizing: border-box; margin: 0; }
+body { width: 1440px; height: 900px; background: #F6F1E7; font-family: 'Segoe UI', system-ui, sans-serif; color: #38301F; display: flex; flex-direction: column; }
+.nav { display: flex; align-items: center; gap: 26px; padding: 20px 44px; }
+.logo { background: #D93B2B; color: #FFF6EA; font: 800 22px/1 'Segoe UI'; padding: 12px 20px; border-radius: 999px; letter-spacing: .06em; }
+.links { display: flex; gap: 22px; font-size: 17px; opacity: .75; }
+.hint { margin-left: auto; border: 2px solid #38301F; border-radius: 999px; padding: 10px 22px; font-weight: 700; font-size: 17px; }
+.head { font: 700 60px/1.12 'Segoe Print', 'Segoe Script', cursive; padding: 16px 44px 4px; color: #33301F; }
+.scene { position: relative; flex: 1; margin: 12px 44px 0; border-top: 4px solid #38301F; overflow: hidden; }
+.road { position: absolute; left: 0; right: 0; bottom: 0; height: 92px; background: #D7CFA0; border-top: 6px solid #38301F; }
+.buildings { position: absolute; left: 0; right: 0; bottom: 92px; top: 10px; display: flex; align-items: flex-end; justify-content: center; gap: 40px; }
+.b { width: 212px; position: relative; }
+.b .top { height: 0; display: flex; justify-content: center; }
+.b .top i { width: 0; height: 0; border-left: 106px solid transparent; border-right: 106px solid transparent; border-bottom: 30px solid #2F6B3A; }
+.b .body { border: 4px solid #38301F; border-radius: 12px 12px 0 0; height: 210px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.b .body span { display: block; height: 24px; border: 3px solid #38301F; border-radius: 6px; }
+.label { text-align: center; font: 700 21px/1.25 'Segoe UI'; margin-top: 12px; }
+.chime .top i { border-bottom-color: #C3231B; }
+.chime .body { background: #F2664F; }
+.bell { position: absolute; top: -38px; left: 50%; transform: translateX(-50%); font-size: 40px; z-index: 2; }
+.cta { display: flex; align-items: center; gap: 18px; padding: 22px 44px; }
+.bujo { background: #F2B01E; border: 3px solid #38301F; border-radius: 999px; padding: 16px 34px; font: 800 23px/1 'Segoe UI'; color: #38301F; box-shadow: 0 8px 0 #38301F; }
+</style></head>
+<body>
+<div class="nav">
+  <span class="logo">mn-qronx</span>
+  <span class="links"><span>Nhãn thật</span><span>Chuông giờ</span><span>Bảng giá</span></span>
+  <span class="hint">Dùng thử</span>
+</div>
+<div class="head">Một ngày của bạn, cắt ra xem một lát.</div>
+<div class="scene">
+  <div class="buildings">
+    <div class="b">
+      <div class="top"><i></i></div>
+      <div class="body" style="background:#F9E9C8"><span></span><span style="width:60%"></span></div>
+      <div class="label">07:30 · Lớp Kiến trúc và tích hợp HT</div>
+    </div>
+    <div class="b chime">
+      <div class="bell">🔔</div>
+      <div class="top"><i></i></div>
+      <div class="body"><span style="background:#FFE1D8"></span><span style="width:75%"></span></div>
+      <div class="label">17:00 · Nộp báo cáo — ĐANG ĐỔ CHUÔNG</div>
+    </div>
+    <div class="b">
+      <div class="top"><i style="border-bottom-color:#F2B01E"></i></div>
+      <div class="body" style="background:#FBF3DF"><span></span><span style="width:52%"></span><span style="width:80%"></span></div>
+      <div class="label">22:00 · Ôn chương 5 · 25 phút</div>
+    </div>
+  </div>
+  <div class="road"></div>
+</div>
+<div class="cta"><span class="bujo">Dùng thử — không cần thẻ</span><span style="font-size:18px;opacity:.7">Chuông đổ đúng giờ, không bỏ sót việc.</span></div>
+</body></html>

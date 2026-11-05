@@ -12,16 +12,16 @@ function Row({ icon: Icon, label, hint, active, onClick, disabled }) {
       onClick={onClick}
       disabled={disabled}
       className={[
-        'flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12.5px] font-semibold transition disabled:cursor-default',
+        'flex min-h-9 w-full cursor-pointer items-center gap-2 rounded-full px-2.5 py-1.5 text-left text-[12.5px] font-bold transition disabled:cursor-default',
         active
-          ? 'bg-brand-gradient-soft text-navy-900 ring-1 ring-blue-100 dark:text-white dark:ring-blue-900/70'
-          : 'text-navy-500 hover:bg-white hover:text-navy-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white',
+          ? 'bg-room-paper text-room-ink shadow-[0_2px_8px_rgb(0_0_0/0.08)] ring-1 ring-room-acorn/30'
+          : 'text-room-ink/65 hover:bg-room-paper/70 hover:text-room-ink',
       ].join(' ')}
     >
-      <Icon size={15} weight={active ? 'fill' : 'regular'} className={active ? 'text-blue-600 dark:text-blue-400' : ''} />
+      <Icon size={15} weight={active ? 'bold' : 'regular'} className={active ? 'text-room-acorn' : ''} />
       <span className="min-w-0 flex-1 truncate">{label}</span>
-      {hint && <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-navy-300 dark:text-slate-600">{hint}</span>}
-      {active && <Check size={13} weight="bold" className="shrink-0 text-blue-600 dark:text-blue-400" />}
+      {hint && <span className="shrink-0 text-[10px] font-bold text-room-ink/35">{hint}</span>}
+      {active && <Check size={13} weight="bold" className="shrink-0 text-room-acorn" />}
     </button>
   )
 }
@@ -47,8 +47,8 @@ export default function WorkspaceSwitcher({ onNavigate }) {
   }
 
   return (
-    <div className="mb-3 rounded-xl bg-navy-50/70 p-1.5 ring-1 ring-navy-100 dark:bg-slate-800/50 dark:ring-slate-700/60">
-      <p className="px-2 pb-1 pt-0.5 text-[10px] font-extrabold uppercase tracking-wider text-navy-400 dark:text-slate-500">
+    <div className="mb-3 rounded-2xl bg-room-oat/40 p-1.5 ring-1 ring-room-acorn/15">
+      <p className="px-2.5 pb-1 pt-0.5 text-[11px] font-bold text-room-ink/45">
         Chế độ làm việc
       </p>
 

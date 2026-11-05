@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { EnvelopeSimple, Lock, Eye, EyeSlash, SignIn, WarningCircle, GoogleLogo } from '@phosphor-icons/react'
 import AuthLayout from '../../components/AuthLayout'
-import { Field, Input } from '../../components/common/Inputs'
-import Button from '../../components/common/Button'
+import { RoomField, RoomInput, RoomButton, RoomDots } from '../../components/common/RoomUI'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
 import { API_BASE_URL } from '../../services/apiClient'
@@ -66,17 +65,17 @@ export default function LoginPage() {
   return (
     <AuthLayout title="Đăng nhập" subtitle="Chào mừng bạn quay lại MN-Qronx. Hãy tiếp tục quản lý công việc của mình.">
       {serverError && (
-        <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-xl bg-rose-50 p-3.5 text-sm font-medium text-rose-700 ring-1 ring-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:ring-rose-800/50">
-          <WarningCircle size={18} className="mt-0.5 shrink-0" weight="fill" />
+        <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-2xl bg-room-rain/30 p-3.5 text-sm font-bold text-room-ink ring-1 ring-room-acorn/25">
+          <WarningCircle size={18} className="mt-0.5 shrink-0" weight="bold" />
           {serverError}
         </div>
       )}
       <form onSubmit={onSubmit} noValidate className="space-y-4">
-        <Field label="Email" required error={errors.email}>
+        <RoomField label="Email" required error={errors.email}>
           {(id) => (
             <div className="relative">
-              <EnvelopeSimple size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
-              <Input
+              <EnvelopeSimple size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+              <RoomInput
                 id={id}
                 type="email"
                 autoComplete="email"
@@ -88,12 +87,12 @@ export default function LoginPage() {
               />
             </div>
           )}
-        </Field>
-        <Field label="Mật khẩu" required error={errors.password}>
+        </RoomField>
+        <RoomField label="Mật khẩu" required error={errors.password}>
           {(id) => (
             <div className="relative">
-              <Lock size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
-              <Input
+              <Lock size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+              <RoomInput
                 id={id}
                 type={showPw ? 'text' : 'password'}
                 autoComplete="current-password"
@@ -107,44 +106,47 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setShowPw((s) => !s)}
                 aria-label={showPw ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-1 text-navy-400 hover:text-navy-700"
+                className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-room-ink/45 transition hover:text-room-acorn"
               >
                 {showPw ? <EyeSlash size={18} /> : <Eye size={18} />}
               </button>
             </div>
           )}
-        </Field>
+        </RoomField>
         <div className="flex items-center justify-between text-sm">
-          <label className="flex cursor-pointer items-center gap-2 font-medium text-navy-600 dark:text-slate-300">
+          <label className="flex min-h-11 cursor-pointer items-center gap-2 font-bold text-room-ink/80">
             <input
               type="checkbox"
               checked={form.remember}
               onChange={(e) => setForm((f) => ({ ...f, remember: e.target.checked }))}
-              className="h-4 w-4 cursor-pointer rounded border-navy-300 accent-blue-600"
+              className="h-4 w-4 cursor-pointer rounded accent-room-acorn"
             />
             Ghi nhớ đăng nhập
           </label>
-          <Link to="/forgot-password" className="font-semibold text-blue-600 hover:underline dark:text-blue-400">
+          <Link
+            to="/forgot-password"
+            className="inline-flex min-h-11 items-center rounded-full px-1 font-bold text-room-ink underline decoration-room-acorn/40 decoration-dotted decoration-2 underline-offset-4 transition hover:text-room-acorn"
+          >
             Quên mật khẩu?
           </Link>
         </div>
-        <Button type="submit" variant="gradient" fullWidth size="lg" loading={loading} icon={SignIn}>
+        <RoomButton type="submit" variant="primary" fullWidth size="lg" loading={loading} icon={SignIn}>
           Đăng nhập
-        </Button>
+        </RoomButton>
         {slowLogin ? (
-          <p className="text-center text-xs leading-relaxed font-medium text-navy-500 dark:text-slate-400">
+          <p className="text-center text-xs leading-relaxed font-semibold text-room-ink/60">
             {SERVER_WAKE_HINT}
           </p>
         ) : null}
       </form>
 
       <div className="mt-6 flex items-center gap-3">
-        <span className="h-px flex-1 bg-navy-100 dark:bg-slate-700" />
-        <span className="text-xs font-bold uppercase tracking-wider text-navy-300 dark:text-slate-500">Hoặc</span>
-        <span className="h-px flex-1 bg-navy-100 dark:bg-slate-700" />
+        <RoomDots />
+        <span className="text-xs font-bold text-room-ink/60">Hoặc</span>
+        <RoomDots />
       </div>
       <div className="mt-4">
-        <Button
+        <RoomButton
           type="button"
           variant="secondary"
           fullWidth
@@ -155,12 +157,15 @@ export default function LoginPage() {
           }}
         >
           Tiếp tục với Google
-        </Button>
+        </RoomButton>
       </div>
 
-      <p className="mt-6 text-center text-sm text-navy-500 dark:text-slate-400">
+      <p className="mt-6 text-center text-sm font-semibold text-room-ink/75">
         Chưa có tài khoản?{' '}
-        <Link to="/register" className="font-semibold text-blue-600 hover:underline">
+        <Link
+          to="/register"
+          className="font-bold text-room-ink underline decoration-room-acorn/40 decoration-dotted decoration-2 underline-offset-4 transition hover:text-room-acorn"
+        >
           Đăng ký ngay
         </Link>
       </p>

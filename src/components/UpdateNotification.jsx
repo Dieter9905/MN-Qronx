@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Sparkle, CheckCircle, TrendUp, Wrench, ArrowRight, Rocket } from '@phosphor-icons/react'
 import { updates, APP_VERSION } from '../data/updates'
+import { useAuth } from '../context/AuthContext'
 
 const STORAGE_KEY = 'mnq:lastSeenVersion'
 
@@ -29,13 +30,16 @@ function getNewUpdates() {
   return updates.filter((u) => u.version > lastSeen)
 }
 
+// Config loại thay đổi — da phòng: Acorn (tính năng), Sage đậm (cải thiện),
+// Bell (sửa lỗi); nền nhạt token tương ứng, không gradient.
 const changeTypeConfig = {
-  feature: { icon: Sparkle, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/30' },
-  improvement: { icon: TrendUp, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
-  fix: { icon: Wrench, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/30' },
+  feature: { icon: Sparkle, color: 'text-room-acorn', bg: 'bg-room-oat/60' },
+  improvement: { icon: TrendUp, color: 'text-room-sage', bg: 'bg-room-moss/60' },
+  fix: { icon: Wrench, color: 'text-room-bell', bg: 'bg-room-oat/60' },
 }
 
 export default function UpdateNotification() {
+  const { user } = useAuth()
   const [show, setShow] = useState(false)
   const [newUpdates, setNewUpdates] = useState([])
   const [currentUpdateIndex, setCurrentUpdateIndex] = useState(0)
@@ -43,6 +47,9 @@ export default function UpdateNotification() {
   const [showAllChanges, setShowAllChanges] = useState(false)
 
   useEffect(() => {
+    // Khách chưa đăng nhập không cần bảng tin cập nhật sản phẩm nội bộ —
+    // landing công khai phải để khung đầu trọn vẹn (phòng mẫu là nhân vật chính).
+    if (!user) return undefined
     const updates = getNewUpdates()
     if (updates.length > 0) {
       setNewUpdates(updates)
@@ -50,7 +57,8 @@ export default function UpdateNotification() {
       const timer = setTimeout(() => setShow(true), 1500)
       return () => clearTimeout(timer)
     }
-  }, [])
+    return undefined
+  }, [user])
 
   const handleClose = () => {
     setShow(false)
@@ -84,42 +92,36 @@ export default function UpdateNotification() {
   const isLastUpdate = currentUpdateIndex >= newUpdates.length - 1
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-navy-900/60 p-4 backdrop-blur-sm dark:bg-black/70">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-room-ink/40 p-4 dark:bg-black/70">
       <div className="relative w-full max-w-lg animate-scale-in">
         {/* Khung giới hạn 90% chiều cao màn hình: đầu + chân (nút bấm) ghim cố định,
             phần nội dung ở giữa tự cuộn — nút "Bỏ qua / Tiếp theo" luôn nhìn thấy. */}
-        <div className="flex max-h-[90dvh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-navy-100 dark:bg-slate-900 dark:ring-slate-700">
-          {/* Header with gradient */}
-          <div className="relative shrink-0 overflow-hidden bg-brand-gradient px-6 py-6">
-            {/* Decorative circles */}
-            <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
-            <div className="absolute -bottom-4 -left-4 h-20 w-20 rounded-full bg-white/10" />
-            
-            <div className="relative">
-              <div className="flex items-center gap-2">
-                <Rocket size={24} weight="fill" className="text-white" />
-                <span className="text-sm font-bold text-white/80">Cập nhật mới</span>
-              </div>
-              <h2 className="mt-2 text-2xl font-extrabold text-white">
-                {currentUpdate.title}
-              </h2>
-              <p className="mt-1 text-sm text-white/80">
-                Phiên bản {currentUpdate.version} • {currentUpdate.date}
-              </p>
+        <div className="flex max-h-[90dvh] flex-col overflow-hidden rounded-3xl bg-room-paper shadow-[0_28px_56px_-28px_rgb(0_0_0/0.40)] ring-1 ring-room-acorn/25">
+          {/* Header phẳng: tên bản cập nhật + phiên bản (không gradient) */}
+          <div className="relative shrink-0 px-6 pb-4 pt-6">
+            <div className="flex items-center gap-2">
+              <Rocket size={22} weight="bold" className="text-room-acorn" />
+              <span className="text-[13px] font-bold text-room-ink/55">Cập nhật mới</span>
             </div>
+            <h2 className="mt-1.5 font-display text-xl font-bold text-room-ink">
+              {currentUpdate.title}
+            </h2>
+            <p className="mt-1 text-sm font-semibold text-room-ink/55">
+              Phiên bản {currentUpdate.version} • {currentUpdate.date}
+            </p>
           </div>
 
           {/* Nội dung có thể cuộn khi dài hơn màn hình */}
           <div className="min-h-0 flex-1 overflow-y-auto">
           {/* Highlights */}
-          <div className="border-b border-navy-100 px-6 py-4 dark:border-slate-700">
-            <p className="text-xs font-bold uppercase tracking-wider text-navy-400 dark:text-slate-500">
+          <div className="border-b border-room-acorn/15 px-6 py-4">
+            <p className="text-sm font-bold text-room-ink">
               Điểm nổi bật
             </p>
             <ul className="mt-2 space-y-1.5">
               {currentUpdate.highlights.map((highlight, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-navy-700 dark:text-slate-300">
-                  <CheckCircle size={16} weight="fill" className="mt-0.5 shrink-0 text-emerald-500" />
+                <li key={i} className="flex items-start gap-2 text-sm text-room-ink/80">
+                  <CheckCircle size={16} weight="fill" className="mt-0.5 shrink-0 text-room-sage" />
                   {highlight}
                 </li>
               ))}
@@ -128,7 +130,7 @@ export default function UpdateNotification() {
 
           {/* Changes */}
           <div className="px-6 py-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-navy-400 dark:text-slate-500">
+            <p className="text-sm font-bold text-room-ink">
               Thay đổi chi tiết
             </p>
             <div className="mt-3 space-y-3">
@@ -138,17 +140,16 @@ export default function UpdateNotification() {
                 return (
                   <div
                     key={i}
-                    className="flex items-start gap-3 rounded-xl p-3 transition-all duration-300 animate-slide-up"
-                    style={{ animationDelay: `${i * 100}ms` }}
+                    className="flex items-start gap-3 rounded-xl p-3 transition-colors duration-200 hover:bg-room-oat/40"
                   >
                     <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${config.bg}`}>
                       <Icon size={20} weight="fill" className={config.color} />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-navy-900 dark:text-white">
-                        {change.icon} {change.title}
+                      <p className="text-sm font-bold text-room-ink">
+                        {change.title}
                       </p>
-                      <p className="mt-0.5 text-xs leading-relaxed text-navy-500 dark:text-slate-400">
+                      <p className="mt-0.5 text-xs leading-relaxed text-room-ink/65">
                         {change.description}
                       </p>
                     </div>
@@ -162,7 +163,7 @@ export default function UpdateNotification() {
               <button
                 type="button"
                 onClick={handleShowAll}
-                className="mt-3 flex w-full items-center justify-center gap-1 rounded-lg bg-navy-50 py-2 text-xs font-bold text-navy-600 transition hover:bg-navy-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                className="mt-3 flex w-full items-center justify-center gap-1 rounded-full bg-room-oat/70 py-2 text-xs font-bold text-room-ink transition hover:bg-room-oat"
               >
                 Xem tất cả {currentUpdate.changes.length} thay đổi
                 <ArrowRight size={14} weight="bold" />
@@ -178,7 +179,7 @@ export default function UpdateNotification() {
                 <span
                   key={i}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === currentUpdateIndex ? 'w-6 bg-blue-500' : 'w-1.5 bg-navy-200 dark:bg-slate-600'
+                    i === currentUpdateIndex ? 'w-6 bg-room-acorn' : 'w-1.5 bg-room-acorn/25'
                   }`}
                 />
               ))}
@@ -186,19 +187,19 @@ export default function UpdateNotification() {
           )}
 
           {/* Actions — ghim đáy, luôn hiện dù nội dung dài */}
-          <div className="shrink-0 border-t border-navy-100 px-6 py-4 dark:border-slate-700">
+          <div className="shrink-0 border-t border-room-acorn/15 px-6 py-4">
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex-1 rounded-xl border border-navy-200 bg-white py-2.5 text-sm font-bold text-navy-600 transition hover:bg-navy-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                className="flex-1 cursor-pointer rounded-full border border-room-acorn/40 py-2.5 text-sm font-bold text-room-ink transition hover:bg-room-oat/60"
               >
                 Bỏ qua
               </button>
               <button
                 type="button"
                 onClick={handleNext}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-gradient py-2.5 text-sm font-bold text-white shadow-glow-blue transition-all hover:scale-[1.02] active:scale-95"
+                className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-room-acorn py-2.5 text-sm font-bold text-room-paper shadow-[0_14px_26px_-12px_rgb(0_0_0/0.30)] transition-all hover:brightness-[0.96] active:scale-[0.99]"
               >
                 {isLastChange && isLastUpdate ? (
                   'Đã hiểu!'

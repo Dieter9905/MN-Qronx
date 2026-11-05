@@ -23,6 +23,8 @@ Thumbs.db
 # Tooling nội bộ (không thuộc dự án)
 .freebuff/
 .claude/
+.opencode/
+.cloud-attachments/
 
 # SSH key deploy VPS - nhạy cảm, tuyệt đối không commit
 .deploy/

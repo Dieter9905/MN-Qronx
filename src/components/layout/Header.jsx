@@ -17,15 +17,25 @@ import {
 } from '@phosphor-icons/react'
 import Button from '../common/Button'
 import Avatar from '../common/Avatar'
+import { RoomButton } from '../common/RoomUI'
 import { useAuth } from '../../context/AuthContext'
 import { useAlarm } from '../../context/AlarmContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useLanguage } from '../../context/LanguageContext'
 import { useToast } from '../common/Toast'
-import { Logo } from '../Logo'
+import WorldLogo from '../WorldLogo'
 import { getTasks } from '../../services/taskService'
 import { app } from '../../i18n/app'
-import { PLAN_NAMES, PLAN_BADGE } from '../../lib/constants'
+import { PLAN_NAMES } from '../../lib/constants'
+
+// Da gói trong shell phòng — đè màu ở nơi dùng; PLAN_BADGE gốc trong constants
+// không đụng (Admin shell + trang khác vẫn dùng bản cũ).
+const PLAN_BADGE_ROOM = {
+  FREE: 'bg-room-oat/70 text-room-ink/80 ring-room-acorn/25',
+  PLUS: 'bg-room-oat text-room-ink ring-room-bell/60',
+  PRO: 'bg-room-acorn text-room-paper ring-room-acorn',
+  BUSINESS: 'bg-room-acorn text-room-paper ring-room-bell',
+}
 
 function DemoAlarmButton() {
   const { triggerDemo, demoLoading } = useAlarm()
@@ -67,13 +77,13 @@ function DemoAlarmButton() {
           setOpen((o) => !o)
         }}
       >
-        {!demoLoading && <BellRinging size={19} weight="bold" className="text-brand-purple" />}
+        {!demoLoading && <BellRinging size={19} weight="bold" className="text-room-acorn" />}
       </Button>
       {open && (
-        <div className="absolute right-0 top-12 z-50 w-80 origin-top-right overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-navy-100 animate-scale-in dark:bg-slate-800 dark:ring-slate-700">
-          <div className="border-b border-navy-100 bg-brand-gradient-soft px-4 py-3">
-            <p className="text-sm font-bold text-navy-900">Thử báo thức ⏰</p>
-            <p className="mt-0.5 text-xs text-navy-500">
+        <div className="absolute right-0 top-12 z-50 w-80 origin-top-right overflow-hidden rounded-2xl bg-room-paper shadow-[0_24px_44px_-24px_rgb(0_0_0/0.35)] ring-1 ring-room-acorn/25 animate-scale-in">
+          <div className="border-b border-room-acorn/15 px-4 py-3">
+            <p className="font-display text-sm font-bold text-room-ink">Thử báo thức</p>
+            <p className="mt-0.5 text-xs text-room-ink/65">
               Chọn một công việc để mô phỏng màn hình báo thức toàn màn hình (tính năng cốt lõi).
             </p>
           </div>
@@ -83,26 +93,20 @@ function DemoAlarmButton() {
                 <button
                   type="button"
                   onClick={() => fire(t.id)}
-                  className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-navy-50"
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-room-oat/60"
                 >
-                  <span
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold"
-                    style={{
-                      backgroundColor: t.category ? `${t.category.color}1a` : '#e2e8f0',
-                      color: t.category ? t.category.color : '#64748b',
-                    }}
-                  >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-room-oat/70 text-[10px] font-bold text-room-ink ring-1 ring-room-acorn/15">
                     {new Date(t.dueAt).getHours().toString().padStart(2, '0')}h
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold text-navy-800">{t.title}</span>
-                    <span className="block text-xs text-navy-400">{user?.fullName}</span>
+                    <span className="block truncate text-sm font-bold text-room-ink">{t.title}</span>
+                    <span className="block text-xs text-room-ink/50">{user?.fullName}</span>
                   </span>
                 </button>
               </li>
             ))}
             {tasks.length === 0 && (
-              <li className="px-3 py-6 text-center text-sm text-navy-400">
+              <li className="px-3 py-6 text-center text-sm text-room-ink/50">
                 Không có công việc nào đang mở để thử báo thức.
               </li>
             )}
@@ -138,19 +142,19 @@ export default function Header({ title, onOpenDrawer }) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-navy-100 bg-white px-4 backdrop-blur dark:border-slate-700 dark:bg-slate-900 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-room-acorn/15 bg-room-paper px-4 sm:px-6">
       <button
         type="button"
         onClick={onOpenDrawer}
         aria-label="Mở menu điều hướng"
-        className="group flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-navy-600 transition-all duration-300 hover:bg-navy-100 hover:shadow-card active:scale-95 dark:text-slate-300 dark:hover:bg-slate-800 lg:hidden"
+        className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-room-ink/70 transition-all duration-300 hover:bg-room-oat/60 hover:text-room-ink active:scale-95 lg:hidden"
       >
         <List size={22} weight="bold" className="icon-pop" />
       </button>
       <div className="lg:hidden">
-        <Logo size={30} />
+        <WorldLogo size={30} />
       </div>
-      <h1 className="hidden text-lg font-bold text-navy-900 dark:text-white lg:block">{title}</h1>
+      <h1 className="hidden font-display text-lg font-bold text-room-ink lg:block">{title}</h1>
       <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
         {/* Công tắc sáng/tối: núm trượt + mặt trời/mặt trăng xoay, đổi màu lan toả từ vị trí bấm */}
         <button
@@ -160,28 +164,28 @@ export default function Header({ title, onOpenDrawer }) {
           aria-checked={theme === 'dark'}
           aria-label={theme === 'light' ? 'Bật chế độ tối' : 'Bật chế độ sáng'}
           title={theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
-          className="group relative flex h-9 w-[62px] shrink-0 cursor-pointer items-center rounded-full bg-navy-100/80 p-1 ring-1 ring-inset ring-navy-200/70 transition-all duration-300 hover:ring-blue-300/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-95 dark:bg-slate-700 dark:ring-slate-600 dark:hover:ring-blue-500/60"
+          className="group relative flex h-9 w-[62px] shrink-0 cursor-pointer items-center rounded-full bg-room-oat/70 p-1 ring-1 ring-inset ring-room-acorn/25 transition-all duration-300 hover:ring-room-acorn/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-room-acorn active:scale-95"
         >
           <span
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-            style={{ boxShadow: '0 0 0 4px rgba(37,99,235,0.14)' }}
+            style={{ boxShadow: '0 0 0 4px rgb(var(--room-acorn)/0.14)' }}
           />
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute left-[9px] text-amber-500 transition-all duration-500 group-hover:rotate-90 dark:opacity-40"
+            className="pointer-events-none absolute left-[9px] text-room-bell transition-all duration-500 group-hover:rotate-90 dark:opacity-40"
           >
             <Sun size={13} weight="fill" />
           </span>
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute right-[9px] text-indigo-500 transition-all duration-500 group-hover:-rotate-12 dark:text-indigo-300"
+            className="pointer-events-none absolute right-[9px] text-room-sky transition-all duration-500 group-hover:-rotate-12 dark:text-room-sky"
           >
             <Moon size={13} weight="fill" />
           </span>
           <span
             aria-hidden="true"
-            className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white text-navy-700 shadow-md ring-1 ring-navy-200/70 transition-all duration-500 group-hover:scale-110 group-active:scale-90 dark:bg-slate-900 dark:text-amber-300 dark:ring-slate-600 ${
+            className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-room-paper text-room-ink shadow-[0_2px_8px_rgb(0_0_0/0.10)] ring-1 ring-room-acorn/25 transition-all duration-500 group-hover:scale-110 group-active:scale-90 ${
               theme === 'dark' ? 'translate-x-[26px]' : 'translate-x-0'
             }`}
             style={{ transitionTimingFunction: 'cubic-bezier(0.16,1,0.3,1)' }}
@@ -207,7 +211,7 @@ export default function Header({ title, onOpenDrawer }) {
         <button
           type="button"
           onClick={toggleLang}
-          className="group flex h-9 items-center gap-1 rounded-xl bg-navy-100/70 px-2.5 text-[11px] font-bold text-navy-600 transition-all duration-300 hover:scale-105 hover:bg-navy-200 hover:shadow-card active:scale-95 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+          className="group flex h-9 items-center gap-1 rounded-full bg-room-oat/70 px-2.5 text-[11px] font-bold text-room-ink/80 ring-1 ring-room-acorn/20 transition-all duration-300 hover:bg-room-oat hover:text-room-ink active:scale-95"
           aria-label="Đổi ngôn ngữ"
           title="Đổi ngôn ngữ"
         >
@@ -216,9 +220,9 @@ export default function Header({ title, onOpenDrawer }) {
         </button>
         <DemoAlarmButton />
         <Link to="/app/tasks/new" className="hidden sm:block">
-          <Button variant="gradient" size="sm" icon={Plus}>
+          <RoomButton size="sm" icon={Plus}>
             {t.createTask}
-          </Button>
+          </RoomButton>
         </Link>
         <div className="relative" ref={menuRef}>
           <button
@@ -226,17 +230,17 @@ export default function Header({ title, onOpenDrawer }) {
             onClick={() => setMenuOpen((o) => !o)}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
-            className="group flex cursor-pointer items-center gap-2 rounded-full p-1 pr-2 transition-all duration-300 hover:bg-navy-50 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-slate-800"
+            className="group flex cursor-pointer items-center gap-2 rounded-full p-1 pr-2 transition-all duration-300 hover:bg-room-oat/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-room-acorn"
           >
             <span className="transition-transform duration-300 group-hover:scale-105 group-active:scale-95">
               <Avatar name={user?.fullName} src={user?.avatarUrl} size="sm" />
             </span>{' '}
             <span className="hidden text-left sm:block">
-              <span className="block max-w-[140px] truncate text-sm font-semibold leading-tight text-navy-800 dark:text-white">
+              <span className="block max-w-[140px] truncate text-sm font-bold leading-tight text-room-ink">
                 {user?.fullName}
               </span>
-              <span className="flex items-center gap-1.5 text-[11px] leading-tight text-navy-400 dark:text-slate-500">
-                <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-extrabold ring-1 ring-inset ${PLAN_BADGE[user?.plan || 'FREE']}`}>
+              <span className="flex items-center gap-1.5 text-[11px] leading-tight text-room-ink/45">
+                <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-extrabold ring-1 ring-inset ${PLAN_BADGE_ROOM[user?.plan || 'FREE']}`}>
                   {PLAN_NAMES[user?.plan || 'FREE']}
                 </span>
                 <span>{isAdmin ? t.roleAdmin : t.roleUser}</span>
@@ -245,17 +249,17 @@ export default function Header({ title, onOpenDrawer }) {
             <CaretDown
               size={14}
               weight="bold"
-              className={`hidden text-navy-400 transition-transform duration-300 sm:block ${menuOpen ? 'rotate-180' : ''}`}
+              className={`hidden text-room-ink/45 transition-transform duration-300 sm:block ${menuOpen ? 'rotate-180' : ''}`}
             />
           </button>
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-12 w-56 origin-top-right overflow-hidden rounded-2xl bg-white py-1.5 shadow-2xl ring-1 ring-navy-100 animate-scale-in dark:bg-slate-800 dark:ring-slate-700"
+              className="absolute right-0 top-12 w-56 origin-top-right overflow-hidden rounded-2xl bg-room-paper py-1.5 shadow-[0_24px_44px_-24px_rgb(0_0_0/0.35)] ring-1 ring-room-acorn/25 animate-scale-in"
             >
-              <div className="border-b border-navy-100 dark:border-slate-700 px-4 py-2.5">
-                <p className="truncate text-sm font-bold text-navy-900 dark:text-white">{user?.fullName}</p>
-                <p className="truncate text-xs text-navy-400 dark:text-slate-500">{user?.email}</p>
+              <div className="border-b border-room-acorn/15 px-4 py-2.5">
+                <p className="truncate text-sm font-bold text-room-ink">{user?.fullName}</p>
+                <p className="truncate text-xs text-room-ink/50">{user?.email}</p>
               </div>
               <button role="menuitem" type="button" onClick={() => go('/app/profile')} className="menu-item">
                 <UserCircle size={18} weight="bold" /> {t.profile}
@@ -274,7 +278,7 @@ export default function Header({ title, onOpenDrawer }) {
                   <ShieldCheck size={18} weight="bold" /> {t.adminArea}
                 </button>
               )}
-              <div className="my-1 border-t border-navy-100 dark:border-slate-700" />
+              <div className="my-1 border-t border-room-acorn/15" />
               <button
                 role="menuitem"
                 type="button"
@@ -282,7 +286,7 @@ export default function Header({ title, onOpenDrawer }) {
                   logout()
                   navigate('/')
                 }}
-                className="menu-item text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                className="menu-item text-room-ink hover:bg-room-rain/40"
               >
                 <SignOut size={18} weight="bold" /> {t.logout}
               </button>

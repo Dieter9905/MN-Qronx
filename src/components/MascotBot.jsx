@@ -86,17 +86,17 @@ export default function MascotBot() {
         <div
           role="dialog"
           aria-label="Gợi ý từ trợ lý nhỏ"
-          className="bot-bubble mb-2 w-60 rounded-2xl bg-white/95 p-3 shadow-xl ring-1 ring-navy-100 backdrop-blur dark:bg-slate-800/95 dark:ring-slate-700"
+          className="bot-bubble mb-2 w-60 rounded-2xl bg-room-paper p-3 shadow-[0_16px_34px_-20px_rgb(0_0_0/0.35)] ring-1 ring-room-acorn/25"
         >
           <div className="flex items-start gap-2">
-            <p className="flex-1 text-xs font-semibold leading-relaxed text-navy-700 dark:text-slate-200">
+            <p className="flex-1 text-xs font-semibold leading-relaxed text-room-ink/85">
               {tip.text}
             </p>
             <button
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Đóng gợi ý"
-              className="cursor-pointer rounded-md p-0.5 text-navy-400 transition hover:bg-navy-100 hover:text-navy-700 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-white"
+              className="cursor-pointer rounded-md p-0.5 text-room-ink/40 transition hover:bg-room-oat/60 hover:text-room-ink"
             >
               <X size={12} weight="bold" />
             </button>
@@ -106,7 +106,7 @@ export default function MascotBot() {
               <Link
                 key={a.to + a.label}
                 to={a.to}
-                className="inline-flex items-center gap-1 rounded-lg bg-brand-gradient px-2 py-1 text-[11px] font-bold text-white shadow-sm transition hover:brightness-110"
+                className="inline-flex items-center gap-1 rounded-full bg-room-paper px-2.5 py-1 text-[11px] font-bold text-room-ink ring-1 ring-room-acorn/35 transition hover:bg-room-oat/60"
               >
                 <a.icon size={12} weight="bold" />
                 {a.label}
@@ -115,7 +115,7 @@ export default function MascotBot() {
             <button
               type="button"
               onClick={hide}
-              className="cursor-pointer rounded-lg px-2 py-1 text-[11px] font-semibold text-navy-400 transition hover:text-rose-500 dark:text-slate-500"
+              className="cursor-pointer rounded-full px-2 py-1 text-[11px] font-bold text-room-ink/45 transition hover:text-room-acorn"
             >
               Ẩn bot
             </button>
@@ -128,41 +128,30 @@ export default function MascotBot() {
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-label={open ? 'Thu gợi ý của trợ lý nhỏ' : 'Mở gợi ý của trợ lý nhỏ'}
-          className="bot-wander group relative flex h-16 w-16 cursor-pointer items-center justify-center rounded-full bg-white/70 shadow-lg ring-1 ring-white/60 backdrop-blur transition hover:scale-105 dark:bg-slate-800/70 dark:ring-slate-700"
+          className="bot-wander group relative flex h-16 w-16 cursor-pointer items-center justify-center rounded-full bg-room-paper shadow-[0_16px_30px_-20px_rgb(0_0_0/0.40)] ring-1 ring-room-acorn/25 transition hover:bg-room-oat/50"
         >
           <svg viewBox="0 0 64 64" className="h-14 w-14" aria-hidden="true">
-            <defs>
-              <linearGradient id="botBody" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#60a5fa" />
-                <stop offset="55%" stopColor="#6366f1" />
-                <stop offset="100%" stopColor="#a855f7" />
-              </linearGradient>
-              <linearGradient id="botVisor" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#0f172a" />
-                <stop offset="100%" stopColor="#1e293b" />
-              </linearGradient>
-            </defs>
-            {/* Quầng sáng dưới chân */}
-            <ellipse cx="32" cy="58" rx="13" ry="3" fill="#6366f1" opacity="0.22" />
+            {/* Thân ô ngữ màu Acorn, mặt kính Ink — cả hai theo token phòng */}
+            <ellipse cx="32" cy="58" rx="13" ry="3" fill="rgb(var(--room-acorn))" opacity="0.20" />
             {/* Ăng ten */}
-            <line x1="32" y1="12" x2="32" y2="7" stroke="#a5b4fc" strokeWidth="2" strokeLinecap="round" />
-            <circle cx="32" cy="6" r="2.6" fill="#22d3ee" className="bot-antenna" />
+            <line x1="32" y1="12" x2="32" y2="7" stroke="rgb(var(--room-acorn))" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
+            <circle cx="32" cy="6" r="2.6" fill="rgb(var(--room-bell))" className="bot-antenna" />
             {/* Thân */}
-            <rect x="14" y="14" width="36" height="32" rx="12" fill="url(#botBody)" />
+            <rect x="14" y="14" width="36" height="32" rx="12" fill="rgb(var(--room-acorn))" />
             {/* Kính / mắt */}
-            <rect x="20" y="21" width="24" height="15" rx="7" fill="url(#botVisor)" />
-            <circle cx="27" cy="28.5" r="2.6" fill="#67e8f9" className="bot-eye" />
-            <circle cx="37" cy="28.5" r="2.6" fill="#67e8f9" className="bot-eye" />
+            <rect x="20" y="21" width="24" height="15" rx="7" fill="rgb(var(--room-ink))" />
+            <circle cx="27" cy="28.5" r="2.6" fill="rgb(var(--room-paper))" className="bot-eye" />
+            <circle cx="37" cy="28.5" r="2.6" fill="rgb(var(--room-paper))" className="bot-eye" />
             {/* Nụ cười */}
-            <path d="M28 34.5c1.6 1.4 6.4 1.4 8 0" stroke="#a5f3fc" strokeWidth="1.6" strokeLinecap="round" fill="none" />
-            {/* Tim đèn ngực */}
-            <circle cx="32" cy="41.5" r="2" fill="#fef08a" opacity="0.9" />
+            <path d="M28 34.5c1.6 1.4 6.4 1.4 8 0" stroke="rgb(var(--room-paper))" strokeWidth="1.6" strokeLinecap="round" fill="none" opacity="0.85" />
+            {/* Tim đèn ngực — bóng đèn nhỏ của phòng */}
+            <circle cx="32" cy="41.5" r="2" fill="rgb(var(--room-bell))" />
             {/* Tai / cánh tay */}
-            <rect x="8" y="25" width="4.5" height="10" rx="2.2" fill="#818cf8" />
-            <rect x="51.5" y="25" width="4.5" height="10" rx="2.2" fill="#818cf8" className="bot-wave" />
+            <rect x="8" y="25" width="4.5" height="10" rx="2.2" fill="rgb(var(--room-oat))" />
+            <rect x="51.5" y="25" width="4.5" height="10" rx="2.2" fill="rgb(var(--room-oat))" className="bot-wave" />
             {/* Bánh xe nhỏ */}
-            <circle cx="24" cy="48.5" r="3.4" fill="#c7d2fe" />
-            <circle cx="40" cy="48.5" r="3.4" fill="#c7d2fe" />
+            <circle cx="24" cy="48.5" r="3.4" fill="rgb(var(--room-oat))" />
+            <circle cx="40" cy="48.5" r="3.4" fill="rgb(var(--room-oat))" />
           </svg>
           <span className="sr-only">Trợ lý nhỏ</span>
         </button>
@@ -172,7 +161,7 @@ export default function MascotBot() {
           type="button"
           onClick={hide}
           aria-label="Ẩn trợ lý nhỏ"
-          className="mb-12 cursor-pointer rounded-full bg-white/80 p-1 text-navy-400 opacity-0 shadow ring-1 ring-navy-100 transition group-hover:opacity-100 hover:text-rose-500 focus-visible:opacity-100 dark:bg-slate-800/80 dark:text-slate-500 dark:ring-slate-700"
+          className="mb-12 cursor-pointer rounded-full bg-room-paper p-1 text-room-ink/45 opacity-0 shadow-[0_8px_18px_-12px_rgb(0_0_0/0.25)] ring-1 ring-room-acorn/25 transition group-hover:opacity-100 hover:text-room-ink focus-visible:opacity-100"
         >
           <X size={10} weight="bold" />
         </button>

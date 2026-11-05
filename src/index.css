@@ -680,3 +680,207 @@ a:hover .icon-pop,
     scroll-behavior: auto !important;
   }
 }
+
+/* ==================================================================== */
+/*  THẾ GIỚI PHÒNG MINI-HOMPY — landing (font tự chủ + token phòng)      */
+/* ==================================================================== */
+
+@font-face {
+  font-family: 'Baloo 2';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('/fonts/Baloo2-Variable.ttf') format('truetype-variations'),
+       url('/fonts/Baloo2-Variable.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 200 1000;
+  font-display: swap;
+  src: url('/fonts/Nunito-Variable.ttf') format('truetype-variations'),
+       url('/fonts/Nunito-Variable.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Nunito';
+  font-style: italic;
+  font-weight: 200 1000;
+  font-display: swap;
+  src: url('/fonts/Nunito-Italic-Variable.ttf') format('truetype-variations'),
+       url('/fonts/Nunito-Italic-Variable.ttf') format('truetype');
+}
+
+/* Token phòng: sáng = Porcelain + Acorn giấy nâu; tối = phòng buổi đêm + đèn ấm */
+:root {
+  --room-paper: 255 246 236;
+  --room-ink: 74 59 44;
+  --room-acorn: 139 111 78;
+  --room-oat: 234 220 199;
+  --room-moss: 220 232 223;
+  --room-sage: 169 196 177;
+  --room-rain: 183 199 214;
+  --room-blush: 245 201 207;
+  --room-bell: 226 176 92;
+  --room-sky: 185 202 218;
+}
+
+.dark {
+  --room-paper: 43 35 30;
+  --room-ink: 233 222 208;
+  --room-acorn: 199 168 133;
+  --room-oat: 62 52 43;
+  --room-moss: 55 69 58;
+  --room-sage: 97 124 104;
+  --room-rain: 116 132 148;
+  --room-blush: 243 183 190;
+  --room-bell: 232 191 118;
+  --room-sky: 40 50 68;
+}
+
+.room-world {
+  font-family: 'Nunito', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+.room-world ::selection {
+  background: rgb(var(--room-blush) / 0.75);
+  color: rgb(var(--room-ink));
+}
+
+.room-world :focus-visible {
+  outline: 2px dashed rgb(var(--room-acorn) / 0.6);
+  outline-offset: 3px;
+}
+
+/* Thanh cuộn màu nâu ấm — chỉ khi trang đang mở thế giới phòng */
+body:has(.room-world) {
+  scrollbar-color: rgb(var(--room-acorn) / 0.45) rgb(var(--room-paper));
+}
+body:has(.room-world)::-webkit-scrollbar { width: 10px; }
+body:has(.room-world)::-webkit-scrollbar-track {
+  background: rgb(var(--room-paper));
+}
+body:has(.room-world)::-webkit-scrollbar-thumb {
+  background: rgb(var(--room-acorn) / 0.4);
+  border-radius: 999px;
+  border: 2px solid rgb(var(--room-paper));
+}
+
+/* Đường kẻ chấm chia mục — ngữ pháp của thế giới */
+.dot-divider {
+  height: 3px;
+  border-radius: 999px;
+  background-image: radial-gradient(rgb(var(--room-acorn) / 0.5) 1.6px, transparent 1.7px);
+  background-size: 16px 3px;
+  background-position: center;
+  background-repeat: repeat-x;
+}
+
+/* Quầng nhịp nhàng của món đồ đến hạn trong phòng */
+@keyframes roomGlowPulse {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+.room-due-glow {
+  animation: roomGlowPulse 2.6s ease-in-out infinite;
+}
+
+/* Giấy dán tường của phòng trong /app: chấm Acorn thưa, cùng họ chấm với
+   dot-divider — chỉ đủ tạo chất liệu, không tranh chữ với nội dung. */
+.room-wallpaper {
+  background-image: radial-gradient(rgb(var(--room-acorn) / 0.16) 1.2px, transparent 1.3px);
+  background-size: 18px 18px;
+}
+
+/* Chữ trên nền blush (trạng thái đến hạn) luôn là nâu đậm — không theo dark mode */
+.on-blush {
+  color: #4a3b2c;
+}
+
+/* Nhãn sáng/tối riêng của bối cảnh trong phòng (mặt trời/mặt trăng, …) */
+.room-only-light {
+  transition: opacity 0.45s ease;
+}
+.room-only-dark {
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+.dark .room-only-dark {
+  opacity: 1;
+}
+.dark .room-only-light {
+  opacity: 0;
+}
+
+/* Đèn ấm chỉ rực lên vào buổi tối (dark mode) */
+.lamp-glow {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.dark .lamp-glow {
+  opacity: 0.55;
+}
+
+/* ======================================================================
+   Vỏ app trong thế giới phòng (M2): các chi tiết động của shell cũ
+   (vệt chuyển trang brand xanh–tím, vạch nav-pill, quầng spotlight,
+   menu dropdown) được lọc màu về da phòng — scope .room-world, các
+   trang/khu khác vẫn dùng giá trị cũ.
+   ====================================================================== */
+
+/* Vệt sáng ngang mỗi lần đổi mục → chấm Acorn chạy dọc mép trên */
+.room-world .route-beam {
+  background: linear-gradient(90deg, rgb(var(--room-acorn)), rgb(var(--room-oat)) 62%, rgb(var(--room-bell)));
+  box-shadow: 0 0 12px rgb(var(--room-acorn) / 0.55), 0 0 24px rgb(var(--room-acorn) / 0.25);
+}
+
+/* Vạch nav-pill (sidebar + bottom nav) trong phòng: nét móc Acorn nhỏ */
+.room-world .nav-pill-beam {
+  background: rgb(var(--room-acorn));
+  box-shadow: 0 0 10px rgb(var(--room-acorn) / 0.4), 0 0 20px rgb(var(--room-bell) / 0.3);
+}
+
+/* Thanh chỉ mục trong phòng định vị lại ngay (không trượt 0.5s): sàn craft
+   chỉ giữ MỘT chuyển động riêng (quầng `room-due-glow`); trượt cũng là nguồn
+   khung giữa chuyến khi capture/reflow đo lại vị trí. */
+.room-world .nav-pill {
+  transition: opacity 0.3s ease;
+}
+
+/* Spotlight thẻ task trong phòng: ánh đèn ấm, không tím–xanh */
+.room-world [data-spotlight]::before {
+  background: radial-gradient(
+    220px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(var(--room-acorn) / 0.10),
+    transparent 72%
+  );
+}
+.dark .room-world [data-spotlight]::before {
+  background: radial-gradient(
+    240px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(var(--room-acorn) / 0.16),
+    transparent 74%
+  );
+}
+
+/* Dropdown menu (Header) trong phòng: chữ Ink, hover chạm Acorn; lớp quét
+   dưới chân đổi thành màng Oat phẳng thay brand-gradient */
+.room-world .menu-item {
+  @apply text-room-ink;
+}
+.room-world .menu-item:hover,
+.room-world .menu-item:focus-visible {
+  @apply text-room-acorn;
+}
+.room-world .menu-item::before {
+  background: linear-gradient(100deg, rgb(var(--room-oat) / 0.75), rgb(var(--room-oat) / 0.3));
+}
+.dark .room-world .menu-item {
+  @apply text-room-ink;
+}

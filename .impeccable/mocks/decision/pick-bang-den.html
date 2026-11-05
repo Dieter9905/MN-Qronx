@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="UTF-8">
+<style>
+* { box-sizing: border-box; margin: 0; }
+body { width: 1440px; height: 900px; background: #6B4A2F; padding: 20px; }
+.board {
+  width: 100%; height: 100%;
+  background:
+    radial-gradient(1200px 500px at 30% -10%, rgba(244,239,227,.06), transparent 60%),
+    radial-gradient(800px 420px at 85% 110%, rgba(228,87,46,.05), transparent 55%),
+    linear-gradient(160deg, #24352E 0%, #1D2B25 60%, #16221D 100%);
+  border: 6px solid #4A3016;
+  box-shadow: inset 0 0 90px rgba(0,0,0,.35);
+  padding: 36px 66px 26px;
+  display: flex; flex-direction: column;
+}
+.nav { display: flex; justify-content: space-between; align-items: center; color: rgba(244,239,227,.85); }
+.logo { font: 700 30px/1 'Segoe Print', cursive; }
+.links { display: flex; gap: 30px; font-size: 17px; opacity: .8; align-items: center; }
+.pill { border: 2px solid rgba(244,239,227,.7); padding: 8px 18px; border-radius: 999px; }
+.headline { font: 700 72px/1.12 'Segoe Print', 'Segoe Script', cursive; color: #F4EFE3; margin: 42px 0 6px; }
+.lines { margin-top: 24px; display: flex; flex-direction: column; gap: 18px; font: 500 31px/1.2 'Segoe Print', cursive; color: rgba(244,239,227,.94); }
+.late { color: #FF8A6F; border-bottom: 3px solid rgba(255,138,111,.75); width: max-content; }
+.done { opacity: .42; text-decoration: line-through; text-decoration-thickness: 2px; }
+.cta {
+  align-self: flex-end; transform: rotate(-2deg);
+  border: 5px double rgba(255,138,111,.92);
+  border-radius: 50% 44% 52% 46% / 58% 50% 55% 47%;
+  padding: 16px 46px 22px;
+  font: 700 38px/1.15 'Segoe Print', cursive; color: #F4EFE3;
+  margin-top: auto;
+}
+.tray { height: 16px; border-radius: 6px; background: linear-gradient(180deg, #8A6A43, #6E5030); margin-top: 22px; position: relative; }
+.tray i { position: absolute; top: -7px; width: 54px; height: 9px; border-radius: 4px; }
+.tray i:nth-child(1) { left: 12%; background: #F4EFE3; }
+.tray i:nth-child(2) { left: 55%; background: #E4572E; }
+.tray i:nth-child(3) { left: 70%; background: #F2C744; }
+</style></head>
+<body>
+ <div class="board">
+  <div class="nav">
+    <span class="logo">mn-qronx</span>
+    <div class="links"><span>Tính năng</span><span>Bảng giá</span><span>Đăng nhập</span><span class="pill">Dùng thử</span></div>
+  </div>
+  <div class="headline">Hôm nay còn 3 việc đến hạn.</div>
+  <div class="lines">
+    <div class="late">17:00 — nộp báo cáo tiến độ tốt nghiệp</div>
+    <div>18:30 — sinh hoạt lớp SHCN206</div>
+    <div>22:00 — ôn chương 5, 25 phút</div>
+    <div class="done">10:30 — gửi bản nháp báo cáo nhóm</div>
+  </div>
+  <div class="cta">Đặt báo thức<br>cho việc này →</div>
+  <div class="tray"><i></i><i></i><i></i></div>
+ </div>
+</body></html>

@@ -30,6 +30,9 @@ export default function BottomNav() {
       }
       const gridRect = grid.getBoundingClientRect()
       const rect = active.getBoundingClientRect()
+      // Phép đo khi bề mặt bị sập (capture/chuyển tab, mọi rect về 0) → bỏ qua,
+      // tránh vẽ vệt sáng về góc (0,0) trong một nốt reflow.
+      if (!rect.width || !rect.height || !gridRect.width) return
       setPill({
         left: rect.left - gridRect.left,
         top: rect.top - gridRect.top + 6,
@@ -51,14 +54,14 @@ export default function BottomNav() {
   return (
     <nav
       aria-label="Điều hướng dưới cùng"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-navy-100 bg-white pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-slate-700 dark:bg-slate-900 lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-room-acorn/15 bg-room-paper pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       <div ref={gridRef} className="relative grid h-16 grid-cols-5 items-center px-2">
         {/* Vệt sáng trượt theo mục đang mở */}
         {pill && (
           <span
             aria-hidden="true"
-            className="nav-pill pointer-events-none absolute rounded-xl bg-brand-gradient-soft dark:bg-white/5"
+            className="nav-pill pointer-events-none absolute rounded-xl bg-room-oat ring-1 ring-room-acorn/20"
             style={{ left: pill.left, top: pill.top, width: pill.width, height: pill.height }}
           >
             <span className="nav-pill-beam absolute -top-1.5 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full" />
@@ -73,9 +76,8 @@ export default function BottomNav() {
           <Link
             to="/app/tasks/new"
             aria-label="Tạo công việc mới"
-            className="group absolute -top-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-gradient text-white shadow-glow-purple transition-all duration-300 hover:-translate-y-1 hover:rotate-90 hover:shadow-xl active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="group absolute -top-6 flex h-14 w-14 items-center justify-center rounded-full bg-room-acorn text-room-paper shadow-[0_14px_26px_-12px_rgb(0_0_0/0.30)] ring-4 ring-room-paper transition-all duration-200 hover:-translate-y-0.5 hover:brightness-[0.96] active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-room-acorn"
           >
-            <span className="absolute inset-0 -z-10 rounded-2xl bg-brand-gradient opacity-60 blur-md transition-opacity duration-300 group-hover:opacity-90" />
             <Plus size={26} weight="bold" />
           </Link>
         </div>
@@ -96,11 +98,11 @@ function BottomNavItem({ to, label, icon: Icon, end, active }) {
       data-nav-active={active}
       className={({ isActive }) =>
         [
-          'group relative z-10 flex flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 text-[10px] font-semibold transition-all duration-300',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+          'group relative z-10 flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 text-[10px] font-bold transition-colors duration-200',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-room-acorn',
           isActive
-            ? 'text-blue-600 dark:text-blue-400'
-            : 'text-navy-400 hover:-translate-y-0.5 hover:text-navy-700 dark:text-slate-500 dark:hover:text-white',
+            ? 'text-room-acorn'
+            : 'text-room-ink/50 hover:text-room-ink',
         ].join(' ')
       }
     >
@@ -108,8 +110,8 @@ function BottomNavItem({ to, label, icon: Icon, end, active }) {
         <>
           <Icon
             size={22}
-            weight={isActive ? 'fill' : 'regular'}
-            className={isActive ? 'nav-icon-active' : 'transition-transform duration-300 group-hover:scale-110'}
+            weight={isActive ? 'bold' : 'regular'}
+            className="transition-transform duration-300 group-hover:scale-105"
           />
           {label}
         </>

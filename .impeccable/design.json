@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-05T04:15:00Z",
+  "title": "Design System: MN-Qronx — Phòng mini-hompy",
+  "extensions": {
+    "colorMeta": {
+      "porcelain": { "role": "neutral", "displayName": "Porcelain", "canonical": "rgb(var(--room-paper) / <alpha>) = 255 246 236; .dark = 43 35 30 (#2B231E)", "tonalRamp": ["#0d0b08", "#272320", "#443f39", "#645c54", "#877f76", "#b2a9a0", "#dad3cc", "#f2eee9"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "rgb(var(--room-ink) / <alpha>) = 74 59 44; .dark = 233 222 208", "tonalRamp": ["#100a05", "#29231c", "#493d32", "#6a5a4a", "#8e7d6c", "#b9a796", "#e0d2c4", "#f6ede3"] },
+      "acorn": { "role": "primary", "displayName": "Acorn", "canonical": "rgb(var(--room-acorn) / <alpha>) = 139 111 78; .dark = 199 168 133", "tonalRamp": ["#130901", "#2d2214", "#4f3c25", "#735838", "#977b59", "#c3a582", "#e7d0b5", "#fcecda"] },
+      "oat": { "role": "neutral", "displayName": "Oat", "canonical": "rgb(var(--room-oat) / <alpha>) = 234 220 199; .dark = 62 52 43", "tonalRamp": ["#0f0a05", "#28231b", "#473e32", "#685c49", "#8b7e6b", "#b6a995", "#ddd3c3", "#f4ede3"] },
+      "moss": { "role": "neutral", "displayName": "Moss", "canonical": "rgb(var(--room-moss) / <alpha>) = 220 232 223; .dark = 55 69 58", "tonalRamp": ["#080c09", "#212522", "#3b423c", "#566159", "#79837b", "#a3aea6", "#ced7d0", "#eaf0ec"] },
+      "sage": { "role": "neutral", "displayName": "Sage", "canonical": "rgb(var(--room-sage) / <alpha>) = 169 196 177; .dark = 97 124 104", "tonalRamp": ["#050e08", "#1d2720", "#334539", "#4c6454", "#6e8876", "#98b3a0", "#c6dacc", "#e5f3e9"] },
+      "rain": { "role": "neutral", "displayName": "Rain", "canonical": "rgb(var(--room-rain) / <alpha>) = 183 199 214; .dark = 116 132 148", "tonalRamp": ["#070c11", "#1f252a", "#37414a", "#515f6d", "#738290", "#9dadbc", "#cad6e1", "#e7f0f7"] },
+      "sky": { "role": "neutral", "displayName": "Sky", "canonical": "rgb(var(--room-sky) / <alpha>) = 185 202 218; .dark = 40 50 68", "tonalRamp": ["#070c11", "#1e252b", "#37414b", "#51606d", "#738291", "#9dadbd", "#c9d6e2", "#e7f0f8"] },
+      "blush": { "role": "tertiary", "displayName": "Blush (due-only)", "canonical": "rgb(var(--room-blush) / <alpha>) = 245 201 207; .dark = 243 183 190", "tonalRamp": ["#140709", "#2f1f21", "#52373b", "#775258", "#9c747a", "#c89ea4", "#eccbcf", "#ffe8eb"] },
+      "bell": { "role": "secondary", "displayName": "Bell gold", "canonical": "rgb(var(--room-bell) / <alpha>) = 226 176 92; .dark = 232 191 118", "tonalRamp": ["#180600", "#332000", "#583900", "#815300", "#a67618", "#d3a14d", "#f4ce92", "#ffebc3"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero + section headings in Baloo 2; sits at 400 — the face is round-heavy by construction. Second heading line is Acorn." },
+      "headline": { "displayName": "Headline", "purpose": "Section titles 1.875–2.25rem, Baloo 2 400, leading tight, text-balance." },
+      "title": { "displayName": "Title", "purpose": "Card, drawer, rail titles; Baloo 2 700 at 15px." },
+      "body": { "displayName": "Body", "purpose": "All reading copy in Nunito; 15px sections / 13px cards, leading relaxed, max-w-md hero prose. The auth gate adds the field-copy scale: 13px bold labels, 12px bold errors / semibold hints, 14px input text." },
+      "label": { "displayName": "Label", "purpose": "Pill vocabulary: MẪU/DEMO chips, toggles, nameplates — Nunito 900 at 11px with tracking." },
+      "utility": { "displayName": "Utility", "purpose": "Validate-at-ship micro steps of the M2 shell & dashboard (20 advisory findings, all recorded intentional): 10px chips (Pro/PLAN_BADGE/lang/BottomNav/WorkspaceSwitcher/SupportBadge labels), 12–12.5px annotation copy, 13px paper-pill buttons and the welcome sub-line, 2rem Baloo streak figure. Only for secondary labels and data figures; never headings. The #7c8cff fallback dot (TodayBrief lesson color) stays from the original build, outside the room token set." }
+    },
+    "shadows": [
+      { "name": "raised-action", "value": "0 14px 26px -12px rgb(0 0 0 / 0.30)", "purpose": "Paper weight under primary Acorn pills (CTAs); nav-scope tighter variant 0 8px 18px -8px / 0.30." },
+      { "name": "floating-card", "value": "0 14px 30px -18px rgb(0 0 0 / 0.25)", "purpose": "Float under the taped task card and rail furniture." },
+      { "name": "nav-weight", "value": "0 12px 28px -18px rgb(0 0 0 / 0.35)", "purpose": "Lift for the floating pill nav (plus ring shadow 1px Acorn/30)." },
+      { "name": "pin-shadow", "value": "0 3px 6px rgb(0 0 0 / 0.28)", "purpose": "Hand-set weight under wooden clothesline pins only." },
+      { "name": "due-blush-glow", "value": "radial-gradient(circle, rgba(245,201,207,0.9) 0%, rgba(245,201,207,0.35) 60%, transparent 100%)", "purpose": "Diegetic breathing light of the due item (roomGlowPulse 2.6s) — the only glow in light mode." },
+      { "name": "lamp-warm", "value": "radial-gradient(circle, rgba(238,203,138,0.85) 0%, rgba(238,203,138,0.3) 55%, transparent 100%); opacity 0 → 0.55 in .dark", "purpose": "Evening lamp light (dark-only, 0.6s fade); never shown in light mode. The auth wall re-draws the same #EECB8A constant as a flatter wash: rgb(238 203 138 / 0.5) 0% → 0.15 55% through the same 0.55 veil." },
+      { "name": "field-focus-halo", "value": "0 0 0 4px rgb(var(--room-acorn) / 0.12) beneath the inset ring deepened to 2px rgb(var(--room-acorn)); field lifts translateY(-1px)", "purpose": "Focus response of room form fields — exists only while the field is focused; never a resting shadow." }
+    ],
+    "motion": [
+      { "name": "ease-out-soft", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "House easing for all transitions, reveals, and pops." },
+      { "name": "reveal-rise", "value": "opacity 0→1, translateY(30px) scale(0.97)→0/1, 0.8s both; IntersectionObserver threshold 0.15, fires once", "purpose": "Scroll reveal of sections and rails." },
+      { "name": "hover-lift", "value": "translateY(-2px), 200ms ease-out-soft", "purpose": "Raised actions lift on hover; the world stays otherwise still." },
+      { "name": "due-glow-pulse", "value": "opacity 0.85 ↔ 0.45, 2.6s ease-in-out infinite", "purpose": "Breathing of the Blush due-light around the lit task." },
+      { "name": "bell-swing", "value": "rotate -12° ↔ 12°, 0.9s ease-in-out infinite (fill-box, origin 50% 95%)", "purpose": "Desk bell shake while the demo circuit rings." },
+      { "name": "toast-pop", "value": "opacity 0→1, translateY(8px) scale(0.9)→none, 0.4s ease-out-soft both", "purpose": "The (mẫu) confirmation appears beside the ringing bell." },
+      { "name": "theme-crossfade", "value": "background-color 300ms; room-only layers 450ms; lamp 600ms", "purpose": "Day/night regrade of the room." },
+      { "name": "control-shift", "value": "all properties 200ms cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Tailwind-native state ramp of RoomUI controls (field ring/halo, pill brightness and translate) — quick mechanical feedback, distinct from the house reveal easing." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Acorn Pill",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The world's one loud action: Acorn pill, Porcelain text, Baloo 2 bold, paper weight; lifts 2px and deepens on hover (bg α .95 on the landing pill, brightness .96 on the RoomUI pill); loading swaps a spinner in and self-disables, disabled drops to 60% opacity with no shadow.",
+      "html": "<button class=\"ds-btn-primary\">Bắt đầu phòng của mình <svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 6l6 6-6 6\"/></svg></button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:8px;background:rgb(var(--room-acorn));color:rgb(var(--room-paper));border:none;border-radius:999px;padding:12px 24px;font-family:'Baloo 2','Nunito',sans-serif;font-size:15px;font-weight:700;line-height:1.25;cursor:pointer;box-shadow:0 14px 26px -12px rgb(0 0 0 / 0.30);transition:transform .2s cubic-bezier(0.16,1,0.3,1),background .2s ease;}.ds-btn-primary:hover{transform:translateY(-2px);background:rgb(var(--room-acorn) / 0.95);filter:brightness(0.96);}.ds-btn-primary:active{transform:translateY(0);}.ds-btn-primary:focus-visible{outline:2px dashed rgb(var(--room-acorn) / 0.6);outline-offset:3px;}.ds-btn-primary:disabled{opacity:.6;box-shadow:none;cursor:not-allowed;}"
+    },
+    {
+      "name": "Secondary Paper Pill",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quiet companion: paper pill with an Acorn/40 hairline; hover fills Oat/60.",
+      "html": "<button class=\"ds-btn-secondary\">Xem tính năng</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;gap:8px;background:transparent;color:rgb(var(--room-ink));border:none;border-radius:999px;padding:12px 20px;font-family:'Baloo 2','Nunito',sans-serif;font-size:15px;font-weight:700;line-height:1.25;cursor:pointer;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.4);transition:background .2s ease,padding .2s;font-family:'Baloo 2','Nunito',sans-serif;}.ds-btn-secondary:hover{background:rgb(var(--room-oat) / 0.6);}.ds-btn-secondary:focus-visible{outline:2px dashed rgb(var(--room-acorn) / 0.6);outline-offset:3px;}"
+    },
+    {
+      "name": "MẪU / DEMO Chip",
+      "kind": "chip",
+      "refersTo": "chip-demo",
+      "description": "The honesty chip: Blush pill with baked-in Ink text; attaches to every fabricated number.",
+      "html": "<span class=\"ds-chip-demo\">MẪU</span>",
+      "css": ".ds-chip-demo{display:inline-flex;background:rgb(var(--room-blush));color:#4a3b2c;border-radius:999px;padding:2px 8px;font-family:'Nunito','Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:900;line-height:1.35;letter-spacing:0.1em;}"
+    },
+    {
+      "name": "Round Theme Toggle",
+      "kind": "button",
+      "refersTo": "nav-bar",
+      "description": "36px Moss action tile with Acorn/25 ring; single-stroke icon at weight bold.",
+      "html": "<button class=\"ds-btn-toggle\" aria-label=\"Chế độ tối\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z\"/></svg></button>",
+      "css": ".ds-btn-toggle{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:999px;border:none;cursor:pointer;background:rgb(var(--room-moss) / 0.7);color:rgb(var(--room-ink));box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);transition:background .2s ease;}.ds-btn-toggle:hover{background:rgb(var(--room-moss));}.ds-btn-toggle:focus-visible{outline:2px dashed rgb(var(--room-acorn) / 0.6);outline-offset:3px;}"
+    },
+    {
+      "name": "Taped Rail Card",
+      "kind": "card",
+      "refersTo": "card-rail",
+      "description": "Rail furniture: Porcelain/80 card, Acorn hairline, angled tape strip on the top edge, Moss icon tile, Baloo 2 figure, MẪU chip. The auth wall re-settles the same build chip-free (no demo data there): paper/85 fill, 32px icon tile, 15px Baloo 2 title, 13px Ink/70 note, tape Oat/90 turned −5°.",
+      "html": "<div class=\"ds-card-rail\"><div class=\"ds-card-rail-head\"><span class=\"ds-card-rail-ico\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 4a5 5 0 0 1 5 5v3l1.5 2.5h-13L7 12V9a5 5 0 0 1 5-5z\"/><path d=\"M10 19a2 2 0 0 0 4 0\"/></svg></span><h3>Chuông đổ đúng hạn</h3></div><div class=\"ds-card-rail-row\"><b>1.284</b><span class=\"ds-chip-demo\">MẪU</span></div><p class=\"ds-card-rail-note\">chuông đổ đúng hạn năm nay</p></div>",
+      "css": ".ds-card-rail{position:relative;background:rgb(var(--room-paper) / 0.8);color:rgb(var(--room-ink));border-radius:16px;padding:16px;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25),0 14px 30px -18px rgb(0 0 0 / 0.25);font-family:'Nunito','Plus Jakarta Sans',sans-serif;}.ds-card-rail::before{content:'';position:absolute;top:-8px;left:24px;width:56px;height:12px;border-radius:3px;transform:rotate(-3deg);background:rgb(var(--room-oat) / 0.9);box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-card-rail-head{display:flex;align-items:center;gap:10px;}.ds-card-rail-ico{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:rgb(var(--room-moss));color:rgb(var(--room-ink));box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-card-rail-head h3{margin:0;font-family:'Baloo 2','Nunito',sans-serif;font-size:15px;font-weight:700;}.ds-card-rail-row{display:flex;align-items:flex-end;gap:8px;margin-top:8px;}.ds-card-rail-row b{font-family:'Baloo 2','Nunito',sans-serif;font-size:30px;font-weight:700;line-height:1;}.ds-card-rail-note{margin:6px 0 0;font-size:12px;font-weight:600;color:rgb(var(--room-ink) / 0.65);}.ds-chip-demo{display:inline-flex;background:rgb(var(--room-blush));color:#4a3b2c;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:900;line-height:1.35;letter-spacing:0.1em;}"
+    },
+    {
+      "name": "Feature Drawer",
+      "kind": "card",
+      "refersTo": "card-drawer",
+      "description": "One drawer of the cabinet: Moss/55 field, wooden knob + icon tile, 15px Baloo 2 title, 13px body.",
+      "html": "<article class=\"ds-drawer\"><div class=\"ds-drawer-top\"><span class=\"ds-drawer-knob\" aria-hidden=\"true\"></span><span class=\"ds-drawer-ico\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 5v14M5 12h14\"/></svg></span><h3>Quản lý công việc linh hoạt</h3></div><p class=\"ds-drawer-desc\">Tạo công việc kèm danh mục, mức ưu tiên, việc con và thời hạn.</p></article>",
+      "css": ".ds-drawer{background:rgb(var(--room-moss) / 0.55);color:rgb(var(--room-ink));border-radius:16px;padding:20px;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);font-family:'Nunito','Plus Jakarta Sans',sans-serif;}.ds-drawer-top{display:flex;align-items:center;gap:12px;}.ds-drawer-knob{display:grid;place-items:center;flex:0 0 auto;width:28px;height:28px;border-radius:999px;background:rgb(var(--room-paper));box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.35);}.ds-drawer-knob::after{content:'';width:8px;height:8px;border-radius:999px;background:rgb(var(--room-acorn) / 0.7);}.ds-drawer-ico{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:32px;height:32px;border-radius:12px;background:rgb(var(--room-paper) / 0.8);color:rgb(var(--room-acorn));box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.3);}.ds-drawer-top h3{margin:0;font-family:'Baloo 2','Nunito',sans-serif;font-size:15px;font-weight:700;line-height:1.25;}.ds-drawer-desc{margin:12px 0 0;font-size:13px;line-height:1.625;color:rgb(var(--room-ink) / 0.75);}"
+    },
+    {
+      "name": "Floating Nav Pill",
+      "kind": "nav",
+      "refersTo": "nav-bar",
+      "description": "Floating pill nav: Porcelain/95 bar, Acorn/30 ring ring, wordmark, hover pills, Moss tiles, nested mini CTA.",
+      "html": "<nav class=\"ds-nav\"><span class=\"ds-nav-logo\">MN-<b>Q</b>ronx</span><div class=\"ds-nav-links\"><a href=\"#\" class=\"ds-nav-link\">Tính năng</a><a href=\"#\" class=\"ds-nav-link\">Bảng giá</a></div><span class=\"ds-btn-toggle ds-nav-tile\" aria-hidden=\"true\"></span><a href=\"#\" class=\"ds-nav-cta\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 11l8-7 8 7v9h-6v-6h-4v6H5a1 1 0 0 1-1-1z\"/></svg>Vào ứng dụng</a></nav>",
+      "css": ".ds-nav{display:inline-flex;align-items:center;gap:6px;padding:8px 8px 8px 12px;border-radius:999px;background:rgb(var(--room-paper) / 0.95);box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.30),0 12px 28px -18px rgb(0 0 0 / 0.35);font-family:'Nunito','Plus Jakarta Sans',sans-serif;}.ds-nav-logo{font-family:'Baloo 2','Nunito',sans-serif;font-size:20px;font-weight:700;color:rgb(var(--room-ink));padding-left:4px;}.ds-nav-logo b{color:rgb(var(--room-acorn));font-weight:700;}.ds-nav-links{display:inline-flex;gap:2px;}.ds-nav-link{display:inline-block;border-radius:999px;padding:6px 12px;font-size:14px;font-weight:700;color:rgb(var(--room-ink) / 0.75);text-decoration:none;transition:background .2s,color .2s;}.ds-nav-link:hover{background:rgb(var(--room-oat) / 0.6);color:rgb(var(--room-ink));}.ds-nav-link:focus-visible{outline:2px dashed rgb(var(--room-acorn) / 0.6);outline-offset:3px;}.ds-nav-tile{display:none;}.ds-nav-cta{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:rgb(var(--room-acorn));color:rgb(var(--room-paper));padding:9px 16px;font-family:'Baloo 2','Nunito',sans-serif;font-size:14px;font-weight:700;text-decoration:none;box-shadow:0 8px 18px -8px rgb(0 0 0 / 0.3);transition:transform .2s cubic-bezier(0.16,1,0.3,1);}.ds-nav-cta:hover{transform:translateY(-2px);}"
+    },
+    {
+      "name": "Demo Toast",
+      "kind": "custom",
+      "refersTo": "toast",
+      "description": "Ink pill confirmation over the room scene; pops once and lives only while the bell rings.",
+      "html": "<div class=\"ds-toast\">Đã hẹn · 17:30 hôm nay (mẫu)</div>",
+      "css": ".ds-toast{display:inline-block;background:rgb(var(--room-ink));color:rgb(var(--room-paper));border-radius:999px;padding:6px 12px;font-family:'Nunito','Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;line-height:1.35;box-shadow:0 10px 24px -12px rgb(0 0 0 / 0.4);animation:dsToastPop .4s cubic-bezier(0.16,1,0.3,1) both;}@keyframes dsToastPop{from{opacity:0;transform:translateY(8px) scale(0.9);}to{opacity:1;transform:none;}}"
+    },
+    {
+      "name": "Dotted Seam",
+      "kind": "custom",
+      "refersTo": "components",
+      "description": "The world's dotted grammar, one device at three orientations: the 16px-rhythmed section seam, the \"Hoặc\" leader (same dots at α 0.65, full-width flex line) and the auth wall's vertical cord (dots in a 3×16px column).",
+      "html": "<div class=\"ds-dot-divider\" aria-hidden=\"true\"></div><div class=\"ds-dot-leader\" aria-hidden=\"true\"></div><div class=\"ds-dot-cord\" aria-hidden=\"true\"></div>",
+      "css": ".ds-dot-divider{height:3px;max-width:1024px;margin:8px auto;border-radius:999px;background-image:radial-gradient(rgb(var(--room-acorn) / 0.5) 1.6px,transparent 1.7px);background-size:16px 3px;background-position:center;background-repeat:repeat-x;}.ds-dot-leader{height:3px;flex:1;border-radius:999px;background-image:radial-gradient(rgb(var(--room-acorn) / 0.65) 1.6px,transparent 1.7px);background-size:16px 3px;background-position:center;background-repeat:repeat-x;}.ds-dot-cord{width:3px;height:120px;opacity:.8;background-image:radial-gradient(rgb(var(--room-acorn) / 0.5) 1.6px,transparent 1.7px);background-size:3px 16px;background-position:center;background-repeat:repeat-y;}"
+    },
+    {
+      "name": "Floating Task Card (demo)",
+      "kind": "card",
+      "refersTo": "button-primary",
+      "description": "The page's one memorable moment in card form: taped-angle paper card with MẪU chip, real alarm time, and the live 'Đặt báo thức' circuit trigger.",
+      "html": "<div class=\"ds-task-card\"><div class=\"ds-task-top\"><span class=\"ds-chip-demo\">MẪU</span><span class=\"ds-task-time\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/></svg>Hôm nay · 17:30</span></div><p class=\"ds-task-title\">Nộp báo cáo tuần cho nhóm</p><button class=\"ds-task-btn\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 4a5 5 0 0 1 5 5v3l1.5 2.5h-13L7 12V9a5 5 0 0 1 5-5z\"/><path d=\"M10 19a2 2 0 0 0 4 0\"/></svg>Đặt báo thức</button></div>",
+      "css": ".ds-task-card{position:relative;width:224px;padding:12px;border-radius:16px;background:rgb(var(--room-paper));box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.35),0 14px 30px -18px rgb(0 0 0 / 0.25);transform:rotate(-2deg);font-family:'Nunito','Plus Jakarta Sans',sans-serif;}.ds-task-top{display:flex;align-items:center;gap:8px;}.ds-task-time{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:rgb(var(--room-ink) / 0.7);}.ds-task-title{margin:6px 0 0;font-family:'Baloo 2','Nunito',sans-serif;font-size:14px;font-weight:700;line-height:1.375;color:rgb(var(--room-ink));}.ds-task-btn{display:flex;width:100%;align-items:center;justify-content:center;gap:8px;margin-top:10px;border:none;border-radius:999px;background:rgb(var(--room-acorn));color:rgb(var(--room-paper));padding:8px 12px;font-family:'Baloo 2','Nunito',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .2s ease;}.ds-task-btn:hover{background:rgb(var(--room-acorn) / 0.9);}.ds-task-btn:disabled{opacity:0.7;cursor:not-allowed;}.ds-task-btn:focus-visible{outline:2px dashed rgb(var(--room-acorn) / 0.6);outline-offset:3px;}.ds-chip-demo{display:inline-flex;background:rgb(var(--room-blush));color:#4a3b2c;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:900;line-height:1.35;letter-spacing:0.1em;}"
+    },
+    {
+      "name": "Room Field",
+      "kind": "input",
+      "refersTo": "input-room",
+      "description": "The guest-form skin: 44px paper tile, Acorn/25 hairline, Acorn halo on focus, Rain ring when invalid (through hover and focus), Oat/40 asleep when disabled — one ramp for every field.",
+      "html": "<div class=\"ds-room-field\"><label class=\"ds-room-label\" for=\"ds-room-email\">Email<span aria-hidden=\"true\">*</span></label><div class=\"ds-room-wrap\"><svg class=\"ds-room-ico\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M3 7l9 6 9-6\"/></svg><input id=\"ds-room-email\" class=\"ds-room-input\" type=\"email\" placeholder=\"ban@example.com\" autocomplete=\"email\"></div><p class=\"ds-room-hint\">Mã gồm 6 chữ số, gửi tới email của bạn</p></div>",
+      "css": ".ds-room-field{font-family:'Nunito','Plus Jakarta Sans',sans-serif;max-width:360px;}.ds-room-label{display:block;margin-bottom:6px;font-size:13px;font-weight:700;color:rgb(var(--room-ink));}.ds-room-label span{margin-left:2px;color:rgb(var(--room-acorn));}.ds-room-wrap{position:relative;}.ds-room-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgb(var(--room-ink) / 0.35);}.ds-room-input{width:100%;height:44px;padding:0 14px;border:none;border-radius:12px;background:rgb(var(--room-paper));color:rgb(var(--room-ink));font-family:inherit;font-size:14px;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);transition:all 200ms cubic-bezier(0.4, 0, 0.2, 1);}.ds-room-input::placeholder{color:rgb(var(--room-ink) / 0.3);}.ds-room-input:hover{box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.45);}.ds-room-input:focus-visible{outline:none;transform:translateY(-1px);box-shadow:inset 0 0 0 2px rgb(var(--room-acorn)),0 0 0 4px rgb(var(--room-acorn) / 0.12);}.ds-room-input.ds-room-invalid,.ds-room-input.ds-room-invalid:hover{box-shadow:inset 0 0 0 1px rgb(var(--room-rain));}.ds-room-input.ds-room-invalid:focus-visible{transform:translateY(-1px);box-shadow:inset 0 0 0 2px rgb(var(--room-rain)),0 0 0 4px rgb(var(--room-acorn) / 0.12);}.ds-room-input:disabled{background:rgb(var(--room-oat) / 0.4);color:rgb(var(--room-ink) / 0.4);cursor:not-allowed;}.ds-room-hint{margin:6px 0 0;font-size:12px;font-weight:600;color:rgb(var(--room-ink) / 0.6);}.ds-room-error{margin:6px 0 0;font-size:12px;font-weight:700;color:rgb(var(--room-ink));}"
+    },
+    {
+      "name": "Room Status Panels",
+      "kind": "custom",
+      "refersTo": "panel-error",
+      "description": "Form feedback told as weather: error on Rain/30, success on Sage/45, dev-code note on Moss/70 — all under one Acorn/25 hairline, Ink copy, no rose, no red, no emoji.",
+      "html": "<div class=\"ds-panel ds-panel-error\" role=\"alert\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 8v5\"/><path d=\"M12 16h.01\"/></svg><span>Đăng nhập bằng Google thất bại. Vui lòng thử lại.</span></div><div class=\"ds-panel ds-panel-success\" role=\"status\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M8.5 12.5l2.5 2.5 4.5-5\"/></svg><span>Mật khẩu của bạn đã được cập nhật. Hãy đăng nhập để tiếp tục.</span></div><div class=\"ds-panel ds-panel-note\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.8c.7.5 1 1.3 1 2.2h5a2.9 2.9 0 0 1 1-2.2A6 6 0 0 0 12 3z\"/></svg><span>Chưa gửi được email – mã xác nhận của bạn là <b>123456</b></span></div>",
+      "css": ".ds-panel{display:flex;align-items:flex-start;gap:10px;border-radius:16px;font-family:'Nunito','Plus Jakarta Sans',sans-serif;color:rgb(var(--room-ink));}.ds-panel svg{flex:0 0 auto;margin-top:2px;}.ds-panel-error{background:rgb(var(--room-rain) / 0.3);padding:14px;font-size:14px;font-weight:700;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-panel-success{background:rgb(var(--room-sage) / 0.45);padding:20px;font-size:14px;font-weight:700;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);margin-top:12px;}.ds-panel-note{background:rgb(var(--room-moss) / 0.7);padding:12px 16px;font-size:13px;font-weight:600;line-height:1.625;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);margin-top:12px;}.ds-panel-note svg{color:rgb(var(--room-acorn));}.ds-panel-note b{letter-spacing:0.1em;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Furnished On-Time Room (Phòng mini-hompy)",
+    "overview": "MN-Qronx's landing world refuses the default SaaS page — no gradient hero, no three equal feature cards, no cascading color words. Instead the homepage is your own room: a Porcelain-paper ground drawn in warm Acorn strokes, isometric furniture walls (moss, sage, oat) and a checkered floor. Every task is an object you place in the room; a due task is the object that lights up while the desk bell beside it swings and rings. Proof, not paint: the wall clock shows real time, \"today\" is the real date, and every fabricated number wears a Blush MẪU/DEMO chip. The room is scoped by the .room-world wrapper — walking into it swaps font family, selection color, focus ring, and scrollbar to the warm system; an older navy app shell still exists elsewhere and its tokens and glow/beam effects are forbidden inside room surfaces. Both themes are first-class: light is a sunny paper room, dark is the same room at evening with a warm lamp — never blue-black. Milestone 2 extends the world into the guest auth gate (AuthLayout + the RoomUI form skin — Login, Register, Forgot/Reset Password, the Google callback) and nothing bends: fields are 44px paper tiles with a hairline Acorn ring, the halved screen is still one continuous sheet of Porcelain split only by a dotted cord, and errors stay weather-cool — the world survives forms without growing a new voice.",
+    "keyCharacteristics": [
+      "Porcelain paper ground; every seam, stroke, and action is drawn with a warm Acorn pen.",
+      "Blush is a state color, not decoration: it marks only the due moment (lit task, its glow, MẪU chips).",
+      "Dark mode is a warm evening room (#2B231E paper) lit by a diegetic lamp glow.",
+      "Sections breathe on dotted seams (.dot-divider); cards are flat paper with hairline Acorn rings.",
+      "Forms wear the landing's skin (RoomUI): every text-entry hit-area is 44px tall and errors publish as bold Ink text, never a new red.",
+      "Faults are neutral weather: invalid fields and error panels are Rain — no rose, no red; the due state keeps its color-alarm monopoly.",
+      "Baloo 2 (display) + Nunito (body), self-hosted variable fonts with preloads.",
+      "Furnishings are flat sticker-props on an isometric floor; the room scene is the world's one authored illustration.",
+      "One authored motion: the demo bell circuit (task lights → bell swings → \"(mẫu)\" toast). Everything else is quiet reveals and ≤2px hover lifts.",
+      "Product truth is a design rule: real clock, real date, labeled demo numbers, unchanged routes (/ /app /login /register /pricing, anchors #tinh-nang #cach-hoat-dong #gioi-thieu #lien-he)."
+    ],
+    "rules": [
+      { "name": "The Acorn-Pen Rule", "body": "One pen draws the world. Strokes, rings, seams, dividers, focus outlines, and scrollbars are all rgb(var(--room-acorn)) at varying alpha (0.15–0.9); furniture fields (Oat/Moss/Sage/Rain/Sky) are fills only and never draw outlines.", "section": "colors" },
+      { "name": "The Due-Only Blush Rule", "body": "Blush earns its space by meaning: on UI surfaces it marks the due state exclusively — the lit task, its breathing glow, and honest-demo MẪU chips. If a Blush element doesn't tell you something is due, it doesn't belong on app chrome.", "section": "colors" },
+      { "name": "The Warm-Night Rule", "body": "Dark mode is the same room at night: Porcelain turns to warm #2B231E, and the lamp (#EECB8A radial, .lamp-glow, dark-only) lights the desk. Never regrade this world onto navy, slate, or blue-black grounds.", "section": "colors" },
+      { "name": "The Round-Heavy Rule", "body": "Baloo 2 carries identity even resting at 400 — never letter-space-tighten it, never set headings in uppercase, and never substitute a system display face; Nunito alone carries reading copy.", "section": "typography" },
+      { "name": "The Dotted Seam Rule", "body": "Page sections part on the dotted seam — dot-divider (3px strip of spaced Acorn dots, 16px rhythm), echoed by peer dotted rules (list leaders, dotted underlines, dashed frames). Solid hairlines stay inside a single footer; they never replace the page's dotted doctrine.", "section": "layout" },
+      { "name": "The Host Rule", "body": "Every viewport names its host — the room in the hero, the cabinet in features, the clothesline in how-it-works — and all surrounding copy serves it. No equal-card wall outside the one waived cabinet shell (see Do's and Don'ts).", "section": "layout" },
+      { "name": "The Paper-Weight Rule", "body": "Surfaces are flat paper at rest; soft black diffuse shadows belong only under raised pills and floating taped cards (a touched field may flash the one focus halo — a response, not a resting shadow) — never colored, never drop-shadowed into \"3D card\" territory, and the only breathing glow is diegetic room light (Blush due-glow, night lamp).", "section": "elevation" },
+      { "name": "The Rain-Is-Neutral Rule", "body": "Rain handles error, pending and waiting as neutral weather: an invalid field rings Rain (rest, hover and focus alike), a server error sits on Rain/30 with a bold Ink sentence and a WarningCircle — no rose, no red, never a red field. Color alarm stays the exclusive property of the due state (Blush).", "section": "colors" },
+      { "name": "The Solid-Wordmark Rule", "body": "In room surfaces the logotype is plain token lettering — WorldLogo: Baloo 2 700, \"MN-\" Ink / \"Q\" Acorn / \"ronx\" Ink, solid color, no gradient and no glow; the gradient logotype stays quarantined in the old shell's Logo.jsx and never enters room surfaces.", "section": "typography" },
+      { "name": "The Doorway Rule", "body": "The auth gate is one room, not a second shell: no card-on-canvas, no glass — the split screen is drawn only by the vertical dotted cord (w-[3px], the same 1.6px dots in a 3×16px column at Acorn/50, wrapper at 80% opacity). Below lg there is no door at all: the form sits alone on the paper under a 30px logo.", "section": "layout" }
+    ],
+    "dos": [
+      "Do wrap room-world pages in .room-world and theme everything through room.* Tailwind tokens (bg-room-moss/70, ring-room-acorn/25) so light/dark switch from the single --room-* variable block; never hardcode navy/slate inside it.",
+      "Do keep text-on-Blush as .on-blush Ink #4A3B2C in both themes — baked by contrast, not by theme.",
+      "Do prove product truth: the wall clock ticks real time, \"today\" is Intl-formatted real date, and every invented figure wears the Blush MẪU/DEMO chip; never ship an unlabeled sample number.",
+      "Do draw all seams as dotted (dot-divider, dotted underlines, dashed frames) and all strokes/rings as Acorn at alpha; hairline solids only inside a footer.",
+      "Do stay flat: sticker props stand upright on the floor, motion stays at ≤2px hover lifts and once-only reveals (threshold 0.15, house easing cubic-bezier(0.16, 1, 0.3, 1)), with prefers-reduced-motion honored.",
+      "Do carry the two registered exceptions as scoped, not general: the six-drawer cabinet (one shell, waivered nested-cards → LandingPage.jsx) and the authored room illustration (waivered shape-assembled-illustration → RoomScene.jsx).",
+      "Do skin every guest form through RoomUI (RoomField/RoomInput/RoomButton/RoomDots) so the one ramp holds everywhere: Acorn/25 rings at rest, Rain rings on invalid, the 44px entry/toggle floor, size lg (h-12) for main actions.",
+      "Do keep wall furniture economical: on the auth wall, one taped card (\"Nhật ký đúng hạn\" — tape Oat/90 turned −5°, ring Acorn/20, floating-card weight beneath) and three Moss blips; the landing rail's three taped cards are that page's furniture, not a wall pattern to replicate."
+    ],
+    "donts": [
+      "Don't blue-black the dark theme — Porcelain goes warm #2B231E and the lamp does the lighting; no slate/navy grounds inside the room world.",
+      "Don't color-glow, gradient-border, or beam anything (no glow-ring, gradient-border, route-beam, hero-glow, brand gradients) — the world's only breathing light is the Blush due-glow and the night lamp.",
+      "Don't pink anything other than the due state on app chrome; Bell gold stays on sounding/burning props, never as a field.",
+      "Don't uppercase or letter-space-tighten headings, and don't substitute system display faces — Baloo 2 rest, Nunito reads.",
+      "Don't invent hard offset shadows or 3D card tilts; depth is drawn, and shadow vocabulary stays the four paper weights listed above.",
+      "Don't paint errors rose or red — Rain/30 panels, Rain rings and bold Ink copy are the whole error kit; only the due state owns an alarm color.",
+      "Don't gradient or glow the room wordmark — WorldLogo is solid Baloo 2 token lettering (Ink / Acorn Q / Ink); the gradient logotype stays in the old shell's Logo.jsx.",
+      "Don't light the lamp in daylight — .lamp-glow holds opacity 0 until .dark (then 0.55); in light mode the only breathing light is the Blush due-glow.",
+      "Don't break the route/label truth: routes / /app /login /register /pricing, anchors #tinh-nang #cach-hoat-dong #gioi-thieu #lien-he, EXTENSION_STORE_URL, DESKTOP_DOWNLOAD_URL stay exactly as shipped; names of unrealized features don't appear as live UI."
+    ]
+  }
+}

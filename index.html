@@ -6,6 +6,11 @@
          no-cache — cứ mỗi lần đổi logo thì bump số ở đây là tab hiện icon mới. -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Font thế giới phòng (landing): preload cùng nguồn gốc; crossorigin là
+         bắt buộc với font theo spec, kể cả khi vẫn cùng origin. -->
+    <link rel="preload" href="/fonts/Baloo2-Variable.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="/fonts/Nunito-Variable.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="/fonts/Nunito-Italic-Variable.ttf" as="font" type="font/ttf" crossorigin />
     <meta name="description" content="MN-Qronx – Lên kế hoạch, theo dõi, nhận nhắc nhở và hoàn thành mục tiêu đúng thời điểm. Plan. Do. On Time." />
     <meta name="theme-color" content="#0D1B2A" />
     <link rel="manifest" href="/manifest.json" />

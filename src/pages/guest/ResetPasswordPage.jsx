@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Lock, Eye, EyeSlash, Key, WarningCircle, CheckCircle } from '@phosphor-icons/react'
 import AuthLayout from '../../components/AuthLayout'
-import { Field, Input } from '../../components/common/Inputs'
-import Button from '../../components/common/Button'
+import { RoomField, RoomInput, RoomButton } from '../../components/common/RoomUI'
 import { resetPassword, getResetToken } from '../../services/authService'
 
 export default function ResetPasswordPage() {
@@ -26,14 +25,17 @@ export default function ResetPasswordPage() {
   if (!token) {
     return (
       <AuthLayout title="Liên kết không hợp lệ" subtitle="Không tìm thấy mã đặt lại mật khẩu.">
-        <div className="rounded-2xl bg-rose-50 p-5 ring-1 ring-rose-200">
-          <p className="text-sm font-semibold text-rose-700">
-            Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu lại.
-          </p>
+        <div className="rounded-2xl bg-room-rain/30 p-5 ring-1 ring-room-acorn/25">
+          <div className="flex items-start gap-2.5">
+            <WarningCircle size={18} className="mt-0.5 shrink-0" weight="bold" />
+            <p className="text-sm font-bold text-room-ink">
+              Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu lại.
+            </p>
+          </div>
         </div>
         <div className="mt-6">
           <Link to="/forgot-password">
-            <Button variant="gradient" fullWidth>Quên mật khẩu</Button>
+            <RoomButton variant="primary" fullWidth>Quên mật khẩu</RoomButton>
           </Link>
         </div>
       </AuthLayout>
@@ -65,18 +67,18 @@ export default function ResetPasswordPage() {
   if (done) {
     return (
       <AuthLayout title="Đặt lại mật khẩu thành công" subtitle="Bạn có thể đăng nhập với mật khẩu mới.">
-        <div className="rounded-2xl bg-emerald-50 p-5 ring-1 ring-emerald-200">
+        <div className="rounded-2xl bg-room-sage/45 p-5 ring-1 ring-room-acorn/25">
           <div className="flex items-start gap-3">
-            <CheckCircle size={22} className="mt-0.5 shrink-0 text-emerald-600" weight="fill" />
-            <p className="text-sm font-semibold text-emerald-800">
+            <CheckCircle size={22} className="mt-0.5 shrink-0 text-room-acorn" weight="bold" />
+            <p className="text-sm font-bold text-room-ink">
               Mật khẩu của bạn đã được cập nhật. Hãy đăng nhập để tiếp tục.
             </p>
           </div>
         </div>
         <div className="mt-6">
-          <Button variant="gradient" fullWidth onClick={() => navigate('/login')}>
+          <RoomButton variant="primary" fullWidth onClick={() => navigate('/login')}>
             Đi đến đăng nhập
-          </Button>
+          </RoomButton>
         </div>
       </AuthLayout>
     )
@@ -85,17 +87,17 @@ export default function ResetPasswordPage() {
   return (
     <AuthLayout title="Đặt lại mật khẩu" subtitle="Tạo mật khẩu mới cho tài khoản của bạn.">
       {serverError && (
-        <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-xl bg-rose-50 p-3.5 text-sm font-medium text-rose-700 ring-1 ring-rose-200">
-          <WarningCircle size={18} className="mt-0.5 shrink-0" weight="fill" />
+        <div role="alert" className="mb-4 flex items-start gap-2.5 rounded-2xl bg-room-rain/30 p-3.5 text-sm font-bold text-room-ink ring-1 ring-room-acorn/25">
+          <WarningCircle size={18} className="mt-0.5 shrink-0" weight="bold" />
           {serverError}
         </div>
       )}
       <form onSubmit={onSubmit} noValidate className="space-y-4">
-        <Field label="Mật khẩu mới" required error={errors.password} hint="Tối thiểu 6 ký tự">
+        <RoomField label="Mật khẩu mới" required error={errors.password} hint="Tối thiểu 6 ký tự">
           {(id) => (
             <div className="relative">
-              <Lock size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
-              <Input
+              <Lock size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+              <RoomInput
                 id={id}
                 type={showPw ? 'text' : 'password'}
                 autoComplete="new-password"
@@ -109,16 +111,16 @@ export default function ResetPasswordPage() {
                 type="button"
                 onClick={() => setShowPw((s) => !s)}
                 aria-label={showPw ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-1 text-navy-400 hover:text-navy-700"
+                className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-room-ink/45 transition hover:text-room-acorn"
               >
                 {showPw ? <EyeSlash size={18} /> : <Eye size={18} />}
               </button>
             </div>
           )}
-        </Field>
-        <Field label="Xác nhận mật khẩu mới" required error={errors.confirmPassword}>
+        </RoomField>
+        <RoomField label="Xác nhận mật khẩu mới" required error={errors.confirmPassword}>
           {(id) => (
-            <Input
+            <RoomInput
               id={id}
               type={showPw ? 'text' : 'password'}
               autoComplete="new-password"
@@ -128,13 +130,16 @@ export default function ResetPasswordPage() {
               invalid={!!errors.confirmPassword}
             />
           )}
-        </Field>
-        <Button type="submit" variant="gradient" fullWidth size="lg" loading={loading} icon={Key}>
+        </RoomField>
+        <RoomButton type="submit" variant="primary" fullWidth size="lg" loading={loading} icon={Key}>
           Đặt lại mật khẩu
-        </Button>
+        </RoomButton>
       </form>
-      <p className="mt-6 text-center text-sm text-navy-500">
-        <Link to="/login" className="font-semibold text-blue-600 hover:underline">
+      <p className="mt-6 text-center text-sm font-semibold text-room-ink/75">
+        <Link
+          to="/login"
+          className="font-bold text-room-ink underline decoration-room-acorn/40 decoration-dotted decoration-2 underline-offset-4 transition hover:text-room-acorn"
+        >
           Quay lại đăng nhập
         </Link>
       </p>

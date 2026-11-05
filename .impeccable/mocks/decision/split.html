@@ -1,0 +1,123 @@
+<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet"><style>
+:root{--paper:#FFF6EC;--ink:#4A3B2C;--acorn:#8B6F4E;--oat:#EADCC7;--moss:#DCE8DF;--sage:#A9C4B1;--rain:#B7C7D6;--blush:#F5C9CF;--bell:#E2B05C}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;overflow:hidden;display:flex;background:var(--paper);color:var(--ink);font-family:'Nunito',sans-serif}
+.d{font-family:'Baloo 2',cursive}
+aside{width:236px;flex-shrink:0;position:relative}
+aside:after{content:'';position:absolute;right:0;top:0;bottom:0;width:3px;background-image:radial-gradient(rgba(139,111,78,.5) 1.6px,transparent 1.7px);background-size:3px 16px;background-repeat:repeat-y}
+.pad{padding:26px 22px}
+.logo{display:flex;gap:10px;align-items:center;margin-bottom:26px}
+.mark{width:32px;height:32px;border-radius:9px;background:conic-gradient(from 210deg,var(--acorn),var(--oat));box-shadow:0 6px 14px -6px rgb(0 0 0/.3);position:relative}
+.mark:after{content:'';position:absolute;inset:9px;border:2.5px solid var(--paper);border-radius:50%}
+.word{font-size:19px;font-weight:700}.word b{color:var(--acorn)}
+.newbtn{display:flex;align-items:center;gap:8px;background:var(--acorn);color:var(--paper);border-radius:999px;height:40px;padding:0 16px;font-weight:700;font-size:14px;box-shadow:0 14px 26px -12px rgb(0 0 0/.3);margin-bottom:22px}
+.plus{width:16px;height:16px;position:relative}.plus:before,.plus:after{content:'';position:absolute;background:var(--paper)}
+.plus:before{left:7px;top:2px;width:2px;height:12px}.plus:after{top:7px;left:2px;width:12px;height:2px}
+.glabel{font-size:10.5px;font-weight:900;letter-spacing:.1em;color:rgba(74,59,44,.5);margin:18px 0 8px}
+.nav{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:999px;font-size:13.5px;font-weight:600;color:rgba(74,59,44,.75)}
+.nav .ic{width:16px;height:16px;border:2px solid rgba(74,59,44,.4);border-radius:5px}
+.nav.on{background:var(--oat);font-weight:800}.nav.on .ic{background:var(--acorn);border-color:var(--acorn)}
+main{flex:1;overflow:hidden;padding:30px 38px 26px 44px;display:flex;flex-direction:column}
+.hrow{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px}
+h1{font-size:26px;font-weight:700}
+.date{font-size:13px;font-weight:800;color:rgba(74,59,44,.55);margin-top:2px}
+.search{width:240px;height:40px;border-radius:999px;background:rgba(234,220,199,.5);box-shadow:inset 0 0 0 1px rgba(139,111,78,.22);color:rgba(74,59,44,.45);font-size:13.5px;font-weight:600;display:flex;align-items:center;padding:0 16px}
+.cols{display:flex;gap:26px;flex:1;min-height:0}
+.colL{flex:1.9;display:flex;flex-direction:column;gap:20px;min-width:0}
+.colR{width:390px;flex-shrink:0;display:flex;flex-direction:column;gap:18px;overflow:hidden;position:relative}
+.colR:before{content:'';position:absolute;left:-14px;top:4px;bottom:4px;width:3px;background-image:radial-gradient(rgba(139,111,78,.45) 1.4px,transparent 1.5px);background-size:3px 14px;background-repeat:repeat-y}
+.panel{border-radius:18px;background:rgba(255,246,236,.9);box-shadow:inset 0 0 0 1px rgba(139,111,78,.26),0 18px 34px -22px rgb(0 0 0/.25);padding:18px 20px;position:relative}
+h2{font-size:17px;font-weight:700}
+.head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.cnt{font-size:30px;line-height:1;font-weight:700;margin-left:auto}
+.row{display:flex;align-items:center;gap:12px;padding:10px 6px;border-radius:12px;font-size:14px;font-weight:600}
+.row+.row{margin-top:4px}
+.cb{width:18px;height:18px;border-radius:6px;box-shadow:inset 0 0 0 2px rgba(139,111,78,.45);flex-shrink:0}
+.row .t{flex:1}
+.time{font-size:11.5px;font-weight:900;color:rgba(74,59,44,.55);background:rgba(234,220,199,.7);border-radius:999px;padding:3px 10px}
+.due{background:rgba(245,201,207,.6)}
+.due .time{background:rgba(226,176,92,.4)}
+.add{font-size:13px;font-weight:800;color:rgba(74,59,44,.6);margin-top:10px}
+.tape:before{content:'';position:absolute;top:-9px;left:18px;width:52px;height:16px;transform:rotate(-5deg);background:rgba(234,220,199,.95);border-radius:3px;box-shadow:inset 0 0 0 1px rgba(139,111,78,.2)}
+.bignum{font-size:34px;line-height:1}
+.sub{font-size:12.5px;font-weight:600;color:rgba(74,59,44,.6);margin-top:3px}
+.strow{display:flex;gap:14px;align-items:center}
+.bellc{width:38px;height:38px;border-radius:12px;background:var(--bell);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bellc:after{content:'';width:12px;height:12px;border:2.5px solid rgba(74,59,44,.65);border-radius:50%}
+.days{display:flex;gap:7px;margin-left:auto}
+.dd{width:11px;height:11px;border-radius:50%;background:var(--acorn);opacity:.85}
+.dd.now{background:transparent;box-shadow:inset 0 0 0 2.5px var(--blush);opacity:1}
+.nums{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+.n{font-size:24px;font-weight:700}.nl{font-size:12px;font-weight:800;color:rgba(74,59,44,.55)}
+.mini{display:flex;align-items:center;gap:10px;padding:8px 2px;font-size:13px;font-weight:600}
+.mini+.mini{border-top:1px dotted rgba(139,111,78,.35)}
+.bar{height:7px;border-radius:999px;background:rgba(234,220,199,.8);overflow:hidden;margin-top:6px}
+.fill{height:100%;width:21%;border-radius:999px;background:var(--acorn)}
+</style></head><body>
+<aside><div class="pad">
+<div class="logo"><span class="mark"></span><span class="word d">MN-<b>Q</b>ronx</span></div>
+<div class="newbtn"><span class="plus"></span>Việc mới</div>
+<p class="glabel">KHÔNG GIAN LÀM VIỆC</p>
+<div class="nav on"><span class="ic"></span>Tổng quan</div>
+<div class="nav"><span class="ic"></span>Việc của tôi</div>
+<div class="nav"><span class="ic"></span>Lịch</div>
+<div class="nav"><span class="ic"></span>Bảng</div>
+<div class="nav"><span class="ic"></span>Danh mục</div>
+<div class="nav"><span class="ic"></span>Giao việc</div>
+<p class="glabel">CÁ NHÂN</p>
+<div class="nav"><span class="ic"></span>Điểm thưởng</div>
+<div class="nav"><span class="ic"></span>Trợ lý AI</div>
+<div class="nav"><span class="ic"></span>Hồ sơ</div>
+<div class="nav"><span class="ic"></span>Cài đặt</div>
+</div></aside>
+<main>
+<div class="hrow">
+<div><h1 class="d">Xin chào, Nam</h1><p class="date">Thứ Tư, 04/11/2026 · Cá nhân</p></div>
+<div class="search">Tìm việc…</div>
+</div>
+<div class="cols">
+<div class="colL">
+<div class="panel">
+<div class="head"><h2 class="d">Việc của hôm nay</h2><span class="cnt d">6</span></div>
+<div class="row due"><span class="cb"></span><span class="t">Làm bài kiểm tra Reading IELTS đầu tay</span><span class="time">14:30</span></div>
+<div class="row"><span class="cb"></span><span class="t">Mua vé tàu Sài Gòn – Đà Nẵng</span><span class="time">16:00</span></div>
+<div class="row"><span class="cb"></span><span class="t">Ôn 30 từ vựng Unit 6</span><span class="time">19:00</span></div>
+<div class="row"><span class="cb"></span><span class="t">Gọi lại cho ông nội</span><span class="time">20:30</span></div>
+<p class="add">+ Thêm việc vào hôm nay…</p>
+</div>
+<div class="panel">
+<div class="head"><h2 class="d">Sắp tới</h2><span class="cnt d">5</span></div>
+<div class="mini">Nộp báo cáo môn thống kê <span class="time">CN 06/11</span></div>
+<div class="mini">Họp nhóm Project <span class="time">T7 08/11 · 09:00</span></div>
+<div class="mini">Phiên học buộc deadline <span class="time">T7 08/11 · 20:00</span></div>
+</div>
+</div>
+<div class="colR">
+<div class="panel tape strow">
+<div><span class="bellc"></span></div>
+<div><div class="bignum d">12</div><div class="sub">ngày liên tiếp · đúng hạn</div></div>
+<div class="days"><span class="dd"></span><span class="dd"></span><span class="dd"></span><span class="dd"></span><span class="dd"></span><span class="dd"></span><span class="dd now"></span></div>
+</div>
+<div class="panel">
+<div class="head"><h2 class="d">Tổng quan</h2></div>
+<div class="nums">
+<div><span class="n d">3</span><div class="nl">Đã xong hôm nay</div></div>
+<div><span class="n d">3</span><div class="nl">Quá hạn còn mở</div></div>
+<div><span class="n d">5</span><div class="nl">Sắp tới</div></div>
+<div><span class="n d">89</span><div class="nl">xong trong tháng</div></div>
+</div>
+</div>
+<div class="panel">
+<div class="head"><h2 class="d">Chuông đã reo</h2></div>
+<div class="mini">Chuông "Học buổi tối" reo lại <span class="time">lúc 20:00</span></div>
+<div class="mini">Đồ "Nộp sample IELTS" đang sáng đèn <span class="time">14:30</span></div>
+</div>
+<div class="panel">
+<div class="head"><h2 class="d">Hạn mức · Plus</h2><span class="cnt" style="font-size:15px;align-self:center">214/1000</span></div>
+<div class="bar"><div class="fill"></div></div>
+<div class="sub" style="margin-top:8px">tín dụng AI còn lại trong chu kỳ này</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

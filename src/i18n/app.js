@@ -48,6 +48,9 @@ export const app = {
     claimNow: 'Nhận ngay',
     // Dashboard mới
     dashQuote: 'Mỗi ngày là một cơ hội mới để bạn tiến gần hơn đến mục tiêu của mình.',
+    roomWallLabel: 'Phòng làm việc của bạn',
+    roomWallDateNote: 'Hôm nay — tờ giấy dán trên tường',
+    roomYourRoom: 'Phòng của',
     quickStats: 'Thống kê nhanh',
     range7: '7 ngày',
     legendCompleted: 'Hoàn thành',
@@ -212,6 +215,9 @@ export const app = {
     claimNow: 'Claim now',
     // Dashboard mới
     dashQuote: 'Every day is a new chance to get closer to your goals.',
+    roomWallLabel: 'Your workspace',
+    roomWallDateNote: 'Today — pinned to the wall',
+    roomYourRoom: 'Room of',
     quickStats: 'Quick stats',
     range7: '7 days',
     legendCompleted: 'Completed',

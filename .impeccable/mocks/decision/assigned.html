@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { background: #08090B; }
+  body { width: 1440px; height: 900px; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', system-ui, sans-serif; }
+  .machine {
+    width: 92%; height: 96%;
+    border-radius: 34px;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 2px, rgba(0,0,0,0) 2px 26px),
+      linear-gradient(180deg, #17181C 0%, #0F1013 55%, #0B0C0E 100%);
+    border: 2px solid #23252B;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.06), inset 0 -26px 40px rgba(0,0,0,.55), 0 40px 80px rgba(0,0,0,.6);
+    padding: 26px 44px 26px;
+    display: flex; flex-direction: column;
+  }
+  .bezel-row { display: flex; justify-content: space-between; align-items: center; }
+  .brand { font: 600 22px/1 'Segoe UI'; letter-spacing: .22em; color: #b7bcc8; }
+  .tiny { display: flex; gap: 26px; font-size: 15px; letter-spacing: .1em; color: #6f7480; }
+  .hand { font: 600 38px/1.2 'Segoe Script', 'Segoe Print', cursive; color: #EFEAD8; text-align: center; margin: 22px 0 4px; }
+  .clock {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 212px; font-weight: 700; letter-spacing: .04em;
+    color: #FF3B30; text-shadow: 0 0 34px rgba(255,59,48,.55), 0 0 90px rgba(255,59,48,.28);
+    line-height: .92; text-align: center;
+  }
+  .sec { font: 40px 'Consolas', monospace; color: rgba(255,59,48,.45); text-align: center; letter-spacing: .3em; }
+  .strip { margin-top: 28px; display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; align-items: center; gap: 20px; background: rgba(255,255,255,.025); border: 1px solid #1E2026; border-radius: 8px; padding: 9px 18px; }
+  .row .t { font: 26px 'Consolas', monospace; color: #FFB020; letter-spacing: .08em; }
+  .row .n { font-size: 24px; color: #C7CBD6; }
+  .row.hot { border-color: rgba(255,59,48,.4); }
+  .row.hot .t { color: #FF3B30; }
+  .actions { display: flex; gap: 22px; margin-top: 26px; justify-content: center; }
+  .key {
+    border: 0; border-radius: 999px; padding: 19px 44px;
+    font: 700 25px/1 'Segoe UI'; letter-spacing: .06em;
+    color: #FFF3E8;
+    background: radial-gradient(120% 150% at 50% 0%, #FF6147, #E42E24 60%, #C3231B);
+    box-shadow: 0 13px 0 #8f1512, 0 20px 34px rgba(0,0,0,.5), inset 0 2px 2px rgba(255,255,255,.5);
+  }
+  .key.ghost { background: transparent; color: #c9cedb; box-shadow: inset 0 0 0 2px #33363E; }
+</style></head>
+<body>
+  <div class="machine">
+    <div class="bezel-row"><span class="brand">MN-QRONX</span><span class="tiny"><span>TÍNH NĂNG</span><span>BÁO GIÁ</span><span>ĐĂNG NHẬP</span></span></div>
+    <div class="hand">Thứ Tư · còn 3 việc sắp kêu</div>
+    <div class="clock">16:45</div>
+    <div class="sec">· 24 GIỜ ·</div>
+    <div class="strip">
+      <div class="row hot"><span class="t">17:00</span><span class="n">Nộp báo cáo tiến độ tốt nghiệp</span></div>
+      <div class="row"><span class="t">18:30</span><span class="n">Buổi sinh hoạt lớp SHCN</span></div>
+      <div class="row"><span class="t">22:00</span><span class="n">Ôn chương 5 · 25 phút</span></div>
+    </div>
+    <div class="actions">
+      <button class="key">ĐẶT BÁO THỨC CHO VIỆC ĐẦU TIÊN</button>
+      <button class="key ghost">ĐẶT VIỆC CỦA BẠN</button>
+    </div>
+  </div>
+</body></html>
