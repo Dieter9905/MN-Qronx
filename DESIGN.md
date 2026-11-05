@@ -317,6 +317,20 @@ Kết thúc mốc: reviewer fresh chấm **SHIP** (trên 5 raster cùng bảng t
 - **Modal da phòng:** `Modal` nhận `skin="room"` (additive): tấm giấy Porcelain + ring Acorn/25, header/footer dải phẳng Acorn/15, **backdrop `bg-room-ink/45` không blur**; mặc định 'classic' giữ nguyên bản navy cho chỗ khác.
 - **Không "đặt khi chưa có":** số hiển thị trên phòng lấy từ `getDashboard` (tổng `deskRows` đã dedupe, `completedCount` từ máy chủ). Trang mới chưa làm (Lịch, Kế hoạch tuần, Báo cáo…) vẫn navy — mở đúng trạng thái hiện tại, không paint-over.
 
+## Trang Lịch (mốc M4)
+
+Vẫn là **Operate**: `CalendarPage.jsx` (~1480 dòng — header, thanh điều khiển, 4 lưới xem Tháng/Tuần/Ngày + TKB theo giờ, 3 panel quản lý) đổi da nguyên trang về token phòng; logic/API/chuỗi giữ nguyên 100%. Imports sạch: bỏ `Button/Skeleton/StatusBadge/PriorityBadge`, thay bằng `RoomButton/RoomCard/RoomSkeleton/RoomSegmented` + `PRIORITY`.
+
+- **Thanh điều khiển:** mũi tên trước/sau + "Hôm nay" là nền Oat/45 hover Oat/75; nhóm chuyển xem là `RoomSegmented size sm`; toggle "Lịch học" bật = **Moss/60** + ring Acorn/25; tiêu đề tháng/tuần/ngày dùng `font-display` Ink. Card chính và panel chi tiết dưới cùng là `RoomCard` (ring Acorn/25) thay `card`.
+- **Ô ngày lịch (MonthGrid/WeekGrid):** nền Oat/35 hover Oat/65, chọn = **ring-2 Acorn cả khung + Oat/70**, "hôm nay" = đĩa Acorn chữ paper, ngoài tháng `bg-transparent opacity-40`. Dot việc giữ **màu dữ liệu category** (fallback Acorn hex `#8b6f4e` vì ghép chuỗi alpha số); sự kiện lịch ngoài = chữ nghiêng mảnh tô màu lịch riêng — nhìn ra khác việc cá nhân.
+- **Xung đột TKB × việc cá nhân = Bell gold, không rose:** chip đếm `bg-room-bell/25 ring-room-bell/50`, slot vướng gets `ring-2 ring-room-bell`, khối cảnh báo `bg-room-bell/20 ring-room-bell/40` — "hai chuông cùng lúc" là khoảnh khắc chuông, đúng luật Bell; tiêu đề slot/link trong khối gạch chân đậm Bell. Đường lưới TKB = nét đứt Acorn/15–20, nhãn giờ `text-room-ink/30`.
+- **Panel Lịch học:** kết nối thành công = dải **Sage/25** + ring Acorn/20 (thành công phẳng, không gradient); "Đồng bộ ngay" RoomButton sm, "Ngắt kết nối" RoomButton `danger` (**pill Rain** — thế giới không đỏ); `lastError`, nhãn phiên trường, "đang tải danh mục" = **Rain trung tính** (Rain/25–35 + ring Rain). Form mật độ py-2 dùng `roomFieldCls` cục bộ (không `RoomInput` — các ô nhỏ có width riêng như `w-[84px]`); select dùng `roomSelectCls` + `ROOM_ARROW_URL` (RoomUI export mũi tên Acorn dùng chung). Danh sách tiết = giấy + ring Acorn/15, thùng rác = Ink/30 hover Acorn (không rose).
+- **Panel Lịch ngoài:** biểu tượng/chip đếm mang **Rain** (dữ liệu chảy vào từ bên ngoài — trung tính), hàng lịch trên Oat/40; nút đồng bộ/thùng rác neutral hover Acorn. Form thêm lịch = `roomFieldCls`.
+- **Liên kết phụ:** `.btn-link` của shell vẫn dùng trong trang — override mới `.room-world .btn-link` (Ink/60, hover Acorn) đổi màu cả nơi dùng mà không đụng shell cũ.
+- **Raster provenance:** `.impeccable/review/`
+  - `m4-calendar-dark.png` — trang Lịch chế độ tối, view Tháng
+  - `m4-calendar-light.png` — cùng viewport chế độ sáng
+
 ## Do's and Don'ts
 
 ### Do:

@@ -168,7 +168,8 @@ export function RoomEmpty({
 
 // ---------- Textarea / Select theo da phòng ----------
 // Select: mũi tên hằn sẵn màu Acorn — cùng chỗ mũi tên navy của bản cũ.
-const roomArrowUrl =
+// (export cho các nơi dùng raw class thay component — giữ một nguồn arrow duy nhất)
+export const ROOM_ARROW_URL =
   'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%238b6f4e%22%20viewBox%3D%220%200%20256%20256%22%3E%3Cpath%20d%3D%22M213.66%2C101.66l-80%2C80a8%2C8%2C0%2C0%2C1-11.32%2C0l-80-80a8%2C8%2C0%2C0%2C1%2C11.32-11.32L128%2C164.69l74.34-74.35a8%2C8%2C0%2C0%2C1%2C11.32%2C11.32Z%22%2F%3E%3C%2Fsvg%3E'
 
 export function RoomTextarea({ invalid, className = '', rows = 3, ...props }) {
@@ -184,7 +185,7 @@ export function RoomTextarea({ invalid, className = '', rows = 3, ...props }) {
 export function RoomSelect({ invalid, className = '', children, ...props }) {
   return (
     <select
-      className={`${roomInputBase} h-11 cursor-pointer appearance-none bg-[url('${roomArrowUrl}')] bg-[position:right_0.75rem_center] bg-no-repeat pr-10 pl-3.5 text-sm ${invalid ? 'ring-room-rain focus:ring-room-rain' : ''} ${className}`}
+      className={`${roomInputBase} h-11 cursor-pointer appearance-none bg-[url('${ROOM_ARROW_URL}')] bg-[position:right_0.75rem_center] bg-no-repeat pr-10 pl-3.5 text-sm ${invalid ? 'ring-room-rain focus:ring-room-rain' : ''} ${className}`}
       {...props}
     >
       {children}

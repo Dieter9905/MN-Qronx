@@ -900,3 +900,11 @@ body:has(.room-world)::-webkit-scrollbar-thumb {
 .dark .room-world .menu-item {
   @apply text-room-ink;
 }
+
+/* Liên kết phụ (.btn-link) trong phòng: Ink alpha chạm Acorn thay xanh navy */
+.room-world .btn-link {
+  color: rgb(var(--room-ink) / 0.6);
+}
+.room-world .btn-link:hover {
+  color: rgb(var(--room-acorn));
+}
