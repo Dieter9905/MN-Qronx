@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-05T11:20:00Z",
+  "generatedAt": "2026-11-06T07:20:00Z",
   "title": "Design System: MN-Qronx — Phòng mini-hompy",
   "extensions": {
     "colorMeta": {
@@ -519,6 +519,78 @@
       "description": "Rewards hero (M5): a paper room-card instead of the old navy→slate gradient with blur orbs. Flame dish = Bell/25 + Bell/40 with full-Bell flame; \"ngày liên tiếp\" label in Bell; points tray = Oat/50 + Acorn/20 ring (no backdrop-blur) with a paper \"Gói của tôi\" pill; 7-day strip: filled day = Bell/40 + Bell/50 ring, today = Oat/50 ring Acorn/25, missed = Rain/40 at Ink/35. Progress bar of redeem tiers is solid Acorn (PRO at full, PLUS at 75%), tier sheets Oat/35 (PRO: Oat/55 + Acorn/35), Sparkle in Bell.",
       "html": "<div class=\"ds-streak\"><span class=\"ds-streak-flame\">🔥</span><span class=\"ds-strip-day ds-filled\">T5</span></div>",
       "css": ".ds-streak{background:rgb(var(--room-paper));border-radius:16px;padding:24px;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-streak-flame{display:inline-flex;width:80px;height:80px;align-items:center;justify-content:center;border-radius:16px;background:rgb(var(--room-bell) / 0.25);box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.4);}.ds-strip-day{display:inline-flex;width:44px;flex-direction:column;align-items:center;border-radius:12px;padding:8px 0;color:rgb(var(--room-ink) / 0.35);background:rgb(var(--room-rain) / 0.4);}.ds-strip-day.ds-filled{background:rgb(var(--room-bell) / 0.4);box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.5);color:rgb(var(--room-ink));}"
+    },
+    {
+      "name": "Room Role Badge",
+      "kind": "chip",
+      "refersTo": "room-role-badge",
+      "description": "Team member role badge (M6). Chủ nhóm = Bell/25 sheet + Bell/40 inner ring with a filled Bell Crown; Quản trị = Oat/60; Thành viên = Oat/40 — three weights of paper, never the old amber/blue/navy pills. Data roles, so tone stays tied to the member, not to decoration.",
+      "html": "<span class=\"ds-role ds-role--owner\"><svg viewBox=\"0 0 12 12\"/><b>Chủ nhóm</b></span>",
+      "css": ".ds-role{display:inline-flex;align-items:center;gap:4px;border-radius:9999px;padding:2px 8px;font-size:11px;font-weight:800;color:rgb(var(--room-ink) / 0.6);}.ds-role--owner{background:rgb(var(--room-bell) / 0.25);box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.4);color:rgb(var(--room-ink) / 0.75);}.ds-role--owner svg{fill:rgb(var(--room-bell));}.ds-role--admin{background:rgb(var(--room-oat) / 0.6);}.ds-role--member{background:rgb(var(--room-oat) / 0.4);color:rgb(var(--room-ink) / 0.5);}"
+    },
+    {
+      "name": "Room Invite Plate",
+      "kind": "panel",
+      "refersTo": "room-invite-plate",
+      "description": "The one road into a team: a paper RoomCard with an uppercase eyebrow, the MN-XXXXXX code set in mono at Acorn-weight Ink with wide tracking, a copy chip (Oat/60 + Acorn/25 ring; after copy it turns Sage/45 = confirmed) and the owner-only “Tạo mã mới” chip in Oat/45. Never the violet→blue gradient banner it replaced.",
+      "html": "<div class=\"ds-invite\"><p>MÃ MỜI NHÓM</p><code>MN-JAHN3Y</code><span class=\"ds-invite-copy\">Đã chép</span></div>",
+      "css": ".ds-invite{background:rgb(var(--room-paper));border-radius:16px;padding:20px;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-invite p{font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:rgb(var(--room-ink) / 0.5);}.ds-invite code{font-family:ui-monospace,monospace;font-size:30px;font-weight:800;letter-spacing:0.18em;color:rgb(var(--room-ink));}.ds-invite-copy{border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;color:rgb(var(--room-ink) / 0.75);background:rgb(var(--room-sage) / 0.45);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);}"
+    },
+    {
+      "name": "Room Assigned Card",
+      "kind": "card",
+      "refersTo": "room-assigned-card",
+      "description": "The receive-side share of Assignment (M6): a paper room-card ringed Acorn/25. Done checkbox = solid Sage disc with paper check; undone = Acorn/40 outline. “Đến lượt bạn” chip = Bell/25 + Bell/40 (a waiting-for-you bell, not an error); overdue date sits on a Blush/45 pill — Blush only for due; the sender’s message sits on Oat/35 + Acorn/15 ring with an Acorn speech icon; “Bạn đã báo xong …” is a Sage/45 chip. Footer CTA is a RoomButton (Acorn primary / secondary when done). PRIORITY + category badges keep their data colors untouched.",
+      "html": "<li class=\"ds-assigned\"><span class=\"ds-assigned-check\"/>​<b>Rép video giới thiệu tính năng</b><i class=\"ds-assigned-overdue\">Chủ nhật…</i><q>“Giáo trong nhóm…”</q><span class=\"ds-assigned-done\">Bạn đã báo xong</span></li>",
+      "css": ".ds-assigned{background:rgb(var(--room-paper));border-radius:16px;padding:16px 20px;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-assigned-check{display:inline-flex;width:24px;height:24px;border-radius:9999px;background:rgb(var(--room-sage));color:rgb(var(--room-paper));box-shadow:0 0 0 2px rgb(var(--room-sage));}.ds-assigned-overdue{border-radius:6px;background:rgb(var(--room-blush) / 0.45);padding:2px 6px;font-weight:700;color:rgb(var(--room-ink) / 0.85);}.ds-assigned q{display:block;border-radius:12px;background:rgb(var(--room-oat) / 0.35);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.15);padding:10px;font-size:12px;color:rgb(var(--room-ink) / 0.7);}.ds-assigned-done{border-radius:9999px;background:rgb(var(--room-sage) / 0.45);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);padding:2px 8px;font-size:12px;font-weight:700;color:rgb(var(--room-ink) / 0.8);}"
+    },
+    {
+      "name": "Room Kanban Column",
+      "kind": "panel",
+      "refersTo": "room-kanban-column",
+      "description": "Board column (M6): Oat/35 paper sheet with a 4px top accent and a small dot — Cần làm = Acorn/50, Đang làm = Rain, Hoàn thành = Sage; count chip is a paper pill + Acorn/20 ring. Empty state draws a dashed Acorn/40 frame with a tiny furniture illustration tinted oat #eaddc7 / rain #b7c7d6 / sage #a9c4b1 (prop oat/rain/sage). While a card hovers to drop, the column ring deepens to a full 2px Acorn ring — the wooden frame receiving the object.",
+      "html": "<section class=\"ds-kanban-col\"><header><i class=\"ds-kanban-dot ds-dot--todo\"/><h3>Cần làm</h3><span>2</span></header><div class=\"ds-kanban-empty\">chưa có gì ở đây</div></section>",
+      "css": ".ds-kanban-col{background:rgb(var(--room-oat) / 0.35);border-radius:16px;padding:12px;min-height:26rem;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);border-top:4px solid rgb(var(--room-acorn) / 0.5);}.ds-kanban-col.ds-drop{box-shadow:0 0 0 2px rgb(var(--room-acorn));}.ds-kanban-dot{width:8px;height:8px;border-radius:9999px;background:rgb(var(--room-acorn) / 0.5);}.ds-dot--doing{background:rgb(var(--room-rain));}.ds-dot--done{background:rgb(var(--room-sage));}.ds-kanban-empty{border:1px dashed rgb(var(--room-acorn) / 0.4);border-radius:12px;color:rgb(var(--room-ink) / 0.45);}"
+    },
+    {
+      "name": "Room Kanban Card",
+      "kind": "card",
+      "refersTo": "room-kanban-card",
+      "description": "The draggable object of the board (M6): light paper sheet + Acorn/25 ring on the Oat/35 column, lifts translateY(-0.5) with a deeper Acorn/50 ring on hover, dims to 50% while grabbed. Title in Ink/90, the PRIORITY dot keeps its DATA color (urgency amber / blue / rose / slate — never restyled), due chip flips to Blush/45 only when overdue, assignee sits in an Oat dish avatar (skin=\"room\"), a ghost Oat/70 dish with UserPlus for unassigned, and hidden Acorn caret buttons (prev/next column) that fade in on hover/focus. The select to reassign is borderless until touched.",
+      "html": "<article class=\"ds-kanban-card\"><b>Dọn bài trước demo</b><span class=\"ds-kanban-pri\"><i class=\"ds-datadot ds-amber\"/>Cao</span><span class=\"ds-kanban-due\">Hôm nay</span><select>Nguyen Van A</select></article>",
+      "css": ".ds-kanban-card{cursor:grab;background:rgb(var(--room-paper));border-radius:12px;padding:12px;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-kanban-card b{font-size:14px;font-weight:700;color:rgb(var(--room-ink) / 0.9);}.ds-kanban-pri{display:inline-flex;align-items:center;gap:4px;border-radius:6px;background:rgb(var(--room-oat) / 0.5);padding:2px 6px;font-size:10px;font-weight:700;color:rgb(var(--room-ink) / 0.65);}.ds-datadot{width:6px;height:6px;border-radius:9999px;}.ds-amber{background:#f59e0b;}.ds-kanban-due{border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700;background:rgb(var(--room-paper));box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.15);color:rgb(var(--room-ink) / 0.55);}"
+    },
+    {
+      "name": "Room AI Rank Row",
+      "kind": "row",
+      "refersTo": "room-ai-rank-row",
+      "description": "AI priority ranking row (M6): Oat/60 disc with the rank number, title in Ink/90, then reason chips — IN_PROGRESS = Rain/40, reasons starting with “Quá hạn” = Blush/45 (due-only), everything else Oat/60 — and the recommendation chip: Blush/60 when the task is overdue, Bell/25 otherwise (a nudge, not an alarm). The complete action is a plain Sage button that fills on click. The PRIORITY word label keeps its data-color class.",
+      "html": "<li class=\"ds-ai-rank\"><span>1</span><div><b>Dọn bài trước demo mốc 6</b><i class=\"ds-ai-chip ds-ai-chip--blush\">Quá hạn 2 giờ</i><i class=\"ds-ai-chip ds-ai-chip--bell\">Làm ngay bây giờ</i><i class=\"ds-ai-chip ds-ai-chip--oat\">Ưu tiên Cao</i></div><em>✓</em></li>",
+      "css": ".ds-ai-rank{display:flex;align-items:center;gap:12px;padding:12px 16px;}.ds-ai-rank>span{display:inline-flex;width:28px;height:28px;border-radius:9999px;background:rgb(var(--room-oat) / 0.6);align-items:center;justify-content:center;font-size:12px;font-weight:800;color:rgb(var(--room-ink) / 0.6);}.ds-ai-chip{border-radius:9999px;padding:1px 8px;font-size:10px;font-weight:700;box-shadow:inset 0 0 0 1px;}.ds-ai-chip--blush{background:rgb(var(--room-blush) / 0.45);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);color:rgb(var(--room-ink) / 0.85);}.ds-ai-chip--bell{background:rgb(var(--room-bell) / 0.25);box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.4);color:rgb(var(--room-ink) / 0.8);}.ds-ai-chip--oat{background:rgb(var(--room-oat) / 0.6);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.15);color:rgb(var(--room-ink) / 0.55);}.ds-ai-rank em{color:rgb(var(--room-sage));font-style:normal;}"
+    },
+    {
+      "name": "Room AI Warning Row",
+      "kind": "row",
+      "refersTo": "room-ai-warning-row",
+      "description": "AI schedule warnings (M6): verdict vocabulary as rounded sheets — danger (overdue accumulation) = Blush/45, warn (day overload / conflict) = Bell/25 + Bell/40 ring, ok = Sage/45; each carries its phosphor icon and Ink copy. Header icon (Warning) is Bell duotone on the section header; never the old rose/amber/emerald triplet.",
+      "html": "<li class=\"ds-ai-warn ds-ai-warn--danger\"><svg/><div><b>3 công việc đang quá hạn</b><p>Hãy ưu tiên xử lý trước…</p></div></li>",
+      "css": ".ds-ai-warn{display:flex;gap:12px;border-radius:12px;padding:12px;box-shadow:inset 0 0 0 1px;}.ds-ai-warn--danger{background:rgb(var(--room-blush) / 0.45);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);color:rgb(var(--room-ink) / 0.85);}.ds-ai-warn--warn{background:rgb(var(--room-bell) / 0.25);box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.4);color:rgb(var(--room-ink) / 0.85);}.ds-ai-warn--ok{background:rgb(var(--room-sage) / 0.45);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);color:rgb(var(--room-ink) / 0.85);}.ds-ai-warn p{font-size:12px;font-weight:600;opacity:.9;}"
+    },
+    {
+      "name": "Room AI Upsell",
+      "kind": "panel",
+      "refersTo": "room-ai-upsell",
+      "description": "The Pro gate of the AI page (M6): a paper RoomCard instead of the violet→fuchsia gradient hero. Eyebrow chip = Oat/70 + Acorn/25 ring with Bell Brain; headline in Baloo Ink; the “Nâng cấp lên Pro” CTA is a RoomButton primary (Acorn pill, Crown icon) through a Link; the four feature tiles are Oat paper cards with a Bell/25 + Bell/40 Sparkle dish — the sparkle of AI lives in Bell, letting the Acorn CTA stay the one strong accent.",
+      "html": "<section class=\"ds-ai-upsell\"><span class=\"ds-ai-upsell-eyebrow\">Trợ lý AI · Gói Pro</span><h2>Khoá AI đang chờ bạn</h2><a class=\"ds-ai-cta\">Nâng cấp lên Pro</a></section>",
+      "css": ".ds-ai-upsell{background:rgb(var(--room-paper));border-radius:16px;padding:32px;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-ai-upsell-eyebrow{display:inline-flex;border-radius:9999px;background:rgb(var(--room-oat) / 0.7);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);padding:4px 12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:rgb(var(--room-ink) / 0.6);}.ds-ai-upsell h2{font-family:\"Baloo 2\";font-weight:700;color:rgb(var(--room-ink));}.ds-ai-cta{display:inline-flex;border-radius:9999px;background:rgb(var(--room-acorn));padding:10px 20px;font-weight:700;color:rgb(var(--room-paper));box-shadow:0 14px 26px -12px rgb(0 0 0 / 0.3);}"
+    },
+    {
+      "name": "Room Chat Bubble & Command Card",
+      "kind": "card",
+      "refersTo": "room-chat-bubble",
+      "description": "The AI chat surface (M6): user bubble = full-Acorn sheet with paper text (the voice of the person, no glow); bot bubble = Oat/40 + Acorn/20 ring. Embedded task cards are paper + Acorn/20 with title/link and the data line (due datetime, “đã xong”); confirm buttons are worded verdicts — Xóa = Rain sheet (neutral regret, not Blush), Hoàn thành = Sage sheet, both Ink text; “Hết hiệu lực” re-appears as Bell text; Done confirmation chip = Sage/45. Composer chips Oat/40 + Acorn/15, input + big send = Acorn rounded-full, reminder select-chips turn solid Bell when chosen, priority pills solid Acorn, “Gợi ý việc con” = Bell/25 chip. Voice interim = Rain/40 (listening, neutral).",
+      "html": "<div class=\"ds-chat\"><p class=\"ds-chat-user\">Sáng 7h tập gym. Chiều 2h họp team…</p><p class=\"ds-chat-bot\">Chào bạn! Tôi sẽ tách thành từng công việc…</p><div class=\"ds-chat-card\"><b>Họp team</b><span class=\"ds-chat-act ds-act-sage\">Hoàn thành</span><span class=\"ds-chat-act ds-act-rain\">Xóa</span></div></div>",
+      "css": ".ds-chat-user{background:rgb(var(--room-acorn));color:rgb(var(--room-paper));border-radius:16px;padding:10px 14px;font-size:14px;box-shadow:0 14px 26px -12px rgb(0 0 0 / 0.3);}.ds-chat-bot{background:rgb(var(--room-oat) / 0.4);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);color:rgb(var(--room-ink) / 0.85);border-radius:16px;padding:10px 14px;}.ds-chat-card{background:rgb(var(--room-paper));border-radius:12px;padding:8px 12px;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);}.ds-chat-act{border-radius:9999px;padding:6px 12px;font-size:11px;font-weight:700;color:rgb(var(--room-ink));}.ds-act-sage{background:rgb(var(--room-sage));}.ds-act-rain{background:rgb(var(--room-rain));}"
     }
   ],
   "narrative": {

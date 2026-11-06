@@ -402,16 +402,16 @@ export default function AiTaskChat({ onTasksCreated }) {
   }
 
   return (
-    <section className="card overflow-hidden dark:bg-slate-800">
-      <div className="flex items-center justify-between border-b border-navy-100 bg-gradient-to-r from-violet-50 to-fuchsia-50 px-5 py-4 dark:border-slate-700 dark:from-violet-900/20 dark:to-fuchsia-900/20">
-        <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-          <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-brand-gradient text-white">
-            <Brain size={18} weight="fill" />
+    <section className="overflow-hidden rounded-2xl bg-room-paper ring-1 ring-room-acorn/25">
+      <div className="flex items-center justify-between border-b border-room-acorn/15 bg-room-oat/35 px-5 py-4">
+        <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
+          <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-room-oat/45 text-room-acorn ring-1 ring-inset ring-room-acorn/25">
+            <Brain size={18} weight="duotone" />
           </span>
           Trợ lý AI – tạo việc & ra lệnh
         </h2>
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+          <span className="rounded-full bg-room-oat/70 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-room-ink/55 ring-1 ring-inset ring-room-acorn/20">
             {usedAI === null ? 'AI + Local' : usedAI ? 'AI riêng' : 'Local AI'}
           </span>
           {messages.length > 1 && (
@@ -420,7 +420,7 @@ export default function AiTaskChat({ onTasksCreated }) {
               onClick={clearChat}
               title="Xoá hội thoại"
               aria-label="Xoá hội thoại"
-              className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-navy-400 transition hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-900/20"
+              className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-room-ink/35 transition hover:bg-room-rain/40 hover:text-room-ink"
             >
               <Trash size={14} />
             </button>
@@ -434,8 +434,8 @@ export default function AiTaskChat({ onTasksCreated }) {
             <div
               className={`max-w-[92%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
                 m.role === 'user'
-                  ? 'bg-brand-gradient text-white shadow-glow-blue'
-                  : 'bg-navy-50 text-navy-800 ring-1 ring-inset ring-navy-100 dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600'
+                  ? 'bg-room-acorn text-room-paper shadow-[0_14px_26px_-12px_rgb(0_0_0/0.30)]'
+                  : 'bg-room-oat/40 text-room-ink/85 ring-1 ring-inset ring-room-acorn/20'
               }`}
             >
               <p className="whitespace-pre-wrap">{m.text}</p>
@@ -450,7 +450,7 @@ export default function AiTaskChat({ onTasksCreated }) {
                     return (
                       <div
                         key={task.id}
-                        className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2 ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-600"
+                        className="flex items-center justify-between gap-2 rounded-xl bg-room-paper px-3 py-2 ring-1 ring-room-acorn/20"
                       >
                         <button
                           type="button"
@@ -458,10 +458,10 @@ export default function AiTaskChat({ onTasksCreated }) {
                           title="Xem chi tiết công việc"
                           className="min-w-0 flex-1 cursor-pointer text-left"
                         >
-                          <p className="truncate text-xs font-bold text-navy-900 group-hover:underline dark:text-white">
+                          <p className="truncate text-xs font-bold text-room-ink/90 group-hover:underline">
                             {task.title}
                           </p>
-                          <p className="text-[11px] text-navy-400">
+                          <p className="text-[11px] font-semibold text-room-ink/40">
                             {task.dueAt
                               ? new Date(task.dueAt).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
                               : 'Không có thời hạn'}
@@ -469,17 +469,19 @@ export default function AiTaskChat({ onTasksCreated }) {
                           </p>
                         </button>
                         {isDone ? (
-                          <span className="shrink-0 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">{doneLabel}</span>
+                          <span className="shrink-0 rounded-full bg-room-sage/45 px-2 py-0.5 text-[11px] font-bold text-room-ink/80 ring-1 ring-inset ring-room-acorn/20">{doneLabel}</span>
                         ) : m.command.cancelled ? (
-                          <span className="shrink-0 text-[11px] font-bold text-navy-400">Đã bỏ qua</span>
+                          <span className="shrink-0 text-[11px] font-bold text-room-ink/40">Đã bỏ qua</span>
                         ) : m.command.expired ? (
-                          <span className="shrink-0 text-[11px] font-bold text-amber-600 dark:text-amber-400">Hết hiệu lực</span>
+                          <span className="shrink-0 text-[11px] font-bold text-room-bell">Hết hiệu lực</span>
                         ) : (
                           <button
                             type="button"
                             onClick={() => executeCommand(m.id, task)}
-                            className={`shrink-0 cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-bold text-white transition ${
-                              m.command.intent === TASK_COMMAND.DELETE ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-500 hover:bg-emerald-600'
+                            className={`shrink-0 cursor-pointer rounded-full px-3 py-1.5 text-[11px] font-bold transition ${
+                              m.command.intent === TASK_COMMAND.DELETE
+                                ? 'bg-room-rain text-room-ink hover:brightness-[0.97]'
+                                : 'bg-room-sage text-room-ink hover:brightness-[0.97]'
                             }`}
                           >
                             {m.command.intent === TASK_COMMAND.DELETE ? 'Xóa' : 'Hoàn thành'}
@@ -492,13 +494,13 @@ export default function AiTaskChat({ onTasksCreated }) {
                     <button
                       type="button"
                       onClick={() => cancelCommand(m.id)}
-                      className="cursor-pointer rounded-lg bg-navy-50 px-3 py-1.5 text-[11px] font-bold text-navy-500 hover:bg-navy-100 dark:bg-slate-700 dark:text-slate-300"
+                      className="cursor-pointer rounded-full bg-room-oat/40 px-3 py-1.5 text-[11px] font-bold text-room-ink/55 ring-1 ring-inset ring-room-acorn/15 hover:bg-room-oat/60"
                     >
                       Bỏ qua
                     </button>
                   )}
                   {m.command.expired && (
-                    <p className="text-[11px] leading-relaxed text-amber-600 dark:text-amber-400">
+                    <p className="text-[11px] font-semibold leading-relaxed text-room-bell">
                       Thẻ xác nhận hết hiệu lực sau khi tải lại trang — gõ lại lệnh nếu bạn vẫn muốn làm.
                     </p>
                   )}
@@ -507,11 +509,11 @@ export default function AiTaskChat({ onTasksCreated }) {
               {m.tasks?.length > 0 && (
                 <div className="mt-3 space-y-2.5">
                   {m.tasks.map((t, i) => (
-                    <div key={i} className="rounded-xl bg-white p-3 text-left ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-600">
+                    <div key={i} className="rounded-xl bg-room-paper p-3 text-left ring-1 ring-room-acorn/20">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-extrabold text-violet-600 dark:text-violet-300">Việc {i + 1}{m.done ? ' · đã tạo' : ''}</span>
+                        <span className="text-xs font-extrabold text-room-acorn">Việc {i + 1}{m.done ? ' · đã tạo' : ''}</span>
                         {!m.done && (
-                          <button type="button" onClick={() => removeTask(m.id, i)} className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-navy-400 hover:bg-rose-50 hover:text-rose-500" aria-label="Xóa việc">
+                          <button type="button" onClick={() => removeTask(m.id, i)} className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-room-ink/35 transition hover:bg-room-rain/40 hover:text-room-ink" aria-label="Xóa việc">
                             <Trash size={14} />
                           </button>
                         )}
@@ -521,14 +523,14 @@ export default function AiTaskChat({ onTasksCreated }) {
                         disabled={m.done}
                         onChange={(e) => updateTask(m.id, i, { title: e.target.value })}
                         placeholder="Tiêu đề công việc *"
-                        className="mt-1.5 h-10 w-full rounded-lg border-0 bg-navy-50 px-3 text-sm font-bold text-navy-900 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-violet-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600"
+                        className="mt-1.5 h-10 w-full rounded-lg bg-room-oat/40 px-3 text-sm font-bold text-room-ink ring-1 ring-inset ring-room-acorn/20 transition focus:ring-2 focus:ring-room-acorn focus:outline-none"
                       />
                       <div className="mt-2 grid gap-2 sm:grid-cols-2">
                         <select
                           value={t.categoryId}
                           disabled={m.done}
                           onChange={(e) => updateTask(m.id, i, { categoryId: e.target.value })}
-                          className="h-10 rounded-lg border-0 bg-navy-50 px-2 text-xs font-semibold text-navy-800 ring-1 ring-inset ring-navy-100 dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600"
+                          className="h-10 cursor-pointer rounded-lg bg-room-oat/40 px-2 text-xs font-semibold text-room-ink/75 ring-1 ring-inset ring-room-acorn/20"
                         >
                           <option value="">Không phân loại</option>
                           {categories.map((c) => (
@@ -540,7 +542,7 @@ export default function AiTaskChat({ onTasksCreated }) {
                           value={t.dueAtLocal}
                           disabled={m.done}
                           onChange={(e) => updateTask(m.id, i, { dueAtLocal: e.target.value })}
-                          className="h-10 rounded-lg border-0 bg-navy-50 px-2 text-xs font-semibold text-navy-800 ring-1 ring-inset ring-navy-100 dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600"
+                          className="h-10 rounded-lg bg-room-oat/40 px-2 text-xs font-semibold text-room-ink/75 ring-1 ring-inset ring-room-acorn/20"
                         />
                       </div>
                       <div className="mt-2 flex flex-wrap gap-1.5">
@@ -552,8 +554,8 @@ export default function AiTaskChat({ onTasksCreated }) {
                             onClick={() => updateTask(m.id, i, { priority: p })}
                             className={`rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset transition ${
                               t.priority === p
-                                ? 'bg-violet-600 text-white ring-violet-600'
-                                : 'bg-navy-50 text-navy-500 ring-navy-100 hover:bg-violet-50 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600'
+                                ? 'bg-room-acorn text-room-paper ring-room-acorn'
+                                : 'bg-room-oat/40 text-room-ink/55 ring-room-acorn/20 hover:bg-room-oat/60'
                             }`}
                           >
                             {PRIORITY[p]?.label || p}
@@ -565,7 +567,7 @@ export default function AiTaskChat({ onTasksCreated }) {
                           value={t.repeatType}
                           disabled={m.done}
                           onChange={(e) => updateTask(m.id, i, { repeatType: e.target.value })}
-                          className="h-9 rounded-lg border-0 bg-navy-50 px-2 text-[11px] font-bold text-navy-700 ring-1 ring-inset ring-navy-100 dark:bg-slate-700 dark:text-slate-200 dark:ring-slate-600"
+                          className="h-9 cursor-pointer rounded-lg bg-room-oat/40 px-2 text-[11px] font-bold text-room-ink/70 ring-1 ring-inset ring-room-acorn/20"
                         >
                           {REPEAT_TYPE_LIST.map((r) => (
                             <option key={r.value} value={r.value}>{r.label}</option>
@@ -579,8 +581,8 @@ export default function AiTaskChat({ onTasksCreated }) {
                             onClick={() => toggleReminder(m.id, i, r.offset)}
                             className={`rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset transition ${
                               t.reminderOffsets.includes(r.offset)
-                                ? 'bg-amber-500 text-white ring-amber-500'
-                                : 'bg-navy-50 text-navy-500 ring-navy-100 hover:bg-amber-50 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600'
+                                ? 'bg-room-bell text-room-ink ring-room-bell'
+                                : 'bg-room-oat/40 text-room-ink/55 ring-room-acorn/20 hover:bg-room-oat/60'
                             }`}
                           >
                             {r.label}
@@ -590,8 +592,8 @@ export default function AiTaskChat({ onTasksCreated }) {
                       {(t.subtasks?.length > 0) && (
                         <ul className="mt-2 space-y-1">
                           {t.subtasks.map((s, si) => (
-                            <li key={si} className="flex items-center gap-1.5 text-xs text-navy-600 dark:text-slate-300">
-                              <CheckCircle size={13} className="text-emerald-500" /> {s.content}
+                            <li key={si} className="flex items-center gap-1.5 text-xs font-semibold text-room-ink/70">
+                              <CheckCircle size={13} className="text-room-sage" /> {s.content}
                             </li>
                           ))}
                         </ul>
@@ -600,9 +602,9 @@ export default function AiTaskChat({ onTasksCreated }) {
                         <button
                           type="button"
                           onClick={() => suggestSubs(m.id, i, t.title)}
-                          className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-lg bg-violet-50 px-2.5 py-1 text-[11px] font-bold text-violet-700 hover:bg-violet-100 dark:bg-violet-900/30 dark:text-violet-300"
+                          className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-lg bg-room-bell/25 px-2.5 py-1 text-[11px] font-bold text-room-ink/80 ring-1 ring-inset ring-room-bell/40 transition hover:bg-room-bell/35"
                         >
-                          <Sparkle size={12} weight="fill" /> Gợi ý việc con
+                          <Sparkle size={12} weight="fill" className="text-room-bell" /> Gợi ý việc con
                         </button>
                       )}
                     </div>
@@ -613,9 +615,9 @@ export default function AiTaskChat({ onTasksCreated }) {
                         type="button"
                         onClick={() => handleCreate(m.id)}
                         disabled={creating}
-                        className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-brand-gradient py-2.5 text-sm font-bold text-white shadow-glow-blue transition hover:scale-[1.01] disabled:opacity-50"
+                        className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-room-acorn py-2.5 text-sm font-bold text-room-paper shadow-[0_14px_26px_-12px_rgb(0_0_0/0.30)] transition hover:brightness-[0.96] disabled:opacity-50"
                       >
-                        {creating ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> : <Plus size={15} weight="bold" />}
+                        {creating ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-room-paper/40 border-t-room-paper" /> : <Plus size={15} weight="bold" />}
                         Tạo {m.tasks.length} công việc
                       </button>
                     </div>
@@ -627,19 +629,19 @@ export default function AiTaskChat({ onTasksCreated }) {
         ))}
         {busy && (
           <div className="flex justify-start">
-            <div className="flex items-center gap-2 rounded-2xl bg-navy-50 px-3.5 py-2.5 text-sm font-semibold text-violet-600 ring-1 ring-inset ring-navy-100 dark:bg-slate-700 dark:text-violet-300 dark:ring-slate-600">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-violet-400/30 border-t-violet-500" /> AI đang phân tích…
+            <div className="flex items-center gap-2 rounded-2xl bg-room-oat/40 px-3.5 py-2.5 text-sm font-bold text-room-acorn ring-1 ring-inset ring-room-acorn/20">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-room-acorn/30 border-t-room-acorn" /> AI đang phân tích…
             </div>
           </div>
         )}
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-navy-100 px-4 py-3 dark:border-slate-700">
+      <div className="border-t border-room-acorn/15 px-4 py-3">
         {/* Trạng thái nghe: nằm ngay trên ô nhập vì đó là chỗ mắt đang nhìn khi
             vừa bấm micro. */}
         {voiceHint && (
-          <p className="mb-2 truncate rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-600 ring-1 ring-inset ring-rose-100 dark:bg-rose-900/20 dark:text-rose-300 dark:ring-rose-900">
+          <p className="mb-2 truncate rounded-xl bg-room-rain/40 px-3 py-2 text-xs font-semibold text-room-ink/70 ring-1 ring-inset ring-room-rain">
             🎙 Đang nghe: “{voiceHint}”
           </p>
         )}
@@ -649,7 +651,7 @@ export default function AiTaskChat({ onTasksCreated }) {
               key={q}
               type="button"
               onClick={() => handleSend(q)}
-              className="cursor-pointer rounded-full bg-navy-50 px-2.5 py-1 text-[11px] font-semibold text-navy-600 ring-1 ring-inset ring-navy-100 transition hover:bg-violet-50 hover:text-violet-700 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600"
+              className="cursor-pointer rounded-full bg-room-oat/40 px-2.5 py-1 text-[11px] font-semibold text-room-ink/60 ring-1 ring-inset ring-room-acorn/15 transition hover:bg-room-oat/60 hover:text-room-ink"
             >
               {q.length > 42 ? q.slice(0, 42) + '…' : q}
             </button>
@@ -666,7 +668,7 @@ export default function AiTaskChat({ onTasksCreated }) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Nhập nhiều việc một lúc, vd: Sáng 7h tập gym. Chiều 2h họp team…"
-            className="h-11 flex-1 rounded-xl border-0 bg-navy-50 px-3.5 text-sm font-medium text-navy-900 ring-1 ring-inset ring-navy-100 placeholder:text-navy-300 focus:ring-2 focus:ring-violet-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600"
+            className="h-11 flex-1 rounded-xl bg-room-oat/40 px-3.5 text-sm font-semibold text-room-ink ring-1 ring-inset ring-room-acorn/20 transition placeholder:text-room-ink/30 focus:ring-2 focus:ring-room-acorn focus:outline-none"
           />
           <VoiceButton
             onText={onVoiceText}
@@ -678,7 +680,7 @@ export default function AiTaskChat({ onTasksCreated }) {
             type="submit"
             disabled={!input.trim() || busy || creating}
             aria-label="Gửi cho AI"
-            className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-brand-gradient text-white shadow-glow-blue transition hover:scale-105 disabled:opacity-50"
+            className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-room-acorn text-room-paper shadow-[0_14px_26px_-12px_rgb(0_0_0/0.30)] transition hover:brightness-[0.96] disabled:opacity-50"
           >
             <PaperPlaneTilt size={18} weight="fill" />
           </button>

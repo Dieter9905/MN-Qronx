@@ -5,7 +5,10 @@ import { useState } from 'react'
  * - Có `src` (vd ảnh từ Google) → hiển thị ảnh
  * - Không có `src`, hoặc ảnh tải lỗi → lùi về chữ cái đầu của tên
  */
-export default function Avatar({ name = '?', src = '', size = 'md', className = '' }) {
+// `skin="room"` (tùy chọn, thêm ở mốc 6): đĩa giấy Oat + ring Acorn cho thế
+// giới phòng — mặc định vẫn là da navy cũ để trang ngoài mốc này không đổi
+// diện mạo (nguyên tắc additive, như Modal skin="room").
+export default function Avatar({ name = '?', src = '', size = 'md', className = '', skin }) {
   const [failed, setFailed] = useState(false)
 
   const sizes = {
@@ -23,11 +26,15 @@ export default function Avatar({ name = '?', src = '', size = 'md', className = 
     .toUpperCase()
 
   const showImage = Boolean(src) && !failed
+  const tone =
+    skin === 'room'
+      ? 'bg-room-oat font-bold text-room-ink ring-1 ring-inset ring-room-acorn/25'
+      : 'bg-brand-gradient font-bold text-white'
 
   return (
     <span
       aria-hidden={showImage ? undefined : 'true'}
-      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-gradient font-bold text-white ${sizes[size]} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full ${tone} ${sizes[size]} ${className}`}
     >
       {showImage ? (
         <img

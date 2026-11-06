@@ -13,8 +13,7 @@ import {
 } from '@phosphor-icons/react'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
-import Button from '../../components/common/Button'
-import { Skeleton } from '../../components/common/Feedback'
+import { RoomButton, RoomCard, RoomSkeleton } from '../../components/common/RoomUI'
 import { getTasks, createTask, completeTask } from '../../services/taskService'
 import AiTaskChat from '../../components/AiTaskChat'
 import {
@@ -109,32 +108,30 @@ export default function AiAssistantPage() {
     ]
     return (
       <div className="mx-auto max-w-3xl animate-fade-in">
-        <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 p-8 text-white shadow-card">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider backdrop-blur">
-            <Brain size={13} weight="fill" /> Trợ lý AI · Gói Pro
+        <RoomCard className="p-8">
+          <span className="inline-flex items-center gap-2 rounded-full bg-room-oat/70 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-room-ink/60 ring-1 ring-inset ring-room-acorn/25">
+            <Brain size={13} weight="fill" className="text-room-acorn" /> Trợ lý AI · Gói Pro
           </span>
-          <h1 className="mt-4 text-3xl font-extrabold tracking-tight">Khoá AI đang chờ bạn</h1>
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-violet-100">
+          <h1 className="mt-4 font-display text-3xl font-bold text-room-ink">Khoá AI đang chờ bạn</h1>
+          <p className="mt-2 max-w-xl text-sm font-semibold leading-relaxed text-room-ink/60">
             Nâng cấp lên <b>Pro</b> để dùng toàn bộ trợ lý AI của MN-Qronx – tự động ưu tiên,
             cảnh báo lịch và chia nhỏ công việc chỉ trong vài giây.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Link to="/app/billing">
-              <Button variant="light" icon={Crown}>
-                Nâng cấp lên Pro
-              </Button>
+              <RoomButton icon={Crown}>Nâng cấp lên Pro</RoomButton>
             </Link>
           </div>
-        </div>
+        </RoomCard>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           {aiFeatures.map((f) => (
-            <div key={f} className="card flex items-start gap-3 p-4">
-              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400">
+            <RoomCard key={f} className="flex items-start gap-3 p-4">
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-room-bell/25 text-room-bell ring-1 ring-inset ring-room-bell/40">
                 <Sparkle size={16} weight="fill" />
               </span>
-              <p className="text-sm font-medium text-navy-700 dark:text-slate-300">{f}</p>
-            </div>
+              <p className="text-sm font-semibold text-room-ink/70">{f}</p>
+            </RoomCard>
           ))}
         </div>
       </div>
@@ -146,25 +143,25 @@ export default function AiAssistantPage() {
     <div className="mx-auto max-w-4xl space-y-6 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-extrabold tracking-tight text-navy-900 dark:text-white">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-gradient text-white">
-              <Brain size={21} weight="fill" />
+          <h1 className="flex items-center gap-2.5 font-display text-2xl font-bold text-room-ink">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-room-oat/45 text-room-acorn ring-1 ring-inset ring-room-acorn/25">
+              <Brain size={21} weight="duotone" />
             </span>
             Trợ lý AI
           </h1>
-          <p className="mt-1 text-sm font-medium text-navy-400 dark:text-slate-500">
+          <p className="mt-1 text-sm font-semibold text-room-ink/45">
             AI phân tích công việc của bạn và đưa ra gợi ý hành động thông minh
           </p>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-glow-purple">
-          <Crown size={12} weight="fill" /> Pro
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-room-oat/70 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-room-ink/55 ring-1 ring-inset ring-room-acorn/25">
+          <Crown size={12} weight="fill" className="text-room-bell" /> Pro
         </span>
       </div>
 
       {loading ? (
         <div className="space-y-3">
-          <Skeleton className="h-24" />
-          <Skeleton className="h-64" />
+          <RoomSkeleton className="h-24" />
+          <RoomSkeleton className="h-64" />
         </div>
       ) : (
         <>
@@ -172,42 +169,42 @@ export default function AiAssistantPage() {
           <AiTaskChat onTasksCreated={() => load({ silent: true })} />
 
           {priorityList.length === 0 && tasks.length === 0 ? (
-        <div className="card p-10 text-center">
-          <Brain size={40} className="mx-auto text-navy-300" />
-          <p className="mt-3 font-bold text-navy-700">Chưa có công việc nào để AI phân tích</p>
-          <p className="mt-1 text-sm text-navy-400">Tạo vài công việc rồi quay lại, AI sẽ giúp bạn sắp xếp.</p>
-        </div>
+        <RoomCard className="p-10 text-center">
+          <Brain size={40} className="mx-auto text-room-ink/30" />
+          <p className="mt-3 font-display font-bold text-room-ink">Chưa có công việc nào để AI phân tích</p>
+          <p className="mt-1 text-sm font-semibold text-room-ink/45">Tạo vài công việc rồi quay lại, AI sẽ giúp bạn sắp xếp.</p>
+        </RoomCard>
           ) : (
         <>
           {/* Nên làm gì tiếp theo */}
-          <section className="card overflow-hidden dark:bg-slate-800">
-            <div className="border-b border-navy-100 bg-gradient-to-r from-blue-50 to-cyan-50 px-5 py-4 dark:border-slate-700 dark:from-blue-900/20 dark:to-cyan-900/20">
-              <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-                <ListChecks size={19} weight="fill" className="text-blue-600 dark:text-blue-400" />
+          <section className="rounded-2xl bg-room-paper ring-1 ring-room-acorn/25 overflow-hidden">
+            <div className="border-b border-room-acorn/15 bg-room-oat/35 px-5 py-4">
+              <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
+                <ListChecks size={19} weight="duotone" className="text-room-acorn" />
                 Nên làm gì tiếp theo?
               </h2>
-              <p className="mt-0.5 text-xs text-navy-400 dark:text-slate-500">
+              <p className="mt-0.5 text-xs font-semibold text-room-ink/45">
                 AI xếp hạng theo độ khẩn cấp + mức ưu tiên của bạn
               </p>
             </div>
-            <ul className="divide-y divide-navy-50 dark:divide-slate-700">
+            <ul className="divide-y divide-room-acorn/10">
               {priorityList.map(({ task, reasons, recommendation }, i) => (
                 <li key={task.id} className="flex items-center gap-3 px-4 py-3">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy-100 text-xs font-extrabold text-navy-600 dark:bg-slate-700 dark:text-slate-300">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-room-oat/60 text-xs font-extrabold text-room-ink/60">
                     {i + 1}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-navy-900 dark:text-white">{task.title}</p>
+                    <p className="truncate text-sm font-bold text-room-ink/90">{task.title}</p>
                     <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                       {reasons.map((r) => (
                         <span
                           key={r}
                           className={`rounded-full px-2 py-px text-[10px] font-bold ring-1 ring-inset ${
                             task.status === 'IN_PROGRESS'
-                              ? 'bg-blue-50 text-blue-600 ring-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:ring-blue-700'
+                              ? 'bg-room-rain/40 text-room-ink/60 ring-room-rain'
                               : r.startsWith('Quá hạn')
-                                ? 'bg-rose-50 text-rose-600 ring-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:ring-rose-700'
-                                : 'bg-navy-50 text-navy-500 ring-navy-100 dark:bg-slate-700 dark:text-slate-400 dark:ring-slate-600'
+                                ? 'bg-room-blush/45 text-room-ink/85 ring-room-acorn/20 dark:bg-room-blush/30 dark:ring-room-acorn/25'
+                                : 'bg-room-oat/60 text-room-ink/55 ring-room-acorn/15'
                           }`}
                         >
                           {r}
@@ -216,8 +213,8 @@ export default function AiAssistantPage() {
                       <span
                         className={`rounded-full px-2 py-px text-[10px] font-extrabold ring-1 ring-inset ${
                           task.isOverdue || task.overdue
-                            ? 'bg-rose-600 text-white ring-rose-600'
-                            : 'bg-emerald-100 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-400 dark:ring-emerald-800'
+                            ? 'bg-room-blush/60 text-room-ink/90 ring-room-acorn/25 dark:bg-room-blush/40'
+                            : 'bg-room-bell/25 text-room-ink/80 ring-room-bell/40'
                         }`}
                       >
                         {recommendation}
@@ -233,7 +230,7 @@ export default function AiAssistantPage() {
                       onClick={() => doComplete(task.id)}
                       disabled={completing === task.id}
                       title="Đánh dấu hoàn thành"
-                      className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-emerald-600 transition hover:bg-emerald-50 disabled:opacity-50"
+                      className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-room-sage transition hover:bg-room-sage/30 disabled:opacity-50"
                     >
                       <CheckCircle size={19} weight={completing === task.id ? 'fill' : 'regular'} />
                     </button>
@@ -244,9 +241,9 @@ export default function AiAssistantPage() {
           </section>
 
           {/* Cảnh báo lịch */}
-          <section className="card p-5 dark:bg-slate-800">
-            <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-              <Warning size={19} weight="fill" className="text-amber-500" />
+          <section className="rounded-2xl bg-room-paper p-5 ring-1 ring-room-acorn/25">
+            <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
+              <Warning size={19} weight="duotone" className="text-room-bell" />
               AI Cảnh báo lịch
             </h2>
             <ul className="mt-3 space-y-2.5">
@@ -255,10 +252,10 @@ export default function AiAssistantPage() {
                   key={i}
                   className={`flex items-start gap-3 rounded-xl p-3 ring-1 ring-inset ${
                     w.level === 'danger'
-                      ? 'bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:ring-rose-800'
+                      ? 'bg-room-blush/45 text-room-ink/85 ring-room-acorn/20 dark:bg-room-blush/30 dark:ring-room-acorn/25'
                       : w.level === 'warn'
-                        ? 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:ring-amber-800'
-                        : 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:ring-emerald-800'
+                        ? 'bg-room-bell/25 text-room-ink/85 ring-room-bell/40'
+                        : 'bg-room-sage/45 text-room-ink/85 ring-room-acorn/20'
                   }`}
                 >
                   <span className="mt-0.5 shrink-0">
@@ -272,7 +269,7 @@ export default function AiAssistantPage() {
                   </span>
                   <div>
                     <p className="text-sm font-bold">{w.title}</p>
-                    <p className="mt-0.5 text-xs leading-relaxed opacity-90">{w.detail}</p>
+                    <p className="mt-0.5 text-xs font-semibold leading-relaxed opacity-90">{w.detail}</p>
                   </div>
                 </li>
               ))}
@@ -280,12 +277,12 @@ export default function AiAssistantPage() {
           </section>
 
           {/* Tách việc con bằng AI */}
-          <section className="card p-5 dark:bg-slate-800">
-            <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-              <Sparkle size={19} weight="fill" className="text-violet-500" />
+          <section className="rounded-2xl bg-room-paper p-5 ring-1 ring-room-acorn/25">
+            <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
+              <Sparkle size={19} weight="duotone" className="text-room-bell" />
               AI tách việc con
             </h2>
-            <p className="mt-0.5 text-xs text-navy-400 dark:text-slate-500">
+            <p className="mt-0.5 text-xs font-semibold text-room-ink/45">
               Nhập tên công việc – AI gợi ý các bước thực hiện cụ thể (có thể tạo kèm luôn)
             </p>
             <div className="mt-3 flex flex-col gap-2">
@@ -293,30 +290,30 @@ export default function AiAssistantPage() {
                 value={breakdownTitle}
                 onChange={(e) => setBreakdownTitle(e.target.value)}
                 placeholder="Ví dụ: Làm bài tập lớn môn Web…"
-                className="h-11 w-full rounded-xl border-0 bg-navy-50 px-3.5 text-sm font-semibold text-navy-900 ring-1 ring-inset ring-navy-100 placeholder:text-navy-300 focus:ring-2 focus:ring-violet-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600"
+                className="h-11 w-full rounded-xl bg-room-oat/40 px-3.5 text-sm font-bold text-room-ink ring-1 ring-inset ring-room-acorn/20 placeholder:text-room-ink/30 transition focus:ring-2 focus:ring-room-acorn focus:outline-none"
               />
               <input
                 value={breakdownDesc}
                 onChange={(e) => setBreakdownDesc(e.target.value)}
                 placeholder="Mô tả ngắn (tùy chọn) – giúp AI gợi ý sát hơn…"
-                className="h-11 w-full rounded-xl border-0 bg-navy-50 px-3.5 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 placeholder:text-navy-300 focus:ring-2 focus:ring-violet-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600"
+                className="h-11 w-full rounded-xl bg-room-oat/40 px-3.5 text-sm text-room-ink ring-1 ring-inset ring-room-acorn/20 placeholder:text-room-ink/30 transition focus:ring-2 focus:ring-room-acorn focus:outline-none"
               />
               <div className="flex justify-end">
-                <Button variant="gradient" size="sm" icon={Sparkle} onClick={analyzeBreakdown} disabled={!breakdownTitle.trim()}>
+                <RoomButton size="sm" icon={Sparkle} iconWeight="fill" onClick={analyzeBreakdown} disabled={!breakdownTitle.trim()}>
                   AI gợi ý các bước
-                </Button>
+                </RoomButton>
               </div>
             </div>
 
             {breakdown && (
-              <div className="mt-4 rounded-xl bg-violet-50/60 p-4 ring-1 ring-violet-100 dark:bg-violet-900/20 dark:ring-violet-800/50">
-                <p className="text-sm font-bold text-violet-700 dark:text-violet-300">
+              <div className="mt-4 rounded-xl bg-room-oat/35 p-4 ring-1 ring-inset ring-room-acorn/15">
+                <p className="text-sm font-bold text-room-ink/85">
                   ✨ Các bước AI đề xuất cho “{breakdownTitle.trim()}”:
                 </p>
                 <ul className="mt-2.5 space-y-1.5">
                   {breakdown.steps.map((s, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm text-navy-700 dark:text-slate-300">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-violet-100 text-[10px] font-extrabold text-violet-700 dark:bg-violet-800/50 dark:text-violet-200">
+                    <li key={i} className="flex items-center gap-2 text-sm font-semibold text-room-ink/70">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-room-paper text-[10px] font-extrabold text-room-ink/60 ring-1 ring-inset ring-room-acorn/25">
                         {i + 1}
                       </span>
                       {s.content}
@@ -324,23 +321,22 @@ export default function AiAssistantPage() {
                   ))}
                 </ul>
                 {breakdown.hint && (
-                  <p className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-violet-500 dark:text-violet-400">
+                  <p className="mt-3 flex items-center gap-1.5 text-xs font-bold text-room-bell">
                     <CalendarBlank size={13} weight="bold" /> {breakdown.hint}
                   </p>
                 )}
                 <div className="mt-4 flex justify-end gap-2">
-                  <Button variant="secondary" size="sm" onClick={() => setBreakdown(null)}>
+                  <RoomButton variant="secondary" size="sm" onClick={() => setBreakdown(null)}>
                     Bỏ
-                  </Button>
-                  <Button
-                    variant="gradient"
+                  </RoomButton>
+                  <RoomButton
                     size="sm"
                     icon={ArrowRight}
                     loading={creating}
                     onClick={createFromBreakdown}
                   >
                     Tạo công việc kèm các bước
-                  </Button>
+                  </RoomButton>
                 </div>
               </div>
             )}

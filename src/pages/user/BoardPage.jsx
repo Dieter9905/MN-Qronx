@@ -15,10 +15,10 @@ import { getMembers } from '../../services/workspaceService'
 import { useWorkspace } from '../../context/WorkspaceContext'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
-import { PageLoader, EmptyState } from '../../components/common/Feedback'
 import Avatar from '../../components/common/Avatar'
 import { PRIORITY } from '../../lib/constants'
 import { formatRelativeDay } from '../../lib/format'
+import { RoomButton, RoomCard, RoomEmpty, RoomSegmented, RoomSkeleton } from '../../components/common/RoomUI'
 
 // ─── Bảng công việc của Nhóm (Jira-lite) ────────────────────────────────
 //
@@ -35,20 +35,20 @@ const COLUMNS = [
   {
     key: 'TODO',
     label: 'Cần làm',
-    accent: 'border-t-slate-400 dark:border-t-slate-500',
-    dot: 'bg-slate-400',
+    accent: 'border-t-room-acorn/50',
+    dot: 'bg-room-acorn/50',
   },
   {
     key: 'IN_PROGRESS',
     label: 'Đang làm',
-    accent: 'border-t-blue-500',
-    dot: 'bg-blue-500',
+    accent: 'border-t-room-rain',
+    dot: 'bg-room-rain',
   },
   {
     key: 'COMPLETED',
     label: 'Hoàn thành',
-    accent: 'border-t-emerald-500',
-    dot: 'bg-emerald-500',
+    accent: 'border-t-room-sage',
+    dot: 'bg-room-sage',
   },
 ]
 
@@ -66,14 +66,14 @@ function cardTotal(list) {
   return list.length
 }
 
-/** Hình minh hoạ nhỏ cho cột trống — cột trống không nên là một ô trắng câm. */
-function EmptyColumnArt({ tone = 'slate' }) {
+/** Hình minh hoạ nhỏ cho cột trống — cột trống không nên là một ô giấy câm. */
+function EmptyColumnArt({ tone = 'oat' }) {
   const tones = {
-    slate: '#cbd5e1',
-    blue: '#93c5fd',
-    emerald: '#6ee7b7',
+    oat: '#eaddc7',
+    rain: '#b7c7d6',
+    sage: '#a9c4b1',
   }
-  const color = tones[tone] || tones.slate
+  const color = tones[tone] || tones.oat
   return (
     <svg viewBox="0 0 96 56" className="h-14 w-24 opacity-80" aria-hidden="true">
       <ellipse cx="48" cy="50" rx="30" ry="3.5" fill={color} opacity="0.25" />
@@ -225,26 +225,39 @@ export default function BoardPage() {
     return map
   }, [filtered])
 
-  if (loading) return <PageLoader />
+  if (loading) {
+    return (
+      <div className="space-y-4 animate-fade-in">
+        <RoomSkeleton className="h-36" />
+        <div className="grid gap-3 lg:grid-cols-3">
+          <RoomSkeleton className="min-h-[26rem]" />
+          <RoomSkeleton className="min-h-[26rem]" />
+          <RoomSkeleton className="min-h-[26rem]" />
+        </div>
+      </div>
+    )
+  }
 
   if (!isTeam) {
     return (
       <div className="mx-auto max-w-2xl space-y-5 animate-fade-in">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-navy-900 dark:text-white">
-            <UsersThree size={24} weight="fill" className="text-violet-600 dark:text-violet-400" />
+          <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-room-ink">
+            <UsersThree size={26} weight="duotone" className="text-room-acorn" />
             Bảng công việc
           </h1>
-          <p className="mt-1 text-sm text-navy-500 dark:text-slate-400">
+          <p className="mt-1 text-sm font-semibold text-room-ink/50">
             Bảng kéo-thả là nơi làm việc của cả nhóm — chỉ mở trong chế độ Nhóm làm việc.
           </p>
         </div>
-        <EmptyState
-          icon={UsersThree}
-          title="Đang ở chế độ khác"
-          description="Chọn một nhóm ở khối “Chế độ làm việc” bên trái, hoặc tạo nhóm mới, để dùng bảng công việc."
-          className="py-14"
-        />
+        <RoomCard className="p-6">
+          <RoomEmpty
+            icon={UsersThree}
+            title="Đang ở chế độ khác"
+            description="Chọn một nhóm ở khối “Chế độ làm việc” bên trái, hoặc tạo nhóm mới, để dùng bảng công việc."
+            className="py-10"
+          />
+        </RoomCard>
       </div>
     )
   }
@@ -254,44 +267,41 @@ export default function BoardPage() {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      {/* Khối đầu trang: nền chuyển sắc + số liệu nhanh của nhóm. Bảng công việc
+      {/* Khối đầu trang: bảng giấy của nhóm + số liệu nhanh. Bảng công việc
           là nơi cả nhóm nhìn chung, nên câu trả lời "hôm nay nhóm đang ở đâu"
           phải thấy ngay trước khi kéo thẻ. */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600 p-5 text-white shadow-glow-purple">
-        <span className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-white/20 blur-2xl" aria-hidden="true" />
-        <span className="pointer-events-none absolute -bottom-20 left-1/3 h-44 w-44 rounded-full bg-cyan-300/25 blur-2xl" aria-hidden="true" />
-
-        <div className="relative flex flex-wrap items-start justify-between gap-4">
+      <RoomCard className="p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/70">Nhóm làm việc</p>
-            <h1 className="mt-1 flex items-center gap-2 text-2xl font-extrabold tracking-tight">
-              <UsersThree size={24} weight="fill" className="text-cyan-200" />
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-room-ink/50">Nhóm làm việc</p>
+            <h1 className="mt-1 flex items-center gap-2 font-display text-2xl font-bold text-room-ink">
+              <UsersThree size={26} weight="duotone" className="text-room-acorn" />
               {workspace.name}
             </h1>
-            <p className="mt-1 max-w-xl text-sm font-medium text-white/85">
+            <p className="mt-1 max-w-xl text-sm font-semibold text-room-ink/55">
               Bảng công việc — kéo thẻ đổi cột, chọn người phụ trách ngay trên thẻ.
             </p>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold ring-1 ring-inset ring-white/25">
-                <span className="h-1.5 w-1.5 rounded-full bg-slate-200" aria-hidden="true" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-room-oat/50 px-3 py-1 text-xs font-bold text-room-ink/70">
+                <span className="h-1.5 w-1.5 rounded-full bg-room-acorn/50" aria-hidden="true" />
                 {byColumn.TODO.length} cần làm
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold ring-1 ring-inset ring-white/25">
-                <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" aria-hidden="true" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-room-oat/50 px-3 py-1 text-xs font-bold text-room-ink/70">
+                <span className="h-1.5 w-1.5 rounded-full bg-room-rain" aria-hidden="true" />
                 {byColumn.IN_PROGRESS.length} đang làm
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold ring-1 ring-inset ring-white/25">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" aria-hidden="true" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-room-oat/50 px-3 py-1 text-xs font-bold text-room-ink/70">
+                <span className="h-1.5 w-1.5 rounded-full bg-room-sage" aria-hidden="true" />
                 {byColumn.COMPLETED.length} xong
               </span>
               {overdueCount > 0 && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/90 px-3 py-1 text-xs font-bold ring-1 ring-inset ring-white/30">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-room-blush/45 px-3 py-1 text-xs font-bold text-room-ink/85 ring-1 ring-inset ring-room-acorn/20 dark:bg-room-blush/30">
                   <Warning size={12} weight="fill" />
                   {overdueCount} quá hạn
                 </span>
               )}
-              <span className="text-xs font-semibold text-white/70">· {openCount} việc đang mở</span>
+              <span className="text-xs font-semibold text-room-ink/50">· {openCount} việc đang mở</span>
             </div>
           </div>
 
@@ -304,55 +314,41 @@ export default function BoardPage() {
                   name={m.user?.fullName}
                   src={m.user?.avatarUrl || ''}
                   size="sm"
-                  className="ring-2 ring-white/90"
+                  skin="room"
+                  className="ring-2 ring-room-paper"
                 />
               ))}
               {members.length > 5 && (
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-[11px] font-bold text-white ring-2 ring-white/80">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-room-oat/70 text-[11px] font-bold text-room-ink/60 ring-2 ring-room-paper">
                   +{members.length - 5}
                 </span>
               )}
             </div>
-            <Link
-              to="/app/tasks/new"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-sm font-bold text-indigo-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              <Plus size={16} weight="bold" />
-              Tạo việc
+            <Link to="/app/tasks/new">
+              <RoomButton icon={Plus}>Tạo việc</RoomButton>
             </Link>
           </div>
         </div>
-      </div>
+      </RoomCard>
 
       {/* Lọc theo người + tìm nhanh — không đổi trang, chỉ thu hẹp thẻ trên bảng */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex rounded-xl bg-navy-50 p-1 ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
-          {SCOPES.map((s) => (
-            <button
-              key={s.key}
-              type="button"
-              onClick={() => setScope(s.key)}
-              className={[
-                'cursor-pointer rounded-lg px-3 py-1.5 text-xs font-bold transition',
-                scope === s.key
-                  ? 'bg-white text-navy-900 shadow-sm dark:bg-slate-700 dark:text-white'
-                  : 'text-navy-500 hover:text-navy-800 dark:text-slate-400 dark:hover:text-white',
-              ].join(' ')}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
+        <RoomSegmented
+          size="sm"
+          options={SCOPES.map((s) => ({ value: s.key, label: s.label }))}
+          value={scope}
+          onChange={setScope}
+        />
         <label className="relative flex-1 sm:max-w-xs">
           <MagnifyingGlass
             size={16}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-navy-400 dark:text-slate-500"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-room-ink/35"
           />
           <input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="Tìm việc trong nhóm…"
-            className="w-full rounded-xl border border-navy-100 bg-white py-2 pl-9 pr-3 text-sm text-navy-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:ring-blue-900/40"
+            className="w-full rounded-xl bg-room-paper py-2 pl-9 pr-3 text-sm text-room-ink ring-1 ring-inset ring-room-acorn/25 outline-none transition placeholder:text-room-ink/30 hover:ring-room-acorn/45 focus:ring-2 focus:ring-room-acorn"
           />
         </label>
       </div>
@@ -378,20 +374,20 @@ export default function BoardPage() {
                 if (task) onMove(task, col.key)
               }}
               className={[
-                'flex min-h-[26rem] flex-col rounded-2xl border-t-4 bg-navy-50/60 p-3 ring-1 transition dark:bg-slate-800/40',
+                'flex min-h-[26rem] flex-col rounded-2xl border-t-4 bg-room-oat/35 p-3 ring-1 transition',
                 col.accent,
                 isOver
-                  ? 'ring-2 ring-blue-400 dark:ring-blue-500'
-                  : 'ring-navy-100 dark:ring-slate-700',
+                  ? 'ring-2 ring-room-acorn'
+                  : 'ring-room-acorn/25',
               ].join(' ')}
               aria-label={`Cột ${col.label}`}
             >
               <header className="mb-2 flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
                   <span className={`h-2 w-2 rounded-full ${col.dot}`} aria-hidden="true" />
-                  <h2 className="text-sm font-extrabold text-navy-800 dark:text-slate-100">{col.label}</h2>
+                  <h2 className="font-display text-sm font-bold text-room-ink/90">{col.label}</h2>
                 </div>
-                <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-navy-500 ring-1 ring-navy-100 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600">
+                <span className="rounded-full bg-room-paper px-2 py-0.5 text-[11px] font-bold text-room-ink/55 ring-1 ring-inset ring-room-acorn/20">
                   {cardTotal(list)}
                 </span>
               </header>
@@ -415,15 +411,15 @@ export default function BoardPage() {
                       }}
                       onDragEnd={() => setDraggingId(null)}
                       className={[
-                        'group cursor-grab rounded-xl bg-white p-3 shadow-sm ring-1 ring-navy-100 transition active:cursor-grabbing dark:bg-slate-900 dark:ring-slate-700',
-                        draggingId === task.id ? 'opacity-50' : 'hover:-translate-y-0.5 hover:shadow-md',
+                        'group cursor-grab rounded-xl bg-room-paper p-3 ring-1 ring-room-acorn/25 transition active:cursor-grabbing',
+                        draggingId === task.id ? 'opacity-50' : 'hover:-translate-y-0.5 hover:ring-room-acorn/50',
                         busyId === task.id ? 'animate-pulse' : '',
                       ].join(' ')}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <Link
                           to={`/app/tasks/${task.id}`}
-                          className="line-clamp-2 text-sm font-bold text-navy-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
+                          className="line-clamp-2 text-sm font-bold text-room-ink/90 hover:text-room-acorn"
                         >
                           {task.title}
                         </Link>
@@ -432,11 +428,12 @@ export default function BoardPage() {
                             name={assignee.fullName}
                             src={assignee.avatarUrl || ''}
                             size="sm"
+                            skin="room"
                             className="!h-6 !w-6 text-[10px]"
                           />
                         ) : (
                           <span
-                            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-navy-100 text-navy-400 dark:bg-slate-700 dark:text-slate-400"
+                            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-room-oat/70 text-room-ink/40 ring-1 ring-inset ring-room-acorn/15"
                             title="Chưa giao cho ai"
                           >
                             <UserPlus size={13} />
@@ -445,7 +442,7 @@ export default function BoardPage() {
                       </div>
 
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                        <span className="inline-flex items-center gap-1 rounded-md bg-navy-50 px-1.5 py-0.5 text-[10px] font-bold text-navy-600 ring-1 ring-navy-100 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-room-oat/50 px-1.5 py-0.5 text-[10px] font-bold text-room-ink/65">
                           <span className={`h-1.5 w-1.5 rounded-full ${priority.dot}`} aria-hidden="true" />
                           {priority.label}
                         </span>
@@ -454,8 +451,8 @@ export default function BoardPage() {
                             className={[
                               'rounded-md px-1.5 py-0.5 text-[10px] font-bold ring-1',
                               overdue
-                                ? 'bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:ring-rose-800'
-                                : 'bg-white text-navy-500 ring-navy-100 dark:bg-slate-800 dark:text-slate-400 dark:ring-slate-700',
+                                ? 'bg-room-blush/45 text-room-ink/85 ring-room-acorn/20 dark:bg-room-blush/30 dark:ring-room-acorn/25'
+                                : 'bg-room-paper text-room-ink/55 ring-room-acorn/15',
                             ].join(' ')}
                           >
                             {formatRelativeDay(task.dueAt)}
@@ -470,7 +467,7 @@ export default function BoardPage() {
                           disabled={busyId === task.id}
                           onChange={(e) => onAssign(task, e.target.value ? Number(e.target.value) : null)}
                           onDragStart={(e) => e.preventDefault()}
-                          className="min-w-0 flex-1 cursor-pointer truncate rounded-lg border border-transparent bg-transparent px-1 py-1 text-[11px] font-semibold text-navy-500 outline-none transition hover:border-navy-200 hover:bg-navy-50 focus:border-blue-300 focus:bg-white dark:text-slate-400 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:focus:bg-slate-800"
+                          className="min-w-0 flex-1 cursor-pointer truncate rounded-lg border border-transparent bg-transparent px-1 py-1 text-[11px] font-semibold text-room-ink/55 outline-none transition hover:border-room-acorn/40 hover:bg-room-oat/60 focus:border-room-acorn focus:bg-room-paper"
                           aria-label={`Người phụ trách của ${task.title}`}
                         >
                           <option value="">Chưa giao — ai nhận cũng được</option>
@@ -491,7 +488,7 @@ export default function BoardPage() {
                               onClick={() => onMove(task, prev.key)}
                               disabled={busyId === task.id}
                               title={`Chuyển về ${prev.label}`}
-                              className="cursor-pointer rounded-md p-1 text-navy-400 hover:bg-navy-100 hover:text-navy-700 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-white"
+                              className="cursor-pointer rounded-md p-1 text-room-ink/35 transition hover:bg-room-oat/75 hover:text-room-ink"
                             >
                               <CaretLeft size={12} weight="bold" />
                             </button>
@@ -502,7 +499,7 @@ export default function BoardPage() {
                               onClick={() => onMove(task, next.key)}
                               disabled={busyId === task.id}
                               title={next.key === 'COMPLETED' ? 'Đánh dấu hoàn thành' : `Chuyển sang ${next.label}`}
-                              className="cursor-pointer rounded-md p-1 text-navy-400 hover:bg-navy-100 hover:text-navy-700 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-white"
+                              className="cursor-pointer rounded-md p-1 text-room-ink/35 transition hover:bg-room-oat/75 hover:text-room-ink"
                             >
                               {next.key === 'COMPLETED' ? (
                                 <Check size={12} weight="bold" />
@@ -518,15 +515,15 @@ export default function BoardPage() {
                 })}
 
                 {!list.length && (
-                  <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-navy-200 px-3 py-6 text-center dark:border-slate-600">
+                  <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-room-acorn/40 px-3 py-6 text-center">
                     {col.key === 'COMPLETED' ? (
-                      <EmptyColumnArt tone="emerald" />
+                      <EmptyColumnArt tone="sage" />
                     ) : col.key === 'IN_PROGRESS' ? (
-                      <EmptyColumnArt tone="blue" />
+                      <EmptyColumnArt tone="rain" />
                     ) : (
-                      <EmptyColumnArt tone="slate" />
+                      <EmptyColumnArt tone="oat" />
                     )}
-                    <p className="text-xs font-semibold text-navy-400 dark:text-slate-500">
+                    <p className="text-xs font-semibold text-room-ink/45">
                       {scope === 'mine'
                         ? 'Chưa có việc nào giao cho bạn ở cột này'
                         : scope === 'unassigned'
