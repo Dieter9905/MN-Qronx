@@ -21,7 +21,7 @@ import {
   Eye,
   EyeSlash,
 } from '@phosphor-icons/react'
-import Button from '../../components/common/Button'
+import { RoomButton, RoomCard, RoomSkeleton } from '../../components/common/RoomUI'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
 import { formatDate, formatVnd } from '../../lib/format'
@@ -43,20 +43,24 @@ import {
 } from '../../services/billingService'
 
 const PLAN_ICON = { FREE: Sparkle, PLUS: Rocket, PRO: Crown, BUSINESS: Crown }
+// Đĩa icon gói (trang trí bề mặt) về tông phòng — chip PLAN_BADGE (dữ liệu tên gói ở
+// Header/Admin) giữ nguyên màu dữ liệu theo luật mốc.
 const PLAN_ICON_COLOR = {
-  FREE: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
-  PLUS: 'bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300',
-  PRO: 'bg-violet-50 text-violet-600 dark:bg-violet-900/40 dark:text-violet-300',
-  BUSINESS: 'bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-900/40 dark:text-fuchsia-300',
+  FREE: 'bg-room-oat/70 text-room-ink/50',
+  PLUS: 'bg-room-rain/40 text-room-ink/65',
+  PRO: 'bg-room-bell/25 text-room-bell ring-1 ring-inset ring-room-bell/40',
+  BUSINESS: 'bg-room-acorn/20 text-room-acorn',
 }
 // Thang bậc gói: cao hơn thì là "nâng cấp", thấp hơn/ngang thì là "gia hạn".
 const RANK = { FREE: 0, PLUS: 1, PRO: 2, BUSINESS: 3 }
 
+// Trạng thái đơn = verdict bằng tông: chờ = Bell (chuông chưa re), đã thanh toán =
+// Sage (chỉ hoàn thành), huỷ = Rain (trung tính), hết hạn = Blush (deadline đã qua).
 const ORDER_STATUS = {
-  PENDING: { label: 'Chờ thanh toán', cls: 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:ring-amber-800/50' },
-  PAID: { label: 'Đã thanh toán', cls: 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:ring-emerald-800/50' },
-  CANCELLED: { label: 'Đã huỷ', cls: 'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:ring-slate-600' },
-  EXPIRED: { label: 'Hết hạn', cls: 'bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:ring-rose-800/50' },
+  PENDING: { label: 'Chờ thanh toán', cls: 'bg-room-bell/25 text-room-ink/85 ring-room-bell/40' },
+  PAID: { label: 'Đã thanh toán', cls: 'bg-room-sage/45 text-room-ink/85 ring-room-acorn/20' },
+  CANCELLED: { label: 'Đã huỷ', cls: 'bg-room-rain/30 text-room-ink/60 ring-room-rain' },
+  EXPIRED: { label: 'Hết hạn', cls: 'bg-room-blush/45 text-room-ink/85 ring-room-acorn/20 dark:bg-room-blush/30' },
 }
 
 function daysRemaining(expiresAt) {
@@ -159,16 +163,16 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
   // ── Người trong nhóm: biết mình dùng chung của ai, và rời đi được ──
   if (isSeat) {
     return (
-      <section className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
-        <p className="inline-flex items-center gap-2 text-sm font-extrabold text-navy-900 dark:text-white">
-          <UsersThree size={18} weight="fill" className="text-fuchsia-500" /> Gói Pro Doanh nghiệp
+      <RoomCard className="p-5">
+        <p className="inline-flex items-center gap-2 text-sm font-extrabold text-room-ink">
+          <UsersThree size={18} weight="duotone" className="text-room-acorn" /> Gói Pro Doanh nghiệp
         </p>
-        <p className="mt-3 text-sm text-navy-600 dark:text-slate-300">
-          Bạn đang dùng chung gói Pro Doanh nghiệp của <b>{family?.owner?.fullName || 'chủ nhóm'}</b>
+        <p className="mt-3 text-sm font-semibold text-room-ink/70">
+          Bạn đang dùng chung gói Pro Doanh nghiệp của <b className="text-room-ink">{family?.owner?.fullName || 'chủ nhóm'}</b>
           {expiresAt && (
             <>
               {' '}
-              — gói còn hiệu lực tới <b>{formatDate(expiresAt)}</b>
+              — gói còn hiệu lực tới <b className="text-room-ink">{formatDate(expiresAt)}</b>
             </>
           )}
           . Mọi quyền lợi Pro (nhắc dai, báo cáo năng suất, kế hoạch tuần, nhờ người khác làm) đều dùng
@@ -176,77 +180,77 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {!confirmLeave ? (
-            <Button variant="secondary" icon={UsersThree} onClick={() => setConfirmLeave(true)}>
+            <RoomButton variant="secondary" icon={UsersThree} onClick={() => setConfirmLeave(true)}>
               Rời gói doanh nghiệp
-            </Button>
+            </RoomButton>
           ) : (
             <>
-              <Button icon={Check} onClick={leave}>
+              <RoomButton variant="danger" icon={Check} onClick={leave}>
                 Chắc chắn — rời gói
-              </Button>
-              <Button variant="ghost" onClick={() => setConfirmLeave(false)}>
+              </RoomButton>
+              <RoomButton variant="secondary" onClick={() => setConfirmLeave(false)}>
                 Để ở lại
-              </Button>
+              </RoomButton>
             </>
           )}
         </div>
         {/* Chủ gói xem được tiến độ của người này ở mục Cả nhóm — phải nói ngay ở
             đây, không thì khách phát hiện ra sau và thấy như bị theo dõi. */}
-        <p className="mt-3 flex items-start gap-2 text-xs font-semibold text-navy-500 dark:text-slate-400">
+        <p className="mt-3 flex items-start gap-2 text-xs font-semibold text-room-ink/60">
           {family?.progressShared === false ? (
             <>
-              <EyeSlash size={14} weight="fill" className="mt-0.5 shrink-0 text-navy-400" />
+              <EyeSlash size={14} weight="fill" className="mt-0.5 shrink-0 text-room-ink/35" />
               Bạn đã tắt chia sẻ tiến độ — chủ gói không thấy số liệu công việc của bạn.
             </>
           ) : (
             <>
-              <Eye size={14} weight="fill" className="mt-0.5 shrink-0 text-fuchsia-500" />
+              <Eye size={14} weight="fill" className="mt-0.5 shrink-0 text-room-acorn" />
               Chủ gói thấy được tiến độ công việc của bạn (số việc xong, việc quá hạn — không đọc được nội dung).
-              Bật/tắt ở mục <Link to="/app/family" className="font-extrabold underline">Cả nhóm</Link>.
+              Bật/tắt ở mục <Link to="/app/family" className="font-extrabold text-room-acorn underline underline-offset-2">Cả nhóm</Link>.
             </>
           )}
         </p>
-        <p className="mt-3 text-xs text-navy-400 dark:text-slate-500">
+        <p className="mt-3 text-xs font-semibold text-room-ink/50">
           Rời gói không xoá dữ liệu nào của bạn — chỉ là trở lại gói Miễn phí, và bạn vẫn mua được gói riêng
           bất cứ lúc nào.
         </p>
-      </section>
+      </RoomCard>
     )
   }
 
   // ── Chủ gói: mời, xem chỗ trống, gỡ ──
   if (isOwner) {
     return (
-      <section className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
+      <RoomCard className="p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="inline-flex items-center gap-2 text-sm font-extrabold text-navy-900 dark:text-white">
-            <UsersThree size={18} weight="fill" className="text-fuchsia-500" /> Gói Pro Doanh nghiệp
+          <p className="inline-flex items-center gap-2 text-sm font-extrabold text-room-ink">
+            <UsersThree size={18} weight="duotone" className="text-room-acorn" /> Gói Pro Doanh nghiệp
           </p>
-          <p className="text-xs font-extrabold text-navy-500 dark:text-slate-400">
+          <p className="text-xs font-extrabold text-room-ink/60">
             Đang dùng {members.length + 1}/{family?.maxSeats || 4} tài khoản
             {expiresAt && <> · hết hạn {formatDate(expiresAt)}</>}
           </p>
-        </div>          <p className="mt-2 text-sm text-navy-600 dark:text-slate-300">
-          Người bạn mời <b>không cần trả tiền</b> — họ dùng quyền lợi Pro y hệt bạn với việc và chuông nhắc của
+        </div>          <p className="mt-2 text-sm font-semibold text-room-ink/70">
+          Người bạn mời <b className="text-room-ink">không cần trả tiền</b> — họ dùng quyền lợi Pro y hệt bạn với việc và chuông nhắc của
           riêng mình, và vẫn là tài khoản độc lập nên việc của bạn vẫn riêng của bạn.
         </p>
 
         {/* Danh sách người trong nhóm */}
         <ul className="mt-4 space-y-2">
-          <li className="flex items-center justify-between gap-3 rounded-xl bg-fuchsia-50 px-3 py-2.5 ring-1 ring-fuchsia-100 dark:bg-fuchsia-900/20 dark:ring-fuchsia-900/40">
+          <li className="flex items-center justify-between gap-3 rounded-xl bg-room-oat/70 px-3 py-2.5 ring-1 ring-room-acorn/25">
             <div className="min-w-0">
-              <p className="truncate text-sm font-extrabold text-navy-900 dark:text-white">Bạn (chủ gói)</p>
-              <p className="truncate text-xs text-navy-500 dark:text-slate-400">Người trả tiền cho cả nhóm</p>
+              <p className="truncate text-sm font-extrabold text-room-ink">Bạn (chủ gói)</p>
+              <p className="truncate text-xs font-semibold text-room-ink/55">Người trả tiền cho cả nhóm</p>
             </div>
           </li>
           {members.map((m) => (
             <li
               key={m.userId}
-              className="flex items-center justify-between gap-3 rounded-xl bg-navy-50 px-3 py-2.5 ring-1 ring-navy-100 dark:bg-slate-900/50 dark:ring-slate-700"
+              className="flex items-center justify-between gap-3 rounded-xl bg-room-oat/40 px-3 py-2.5 ring-1 ring-room-acorn/10"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-extrabold text-navy-900 dark:text-white">{m.fullName}</p>
-                <p className="truncate text-xs text-navy-500 dark:text-slate-400">
+                <p className="truncate text-sm font-extrabold text-room-ink">{m.fullName}</p>
+                <p className="truncate text-xs font-semibold text-room-ink/55">
                   {m.email} · tham gia {formatDate(m.joinedAt)}
                 </p>
               </div>
@@ -255,14 +259,14 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
                   <button
                     type="button"
                     onClick={() => drop(m.userId)}
-                    className="rounded-lg bg-rose-600 px-2.5 py-1 text-xs font-extrabold text-white"
+                    className="cursor-pointer rounded-lg bg-room-rain px-2.5 py-1 text-xs font-extrabold text-room-ink transition hover:brightness-[0.96]"
                   >
                     Gỡ thật
                   </button>
                   <button
                     type="button"
                     onClick={() => setConfirmRemove(null)}
-                    className="rounded-lg px-2 py-1 text-xs font-extrabold text-navy-500 hover:text-navy-800 dark:text-slate-400 dark:hover:text-white"
+                    className="cursor-pointer rounded-lg px-2 py-1 text-xs font-extrabold text-room-ink/60 transition hover:text-room-ink"
                   >
                     Huỷ
                   </button>
@@ -271,7 +275,7 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
                 <button
                   type="button"
                   onClick={() => setConfirmRemove(m.userId)}
-                  className="shrink-0 text-xs font-extrabold text-rose-600 hover:underline dark:text-rose-400"
+                  className="shrink-0 cursor-pointer rounded-md px-1.5 py-0.5 text-xs font-extrabold text-room-ink/60 transition hover:bg-room-rain/40 hover:text-room-ink"
                 >
                   Gỡ
                 </button>
@@ -281,8 +285,8 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
         </ul>
 
         {/* Form mời */}
-        <div className="mt-4 rounded-xl bg-navy-50 p-3 ring-1 ring-navy-100 dark:bg-slate-900/50 dark:ring-slate-700">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-navy-500 dark:text-slate-400">
+        <div className="mt-4 rounded-xl bg-room-oat/40 p-3 ring-1 ring-room-acorn/10">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-room-ink/55">
             Thêm chủ nhóm (tối đa {left} chỗ còn trống)
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -292,7 +296,7 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
               onChange={(e) => setEmail(e.target.value)}
               disabled={left <= 0 || inviting}
               placeholder="email của người bạn muốn mời"
-              className="min-w-[220px] flex-1 rounded-xl border-0 bg-white px-3 py-2 text-sm font-semibold text-navy-900 ring-1 ring-navy-100 focus:ring-2 focus:ring-fuchsia-400 disabled:opacity-60 dark:bg-slate-800 dark:text-white dark:ring-slate-700"
+              className="min-w-[220px] flex-1 rounded-xl bg-room-paper px-3 py-2 text-sm font-semibold text-room-ink ring-1 ring-inset ring-room-acorn/20 transition focus:ring-2 focus:ring-room-acorn disabled:opacity-60"
             />
             <input
               type="text"
@@ -300,18 +304,18 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
               onChange={(e) => setNote(e.target.value)}
               disabled={left <= 0 || inviting}
               placeholder="lời nhắn (không bắt buộc)"
-              className="min-w-[160px] flex-1 rounded-xl border-0 bg-white px-3 py-2 text-sm font-semibold text-navy-900 ring-1 ring-navy-100 focus:ring-2 focus:ring-fuchsia-400 disabled:opacity-60 dark:bg-slate-800 dark:text-white dark:ring-slate-700"
+              className="min-w-[160px] flex-1 rounded-xl bg-room-paper px-3 py-2 text-sm font-semibold text-room-ink ring-1 ring-inset ring-room-acorn/20 transition focus:ring-2 focus:ring-room-acorn disabled:opacity-60"
             />
-            <Button icon={EnvelopeSimple} loading={inviting} disabled={left <= 0 || !email.trim()} onClick={invite}>
+            <RoomButton icon={EnvelopeSimple} loading={inviting} disabled={left <= 0 || !email.trim()} onClick={invite}>
               Thêm vào nhà
-            </Button>
+            </RoomButton>
           </div>
           {left <= 0 ? (
-            <p className="mt-2 text-xs font-bold text-amber-600 dark:text-amber-400">
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-room-bell/25 px-2.5 py-1 text-xs font-bold text-room-ink/85 ring-1 ring-inset ring-room-bell/40">
               Nhà đã đủ {family?.maxSeats || 4} tài khoản. Gỡ một người đi rồi mời người khác.
             </p>
           ) : (
-            <p className="mt-2 text-xs text-navy-500 dark:text-slate-400">
+            <p className="mt-2 text-xs font-semibold text-room-ink/55">
               Người được mời cần ĐÃ có tài khoản MN-Qronx (dùng miễn phí). Họ nhận thông báo ngay và dùng được
               quyền Pro kể từ giây đó.
             </p>
@@ -322,35 +326,35 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
             để ngay cạnh phần mời người, không giấu vào menu. */}
         <div className="mt-4">
           <Link to="/app/family">
-            <Button variant="secondary" icon={UsersThree}>
+            <RoomButton variant="secondary" icon={UsersThree}>
               Xem cả nhóm đang tới đâu
-            </Button>
+            </RoomButton>
           </Link>
         </div>
-      </section>
+      </RoomCard>
     )
   }
 
   // ── Chưa có nhà: bán gói ──
   return (
-    <section className="rounded-2xl bg-gradient-to-br from-fuchsia-600 via-pink-600 to-violet-600 p-5 text-white shadow-card">
-      <p className="inline-flex items-center gap-2 text-sm font-extrabold">
-        <UsersThree size={18} weight="fill" /> Gói Pro Doanh nghiệp — 349.000đ/tháng cho cả nhóm
+    <RoomCard className="p-5">
+      <p className="inline-flex items-center gap-2 text-sm font-extrabold text-room-ink">
+        <UsersThree size={18} weight="duotone" className="text-room-acorn" /> Gói Pro Doanh nghiệp — 349.000đ/tháng cho cả nhóm
       </p>
-      <p className="mt-2 text-sm text-white/85">
-        Mua một lần, dùng chung tới <b>10 tài khoản</b>: mỗi người vẫn là một tài khoản riêng với việc, nhắc nhở và
+      <p className="mt-2 text-sm font-semibold text-room-ink/70">
+        Mua một lần, dùng chung tới <b className="text-room-ink">10 tài khoản</b>: mỗi người vẫn là một tài khoản riêng với việc, nhắc nhở và
         báo cáo của chính mình, nhưng tất cả đều có quyền lợi Pro (nhắc dai, báo cáo năng suất, kế hoạch tuần,
         báo cáo gửi email, nhờ người khác làm). So với 10 gói Pro lẻ là 790.000đ, cả nhóm tiết kiệm 441.000đ mỗi tháng.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button variant="light" icon={Crown} loading={busy === 'BUSINESS'} onClick={() => onBuy('BUSINESS')}>
+        <RoomButton icon={Crown} loading={busy === 'BUSINESS'} onClick={() => onBuy('BUSINESS')}>
           Mua cho cả nhóm
-        </Button>
-        <span className="inline-flex items-center rounded-xl bg-white/15 px-3 py-2 text-xs font-bold ring-1 ring-inset ring-white/25">
+        </RoomButton>
+        <span className="inline-flex items-center rounded-xl bg-room-oat/60 px-3 py-2 text-xs font-bold text-room-ink/70 ring-1 ring-inset ring-room-acorn/20">
           Trả theo năm 3.490.000đ — tặng 2 tháng
         </span>
       </div>
-    </section>
+    </RoomCard>
   )
 }
 
@@ -519,10 +523,10 @@ export default function BillingPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-5xl space-y-5">
-        <div className="h-40 animate-pulse rounded-2xl bg-navy-100 dark:bg-slate-800" />
+        <RoomSkeleton className="h-40" />
         <div className="grid gap-5 md:grid-cols-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-72 animate-pulse rounded-2xl bg-navy-100 dark:bg-slate-800" />
+            <RoomSkeleton key={i} className="h-72" />
           ))}
         </div>
       </div>
@@ -535,41 +539,33 @@ export default function BillingPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 animate-fade-in">
       <div>
-        <h1 className="page-title dark:text-white">Gói của bạn</h1>
-        <p className="mt-1 text-sm font-medium text-navy-400 dark:text-slate-500">
+        <h1 className="font-display text-2xl font-bold text-room-ink">Gói của bạn</h1>
+        <p className="mt-1 text-sm font-semibold text-room-ink/50">
           Quản lý gói, theo dõi hạn sử dụng và thanh toán bằng chuyển khoản ngân hàng
         </p>
       </div>
 
       {/* ── Gói hiện tại ── */}
-      <section
-        className={`relative overflow-hidden rounded-2xl p-6 shadow-card sm:p-7 ${
-          paid
-            ? isProPlan(current)
-              ? 'bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 text-white'
-              : 'bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 text-white'
-            : 'bg-gradient-to-br from-slate-700 via-slate-600 to-slate-500 text-white'
-        }`}
-      >
+      <RoomCard className="relative p-6 sm:p-7">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-4">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 shadow-inner">
+            <span className={`flex h-14 w-14 items-center justify-center rounded-2xl ${PLAN_ICON_COLOR[current] || PLAN_ICON_COLOR.FREE}`}>
               {(() => {
                 const Icon = PLAN_ICON[current] || Sparkle
-                return <Icon size={30} weight="fill" />
+                return <Icon size={30} weight={current === 'PRO' || current === 'BUSINESS' ? 'fill' : 'duotone'} />
               })()}
             </span>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/70">Gói hiện tại</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-room-ink/45">Gói hiện tại</p>
               <div className="mt-0.5 flex flex-wrap items-center gap-2.5">
-                <h2 className="text-2xl font-extrabold">{PLAN_NAMES[current] || current}</h2>
+                <h2 className="font-display text-2xl font-bold text-room-ink">{PLAN_NAMES[current] || current}</h2>
                 {overview?.subscription?.provider === 'TRIAL' && (
-                  <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-extrabold ring-1 ring-inset ring-white/40">
+                  <span className="rounded-full bg-room-bell/25 px-2.5 py-0.5 text-xs font-extrabold text-room-ink/85 ring-1 ring-inset ring-room-bell/40">
                     Đang dùng thử
                   </span>
                 )}
                 {isSeat && (
-                  <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-extrabold ring-1 ring-inset ring-white/40">
+                  <span className="rounded-full bg-room-oat/60 px-2.5 py-0.5 text-xs font-extrabold text-room-ink/65 ring-1 ring-inset ring-room-acorn/20">
                     Dùng chung của {family?.owner?.fullName || 'chủ nhóm'}
                   </span>
                 )}
@@ -580,18 +576,18 @@ export default function BillingPage() {
           <div className="flex flex-wrap gap-2 sm:justify-end">
             {paid ? (
               <>
-                <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/15 px-3 py-2 text-xs font-bold ring-1 ring-inset ring-white/25 backdrop-blur">
-                  <CalendarCheck size={15} weight="bold" />
+                <span className="inline-flex items-center gap-1.5 rounded-xl bg-room-oat/45 px-3 py-2 text-xs font-bold text-room-ink/70 ring-1 ring-inset ring-room-acorn/15">
+                  <CalendarCheck size={15} weight="bold" className="text-room-acorn" />
                   Từ {overview?.planStartedAt ? formatDate(overview.planStartedAt) : '—'}
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/15 px-3 py-2 text-xs font-bold ring-1 ring-inset ring-white/25 backdrop-blur">
-                  <CalendarX size={15} weight="bold" />
+                <span className="inline-flex items-center gap-1.5 rounded-xl bg-room-oat/45 px-3 py-2 text-xs font-bold text-room-ink/70 ring-1 ring-inset ring-room-acorn/15">
+                  <CalendarX size={15} weight="bold" className="text-room-ink/45" />
                   Đến {overview?.planExpiresAt ? formatDate(overview.planExpiresAt) : '—'}
                 </span>
               </>
             ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/15 px-3 py-2 text-xs font-bold ring-1 ring-inset ring-white/25 backdrop-blur">
-                <Sparkle size={15} weight="bold" />
+              <span className="inline-flex items-center gap-1.5 rounded-xl bg-room-oat/45 px-3 py-2 text-xs font-bold text-room-ink/70 ring-1 ring-inset ring-room-acorn/15">
+                <Sparkle size={15} weight="duotone" className="text-room-acorn" />
                 Miễn phí – không giới hạn thời gian
               </span>
             )}
@@ -601,15 +597,13 @@ export default function BillingPage() {
         {paid ? (
           <div className="mt-5 flex flex-wrap items-center gap-4">
             <div className="min-w-[180px] flex-1">
-              <div className="flex items-center justify-between text-xs font-bold">
-                <span className="inline-flex items-center gap-1.5 text-white/85">
-                  <HourglassMedium size={15} weight="bold" />
-                  {days < 0 ? 'Hạn đã qua' : `Còn lại ${days} ngày`}
-                </span>
-              </div>
-              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/25">
+              <p className="inline-flex items-center gap-1.5 text-xs font-bold text-room-ink/70">
+                <HourglassMedium size={15} weight="bold" className="text-room-acorn" />
+                {days < 0 ? 'Hạn đã qua' : `Còn lại ${days} ngày`}
+              </p>
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-room-ink/10">
                 <div
-                  className={`h-full rounded-full ${days <= 7 ? 'bg-amber-300' : 'bg-white'}`}
+                  className={`h-full rounded-full ${days <= 7 ? 'bg-room-blush' : 'bg-room-acorn'}`}
                   style={{ width: `${Math.max(0, Math.min(100, ((days || 0) / 30) * 100))}%` }}
                 />
               </div>
@@ -620,30 +614,30 @@ export default function BillingPage() {
               {!isSeat && (
                 <>
                   {!isProPlan(current) && (
-                    <Button variant="light" icon={Crown} onClick={() => buy('PRO')} loading={busy === 'PRO'}>
+                    <RoomButton icon={Crown} onClick={() => buy('PRO')} loading={busy === 'PRO'}>
                       Nâng cấp lên Pro
-                    </Button>
+                    </RoomButton>
                   )}
-                  <Button variant="light" icon={ArrowClockwise} onClick={() => buy(current)} loading={busy === current}>
+                  <RoomButton variant="secondary" icon={ArrowClockwise} onClick={() => buy(current)} loading={busy === current}>
                     Gia hạn thêm {cycle === 'YEARLY' ? '1 năm' : '30 ngày'}
-                  </Button>
+                  </RoomButton>
                 </>
               )}
             </div>
           </div>
         ) : (
           <div className="mt-5 flex flex-wrap gap-2">
-            <Button variant="light" icon={Crown} onClick={() => buy('PRO')} loading={busy === 'PRO'}>
+            <RoomButton icon={Crown} onClick={() => buy('PRO')} loading={busy === 'PRO'}>
               Nâng cấp lên Pro
-            </Button>
+            </RoomButton>
             {trial.eligible && (
-              <Button variant="light" icon={Sparkle} onClick={doTrial} loading={busy === 'TRIAL'}>
+              <RoomButton variant="secondary" icon={Sparkle} onClick={doTrial} loading={busy === 'TRIAL'}>
                 Dùng thử Pro {trial.days} ngày miễn phí
-              </Button>
+              </RoomButton>
             )}
           </div>
         )}
-      </section>
+      </RoomCard>
 
       {/* ── Gói Pro Doanh nghiệp: một người trả tiền, tới 10 tài khoản cùng dùng ── */}
       <FamilyCard
@@ -657,51 +651,51 @@ export default function BillingPage() {
 
       {/* ── Hạn mức AI hôm nay ── */}
       {aiUsage && (
-        <section className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
+        <RoomCard className="p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="inline-flex items-center gap-2 text-sm font-extrabold text-navy-900 dark:text-white">
-              <Brain size={18} weight="fill" className="text-violet-500" />
+            <p className="inline-flex items-center gap-2 text-sm font-extrabold text-room-ink">
+              <Brain size={18} weight="duotone" className="text-room-bell" />
               Trợ lý AI hôm nay
             </p>
-            <p className="text-sm font-bold text-navy-500 dark:text-slate-400">
+            <p className="text-sm font-bold text-room-ink/60">
               {aiUsage.limit === null
                 ? `Đã dùng ${aiUsage.used} lần — không giới hạn`
                 : `Còn ${aiUsage.remaining}/${aiUsage.limit} lần`}
             </p>
           </div>
           {aiUsage.limit !== null && (
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-navy-100 dark:bg-slate-700">
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-room-ink/10">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500"
+                className="h-full rounded-full bg-room-acorn"
                 style={{ width: `${Math.min(100, (aiUsage.used / aiUsage.limit) * 100)}%` }}
               />
             </div>
           )}
           {aiUsage.limit !== null && aiUsage.remaining === 0 && (
-            <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-room-bell/25 px-2.5 py-1 text-xs font-bold text-room-ink/85 ring-1 ring-inset ring-room-bell/40">
               <Warning size={14} weight="fill" /> Hết lượt hôm nay — nâng cấp để có thêm, hoặc quay lại vào ngày mai
             </p>
           )}
-        </section>
+        </RoomCard>
       )}
 
       {/* ── Chọn kỳ thanh toán ── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-extrabold text-navy-900 dark:text-white">Các gói</h2>
-        <div className="inline-flex rounded-xl bg-navy-100 p-1 dark:bg-slate-800">
+        <h2 className="font-display text-lg font-bold text-room-ink">Các gói</h2>
+        <div className="inline-flex rounded-xl bg-room-oat/70 p-1 ring-1 ring-room-acorn/15">
           {BILLING_CYCLES.map((c) => (
             <button
               key={c.id}
               type="button"
               onClick={() => setCycle(c.id)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-extrabold transition ${
+              className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-extrabold transition ${
                 cycle === c.id
-                  ? 'bg-white text-navy-900 shadow-sm dark:bg-slate-700 dark:text-white'
-                  : 'text-navy-500 hover:text-navy-800 dark:text-slate-400 dark:hover:text-white'
+                  ? 'bg-room-paper text-room-ink shadow-[0_6px_12px_-8px_rgb(0_0_0/0.25)] ring-1 ring-room-acorn/30'
+                  : 'text-room-ink/55 hover:text-room-ink'
               }`}
             >
               {c.label}
-              {c.note && <span className="ml-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">{c.note}</span>}
+              {c.note && <span className="ml-1.5 text-[10px] font-bold text-room-acorn">{c.note}</span>}
             </button>
           ))}
         </div>
@@ -717,39 +711,39 @@ export default function BillingPage() {
           return (
             <div
               key={p.id}
-              className={`relative flex flex-col rounded-2xl bg-white p-6 shadow-card ring-1 transition dark:bg-slate-800 ${
+              className={`relative flex flex-col rounded-2xl bg-room-paper p-6 ring-1 transition ${
                 isCurrent
-                  ? 'ring-2 ring-blue-500'
+                  ? 'ring-2 ring-room-acorn'
                   : p.popular
-                    ? 'ring-2 ring-cyan-400'
-                    : 'ring-navy-100 dark:ring-slate-700'
+                    ? 'ring-2 ring-room-bell/60'
+                    : 'ring-room-acorn/25'
               }`}
             >
               {p.popular && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-md">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-room-bell px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-room-ink shadow-[0_10px_18px_-10px_rgb(0_0_0/0.35)]">
                   Phổ biến nhất
                 </span>
               )}
-              <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${PLAN_ICON_COLOR[p.id]}`}>
-                <Icon size={24} weight="fill" />
+              <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${(PLAN_ICON_COLOR[p.id] || PLAN_ICON_COLOR.FREE)}`}>
+                <Icon size={24} weight={p.id === 'FREE' || p.id === 'PLUS' ? 'duotone' : 'fill'} />
               </span>
-              <h3 className="mt-4 text-xl font-extrabold text-navy-900 dark:text-white">{p.title}</h3>
-              <p className="mt-1 text-sm text-navy-400 dark:text-slate-500">{p.tagline}</p>
+              <h3 className="mt-4 font-display text-xl font-bold text-room-ink">{p.title}</h3>
+              <p className="mt-1 text-sm font-semibold text-room-ink/50">{p.tagline}</p>
               <p className="mt-4 flex items-baseline gap-1">
-                <span className="text-3xl font-extrabold text-navy-900 dark:text-white">
+                <span className="font-display text-3xl font-bold text-room-ink">
                   {isFree ? '0đ' : formatVnd(p.price)}
                 </span>
-                {!isFree && <span className="text-sm font-semibold text-navy-400 dark:text-slate-500">{p.period}</span>}
+                {!isFree && <span className="text-sm font-semibold text-room-ink/45">{p.period}</span>}
               </p>
               {!isFree && cycle === 'YEARLY' && (
-                <p className="mt-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                <p className="mt-1 text-xs font-bold text-room-acorn">
                   ≈ {formatVnd(Math.round(p.price / 12))}/tháng — tiết kiệm 2 tháng
                 </p>
               )}
               <ul className="mt-5 space-y-2.5">
                 {(p.features || []).map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm text-navy-600 dark:text-slate-300">
-                    <span className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
+                  <li key={f} className="flex items-start gap-2.5 text-sm font-semibold text-room-ink/70">
+                    <span className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-room-sage/45 text-room-ink/80">
                       <Check size={11} weight="bold" />
                     </span>
                     {f}
@@ -759,10 +753,10 @@ export default function BillingPage() {
 
               {/* Chưa làm xong thì nói thẳng là “Sắp có” — không bán thứ chưa có */}
               {(p.upcoming || []).length > 0 && (
-                <ul className="mt-3 space-y-2 border-t border-dashed border-navy-100 pt-3 dark:border-slate-700">
+                <ul className="mt-3 space-y-2 border-t border-dashed border-room-acorn/25 pt-3">
                   {p.upcoming.map((f) => (
-                    <li key={f} className="flex items-start gap-2.5 text-sm text-navy-400 dark:text-slate-500">
-                      <span className="mt-0.5 shrink-0 rounded-full bg-amber-100 px-2 py-[1px] text-[10px] font-extrabold uppercase tracking-wide text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                    <li key={f} className="flex items-start gap-2.5 text-sm font-semibold text-room-ink/45">
+                      <span className="mt-0.5 shrink-0 rounded-full bg-room-oat/70 px-2 py-[1px] text-[10px] font-extrabold uppercase tracking-wide text-room-ink/55">
                         Sắp có
                       </span>
                       {f}
@@ -773,23 +767,22 @@ export default function BillingPage() {
               <div className="flex-1" />
               <div className="mt-6">
                 {isCurrent ? (
-                  <Button variant="secondary" fullWidth disabled icon={Sparkle}>
+                  <RoomButton variant="secondary" fullWidth disabled icon={Sparkle}>
                     Gói hiện tại
-                  </Button>
+                  </RoomButton>
                 ) : isFree ? (
-                  <Button variant="secondary" fullWidth disabled>
+                  <RoomButton variant="secondary" fullWidth disabled>
                     {included ? 'Đã bao gồm' : 'Gói cơ bản'}
-                  </Button>
+                  </RoomButton>
                 ) : (
-                  <Button
-                    variant={p.popular ? 'gradient' : 'primary'}
+                  <RoomButton
                     fullWidth
                     icon={Crown}
                     loading={busy === p.id}
                     onClick={() => buy(p.id)}
                   >
                     {included ? `Gia hạn ${p.title}` : `Nâng cấp ${p.title}`}
-                  </Button>
+                  </RoomButton>
                 )}
               </div>
             </div>
@@ -798,17 +791,17 @@ export default function BillingPage() {
       </div>
 
       {/* ── Lịch sử đơn ── */}
-      <section className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
-        <p className="inline-flex items-center gap-2 text-sm font-extrabold text-navy-900 dark:text-white">
-          <Receipt size={18} weight="fill" className="text-blue-500" /> Lịch sử đơn hàng
+      <RoomCard className="p-5">
+        <p className="inline-flex items-center gap-2 text-sm font-extrabold text-room-ink">
+          <Receipt size={18} weight="duotone" className="text-room-acorn" /> Lịch sử đơn hàng
         </p>
         {!overview?.orders?.length ? (
-          <p className="mt-3 text-sm text-navy-400 dark:text-slate-500">Chưa có đơn nào.</p>
+          <p className="mt-3 text-sm font-semibold text-room-ink/50">Chưa có đơn nào.</p>
         ) : (
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-[560px] text-left text-sm">
               <thead>
-                <tr className="text-[11px] font-bold uppercase tracking-wider text-navy-400 dark:text-slate-500">
+                <tr className="text-[11px] font-bold uppercase tracking-wider text-room-ink/45">
                   <th className="pb-2">Mã đơn</th>
                   <th className="pb-2">Gói</th>
                   <th className="pb-2">Số tiền</th>
@@ -817,22 +810,22 @@ export default function BillingPage() {
                   <th className="pb-2" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-navy-100 dark:divide-slate-700">
+              <tbody className="divide-y divide-room-acorn/15">
                 {overview.orders.map((o) => {
                   const st = ORDER_STATUS[o.status] || ORDER_STATUS.PENDING
                   return (
                     <tr key={o.id}>
-                      <td className="py-2.5 font-mono text-xs font-bold text-navy-700 dark:text-slate-200">{o.orderCode}</td>
-                      <td className="py-2.5 font-semibold text-navy-700 dark:text-slate-200">
+                      <td className="py-2.5 font-mono text-xs font-bold text-room-ink/85">{o.orderCode}</td>
+                      <td className="py-2.5 font-semibold text-room-ink/85">
                         {o.planName} · {o.cycle === 'YEARLY' ? 'năm' : 'tháng'}
                       </td>
-                      <td className="py-2.5 font-bold text-navy-700 dark:text-slate-200">{formatVnd(o.amount)}</td>
+                      <td className="py-2.5 font-bold text-room-ink/85">{formatVnd(o.amount)}</td>
                       <td className="py-2.5">
                         <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-extrabold ring-1 ring-inset ${st.cls}`}>
                           {st.label}
                         </span>
                       </td>
-                      <td className="py-2.5 text-navy-500 dark:text-slate-400">{formatDate(o.createdAt)}</td>
+                      <td className="py-2.5 font-semibold text-room-ink/55">{formatDate(o.createdAt)}</td>
                       <td className="py-2.5 text-right">
                         {o.status === 'PENDING' && (
                           <div className="flex justify-end gap-2">
@@ -845,14 +838,14 @@ export default function BillingPage() {
                                   setCheckout({ order: res.data.order, payment: res.data.payment })
                                 }
                               }}
-                              className="text-xs font-extrabold text-blue-600 hover:underline dark:text-blue-400"
+                              className="cursor-pointer rounded-md px-1.5 py-0.5 text-xs font-extrabold text-room-acorn underline-offset-2 transition hover:bg-room-oat/70 hover:underline"
                             >
                               Thanh toán
                             </button>
                             <button
                               type="button"
                               onClick={() => dropOrder(o.orderCode)}
-                              className="text-xs font-extrabold text-rose-600 hover:underline dark:text-rose-400"
+                              className="cursor-pointer rounded-md px-1.5 py-0.5 text-xs font-extrabold text-room-ink/60 underline-offset-2 transition hover:bg-room-rain/40 hover:text-room-ink hover:underline"
                             >
                               Huỷ
                             </button>
@@ -866,11 +859,11 @@ export default function BillingPage() {
             </table>
           </div>
         )}
-      </section>
+      </RoomCard>
 
-      <p className="text-center text-xs text-navy-400 dark:text-slate-500">
+      <p className="text-center text-xs font-semibold text-room-ink/45">
         Thanh toán bằng chuyển khoản ngân hàng (VietQR). Tiền vào tài khoản là gói tự kích hoạt, không cần chờ duyệt.
-        Cần hỗ trợ? Nhắn cho chúng tôi ở mục <span className="font-bold">Hỗ trợ</span>.
+        Cần hỗ trợ? Nhắn cho chúng tôi ở mục <span className="font-bold text-room-ink/70">Hỗ trợ</span>.
       </p>
 
       {checkout && (
@@ -901,12 +894,12 @@ function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose, onCh
   const urgent = !expired && left <= 120
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-navy-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-6 shadow-xl sm:rounded-2xl dark:bg-slate-800">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-room-ink/45 p-0 sm:items-center sm:p-4">
+      <div className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-room-paper p-6 shadow-xl ring-1 ring-room-acorn/25 sm:rounded-2xl">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-navy-400 dark:text-slate-500">Thanh toán đơn</p>
-            <h3 className="text-xl font-extrabold text-navy-900 dark:text-white">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-room-ink/45">Thanh toán đơn</p>
+            <h3 className="font-display text-xl font-bold text-room-ink">
               {order.planName} · {order.cycle === 'YEARLY' ? '1 năm' : '1 tháng'}
             </h3>
           </div>
@@ -914,17 +907,17 @@ function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose, onCh
             type="button"
             onClick={onClose}
             aria-label="Đóng"
-            className="rounded-lg p-1.5 text-navy-400 hover:bg-navy-50 dark:hover:bg-slate-700"
+            className="rounded-lg p-1.5 text-room-ink/40 transition hover:bg-room-oat/70 hover:text-room-ink"
           >
             <X size={18} weight="bold" />
           </button>
         </div>
 
-        <div className="mt-4 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 p-4 text-white">
-          <p className="text-xs font-bold uppercase tracking-wider text-white/80">Số tiền cần chuyển</p>
-          <p className="mt-1 text-3xl font-extrabold">{formatVnd(order.amount)}</p>
-          <p className="mt-2 inline-flex flex-wrap items-center gap-1.5 text-xs font-bold text-white/90">
-            <Clock size={14} weight="bold" />
+        <div className="mt-4 rounded-2xl bg-room-oat/50 p-4 ring-1 ring-inset ring-room-acorn/25">
+          <p className="text-xs font-bold uppercase tracking-wider text-room-ink/55">Số tiền cần chuyển</p>
+          <p className="mt-1 font-display text-3xl font-bold text-room-ink">{formatVnd(order.amount)}</p>
+          <p className="mt-2 inline-flex flex-wrap items-center gap-1.5 text-xs font-bold text-room-ink/75">
+            <Clock size={14} weight="bold" className="text-room-bell" />
             {status === 'PAID' ? (
               'Đã thanh toán'
             ) : expired ? (
@@ -934,35 +927,37 @@ function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose, onCh
                 Mã QR còn hiệu lực
                 <span
                   className={`rounded-lg px-1.5 py-0.5 font-mono text-sm font-extrabold ${
-                    urgent ? 'bg-rose-500 text-white' : 'bg-white/20'
+                    urgent
+                      ? 'bg-room-blush/45 text-room-ink ring-1 ring-inset ring-room-acorn/20'
+                      : 'bg-room-paper text-room-ink/85 ring-1 ring-inset ring-room-acorn/25'
                   }`}
                 >
                   {countdownText(left)}
                 </span>
-                {urgent && <span className="font-extrabold">sắp hết — chuyển ngay nhé</span>}
+                {urgent && <span className="font-extrabold text-room-ink">sắp hết — chuyển ngay nhé</span>}
               </>
             )}
           </p>
           {!expired && status !== 'PAID' && (
-            <p className="mt-1 text-[11px] font-semibold text-white/80">
+            <p className="mt-1 text-[11px] font-semibold text-room-ink/55">
               Hết giờ này thì mã đơn cũ không còn khớp — lúc đó bấm “Tạo mã mới”.
             </p>
           )}
         </div>
 
         {expired && (
-          <div className="mt-4 rounded-xl bg-rose-50 p-4 text-sm font-semibold text-rose-700 ring-1 ring-rose-200 dark:bg-rose-900/20 dark:text-rose-200 dark:ring-rose-800/50">
+          <div className="mt-4 rounded-xl bg-room-rain/30 p-4 text-sm font-bold text-room-ink/85 ring-1 ring-inset ring-room-rain">
             Đơn này đã quá hạn nên mã đơn{' '}
-            <span className="font-mono font-extrabold">{order.orderCode}</span> không còn dùng để chuyển khoản được nữa. Bấm
+            <span className="font-mono font-extrabold text-room-ink">{order.orderCode}</span> không còn dùng để chuyển khoản được nữa. Bấm
             “Tạo mã mới” để sinh đơn khác. Nếu bạn đã lỡ chuyển tiền cho đơn này, tiền vẫn được ghi lại trong mục “Tiền đã vào
             nhưng chưa khớp đơn” và chúng tôi sẽ xử lý — nhắn mục Hỗ trợ kèm mã đơn trên là xong.
           </div>
         )}
 
         {!payment?.configured ? (
-          <div className="mt-4 rounded-xl bg-amber-50 p-4 text-sm font-semibold text-amber-800 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:ring-amber-800/50">
+          <div className="mt-4 rounded-xl bg-room-bell/20 p-4 text-sm font-bold text-room-ink/85 ring-1 ring-inset ring-room-bell/40">
             Hệ thống chưa cấu hình tài khoản nhận tiền (BANK_ID / BANK_ACCOUNT). Bạn nhắn cho chúng tôi ở mục Hỗ trợ kèm mã đơn
-            <span className="font-mono font-extrabold"> {order.orderCode}</span> để được hướng dẫn.
+            <span className="font-mono font-extrabold text-room-ink"> {order.orderCode}</span> để được hướng dẫn.
           </div>
         ) : (
           <>
@@ -973,15 +968,15 @@ function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose, onCh
               if (!qrSrc || expired) return null
               return (
                 <div className="mt-4 flex flex-col items-center">
-                  <p className="inline-flex items-center gap-1.5 text-xs font-bold text-navy-500 dark:text-slate-400">
-                    <QrCode size={14} weight="bold" /> Quét mã bằng app ngân hàng
+                  <p className="inline-flex items-center gap-1.5 text-xs font-bold text-room-ink/60">
+                    <QrCode size={14} weight="bold" className="text-room-acorn" /> Quét mã bằng app ngân hàng
                   </p>
                   <img
                     src={qrSrc}
                     alt={`Mã VietQR cho đơn ${order.orderCode}`}
-                    className="mt-2 w-full max-w-[260px] rounded-2xl ring-1 ring-navy-100 dark:ring-slate-700"
+                    className="mt-2 w-full max-w-[260px] rounded-2xl ring-1 ring-room-acorn/25"
                   />
-                  <p className="mt-2 rounded-full bg-navy-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-navy-500 dark:bg-slate-900/60 dark:text-slate-400">
+                  <p className="mt-2 rounded-full bg-room-oat/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-room-ink/55 ring-1 ring-inset ring-room-acorn/15">
                     {payment.qrSource === 'BANK'
                       ? `Mã QR do ${payment.bankName || 'ngân hàng'} tạo cho đơn này`
                       : 'Mã QR do hệ thống tạo — có sẵn số tiền và nội dung'}
@@ -990,7 +985,7 @@ function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose, onCh
                     <button
                       type="button"
                       onClick={() => onCopy(payment.qrPayload, 'chuỗi mã QR')}
-                      className="mt-1.5 text-[11px] font-bold text-blue-600 underline dark:text-blue-400"
+                      className="mt-1.5 cursor-pointer text-[11px] font-bold text-room-acorn underline underline-offset-2"
                     >
                       Copy chuỗi mã QR (dán vào app khác)
                     </button>
@@ -1014,44 +1009,54 @@ function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose, onCh
         )}
 
         {checkNote && status !== 'PAID' && !expired && (
-          <p className="mt-4 rounded-xl bg-blue-50 p-3 text-xs font-bold text-blue-700 ring-1 ring-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:ring-blue-800/50">
+          <p className="mt-4 rounded-xl bg-room-oat/60 p-3 text-xs font-bold text-room-ink/80 ring-1 ring-inset ring-room-acorn/15">
             {checkNote}
           </p>
         )}
 
-        <div className="mt-5 rounded-xl bg-navy-50 p-4 text-xs font-semibold text-navy-600 dark:bg-slate-900/50 dark:text-slate-300">
+        <div className="mt-5 rounded-xl bg-room-oat/45 p-4 text-xs font-semibold text-room-ink/70 ring-1 ring-inset ring-room-acorn/10">
           {status === 'PAID' ? (
-            <span className="text-emerald-600 dark:text-emerald-400">Đã nhận được tiền — gói đang được kích hoạt.</span>
+            <span className="rounded-md bg-room-sage/45 px-2 py-0.5 text-xs font-bold text-room-ink/85">
+              Đã nhận được tiền — gói đang được kích hoạt.
+            </span>
           ) : (
             <>
-              Chuyển <span className="font-extrabold">đúng số tiền</span> và{' '}
-              <span className="font-extrabold">đúng nội dung</span> — tiền vào là hệ thống tự phát hiện và{' '}
-              <span className="font-extrabold">kích hoạt gói ngay</span>, không phải chờ ai duyệt. Trang này tự cập nhật trong
+              Chuyển <span className="font-extrabold text-room-ink/90">đúng số tiền</span> và{' '}
+              <span className="font-extrabold text-room-ink/90">đúng nội dung</span> — tiền vào là hệ thống tự phát hiện và{' '}
+              <span className="font-extrabold text-room-ink/90">kích hoạt gói ngay</span>, không phải chờ ai duyệt. Trang này tự cập nhật trong
               vài giây. Quá 5 phút vẫn chưa thấy gói mới, bạn nhắn ở mục{' '}
-              <span className="font-extrabold">Hỗ trợ</span> kèm mã đơn{' '}
-              <span className="font-mono font-extrabold">{order.orderCode}</span> để được kiểm tra ngay.
+              <span className="font-extrabold text-room-ink/90">Hỗ trợ</span> kèm mã đơn{' '}
+              <span className="font-mono font-extrabold text-room-ink/90">{order.orderCode}</span> để được kiểm tra ngay.
             </>
           )}
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
           {expired ? (
-            <Button icon={ArrowClockwise} onClick={onRenew}>
+            <RoomButton icon={ArrowClockwise} onClick={onRenew}>
               Tạo mã mới
-            </Button>
+            </RoomButton>
           ) : (
-            <Button icon={Check} loading={checking} disabled={status === 'PAID'} onClick={onCheck}>
+            <RoomButton icon={Check} loading={checking} disabled={status === 'PAID'} onClick={onCheck}>
               Tôi đã chuyển
-            </Button>
+            </RoomButton>
           )}
           {status === 'PENDING' && !expired && (
-            <Button variant="ghost" className="text-rose-600 dark:text-rose-400" onClick={onCancel}>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="cursor-pointer rounded-full px-3.5 py-2 font-display text-sm font-bold text-room-ink/60 ring-1 ring-room-acorn/25 transition hover:bg-room-rain/40 hover:text-room-ink"
+            >
               Huỷ đơn này
-            </Button>
+            </button>
           )}
-          <Button variant="ghost" onClick={onClose}>
+          <button
+            type="button"
+            onClick={onClose}
+            className="cursor-pointer rounded-full px-3.5 py-2 font-display text-sm font-bold text-room-ink/60 ring-1 ring-room-acorn/25 transition hover:bg-room-oat/70 hover:text-room-ink"
+          >
             Đóng
-          </Button>
+          </button>
         </div>
       </div>
     </div>
@@ -1063,19 +1068,19 @@ function Row({ label, value, onCopy, highlight }) {
     <div
       className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 ring-1 ring-inset ${
         highlight
-          ? 'bg-amber-50 ring-amber-200 dark:bg-amber-900/20 dark:ring-amber-800/50'
-          : 'bg-white ring-navy-100 dark:bg-slate-900/40 dark:ring-slate-700'
+          ? 'bg-room-bell/25 ring-room-bell/40'
+          : 'bg-room-oat/40 ring-room-acorn/10'
       }`}
     >
       <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-navy-400 dark:text-slate-500">{label}</p>
-        <p className="truncate font-mono text-sm font-extrabold text-navy-900 dark:text-white">{value}</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-room-ink/45">{label}</p>
+        <p className="truncate font-mono text-sm font-extrabold text-room-ink">{value}</p>
       </div>
       {onCopy && (
         <button
           type="button"
           onClick={onCopy}
-          className="shrink-0 rounded-lg p-2 text-navy-400 hover:bg-navy-100 hover:text-navy-700 dark:hover:bg-slate-700 dark:hover:text-white"
+          className="shrink-0 cursor-pointer rounded-lg p-2 text-room-ink/40 transition hover:bg-room-oat/75 hover:text-room-ink"
           aria-label={`Copy ${label}`}
         >
           <Copy size={15} weight="bold" />

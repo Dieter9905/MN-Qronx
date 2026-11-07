@@ -11,10 +11,8 @@ import {
 } from '@phosphor-icons/react'
 import { getFamily, getFamilyBoard, setProgressSharing } from '../../services/familyService'
 import { useToast } from '../../components/common/Toast'
-import { PageLoader } from '../../components/common/Feedback'
-import Button from '../../components/common/Button'
 import Avatar from '../../components/common/Avatar'
-import { Toggle } from '../../components/common/Inputs'
+import { RoomButton, RoomCard, RoomSkeleton, RoomToggle } from '../../components/common/RoomUI'
 import { formatDate, formatDateTime, formatVnd } from '../../lib/format'
 import { isProPlan } from '../../lib/constants'
 import { useAuth } from '../../context/AuthContext'
@@ -33,11 +31,13 @@ import { useAuth } from '../../context/AuthContext'
 // Ba vai, ba nội dung — nhưng chỉ MỘT trang, vì cả ba đều đang hỏi cùng một câu:
 // "cái gói doanh nghiệp này đang cho tôi cái gì?".
 
+// Chip số liệu của thế giới phòng: "xong" = Sage (chỉ hoàn thành), dữ liệu
+// trung tính = Oat, "quá hạn" = Blush/45 on-blush (Blush chỉ đến hạn/quá hạn).
 function StatChip({ value, label, tone = 'default' }) {
   const tones = {
-    default: 'bg-navy-50 text-navy-700 dark:bg-slate-900/60 dark:text-slate-200',
-    good: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-    bad: 'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+    default: 'bg-room-oat/60 text-room-ink/65',
+    good: 'bg-room-sage/45 text-room-ink/75',
+    bad: 'bg-room-blush/45 text-room-ink/85 dark:bg-room-blush/30',
   }
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-extrabold ${tones[tone]}`}>
@@ -49,22 +49,22 @@ function StatChip({ value, label, tone = 'default' }) {
 
 function PersonCard({ person, isMe }) {
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
+    <RoomCard className="p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <Avatar name={person.fullName} src={person.avatarUrl} size="sm" />
+          <Avatar name={person.fullName} src={person.avatarUrl} size="sm" skin="room" />
           <div className="min-w-0">
-            <p className="truncate text-sm font-extrabold text-navy-900 dark:text-white">
+            <p className="truncate text-sm font-extrabold text-room-ink">
               {person.fullName}
-              {isMe && <span className="ml-1.5 text-xs font-bold text-navy-400 dark:text-slate-500">(bạn)</span>}
+              {isMe && <span className="ml-1.5 text-xs font-bold text-room-ink/40">(bạn)</span>}
             </p>
-            <p className="truncate text-xs text-navy-500 dark:text-slate-400">
+            <p className="truncate text-xs font-semibold text-room-ink/55">
               {isMe ? 'Người trả tiền cho cả nhóm' : person.email}
             </p>
           </div>
         </div>
         {!person.shared && (
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-navy-100 px-2.5 py-1 text-[11px] font-extrabold text-navy-500 dark:bg-slate-700 dark:text-slate-300">
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-room-oat/70 px-2.5 py-1 text-[11px] font-extrabold text-room-ink/55 ring-1 ring-inset ring-room-acorn/20">
             <EyeSlash size={13} weight="bold" /> Không chia sẻ
           </span>
         )}
@@ -81,12 +81,12 @@ function PersonCard({ person, isMe }) {
 
           {/* Việc quá hạn LÂU NHẤT là thứ cần nhắc — không phải việc trễ 5 phút */}
           {(person.worst || []).length > 0 && (
-            <ul className="mt-3 space-y-1.5 border-t border-dashed border-navy-100 pt-3 dark:border-slate-700">
+            <ul className="mt-3 space-y-1.5 border-t border-dashed border-room-acorn/25 pt-3">
               {person.worst.map((t) => (
                 <li key={t.taskId} className="flex items-start gap-2 text-xs">
-                  <Warning size={13} weight="fill" className="mt-0.5 shrink-0 text-rose-500" />
-                  <span className="min-w-0 flex-1 truncate font-bold text-navy-700 dark:text-slate-200">{t.title}</span>
-                  <span className="shrink-0 font-semibold text-navy-400 dark:text-slate-500">
+                  <Warning size={13} weight="fill" className="mt-0.5 shrink-0 text-room-ink/40" />
+                  <span className="min-w-0 flex-1 truncate font-bold text-room-ink/90">{t.title}</span>
+                  <span className="shrink-0 rounded-md bg-room-blush/45 px-1.5 py-0.5 font-bold text-room-ink/85 dark:bg-room-blush/30">
                     hạn {formatDateTime(t.dueAt)}
                   </span>
                 </li>
@@ -95,11 +95,11 @@ function PersonCard({ person, isMe }) {
           )}
         </>
       ) : (
-        <p className="mt-3 text-xs font-semibold text-navy-400 dark:text-slate-500">
+        <p className="mt-3 text-xs font-semibold text-room-ink/50">
           Người này đã tắt chia sẻ tiến độ. Số liệu của họ không rời khỏi máy chủ — hãy nhắn hỏi trực tiếp.
         </p>
       )}
-    </div>
+    </RoomCard>
   )
 }
 
@@ -136,7 +136,18 @@ export default function FamilyPage() {
     setFamily((prev) => (prev ? { ...prev, progressShared: next } : prev))
   }
 
-  if (loading) return <PageLoader />
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-5 animate-fade-in">
+        <div className="space-y-2">
+          <RoomSkeleton className="h-8 w-64" />
+          <RoomSkeleton className="h-5 w-80" />
+        </div>
+        <RoomSkeleton className="h-24" />
+        <RoomSkeleton className="h-40" />
+      </div>
+    )
+  }
 
   const isSeat = family?.role === 'MEMBER'
 
@@ -146,61 +157,61 @@ export default function FamilyPage() {
     return (
       <div className="mx-auto max-w-3xl space-y-5 animate-fade-in">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-navy-900 dark:text-white">
-            <UsersThree size={24} weight="fill" className="text-fuchsia-600 dark:text-fuchsia-400" />
+          <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-room-ink">
+            <UsersThree size={26} weight="duotone" className="text-room-acorn" />
             Cả nhóm
           </h1>
-          <p className="mt-1 text-sm text-navy-500 dark:text-slate-400">
+          <p className="mt-1 text-sm font-semibold text-room-ink/55">
             Bạn đang dùng gói Pro Doanh nghiệp của <b>{family?.owner?.fullName || 'chủ nhóm'}</b>
             {family?.owner?.expiresAt && <> — còn hiệu lực tới {formatDate(family.owner.expiresAt)}</>}.
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
-          <Toggle
+        <RoomCard className="p-5">
+          <RoomToggle
             checked={shared}
             disabled={saving}
             onChange={() => toggleSharing(!shared)}
             label="Cho chủ gói xem tiến độ của tôi"
             description="Số việc bạn xong hôm nay và trong 7 ngày, số việc đang mở, số việc quá hạn, và tên tối đa 3 việc quá hạn lâu nhất. Không ai đọc được nội dung công việc của bạn."
           />
-          <p className="mt-3 flex items-start gap-2 text-xs font-semibold text-navy-500 dark:text-slate-400">
+          <p className="mt-3 flex items-start gap-2 text-xs font-semibold text-room-ink/60">
             {shared ? (
               <>
-                <Eye size={14} weight="fill" className="mt-0.5 shrink-0 text-fuchsia-500" />
+                <Eye size={14} weight="fill" className="mt-0.5 shrink-0 text-room-acorn" />
                 Chủ gói hiện thấy các con số trên. Tắt đi là số liệu của bạn không rời khỏi máy chủ nữa.
               </>
             ) : (
               <>
-                <EyeSlash size={14} weight="fill" className="mt-0.5 shrink-0 text-navy-400" />
+                <EyeSlash size={14} weight="fill" className="mt-0.5 shrink-0 text-room-ink/35" />
                 Chủ gói không thấy số liệu nào của bạn.
               </>
             )}
           </p>
-        </div>
+        </RoomCard>
 
-        <div className="rounded-2xl bg-white p-5 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
-          <p className="text-sm font-extrabold text-navy-900 dark:text-white">Bạn có gì trong gói này</p>
-          <ul className="mt-2 space-y-1.5 text-sm text-navy-600 dark:text-slate-300">
+        <RoomCard className="p-5">
+          <p className="font-display text-sm font-bold text-room-ink">Bạn có gì trong gói này</p>
+          <ul className="mt-2 space-y-1.5 text-sm font-semibold text-room-ink/75">
             {[
               'Toàn bộ quyền lợi Pro: nhắc dai, báo cáo năng suất, kế hoạch tuần, nhờ người khác làm',
               'Việc, nhắc nhở và báo cáo là của riêng bạn — chủ gói không sửa được việc của bạn',
               'Muốn tự trả tiền? Rời gói doanh nghiệp ở trang Gói, dữ liệu vẫn còn nguyên',
             ].map((line) => (
               <li key={line} className="flex items-start gap-2">
-                <Check size={15} weight="bold" className="mt-0.5 shrink-0 text-emerald-500" />
+                <Check size={15} weight="bold" className="mt-0.5 shrink-0 text-room-sage" />
                 {line}
               </li>
             ))}
           </ul>
           <div className="mt-4">
             <Link to="/app/billing">
-              <Button variant="secondary" icon={ArrowRight}>
+              <RoomButton variant="secondary" icon={ArrowRight}>
                 Quản lý gói của tôi
-              </Button>
+              </RoomButton>
             </Link>
           </div>
-        </div>
+        </RoomCard>
       </div>
     )
   }
@@ -211,72 +222,79 @@ export default function FamilyPage() {
       <div className="mx-auto max-w-3xl space-y-5 animate-fade-in">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-navy-900 dark:text-white">
-              <UsersThree size={24} weight="fill" className="text-fuchsia-600 dark:text-fuchsia-400" />
+            <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-room-ink">
+              <UsersThree size={26} weight="duotone" className="text-room-acorn" />
               Cả nhóm hôm nay
             </h1>
-            <p className="mt-1 text-sm text-navy-500 dark:text-slate-400">
+            <p className="mt-1 text-sm font-semibold text-room-ink/55">
               Mọi người trong gói doanh nghiệp đang tới đâu — số liệu do máy chủ tính theo giờ Việt Nam.
             </p>
           </div>
           <Link to="/app/billing">
-            <Button variant="secondary" icon={UsersThree}>
+            <RoomButton variant="secondary" icon={UsersThree}>
               Quản lý chỗ trong nhóm
-            </Button>
+            </RoomButton>
           </Link>
         </div>
 
-        <div className="rounded-2xl bg-gradient-to-br from-fuchsia-600 via-pink-600 to-violet-600 p-5 text-white shadow-card">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/70">Cả nhóm</p>
+        <RoomCard className="p-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-room-ink/50">Cả nhóm</p>
           <div className="mt-2 flex flex-wrap gap-5">
             <div>
-              <p className="text-3xl font-extrabold">{board.totals.doneToday}</p>
-              <p className="text-xs font-bold text-white/85">việc xong hôm nay</p>
+              <p className="text-3xl font-extrabold text-room-ink">{board.totals.doneToday}</p>
+              <p className="text-xs font-bold text-room-ink/55">việc xong hôm nay</p>
             </div>
             <div>
-              <p className="text-3xl font-extrabold">{board.totals.doneWeek}</p>
-              <p className="text-xs font-bold text-white/85">việc xong trong 7 ngày</p>
+              <p className="text-3xl font-extrabold text-room-ink">{board.totals.doneWeek}</p>
+              <p className="text-xs font-bold text-room-ink/55">việc xong trong 7 ngày</p>
             </div>
             <div>
-              <p className="text-3xl font-extrabold">{board.totals.open}</p>
-              <p className="text-xs font-bold text-white/85">việc đang mở</p>
+              <p className="text-3xl font-extrabold text-room-ink">{board.totals.open}</p>
+              <p className="text-xs font-bold text-room-ink/55">việc đang mở</p>
             </div>
             <div>
-              <p className={`text-3xl font-extrabold ${board.totals.overdue > 0 ? 'text-amber-200' : ''}`}>
+              {/* Quá hạn là dữ liệu "đến hạn" — số nằm mỏ Blush/45 on-blush, số 0 để trống giấy */}
+              <p
+                className={`text-3xl font-extrabold ${
+                  board.totals.overdue > 0
+                    ? 'rounded-lg bg-room-blush/45 px-2 text-room-ink dark:bg-room-blush/30'
+                    : 'text-room-ink'
+                }`}
+              >
                 {board.totals.overdue}
               </p>
-              <p className="text-xs font-bold text-white/85">việc quá hạn</p>
+              <p className="text-xs font-bold text-room-ink/55">việc quá hạn</p>
             </div>
           </div>
           {board.hiddenCount > 0 && (
-            <p className="mt-3 text-xs font-semibold text-white/80">
+            <p className="mt-3 text-xs font-semibold text-room-ink/60">
               {board.hiddenCount} người trong nhóm không chia sẻ tiến độ, nên các số trên chưa tính họ.
             </p>
           )}
-        </div>
+        </RoomCard>
 
         <PersonCard person={board.me} isMe />
 
         {board.members.length === 0 ? (
-          <div className="rounded-2xl bg-white p-5 text-center shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700">
-            <p className="text-sm font-extrabold text-navy-900 dark:text-white">
+          <RoomCard className="p-5 text-center">
+            <p className="font-display text-sm font-bold text-room-ink">
               Nhà mới có mình bạn
             </p>
-            <p className="mt-1 text-sm text-navy-500 dark:text-slate-400">
+            <p className="mt-1 text-sm font-semibold text-room-ink/55">
               Mời chủ nhóm vào bằng email — họ dùng miễn phí và có ngay quyền lợi Pro. Nhà dùng được tối đa{' '}
               {board.maxSeats} tài khoản.
             </p>
             <div className="mt-4 flex justify-center">
               <Link to="/app/billing">
-                <Button icon={UsersThree}>Mời chủ nhóm</Button>
+                <RoomButton icon={UsersThree}>Mời chủ nhóm</RoomButton>
               </Link>
             </div>
-          </div>
+          </RoomCard>
         ) : (
           board.members.map((m) => <PersonCard key={m.userId} person={m} />)
         )}
 
-        <p className="text-center text-xs text-navy-400 dark:text-slate-500">
+        <p className="text-center text-xs font-semibold text-room-ink/45">
           Bảng này là quyền lợi riêng của chủ gói Pro Doanh nghiệp. Người trong nhóm luôn thấy được là đang chia sẻ và tắt
           được bất cứ lúc nào.
         </p>
@@ -289,37 +307,37 @@ export default function FamilyPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-5 animate-fade-in">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-navy-900 dark:text-white">
-          <UsersThree size={24} weight="fill" className="text-fuchsia-600 dark:text-fuchsia-400" />
+        <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-room-ink">
+          <UsersThree size={26} weight="duotone" className="text-room-acorn" />
           Cả nhóm
         </h1>
-        <p className="mt-1 text-sm text-navy-500 dark:text-slate-400">
+        <p className="mt-1 text-sm font-semibold text-room-ink/55">
           Trang này dành cho gói <b>Pro Doanh nghiệp</b> — một người trả tiền, cả nhóm cùng dùng.
         </p>
       </div>
 
-      <div className="rounded-2xl bg-gradient-to-br from-fuchsia-600 via-pink-600 to-violet-600 p-6 text-white shadow-card">
-        <p className="inline-flex items-center gap-2 text-sm font-extrabold">
-          <Crown size={18} weight="fill" /> Pro Doanh nghiệp — {formatVnd(349000)}/tháng cho cả nhóm
+      <RoomCard className="p-6">
+        <p className="inline-flex items-center gap-2 font-display text-sm font-bold text-room-ink">
+          <Crown size={18} weight="fill" className="text-room-bell" /> Pro Doanh nghiệp — {formatVnd(349000)}/tháng cho cả nhóm
         </p>
-        <p className="mt-2 text-sm text-white/85">
+        <p className="mt-2 text-sm font-semibold leading-relaxed text-room-ink/65">
           Tới <b>10 tài khoản</b> dùng chung quyền lợi Pro, và chủ gói có trang này để nhìn cả nhóm đang tới đâu: hôm nay
           ai xong việc gì, ai đang quá hạn, việc nào bị bỏ quên lâu nhất. Người trong nhóm luôn biết mình đang chia sẻ
           gì và tắt được bất cứ lúc nào.
         </p>
         <div className="mt-4">
           <Link to="/app/billing">
-            <Button variant="light" icon={ArrowRight}>
+            <RoomButton icon={ArrowRight}>
               {paidButNotFamily ? 'Nâng cấp lên Pro Doanh nghiệp' : 'Mua cho cả nhóm'}
-            </Button>
+            </RoomButton>
           </Link>
         </div>
         {paidButNotFamily && (
-          <p className="mt-3 text-xs font-semibold text-white/80">
+          <p className="mt-3 text-xs font-semibold text-room-ink/55">
             Bạn đã có quyền lợi Pro rồi; gói doanh nghiệp là để thêm chủ nhóm và mở trang này.
           </p>
         )}
-      </div>
+      </RoomCard>
     </div>
   )
 }

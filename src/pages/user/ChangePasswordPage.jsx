@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Lock, Eye, EyeSlash, Key, Check } from '@phosphor-icons/react'
-import { Field, Input } from '../../components/common/Inputs'
-import Button from '../../components/common/Button'
+import { RoomButton, RoomCard, RoomField, RoomInput } from '../../components/common/RoomUI'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
 import { changePassword } from '../../services/authService'
@@ -47,23 +46,23 @@ export default function ChangePasswordPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 animate-fade-in">
-      <a href="/app/settings" className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-500 transition hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400">
+      <a href="/app/settings" className="inline-flex items-center gap-1.5 text-sm font-bold text-room-ink/60 transition hover:text-room-acorn">
         <ArrowLeft size={16} weight="bold" /> Quay lại cài đặt
       </a>
-      <h1 className="page-title dark:text-white">Đổi mật khẩu</h1>
+      <h1 className="font-display text-2xl font-bold text-room-ink">Đổi mật khẩu</h1>
 
-      <div className="card p-6">
+      <RoomCard className="p-6">
         {serverError && (
-          <div role="alert" className="mb-4 rounded-xl bg-rose-50 p-3.5 text-sm font-medium text-rose-700 ring-1 ring-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:ring-rose-800/50">
+          <div role="alert" className="mb-4 rounded-xl bg-room-rain/30 p-3.5 text-sm font-bold text-room-ink ring-1 ring-inset ring-room-rain">
             {serverError}
           </div>
         )}
         <div className="space-y-4">
-          <Field label="Mật khẩu hiện tại" required error={errors.currentPassword}>
+          <RoomField label="Mật khẩu hiện tại" required error={errors.currentPassword}>
             {(fid) => (
               <div className="relative">
-                <Lock size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
-                <Input
+                <Lock size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+                <RoomInput
                   id={fid}
                   type={showPw ? 'text' : 'password'}
                   autoComplete="current-password"
@@ -74,11 +73,11 @@ export default function ChangePasswordPage() {
                 />
               </div>
             )}
-          </Field>
+          </RoomField>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Mật khẩu mới" required error={errors.newPassword} hint="Tối thiểu 6 ký tự">
+            <RoomField label="Mật khẩu mới" required error={errors.newPassword} hint="Tối thiểu 6 ký tự">
               {(fid) => (
-                <Input
+                <RoomInput
                   id={fid}
                   type={showPw ? 'text' : 'password'}
                   autoComplete="new-password"
@@ -87,10 +86,10 @@ export default function ChangePasswordPage() {
                   invalid={!!errors.newPassword}
                 />
               )}
-            </Field>
-            <Field label="Xác nhận mật khẩu mới" required error={errors.confirmPassword}>
+            </RoomField>
+            <RoomField label="Xác nhận mật khẩu mới" required error={errors.confirmPassword}>
               {(fid) => (
-                <Input
+                <RoomInput
                   id={fid}
                   type={showPw ? 'text' : 'password'}
                   autoComplete="new-password"
@@ -99,12 +98,12 @@ export default function ChangePasswordPage() {
                   invalid={!!errors.confirmPassword}
                 />
               )}
-            </Field>
+            </RoomField>
           </div>
           <button
             type="button"
             onClick={() => setShowPw((s) => !s)}
-            className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-navy-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
+            className="flex cursor-pointer items-center gap-1.5 text-xs font-bold text-room-ink/60 transition hover:text-room-acorn"
           >
             {showPw ? <EyeSlash size={15} /> : <Eye size={15} />}
             {showPw ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
@@ -112,12 +111,12 @@ export default function ChangePasswordPage() {
         </div>
 
         <div className="mt-6 flex justify-end">
-          <Button variant="gradient" icon={Key} onClick={save} loading={saving}>
+          <RoomButton icon={Key} onClick={save} loading={saving}>
             <Check size={16} className="mr-1" weight="bold" />
             Đổi mật khẩu
-          </Button>
+          </RoomButton>
         </div>
-      </div>
+      </RoomCard>
     </div>
   )
 }

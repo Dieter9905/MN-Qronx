@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-06T07:20:00Z",
+  "generatedAt": "2026-11-06T10:05:00Z",
   "title": "Design System: MN-Qronx — Phòng mini-hompy",
   "extensions": {
     "colorMeta": {
@@ -591,6 +591,102 @@
       "description": "The AI chat surface (M6): user bubble = full-Acorn sheet with paper text (the voice of the person, no glow); bot bubble = Oat/40 + Acorn/20 ring. Embedded task cards are paper + Acorn/20 with title/link and the data line (due datetime, “đã xong”); confirm buttons are worded verdicts — Xóa = Rain sheet (neutral regret, not Blush), Hoàn thành = Sage sheet, both Ink text; “Hết hiệu lực” re-appears as Bell text; Done confirmation chip = Sage/45. Composer chips Oat/40 + Acorn/15, input + big send = Acorn rounded-full, reminder select-chips turn solid Bell when chosen, priority pills solid Acorn, “Gợi ý việc con” = Bell/25 chip. Voice interim = Rain/40 (listening, neutral).",
       "html": "<div class=\"ds-chat\"><p class=\"ds-chat-user\">Sáng 7h tập gym. Chiều 2h họp team…</p><p class=\"ds-chat-bot\">Chào bạn! Tôi sẽ tách thành từng công việc…</p><div class=\"ds-chat-card\"><b>Họp team</b><span class=\"ds-chat-act ds-act-sage\">Hoàn thành</span><span class=\"ds-chat-act ds-act-rain\">Xóa</span></div></div>",
       "css": ".ds-chat-user{background:rgb(var(--room-acorn));color:rgb(var(--room-paper));border-radius:16px;padding:10px 14px;font-size:14px;box-shadow:0 14px 26px -12px rgb(0 0 0 / 0.3);}.ds-chat-bot{background:rgb(var(--room-oat) / 0.4);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);color:rgb(var(--room-ink) / 0.85);border-radius:16px;padding:10px 14px;}.ds-chat-card{background:rgb(var(--room-paper));border-radius:12px;padding:8px 12px;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);}.ds-chat-act{border-radius:9999px;padding:6px 12px;font-size:11px;font-weight:700;color:rgb(var(--room-ink));}.ds-act-sage{background:rgb(var(--room-sage));}.ds-act-rain{background:rgb(var(--room-rain));}"
+    },
+    {
+      "name": "Room Settings Tabs",
+      "kind": "nav",
+      "refersTo": "room-settings-tabs",
+      "description": "Settings tablist (M7): the room version of SegmentedControl when an icon must ride along — an Oat/70 tray ringed Acorn/15 holding flex-1 tabs; the chosen tab is a sheet of paper with a subtle drop shadow and an inner ring Acorn/30, the rest Ink/55. Duotone icons keep the card furniture feel (BellRinging = Bell, Devices = Acorn, CalendarBlank = Acorn). Dark mode flips only via tokens.",
+      "html": "<div class=\"ds-tabs\"><span class=\"ds-tab ds-on\"><svg/><b>Thông báo</b></span><span class=\"ds-tab\">Thiết bị</span></div>",
+      "css": ".ds-tabs{display:flex;gap:4px;border-radius:12px;background:rgb(var(--room-oat) / 0.7);padding:4px;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.15);}.ds-tab{display:flex;flex:1;align-items:center;justify-content:center;gap:6px;border-radius:8px;padding:8px 14px;font-family:\"Baloo 2\";font-size:13px;font-weight:700;color:rgb(var(--room-ink) / 0.55);}.ds-tab.ds-on{background:rgb(var(--room-paper));color:rgb(var(--room-ink));box-shadow:0 6px 12px -8px rgb(0 0 0/0.25),inset 0 0 0 1px rgb(var(--room-acorn) / 0.3);}"
+    },
+    {
+      "name": "Room Device Row",
+      "kind": "row",
+      "refersTo": "room-device-row",
+      "description": "Device list row (M7): an Oat/40 dish holding a paper tile with the platform duotone icon in Acorn (Devices = Acorn), name in Ink bold, “Hoạt động …” in Ink/45; the remove action is a hand-drawn pill — Ink/55 with an Acorn/25 ring that fills Rain/40 on hover (gỡ = neutral removal), never rose-blue buttons. “Đăng ký thiết bị này” is a RoomButton secondary with Plus.",
+      "html": "<li class=\"ds-dev\"><span class=\"ds-dev-dish\"><svg/></span><div><b>Laptop mưa rào</b><small>Web · Hoạt động 2 phút trước</small></div><em>Gỡ</em></li>",
+      "css": ".ds-dev{display:flex;align-items:center;gap:16px;border-radius:12px;background:rgb(var(--room-oat) / 0.4);padding:12px;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.1);}.ds-dev-dish{display:inline-flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:12px;background:rgb(var(--room-paper));color:rgb(var(--room-acorn));box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);}.ds-dev b{font-size:14px;color:rgb(var(--room-ink));}.ds-dev small{font-size:12px;font-weight:600;color:rgb(var(--room-ink) / 0.45);}.ds-dev em{border-radius:9999px;padding:6px 14px;font-family:\"Baloo 2\";font-style:normal;font-size:13px;font-weight:700;color:rgb(var(--room-ink) / 0.55);box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}"
+    },
+    {
+      "name": "Room ICS Tray",
+      "kind": "panel",
+      "refersTo": "room-ics-tray",
+      "description": "Calendar-sync tray (M7): the read-only .ics link sits in an Oat/40 mono field ringed Acorn/20 (focus = 2px Acorn); actions are an Acorn pill “Tải tệp .ics” (raised-action shadow) plus secondary Copy / “Tạo lại khoá”. The security verdict is a Rain/30 sheet ringed Rain with bold Ink — a link-leak warning is regret/neutral, not Blush (nothing is “due”), not amber.",
+      "html": "<div class=\"ds-ics\"><input class=\"ds-ics-url\" value=\".../ics/MN-XXXX\" /><span class=\"ds-ics-warn\">Ai có link này cũng xem được việc của bạn…</span></div>",
+      "css": ".ds-ics-url{width:100%;border-radius:12px;background:rgb(var(--room-oat) / 0.4);padding:0 14px;height:44px;font-family:ui-monospace,monospace;font-size:12px;font-weight:600;color:rgb(var(--room-ink) / 0.8);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);}.ds-ics-warn{display:block;border-radius:12px;background:rgb(var(--room-rain) / 0.3);padding:10px;font-size:12px;font-weight:700;color:rgb(var(--room-ink) / 0.8);box-shadow:inset 0 0 0 1px rgb(var(--room-rain));}"
+    },
+    {
+      "name": "Room Sound Tile",
+      "kind": "row",
+      "refersTo": "room-sound-tile",
+      "description": "Custom alarm sounds tray (M7): tiles of paper ringed Acorn/20; the tile currently chosen as alarm carries a Bell/25 dish with a full-Bell MusicNotes and a Bell/40 inner ring (a bell is the alarm), the rest Oat/70 + Ink/45. Preview and delete are borderless round buttons that hover Oat / Rain/40 + Trash. The locked upsell for free plans is a Bell/20 sheet ringed Bell/40 with a Bell Lock and Ink copy — gold invitation, not a violet prison.",
+      "html": "<li class=\"ds-snd ds-on\"><span class=\"ds-snd-dish\"><svg/></span><div><b>Con trỏ xa vắng.mp3</b><small>0.9 MB</small></div></li><div class=\"ds-lock\"><svg/>Nhập MP3 của riêng bạn là tính năng của gói Plus/Pro.</div>",
+      "css": ".ds-snd{display:flex;align-items:center;gap:8px;border-radius:8px;background:rgb(var(--room-paper));padding:8px 10px;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);}.ds-snd-dish{display:inline-flex;width:28px;height:28px;align-items:center;justify-content:center;border-radius:8px;background:rgb(var(--room-oat) / 0.7);color:rgb(var(--room-ink) / 0.45);}.ds-snd.ds-on .ds-snd-dish{background:rgb(var(--room-bell) / 0.25);color:rgb(var(--room-bell));box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.4);}.ds-snd b{font-size:12px;font-weight:700;color:rgb(var(--room-ink) / 0.9);}.ds-snd small{font-size:10px;font-weight:600;color:rgb(var(--room-ink) / 0.35);}.ds-lock{display:flex;align-items:center;gap:8px;border-radius:12px;background:rgb(var(--room-bell) / 0.2);padding:10px;font-size:12px;font-weight:700;color:rgb(var(--room-ink) / 0.8);box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.4);}.ds-lock svg{color:rgb(var(--room-bell));}"
+    },
+    {
+      "name": "Room Support Status Chip",
+      "kind": "chip",
+      "refersTo": "room-support-status",
+      "description": "Support conversation verdict (M7): “Đã xong” = Sage/45 chip ringed Acorn/20 with a filled CheckCircle (only completion is Sage); “Đang chờ phản hồi” = Bell/25 chip ringed Bell/40 with ClockCountdown (waiting is a bell, not an alarm — the old amber got retired). A new admin message is a Bell/25 sheet line with Ink copy; a failed connection is a Rain-icon verdict card whose retry is an Acorn rounded-full raised action.",
+      "html": "<span class=\"ds-sup ds-wait\"><svg/>Đang chờ phản hồi</span>",
+      "css": ".ds-sup{display:inline-flex;align-items:center;gap:6px;border-radius:9999px;padding:6px 12px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--room-ink) / 0.85);}.ds-sup.ds-wait{background:rgb(var(--room-bell) / 0.25);box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.4);}.ds-sup.ds-done{background:rgb(var(--room-sage) / 0.45);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);color:rgb(var(--room-ink) / 0.75);}"
+    },
+    {
+      "name": "Room Support Chat",
+      "kind": "panel",
+      "refersTo": "room-support-chat",
+      "description": "SupportChatPanel skin=\"room\" (M7): the shared chat panel skinned additively via an optional skin prop — user-facing page wears the room, the admin page keeps its navy classic look untouched. Container = Oat/40 ringed Acorn/25; my bubble = full-Acorn with paper text (raised-action shadow), admin reply = paper ringed Acorn/20 with the Headset author line in Acorn; loading thumb = Oat/70, failed attachment = Ink/50 text; pending-image strip on paper with the remove button as a Rain disc + Ink X; composer = Oat/40 textarea within Acorn/20, image button = Oat/60 dish, and the send button is an Acorn rounded-full raised action with the paper plane. Empty state = Oat/60 dish (duotone Headset) + Ink copy. No violet anywhere.",
+      "html": "<div class=\"ds-chat\"><p class=\"ds-chat-u\">Xin chào, app báo thức không kêu…</p><p class=\"ds-chat-b\">Chào bạn, tôi đang kiểm tra giúp bạn nhé.</p><span class=\"ds-chat-d\"><svg/></span><input class=\"ds-chat-in\" placeholder=\"Nhập nội dung cần hỗ trợ…\" /><em>Gửi</em></div>",
+      "css": ".ds-chat{display:flex;flex-direction:column;border-radius:16px;background:rgb(var(--room-oat) / 0.4);box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-chat-u{max-width:70%;margin-left:auto;border-radius:16px;background:rgb(var(--room-acorn));color:rgb(var(--room-paper));padding:10px 14px;font-size:14px;line-height:1.6;box-shadow:0 14px 26px -12px rgb(0 0 0/0.3);}.ds-chat-b{max-width:70%;border-radius:16px;background:rgb(var(--room-paper));color:rgb(var(--room-ink) / 0.85);padding:10px 14px;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);}.ds-chat-in{border-radius:12px;background:rgb(var(--room-oat) / 0.4);padding:10px;font-size:14px;font-weight:600;color:rgb(var(--room-ink));box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);}.ds-chat-d{display:inline-flex;width:40px;height:40px;align-items:center;justify-content:center;border-radius:12px;background:rgb(var(--room-oat) / 0.6);color:rgb(var(--room-ink) / 0.6);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.15);}.ds-chat em{display:inline-flex;align-items:center;border-radius:9999px;background:rgb(var(--room-acorn));color:rgb(var(--room-paper));padding:10px 16px;font-weight:700;box-shadow:0 14px 26px -12px rgb(0 0 0/0.3);}"
+    },
+    {
+      "name": "Room Family Person Card",
+      "kind": "card",
+      "refersTo": "room-family-person",
+      "description": "PersonCard of the family board (M7): a paper RoomCard with the Avatar in skin=\"room\"; StatChips speak verdicts — done today > 0 = Sage/45, neutral counters = Oat/60, overdue > 0 = Blush/45 with Ink (Blush is the due-surface, the number rides it). The worst-overdue list keeps the task title in bold Ink and puts “hạn {time}” on a Blush/45 pill (the Blush layer carries the data, never a light glyph on cream); “Không chia sẻ” = Oat/70 chip ringed Acorn/20 with EyeSlash Ink/35.",
+      "html": "<article class=\"ds-per\"><span class=\"ds-per-chip ds-good\"><b>4</b> xong hôm nay</span><span class=\"ds-per-chip ds-due\"><b>2</b> quá hạn</span><span class=\"ds-per-limit\">hạn 01/11 07:30</span></article>",
+      "css": ".ds-per{display:flex;flex-wrap:wrap;gap:8px;}.ds-per-chip{display:inline-flex;align-items:center;gap:6px;border-radius:12px;padding:6px 10px;font-size:12px;font-weight:800;color:rgb(var(--room-ink) / 0.65);}.ds-per-chip b{font-size:14px;}.ds-good{background:rgb(var(--room-sage) / 0.45);color:rgb(var(--room-ink) / 0.75);}.ds-due{background:rgb(var(--room-blush) / 0.45);color:rgb(var(--room-ink) / 0.85);}.ds-per-limit{border-radius:6px;background:rgb(var(--room-blush) / 0.45);padding:2px 6px;font-size:12px;font-weight:700;color:rgb(var(--room-ink) / 0.85);}"
+    },
+    {
+      "name": "Room Family Board",
+      "kind": "panel",
+      "refersTo": "room-family-board",
+      "description": "Owner totals of the family board (M7): the old fuchsia→pink→violet gradient hero becomes a paper RoomCard — an uppercase eyebrow “CẢ NHÓM” in Ink/50, four counters in display-weight Ink whose overdue count only sits on a Blush/45 pill when > 0, and the hidden-members note in Ink/60. All the noise colors leave; the numbers themselves are the room’s furniture.",
+      "html": "<section class=\"ds-board\"><p class=\"ds-board-eyebrow\">CẢ NHÓM</p><p class=\"ds-board-n\">18</p><p class=\"ds-board-n ds-due\">2</p></section>",
+      "css": ".ds-board{border-radius:16px;background:rgb(var(--room-paper));padding:20px;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-board-eyebrow{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgb(var(--room-ink) / 0.5);}.ds-board-n{font-family:\"Baloo 2\";font-size:30px;font-weight:800;color:rgb(var(--room-ink));}.ds-board-n.ds-due{display:inline-block;border-radius:8px;background:rgb(var(--room-blush) / 0.45);padding:0 8px;color:rgb(var(--room-ink));}"
+    },
+    {
+      "name": "Room Family Sales",
+      "kind": "panel",
+      "refersTo": "room-family-sales",
+      "description": "The BUSINESS block of Billing in all three roles (M7): seat view = RoomCard with RoomToggle “Cho chủ gói xem tiến độ của tôi”, Eye = Acorn / EyeSlash = Ink/35, and “Rời gói” asks first; the farewell is a RoomButton danger (Rain, neutral leaving) with “Để ở lại” as secondary. Owner view = paper card whose self-row is Oat/70 ringed Acorn/25, member rows Oat/40; “Gỡ thật” = Rain sheet button, the small “Gỡ” = Ink pill with Rain hover; the invite form is an Oat/40 tray with paper inputs ringed Acorn/20 focusing 2px Acorn and an Acorn “Thêm vào nhà” CTA (fuchsia replaced everywhere). No-seat upsell = RoomCard + Acorn “Mua cho cả nhóm” and the yearly gift chip on Oat/60.",
+      "html": "<div class=\"ds-sales\"><button class=\"ds-sales-btn ds-rain\">Gỡ thật</button><button class=\"ds-sales-btn ds-gone\">Gỡ</button><button class=\"ds-sales-btn ds-buy\">Thêm vào nhà</button></div>",
+      "css": ".ds-sales{display:flex;gap:8px;}.ds-sales-btn{display:inline-flex;align-items:center;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:800;}.ds-rain{background:rgb(var(--room-rain));color:rgb(var(--room-ink));}.ds-gone{color:rgb(var(--room-ink) / 0.6);}.ds-buy{background:rgb(var(--room-acorn));color:rgb(var(--room-paper));box-shadow:0 14px 26px -12px rgb(0 0 0/0.3);}"
+    },
+    {
+      "name": "Room Plan Card",
+      "kind": "card",
+      "refersTo": "room-plan-card",
+      "description": "The four plan cards (M7): paper sheets ringed Acorn/25, plan currently in use = ring-2 Acorn, “Phổ biến nhất” = a solid Bell ribbon with Ink text plus a ring-2 Bell/60 frame. Icon dishes room-tone the plan: FREE = Oat/70, PLUS = Rain/40, PRO = Bell/25 with a full-Bell Crown, BUSINESS = Acorn/20 (the PLAN_BADGE text chip keeps its data colors untouched — plan identity is data). Feature checks = Sage/45 discs with Ink; the yearly-savings line is Acorn; “Sắp có” = Oat/70 chip; CTA “Nâng cấp = Acorn rounded-full raised action, disabled states = RoomButton secondary.",
+      "html": "<article class=\"ds-plan ds-popu\"><span class=\"ds-plan-ribbon\">Phổ biến nhất</span><span class=\"ds-plan-dish\"></span><h3>Pro</h3><p class=\"ds-plan-price\">79.000đ</p><span class=\"ds-plan-feat\"><i>✓</i>Nhắc dai không giới hạn</span><button class=\"ds-plan-cta\">Nâng cấp Pro</button></article>",
+      "css": ".ds-plan{position:relative;display:flex;flex-direction:column;border-radius:16px;background:rgb(var(--room-paper));padding:20px;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-plan.ds-popu{box-shadow:0 0 0 2px rgb(var(--room-bell) / 0.6);}.ds-plan-ribbon{position:absolute;top:-12px;left:50%;transform:translateX(-50%);border-radius:9999px;background:rgb(var(--room-bell));padding:4px 12px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:rgb(var(--room-ink));box-shadow:0 10px 18px -10px rgb(0 0 0/0.35);}.ds-plan-dish{display:inline-flex;width:48px;height:48px;border-radius:14px;background:rgb(var(--room-bell) / 0.25);color:rgb(var(--room-bell));box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.4);}.ds-plan h3{font-family:\"Baloo 2\";font-weight:700;font-size:20px;color:rgb(var(--room-ink));margin-top:16px;}.ds-plan-price{font-family:\"Baloo 2\";font-size:30px;font-weight:800;color:rgb(var(--room-ink));}.ds-plan-feat{display:flex;gap:10px;margin-top:10px;font-size:14px;font-weight:600;color:rgb(var(--room-ink) / 0.7);}.ds-plan-feat i{display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;border-radius:9999px;background:rgb(var(--room-sage) / 0.45);color:rgb(var(--room-ink) / 0.8);font-style:normal;}.ds-plan-cta{margin-top:24px;border-radius:9999px;background:rgb(var(--room-acorn));color:rgb(var(--room-paper));padding:10px;font-weight:700;box-shadow:0 14px 26px -12px rgb(0 0 0/0.3);}"
+    },
+    {
+      "name": "Room Order Status Chips",
+      "kind": "chip",
+      "refersTo": "room-order-status",
+      "description": "Order history verdicts (M7) on a paper table with Ink/45 uppercase headers and Acorn/15 dividers: PENDING = Bell/25 ring Bell/40 (chờ là chuông), PAID = Sage/45 ring Acorn/20 (chỉ hoàn thành), CANCELLED = Rain/30 ring Rain (hủy trung tính), EXPIRED = Blush/45 ring Acorn/20 (deadline đã qua — Blush là lớp nền mang dữ liệu hạn). Old amber/emerald/slate/rose all retired; row actions: “Thanh toán” = Acorn text, “Huỷ” = Ink/55 with Rain/40 hover.",
+      "html": "<span class=\"ds-ord ds-ord--paid\">Đã thanh toán</span> <span class=\"ds-ord ds-ord--pending\">Chờ thanh toán</span>",
+      "css": ".ds-ord{display:inline-flex;border-radius:9999px;padding:2px 8px;font-size:11px;font-weight:800;}.ds-ord--pending{background:rgb(var(--room-bell) / 0.25);color:rgb(var(--room-ink) / 0.85);box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.4);}.ds-ord--paid{background:rgb(var(--room-sage) / 0.45);color:rgb(var(--room-ink) / 0.85);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);}"
+    },
+    {
+      "name": "Room QR Checkout",
+      "kind": "panel",
+      "refersTo": "room-checkout",
+      "description": "CheckoutModal (M7): hand-rolled room modal — Ink/45 overlay (no backdrop-blur), paper panel ringed Acorn/25. The amount hero is an Oat/50 sheet ringed Acorn/25 with the money in display-weight Ink; the countdown chirps on a paper chip ringed Acorn/25 and flips to Blush/45 with Ink when ≤ 2 phút (deadline proximity = Blush). Expired-verdict = Rain/30 sheet ringed Rain; unconfigured-bank = Bell/20 ringed Bell/40; the transfer-content Row is Bell/25 (the must-be-right thing); QR image sits on paper with an Acorn/25 ring; PAID confirmation = Sage/45 chip; CTAs “Tôi đã chuyển / Tạo mã mới” = Acorn, “Huỷ đơn này” = Ink pill with Rain hover.",
+      "html": "<div class=\"ds-co\"><span class=\"ds-co-amount\">79.000đ</span><span class=\"ds-co-clock\">04:59</span><span class=\"ds-co-row\">Nội dung chuyển khoản MN-1234</span><button class=\"ds-co-cta\">Tôi đã chuyển</button></div>",
+      "css": ".ds-co{border-radius:16px;background:rgb(var(--room-paper));padding:24px;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-co-amount{display:block;border-radius:14px;background:rgb(var(--room-oat) / 0.5);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);padding:16px;font-family:\"Baloo 2\";font-size:30px;font-weight:800;color:rgb(var(--room-ink));}.ds-co-clock{display:inline-block;border-radius:8px;background:rgb(var(--room-paper));margin-top:8px;padding:2px 8px;font-family:ui-monospace,monospace;font-size:14px;font-weight:800;color:rgb(var(--room-ink) / 0.85);box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-co-row{display:flex;justify-content:space-between;align-items:center;border-radius:12px;background:rgb(var(--room-bell) / 0.25);box-shadow:inset 0 0 0 1px rgb(var(--room-bell) / 0.4);padding:10px;font-family:ui-monospace,monospace;font-weight:800;color:rgb(var(--room-ink));margin-top:10px;}.ds-co-cta{display:inline-flex;margin-top:16px;border-radius:9999px;background:rgb(var(--room-acorn));color:rgb(var(--room-paper));padding:10px 20px;font-weight:700;box-shadow:0 14px 26px -12px rgb(0 0 0/0.3);}"
     }
   ],
   "narrative": {

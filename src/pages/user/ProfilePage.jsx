@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { ArrowLeft, UserCircle, EnvelopeSimple, Phone, Check } from '@phosphor-icons/react'
-import { Field, Input } from '../../components/common/Inputs'
-import Button from '../../components/common/Button'
 import Avatar from '../../components/common/Avatar'
+import { RoomButton, RoomCard, RoomField, RoomInput } from '../../components/common/RoomUI'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/common/Toast'
 import { formatDate } from '../../lib/format'
@@ -43,29 +42,29 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 animate-fade-in">
-      <a href="/app/settings" className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-500 transition hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400">
+      <a href="/app/settings" className="inline-flex items-center gap-1.5 text-sm font-bold text-room-ink/60 transition hover:text-room-acorn">
         <ArrowLeft size={16} weight="bold" /> Quay lại cài đặt
       </a>
-      <h1 className="page-title dark:text-white">Hồ sơ cá nhân</h1>
+      <h1 className="font-display text-2xl font-bold text-room-ink">Hồ sơ cá nhân</h1>
 
-      <div className="card p-6">
-        <div className="flex flex-col items-center gap-4 border-b border-navy-100 pb-6 dark:border-slate-700 sm:flex-row sm:items-center">
-          <Avatar name={form.fullName || user?.fullName} src={user?.avatarUrl} size="xl" />
+      <RoomCard className="p-6">
+        <div className="flex flex-col items-center gap-4 border-b border-room-acorn/15 pb-6 sm:flex-row sm:items-center">
+          <Avatar name={form.fullName || user?.fullName} src={user?.avatarUrl} size="xl" skin="room" />
           <div className="text-center sm:text-left">
-            <p className="text-lg font-extrabold text-navy-900 dark:text-white">{user?.fullName}</p>
-            <p className="text-sm text-navy-400 dark:text-slate-400">{user?.email}</p>
-            <p className="mt-1 text-xs text-navy-400 dark:text-slate-500">
+            <p className="text-lg font-extrabold text-room-ink">{user?.fullName}</p>
+            <p className="text-sm font-semibold text-room-ink/50">{user?.email}</p>
+            <p className="mt-1 text-xs font-semibold text-room-ink/40">
               Thành viên từ {formatDate(user?.createdAt)} · Vai trò: {user?.role === 'ADMIN' ? 'Quản trị viên' : 'Người dùng'}
             </p>
           </div>
         </div>
 
         <div className="mt-6 space-y-4">
-          <Field label="Họ tên" required error={errors.fullName}>
+          <RoomField label="Họ tên" required error={errors.fullName}>
             {(fid) => (
               <div className="relative">
-                <UserCircle size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
-                <Input
+                <UserCircle size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+                <RoomInput
                   id={fid}
                   value={form.fullName}
                   onChange={(e) => {
@@ -77,20 +76,20 @@ export default function ProfilePage() {
                 />
               </div>
             )}
-          </Field>
-          <Field label="Email" hint="Email không thể thay đổi – dùng để đăng nhập và khôi phục mật khẩu">
+          </RoomField>
+          <RoomField label="Email" hint="Email không thể thay đổi – dùng để đăng nhập và khôi phục mật khẩu">
             {(fid) => (
               <div className="relative">
-                <EnvelopeSimple size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
-                <Input id={fid} value={user?.email} disabled className="pl-10" />
+                <EnvelopeSimple size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+                <RoomInput id={fid} value={user?.email} disabled className="pl-10" />
               </div>
             )}
-          </Field>
-          <Field label="Số điện thoại" error={errors.phoneNumber}>
+          </RoomField>
+          <RoomField label="Số điện thoại" error={errors.phoneNumber}>
             {(fid) => (
               <div className="relative">
-                <Phone size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-300" />
-                <Input
+                <Phone size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+                <RoomInput
                   id={fid}
                   type="tel"
                   value={form.phoneNumber}
@@ -104,15 +103,15 @@ export default function ProfilePage() {
                 />
               </div>
             )}
-          </Field>
+          </RoomField>
         </div>
 
         <div className="mt-6 flex justify-end">
-          <Button variant="gradient" icon={Check} onClick={save} loading={saving}>
+          <RoomButton icon={Check} onClick={save} loading={saving}>
             Lưu thay đổi
-          </Button>
+          </RoomButton>
         </div>
-      </div>
+      </RoomCard>
     </div>
   )
 }
