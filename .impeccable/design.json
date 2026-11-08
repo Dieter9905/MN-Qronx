@@ -7,7 +7,7 @@
       "porcelain": {
         "role": "neutral",
         "displayName": "Porcelain",
-        "canonical": "rgb(var(--room-paper) / <alpha>) = 255 246 236; .dark = 43 35 30 (#2B231E)",
+        "canonical": "rgb(var(--room-paper) / <alpha>) = 255 246 236; .dark = 48 40 34 (#302822)",
         "tonalRamp": [
           "#0d0b08",
           "#272320",
@@ -52,7 +52,7 @@
       "oat": {
         "role": "neutral",
         "displayName": "Oat",
-        "canonical": "rgb(var(--room-oat) / <alpha>) = 234 220 199; .dark = 62 52 43",
+        "canonical": "rgb(var(--room-oat) / <alpha>) = 234 220 199; .dark = 76 63 52",
         "tonalRamp": [
           "#0f0a05",
           "#28231b",

@@ -157,8 +157,8 @@ A warm paper-and-ink room: brown ink text on Porcelain paper, with one working p
 - **Blush** (#F5C9CF — dark: rgb(243 183 190)): the due/đến-hạn light of the world. On app surfaces it appears only as the due state: the lit task item, its pulsing glow, and the MẪU/DEMO chips. Inside the authored room scene it may additionally dress soft fabric (garland flags, the armchair pillow) — that latitude stops at the SVG scene.
 
 ### Neutral (room surfaces)
-- **Porcelain** (#FFF6EC — dark: rgb(43 35 30)): the paper ground and paper fills; in dark values it becomes the warm evening room `#2B231E`.
-- **Oat** (#EADCC7 — dark: rgb(62 52 43)): the floor, tabletops, and cream fields.
+- **Porcelain** (#FFF6EC — dark: rgb(48 40 34)): the paper ground and paper fills; in dark values it becomes the warm evening room `#302822`.
+- **Oat** (#EADCC7 — dark: rgb(76 63 52)): the floor, tabletops, and cream fields.
 - **Moss** (#DCE8DF — dark: rgb(55 69 58)) and **Sage** (#A9C4B1 — dark: rgb(97 124 104)): the two structural wallpaper/furniture walls and cool green furniture fields. On app chrome: Moss/70 anchors the dev-code reminder note and the 24–32px icon tiles (blips, tape cards), Sage/45 is the success-panel climate on forms.
 - **Rain** (#B7C7D6 — dark: rgb(116 132 148)): the neutral cool field — round rug, pending-dot, unused-task markers; on forms it is the error climate: the invalid field's ring and the error panel at 30%, always under Acorn rings with Ink copy (The Rain-Is-Neutral Rule).
 - **Sky** (#B9CADA — dark: rgb(40 50 68)): the arched-window pane that day turns into night glass.
