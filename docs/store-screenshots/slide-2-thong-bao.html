@@ -2,70 +2,60 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
 <style>
+  /* Slide listing store — tông "phòng" (m7): paper buổi đêm + đèn ấm, không gradient/glass.
+     Toast Windows mô phỏng giữ dạng thông báo hệ thống thật. */
   :root {
-    --bg: #0f1524; --card: #1a2236; --line: #2a3450; --text: #e8ecf6;
-    --muted: #9aa5c0; --accent: #7c8cff; --ok: #3ddc97; --warn: #ffb454; --danger: #ff6b6b;
+    --paper: #2b231e; --oat: #3e342b; --ink: #e9ded0; --acorn: #c7a885;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     width: 1280px; height: 800px; overflow: hidden; position: relative;
-    background: radial-gradient(900px 500px at 80% 20%, rgba(124,140,255,.25), transparent 60%),
-                radial-gradient(700px 500px at 10% 85%, rgba(61,220,151,.10), transparent 55%),
-                linear-gradient(160deg, #0d1b2a, #101a30 55%, #0d1526);
-    color: var(--text);
-    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: var(--paper); color: var(--ink);
+    font-family: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
     display: flex; flex-direction: column;
   }
   .stage { flex: 1; display: flex; align-items: center; justify-content: center; gap: 70px; padding-bottom: 96px; }
 
-  .kicker { text-transform: uppercase; letter-spacing: .28em; color: #8fa3ff; font-size: 15px; font-weight: 700; margin-bottom: 18px; }
-  .headline { font-size: 44px; font-weight: 800; line-height: 1.25; }
-  .headline em { font-style: normal; color: #9fb0ff; }
-  .sub { color: var(--muted); font-size: 18px; line-height: 1.6; margin-top: 16px; max-width: 430px; }
+  .kicker { text-transform: uppercase; letter-spacing: .28em; color: var(--acorn); font-size: 15px; font-weight: 800; margin-bottom: 18px; }
+  .headline { font-family: 'Baloo 2', 'Nunito', sans-serif; font-size: 44px; font-weight: 800; line-height: 1.25; color: var(--ink); }
+  .headline em { font-style: normal; color: var(--acorn); }
+  .sub { color: rgba(233,222,208,.72); font-size: 18px; line-height: 1.6; margin-top: 16px; max-width: 430px; font-weight: 600; }
 
-  /* Toast Windows 11 */
+  /* Toast Windows 11 (mô phỏng — đây là bề mặt của hệ điều hành) */
   .toast-wrap { position: relative; width: 430px; flex: none; }
   .desktop-bar {
     display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 14px;
-    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
-    color: var(--muted); font-size: 13px; margin-bottom: 26px;
+    background: var(--oat); border: 1px solid rgba(199,168,133,.25);
+    color: rgba(233,222,208,.65); font-size: 13px; margin-bottom: 26px; font-weight: 600;
   }
   .desktop-bar .clock { margin-left: auto; font-variant-numeric: tabular-nums; }
-  .ext-badge {
-    position: absolute; top: 8px; right: 260px; display: flex; flex-direction: column; align-items: center; gap: 4px;
-    color: var(--muted); font-size: 11px;
-  }
-  .ext-badge .ico {
-    width: 44px; height: 44px; border-radius: 12px; background: #233057; display: flex;
-    align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,.4);
-  }
-  .ext-badge .ico span { position: absolute; transform: translate(16px,-16px); background: var(--danger); color:#fff; font-size: 12px; font-weight: 700; border-radius: 10px; padding: 1px 7px; }
   .toast {
     background: #1c2230f2; border: 1px solid #3a4457; border-radius: 12px;
     box-shadow: 0 30px 70px rgba(0,0,0,.6); padding: 16px 18px 14px; width: 100%;
   }
   .toast .head { display: flex; gap: 12px; align-items: flex-start; }
   .toast img { width: 34px; height: 34px; border-radius: 8px; }
-  .appicon { display: inline-flex; width: 34px; height: 34px; border-radius: 8px; background: linear-gradient(135deg,#7c3aed,#8b5cf6); color: #fff; align-items: center; justify-content: center; font-size: 18px; flex: none; }
-  .toast b { font-size: 16.5px; }
+  .toast b { font-size: 16.5px; color: #e8ecf6; }
   .toast p { color: #c9d2e6; font-size: 14px; margin-top: 3px; line-height: 1.5; }
-  .toast .note { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  .toast .note { color: #9aa5c0; font-size: 12px; margin-top: 8px; }
   .toast .actions { display: flex; gap: 10px; margin-top: 12px; }
   .toast .actions button {
     flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #46506a;
-    background: rgba(255,255,255,.05); color: var(--text); font-size: 13.5px;
+    background: rgba(255,255,255,.05); color: #e8ecf6; font-size: 13.5px;
   }
 
   .caption {
     position: absolute; inset: auto 0 0 0; height: 96px;
     display: flex; align-items: center; justify-content: center; gap: 16px;
-    background: linear-gradient(180deg, rgba(13,20,38,0), rgba(9,13,26,.92) 30%);
-    font-size: 30px; font-weight: 750;
+    background: var(--oat); border-top: 1px solid rgba(199,168,133,.25);
+    font-size: 30px; font-weight: 750; color: var(--ink);
   }
   .caption .badge {
-    background: var(--ok); color: #08301f; border-radius: 999px; padding: 4px 16px;
-    font-size: 20px; font-weight: 700;
+    background: var(--acorn); color: var(--paper); border-radius: 999px; padding: 4px 16px;
+    font-size: 20px; font-weight: 800;
   }
 </style>
 </head>
@@ -80,7 +70,7 @@
       <div class="desktop-bar"><span>🪟 Desktop</span><span class="clock">14:30 · 26/10</span></div>
       <div class="toast">
         <div class="head">
-          <span class="appicon">🕒</span>
+          <img src="../../assets/brand/logo-512.png" alt="" />
           <div>
             <b>⏰ Nộp báo cáo tuần</b>
             <p>Đến giờ nhắc (14:30) — bấm để mở MN-Qronx</p>
