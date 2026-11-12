@@ -174,9 +174,7 @@ Production bây giờ chạy trên VPS riêng (đã cài Node 22, Nginx, Postgre
 
 ## Seed Accounts
 
-| Email | Password | Role |
-|---|---|---|
-| admin@taskalarm.com | Admin@123 | ADMIN |
+Tài khoản seed không công bố trong repo — cấu hình `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` / `SEED_DEMO_EMAIL` / `SEED_DEMO_PASSWORD` trong `.env` (xem `.env.example`) rồi chạy `npm run seed`.
 
 ## Project Structure
 

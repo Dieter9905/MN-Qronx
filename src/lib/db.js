@@ -70,7 +70,7 @@ function seed() {
     {
       id: 1,
       fullName: 'Nguyễn Văn Minh',
-      email: 'minh@mn-qronx.com',
+      email: 'minh@example.com',
       password: '123456',
       phoneNumber: '0901 234 567',
       role: 'USER',
@@ -80,8 +80,8 @@ function seed() {
     {
       id: 2,
       fullName: 'Quản trị viên',
-      email: 'admin@mn-qronx.com',
-      password: 'Admin@123',
+      email: 'admin@example.com',
+      password: 'admin1234',
       phoneNumber: '',
       role: 'ADMIN',
       isActive: true,
