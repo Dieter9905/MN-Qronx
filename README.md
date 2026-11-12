@@ -38,6 +38,8 @@ npm run build      # build production vào dist/
 npm run preview    # xem bản build
 ```
 
+Tạo tài khoản mới ngay trong app tại trang `/register`.
+
 ## Deploy lên Vercel
 
 Repo đã cấu hình sẵn (`vercel.json` + `package.json` ở root) nên Vercel tự nhận diện Vite:
@@ -45,15 +47,6 @@ Repo đã cấu hình sẵn (`vercel.json` + `package.json` ở root) nên Verce
 - Import repo https://github.com/Dieter9905/MN-Qronx vào Vercel.
 - Framework Preset: **Vite** (tự động) · Build Command: `npm run build` · Output Directory: `dist`.
 - Cứ mỗi lần push lên `main`, Vercel tự deploy Production.
-
-## Tài khoản demo
-
-| Vai trò | Email | Mật khẩu |
-|---|---|---|
-| Người dùng | `minh@mn-qronx.com` | `123456` |
-| Quản trị viên | `admin@mn-qronx.com` | `Admin@123` |
-
-Có thể đăng ký tài khoản mới ngay trên trang `/register`.
 
 ## Cấu trúc
 

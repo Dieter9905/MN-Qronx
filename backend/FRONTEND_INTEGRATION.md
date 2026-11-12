@@ -371,10 +371,7 @@ export async function getDashboard() {
 
 ## Seed Accounts
 
-| Email | Password | Role |
-|---|---|---|
-| admin@taskalarm.com | Admin@123 | ADMIN |
-| demo@taskalarm.com | User@1234 | USER |
+Tài khoản seed không công bố trong repo — cấu hình `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` / `SEED_DEMO_EMAIL` / `SEED_DEMO_PASSWORD` trong `.env` (xem `.env.example`) rồi chạy `npm run seed`.
 
 ## Environment Variables
 

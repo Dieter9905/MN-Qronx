@@ -1,5 +1,13 @@
+import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+
+// Thông tin xác thực tài khoản seed đọc từ .env — không nhúng mật khẩu trong
+// mã nguồn. Không cấu hình → tạo tài khoản mẫu generic để dev tự đổi sau.
+const SEED_ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || 'admin@example.com'
+const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || 'ChangeMe123!'
+const SEED_DEMO_EMAIL = process.env.SEED_DEMO_EMAIL || 'demo@example.com'
+const SEED_DEMO_PASSWORD = process.env.SEED_DEMO_PASSWORD || 'ChangeMe123!'
 
 const prisma = new PrismaClient()
 
@@ -22,14 +30,14 @@ async function main() {
   console.log('[Seed] Roles:', userRole.roleName, adminRole.roleName)
 
   // ── Admin user ────────────────────────────────────────
-  const adminPasswordHash = await bcrypt.hash('Admin@123', 10)
+  const adminPasswordHash = await bcrypt.hash(SEED_ADMIN_PASSWORD, 10)
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@taskalarm.com' },
+    where: { email: SEED_ADMIN_EMAIL },
     update: {},
     create: {
       roleId: adminRole.roleId,
       fullName: 'Admin TaskAlarm',
-      email: 'admin@taskalarm.com',
+      email: SEED_ADMIN_EMAIL,
       passwordHash: adminPasswordHash,
       phoneNumber: '0901234567',
       isActive: true,
@@ -43,16 +51,16 @@ async function main() {
   })
 
   // ── Demo user ─────────────────────────────────────────
-  const userPasswordHash = await bcrypt.hash('User@1234', 10)
+  const userPasswordHash = await bcrypt.hash(SEED_DEMO_PASSWORD, 10)
   const planStart = new Date()
   const planEnd = new Date(planStart.getTime() + 30 * 86400000)
   const demoUser = await prisma.user.upsert({
-    where: { email: 'demo@taskalarm.com' },
+    where: { email: SEED_DEMO_EMAIL },
     update: { plan: 'PLUS', planStartedAt: planStart, planExpiresAt: planEnd },
     create: {
       roleId: userRole.roleId,
       fullName: 'Nguyen Van A',
-      email: 'demo@taskalarm.com',
+      email: SEED_DEMO_EMAIL,
       passwordHash: userPasswordHash,
       phoneNumber: '0912345678',
       isActive: true,
