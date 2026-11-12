@@ -22,7 +22,7 @@
       "ink": {
         "role": "neutral",
         "displayName": "Ink",
-        "canonical": "rgb(var(--room-ink) / <alpha>) = 74 59 44; .dark = 233 222 208",
+        "canonical": "rgb(var(--room-ink) / <alpha>) = 35 28 21; .dark = 233 222 208",
         "tonalRamp": [
           "#100a05",
           "#29231c",
@@ -37,7 +37,7 @@
       "acorn": {
         "role": "primary",
         "displayName": "Acorn",
-        "canonical": "rgb(var(--room-acorn) / <alpha>) = 139 111 78; .dark = 199 168 133",
+        "canonical": "rgb(var(--room-acorn) / <alpha>) = 108 82 54; .dark = 199 168 133",
         "tonalRamp": [
           "#130901",
           "#2d2214",
@@ -302,7 +302,7 @@
       "refersTo": "chip-demo",
       "description": "The honesty chip: Blush pill with baked-in Ink text; attaches to every fabricated number.",
       "html": "<span class=\"ds-chip-demo\">MẪU</span>",
-      "css": ".ds-chip-demo{display:inline-flex;background:rgb(var(--room-blush));color:#4a3b2c;border-radius:999px;padding:2px 8px;font-family:'Nunito','Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:900;line-height:1.35;letter-spacing:0.1em;}"
+      "css": ".ds-chip-demo{display:inline-flex;background:rgb(var(--room-blush));color:#231c15;border-radius:999px;padding:2px 8px;font-family:'Nunito','Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:900;line-height:1.35;letter-spacing:0.1em;}"
     },
     {
       "name": "Round Theme Toggle",
@@ -318,7 +318,7 @@
       "refersTo": "card-rail",
       "description": "Rail furniture: Porcelain/80 card, Acorn hairline, angled tape strip on the top edge, Moss icon tile, Baloo 2 figure, MẪU chip. The auth wall re-settles the same build chip-free (no demo data there): paper/85 fill, 32px icon tile, 15px Baloo 2 title, 13px Ink/70 note, tape Oat/90 turned −5°.",
       "html": "<div class=\"ds-card-rail\"><div class=\"ds-card-rail-head\"><span class=\"ds-card-rail-ico\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 4a5 5 0 0 1 5 5v3l1.5 2.5h-13L7 12V9a5 5 0 0 1 5-5z\"/><path d=\"M10 19a2 2 0 0 0 4 0\"/></svg></span><h3>Chuông đổ đúng hạn</h3></div><div class=\"ds-card-rail-row\"><b>1.284</b><span class=\"ds-chip-demo\">MẪU</span></div><p class=\"ds-card-rail-note\">chuông đổ đúng hạn năm nay</p></div>",
-      "css": ".ds-card-rail{position:relative;background:rgb(var(--room-paper) / 0.8);color:rgb(var(--room-ink));border-radius:16px;padding:16px;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25),0 14px 30px -18px rgb(0 0 0 / 0.25);font-family:'Nunito','Plus Jakarta Sans',sans-serif;}.ds-card-rail::before{content:'';position:absolute;top:-8px;left:24px;width:56px;height:12px;border-radius:3px;transform:rotate(-3deg);background:rgb(var(--room-oat) / 0.9);box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-card-rail-head{display:flex;align-items:center;gap:10px;}.ds-card-rail-ico{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:rgb(var(--room-moss));color:rgb(var(--room-ink));box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-card-rail-head h3{margin:0;font-family:'Baloo 2','Nunito',sans-serif;font-size:15px;font-weight:700;}.ds-card-rail-row{display:flex;align-items:flex-end;gap:8px;margin-top:8px;}.ds-card-rail-row b{font-family:'Baloo 2','Nunito',sans-serif;font-size:30px;font-weight:700;line-height:1;}.ds-card-rail-note{margin:6px 0 0;font-size:12px;font-weight:600;color:rgb(var(--room-ink) / 0.65);}.ds-chip-demo{display:inline-flex;background:rgb(var(--room-blush));color:#4a3b2c;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:900;line-height:1.35;letter-spacing:0.1em;}"
+      "css": ".ds-card-rail{position:relative;background:rgb(var(--room-paper) / 0.8);color:rgb(var(--room-ink));border-radius:16px;padding:16px;box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25),0 14px 30px -18px rgb(0 0 0 / 0.25);font-family:'Nunito','Plus Jakarta Sans',sans-serif;}.ds-card-rail::before{content:'';position:absolute;top:-8px;left:24px;width:56px;height:12px;border-radius:3px;transform:rotate(-3deg);background:rgb(var(--room-oat) / 0.9);box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-card-rail-head{display:flex;align-items:center;gap:10px;}.ds-card-rail-ico{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:rgb(var(--room-moss));color:rgb(var(--room-ink));box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.25);}.ds-card-rail-head h3{margin:0;font-family:'Baloo 2','Nunito',sans-serif;font-size:15px;font-weight:700;}.ds-card-rail-row{display:flex;align-items:flex-end;gap:8px;margin-top:8px;}.ds-card-rail-row b{font-family:'Baloo 2','Nunito',sans-serif;font-size:30px;font-weight:700;line-height:1;}.ds-card-rail-note{margin:6px 0 0;font-size:12px;font-weight:600;color:rgb(var(--room-ink) / 0.65);}.ds-chip-demo{display:inline-flex;background:rgb(var(--room-blush));color:#231c15;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:900;line-height:1.35;letter-spacing:0.1em;}"
     },
     {
       "name": "Feature Drawer",
@@ -358,7 +358,7 @@
       "refersTo": "button-primary",
       "description": "The page's one memorable moment in card form: taped-angle paper card with MẪU chip, real alarm time, and the live 'Đặt báo thức' circuit trigger.",
       "html": "<div class=\"ds-task-card\"><div class=\"ds-task-top\"><span class=\"ds-chip-demo\">MẪU</span><span class=\"ds-task-time\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/></svg>Hôm nay · 17:30</span></div><p class=\"ds-task-title\">Nộp báo cáo tuần cho nhóm</p><button class=\"ds-task-btn\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 4a5 5 0 0 1 5 5v3l1.5 2.5h-13L7 12V9a5 5 0 0 1 5-5z\"/><path d=\"M10 19a2 2 0 0 0 4 0\"/></svg>Đặt báo thức</button></div>",
-      "css": ".ds-task-card{position:relative;width:224px;padding:12px;border-radius:16px;background:rgb(var(--room-paper));box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.35),0 14px 30px -18px rgb(0 0 0 / 0.25);transform:rotate(-2deg);font-family:'Nunito','Plus Jakarta Sans',sans-serif;}.ds-task-top{display:flex;align-items:center;gap:8px;}.ds-task-time{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:rgb(var(--room-ink) / 0.7);}.ds-task-title{margin:6px 0 0;font-family:'Baloo 2','Nunito',sans-serif;font-size:14px;font-weight:700;line-height:1.375;color:rgb(var(--room-ink));}.ds-task-btn{display:flex;width:100%;align-items:center;justify-content:center;gap:8px;margin-top:10px;border:none;border-radius:999px;background:rgb(var(--room-acorn));color:rgb(var(--room-paper));padding:8px 12px;font-family:'Baloo 2','Nunito',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .2s ease;}.ds-task-btn:hover{background:rgb(var(--room-acorn) / 0.9);}.ds-task-btn:disabled{opacity:0.7;cursor:not-allowed;}.ds-task-btn:focus-visible{outline:2px dashed rgb(var(--room-acorn) / 0.6);outline-offset:3px;}.ds-chip-demo{display:inline-flex;background:rgb(var(--room-blush));color:#4a3b2c;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:900;line-height:1.35;letter-spacing:0.1em;}"
+      "css": ".ds-task-card{position:relative;width:224px;padding:12px;border-radius:16px;background:rgb(var(--room-paper));box-shadow:0 0 0 1px rgb(var(--room-acorn) / 0.35),0 14px 30px -18px rgb(0 0 0 / 0.25);transform:rotate(-2deg);font-family:'Nunito','Plus Jakarta Sans',sans-serif;}.ds-task-top{display:flex;align-items:center;gap:8px;}.ds-task-time{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:rgb(var(--room-ink) / 0.7);}.ds-task-title{margin:6px 0 0;font-family:'Baloo 2','Nunito',sans-serif;font-size:14px;font-weight:700;line-height:1.375;color:rgb(var(--room-ink));}.ds-task-btn{display:flex;width:100%;align-items:center;justify-content:center;gap:8px;margin-top:10px;border:none;border-radius:999px;background:rgb(var(--room-acorn));color:rgb(var(--room-paper));padding:8px 12px;font-family:'Baloo 2','Nunito',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .2s ease;}.ds-task-btn:hover{background:rgb(var(--room-acorn) / 0.9);}.ds-task-btn:disabled{opacity:0.7;cursor:not-allowed;}.ds-task-btn:focus-visible{outline:2px dashed rgb(var(--room-acorn) / 0.6);outline-offset:3px;}.ds-chip-demo{display:inline-flex;background:rgb(var(--room-blush));color:#231c15;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:900;line-height:1.35;letter-spacing:0.1em;}"
     },
     {
       "name": "Room Field",
@@ -422,7 +422,7 @@
       "refersTo": "room-chip",
       "description": "Status and priority chips on room paper (M4, CalendarPage day lists): the data of TASK_STATUS/PRIORITY stays untouched, only the paint changes. Overdue = Blush/45 + on-blush ink + Acorn/20 ring; COMPLETED = Sage/45 + Ink; everything else (TODO / IN_PROGRESS / CANCELLED) = a neutral Oat/60 chip at Ink/45. Priority chip keeps the data dot inside an Oat/60 pill. Never rose, never navy badges.",
       "html": "<span class=\"ds-room-chip ds-room-chip--due\">Quá hạn</span>",
-      "css": ".ds-room-chip{border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800;color:rgb(var(--room-ink) / 0.45);background:rgb(var(--room-oat) / 0.6);}.ds-room-chip--due{background:rgb(var(--room-blush) / 0.45);color:#4a3b2c;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);}"
+      "css": ".ds-room-chip{border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800;color:rgb(var(--room-ink) / 0.45);background:rgb(var(--room-oat) / 0.6);}.ds-room-chip--due{background:rgb(var(--room-blush) / 0.45);color:#231c15;box-shadow:inset 0 0 0 1px rgb(var(--room-acorn) / 0.2);}"
     },
     {
       "name": "Room Calendar Day Cell",
@@ -758,7 +758,7 @@
     ],
     "dos": [
       "Do wrap room-world pages in .room-world and theme everything through room.* Tailwind tokens (bg-room-moss/70, ring-room-acorn/25) so light/dark switch from the single --room-* variable block; never hardcode navy/slate inside it.",
-      "Do keep text-on-Blush as .on-blush Ink #4A3B2C in both themes — baked by contrast, not by theme.",
+      "Do keep text-on-Blush as .on-blush Ink #231C15 in both themes — baked by contrast, not by theme.",
       "Do prove product truth: the wall clock ticks real time, \"today\" is Intl-formatted real date, and every invented figure wears the Blush MẪU/DEMO chip; never ship an unlabeled sample number.",
       "Do draw all seams as dotted (dot-divider, dotted underlines, dashed frames) and all strokes/rings as Acorn at alpha; hairline solids only inside a footer.",
       "Do stay flat: sticker props stand upright on the floor, motion stays at ≤2px hover lifts and once-only reveals (threshold 0.15, house easing cubic-bezier(0.16, 1, 0.3, 1)), with prefers-reduced-motion honored.",

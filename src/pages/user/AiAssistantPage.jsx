@@ -149,11 +149,11 @@ export default function AiAssistantPage() {
             </span>
             Trợ lý AI
           </h1>
-          <p className="mt-1 text-sm font-semibold text-room-ink/45">
+          <p className="mt-1 text-sm font-semibold text-room-ink/65">
             AI phân tích công việc của bạn và đưa ra gợi ý hành động thông minh
           </p>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-room-oat/70 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-room-ink/55 ring-1 ring-inset ring-room-acorn/25">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-room-oat/70 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-room-ink/65 ring-1 ring-inset ring-room-acorn/25">
           <Crown size={12} weight="fill" className="text-room-bell" /> Pro
         </span>
       </div>
@@ -170,9 +170,9 @@ export default function AiAssistantPage() {
 
           {priorityList.length === 0 && tasks.length === 0 ? (
         <RoomCard className="p-10 text-center">
-          <Brain size={40} className="mx-auto text-room-ink/30" />
+          <Brain size={40} className="mx-auto text-room-ink/60" />
           <p className="mt-3 font-display font-bold text-room-ink">Chưa có công việc nào để AI phân tích</p>
-          <p className="mt-1 text-sm font-semibold text-room-ink/45">Tạo vài công việc rồi quay lại, AI sẽ giúp bạn sắp xếp.</p>
+          <p className="mt-1 text-sm font-semibold text-room-ink/65">Tạo vài công việc rồi quay lại, AI sẽ giúp bạn sắp xếp.</p>
         </RoomCard>
           ) : (
         <>
@@ -183,7 +183,7 @@ export default function AiAssistantPage() {
                 <ListChecks size={19} weight="duotone" className="text-room-acorn" />
                 Nên làm gì tiếp theo?
               </h2>
-              <p className="mt-0.5 text-xs font-semibold text-room-ink/45">
+              <p className="mt-0.5 text-xs font-semibold text-room-ink/65">
                 AI xếp hạng theo độ khẩn cấp + mức ưu tiên của bạn
               </p>
             </div>
@@ -204,7 +204,7 @@ export default function AiAssistantPage() {
                               ? 'bg-room-rain/40 text-room-ink/60 ring-room-rain'
                               : r.startsWith('Quá hạn')
                                 ? 'bg-room-blush/45 text-room-ink/85 ring-room-acorn/20 dark:bg-room-blush/30 dark:ring-room-acorn/25'
-                                : 'bg-room-oat/60 text-room-ink/55 ring-room-acorn/15'
+                                : 'bg-room-oat/60 text-room-ink/65 ring-room-acorn/15'
                           }`}
                         >
                           {r}
@@ -282,7 +282,7 @@ export default function AiAssistantPage() {
               <Sparkle size={19} weight="duotone" className="text-room-bell" />
               AI tách việc con
             </h2>
-            <p className="mt-0.5 text-xs font-semibold text-room-ink/45">
+            <p className="mt-0.5 text-xs font-semibold text-room-ink/65">
               Nhập tên công việc – AI gợi ý các bước thực hiện cụ thể (có thể tạo kèm luôn)
             </p>
             <div className="mt-3 flex flex-col gap-2">
@@ -290,13 +290,13 @@ export default function AiAssistantPage() {
                 value={breakdownTitle}
                 onChange={(e) => setBreakdownTitle(e.target.value)}
                 placeholder="Ví dụ: Làm bài tập lớn môn Web…"
-                className="h-11 w-full rounded-xl bg-room-oat/40 px-3.5 text-sm font-bold text-room-ink ring-1 ring-inset ring-room-acorn/20 placeholder:text-room-ink/30 transition focus:ring-2 focus:ring-room-acorn focus:outline-none"
+                className="h-11 w-full rounded-xl bg-room-oat/40 px-3.5 text-sm font-bold text-room-ink ring-1 ring-inset ring-room-acorn/20 placeholder:text-room-ink/45 transition focus:ring-2 focus:ring-room-acorn focus:outline-none"
               />
               <input
                 value={breakdownDesc}
                 onChange={(e) => setBreakdownDesc(e.target.value)}
                 placeholder="Mô tả ngắn (tùy chọn) – giúp AI gợi ý sát hơn…"
-                className="h-11 w-full rounded-xl bg-room-oat/40 px-3.5 text-sm text-room-ink ring-1 ring-inset ring-room-acorn/20 placeholder:text-room-ink/30 transition focus:ring-2 focus:ring-room-acorn focus:outline-none"
+                className="h-11 w-full rounded-xl bg-room-oat/40 px-3.5 text-sm text-room-ink ring-1 ring-inset ring-room-acorn/20 placeholder:text-room-ink/45 transition focus:ring-2 focus:ring-room-acorn focus:outline-none"
               />
               <div className="flex justify-end">
                 <RoomButton size="sm" icon={Sparkle} iconWeight="fill" onClick={analyzeBreakdown} disabled={!breakdownTitle.trim()}>

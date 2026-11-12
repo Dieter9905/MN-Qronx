@@ -344,7 +344,7 @@ export default function TaskFormPage() {
         <ArrowLeft size={16} weight="bold" /> {isEdit ? 'Quay lại chi tiết' : 'Quay lại danh sách'}
       </Link>
       <h1 className="mt-4 font-display text-2xl font-bold text-room-ink">{isEdit ? 'Sửa công việc' : 'Tạo công việc mới'}</h1>
-      <p className="mt-1 text-sm font-semibold text-room-ink/55">
+      <p className="mt-1 text-sm font-semibold text-room-ink/65">
         {isEdit ? 'Cập nhật thông tin và nhắc nhở của công việc.' : 'Nhập tiêu đề, thời hạn và nhắc nhở. Chỉ vài bước là xong.'}
       </p>
 
@@ -453,7 +453,7 @@ export default function TaskFormPage() {
                   })}
                 </div>
                 {!form.repeatDays.length && (
-                  <p className="mt-2 text-xs font-semibold text-room-ink/50">
+                  <p className="mt-2 text-xs font-semibold text-room-ink/60">
                     Chưa chọn ngày – sẽ lặp lại vào đúng thứ của ngày đến hạn.
                   </p>
                 )}
@@ -514,7 +514,7 @@ export default function TaskFormPage() {
                     type="button"
                     onClick={() => removeReminder(i)}
                     aria-label="Xóa nhắc nhở"
-                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/35 transition hover:bg-room-oat/70 hover:text-room-acorn"
+                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/65 transition hover:bg-room-oat/70 hover:text-room-acorn"
                   >
                     <Trash size={16} />
                   </button>
@@ -523,7 +523,7 @@ export default function TaskFormPage() {
             </ul>
           )}
           {form.reminders.length === 0 && (
-            <p className="mt-3 text-xs font-semibold text-room-ink/50">
+            <p className="mt-3 text-xs font-semibold text-room-ink/60">
               Chưa có nhắc nhở – MN-Qronx sẽ không báo thức cho công việc này.
             </p>
           )}
@@ -540,7 +540,7 @@ export default function TaskFormPage() {
               PRO
             </span>
           </div>
-          <p className="mt-2 text-xs font-semibold text-room-ink/55">
+          <p className="mt-2 text-xs font-semibold text-room-ink/65">
             Việc chưa xong thì chuông tự kêu lại (tối đa 10 lần). Bấm “Xong” là thôi nhắc —
             dành cho việc không được phép quên.
           </p>
@@ -585,7 +585,7 @@ export default function TaskFormPage() {
         <RoomCard className="p-5 sm:p-6">
           <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
             <ListChecks size={19} weight="fill" className="text-room-acorn" />
-            Việc con <span className="text-xs font-semibold text-room-ink/50">(tùy chọn)</span>
+            Việc con <span className="text-xs font-semibold text-room-ink/60">(tùy chọn)</span>
           </h2>
           {form.subtasks.length > 0 && (
             <ul className="mt-3 space-y-2">
@@ -603,7 +603,7 @@ export default function TaskFormPage() {
                     type="button"
                     onClick={() => removeSubtaskRow(i)}
                     aria-label="Xóa việc con"
-                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/35 transition hover:bg-room-oat/70 hover:text-room-acorn"
+                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/65 transition hover:bg-room-oat/70 hover:text-room-acorn"
                   >
                     <Trash size={16} />
                   </button>

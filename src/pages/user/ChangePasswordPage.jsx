@@ -61,7 +61,7 @@ export default function ChangePasswordPage() {
           <RoomField label="Mật khẩu hiện tại" required error={errors.currentPassword}>
             {(fid) => (
               <div className="relative">
-                <Lock size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+                <Lock size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/65" />
                 <RoomInput
                   id={fid}
                   type={showPw ? 'text' : 'password'}

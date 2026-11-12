@@ -53,7 +53,7 @@ export default function TodayBrief() {
         <h2 className="flex items-center gap-2 font-display text-[15px] font-bold text-room-ink">
           <GraduationCap size={18} weight="bold" className="text-room-acorn" />
           Hôm nay
-          <span className="text-xs font-bold text-room-ink/50">
+          <span className="text-xs font-bold text-room-ink/60">
             {hasClasses ? `${brief.classes.length} tiết` : 'không có tiết'}
             {hasTasks ? ` · ${brief.tasks.length} việc đến hạn` : ''}
           </span>
@@ -73,7 +73,7 @@ export default function TodayBrief() {
               </span>
               <span className="min-w-0 flex-1 truncate text-sm font-semibold text-room-ink">{c.title}</span>
               {c.room && (
-                <span className="flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-room-ink/45">
+                <span className="flex shrink-0 items-center gap-0.5 text-[11px] font-semibold text-room-ink/65">
                   <MapPin size={11} weight="fill" /> {c.room}
                 </span>
               )}
@@ -92,7 +92,7 @@ export default function TodayBrief() {
               >
                 <ListChecks size={13} weight="bold" className="shrink-0 text-room-acorn/70" />
                 <span className="min-w-0 flex-1 truncate">{t.title}</span>
-                <span className="shrink-0 text-[11px] font-semibold text-room-ink/50">
+                <span className="shrink-0 text-[11px] font-semibold text-room-ink/60">
                   {new Date(t.dueAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </Link>

@@ -49,7 +49,7 @@ function RoleBadge({ role }) {
     )
   }
   return (
-    <span className="rounded-full bg-room-oat/40 px-2 py-0.5 text-[11px] font-bold text-room-ink/50">
+    <span className="rounded-full bg-room-oat/40 px-2 py-0.5 text-[11px] font-bold text-room-ink/60">
       Thành viên
     </span>
   )
@@ -115,7 +115,7 @@ export default function TeamPage() {
             <UsersThree size={26} weight="duotone" className="text-room-acorn" />
             Nhóm làm việc
           </h1>
-          <p className="mt-1 text-sm font-semibold text-room-ink/50">
+          <p className="mt-1 text-sm font-semibold text-room-ink/60">
             Chọn hoặc tạo một nhóm ở khối “Chế độ làm việc” bên trái để quản lý thành viên và giao việc.
           </p>
         </div>
@@ -203,7 +203,7 @@ export default function TeamPage() {
             <UsersThree size={26} weight="duotone" className="text-room-acorn" />
             {workspace.name}
           </h1>
-          <p className="mt-1 text-sm font-semibold text-room-ink/50">
+          <p className="mt-1 text-sm font-semibold text-room-ink/60">
             {members.length} thành viên · mọi người trong nhóm cùng thấy công việc của nhóm và
             nhận chuông nhắc việc được giao cho mình.
           </p>
@@ -217,7 +217,7 @@ export default function TeamPage() {
 
       {/* Mã mời: đường duy nhất để thêm người vào nhóm */}
       <RoomCard className="p-5">
-        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-room-ink/50">Mã mời nhóm</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-room-ink/60">Mã mời nhóm</p>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <span className="select-all font-mono text-3xl font-extrabold tracking-[0.18em] text-room-ink">
             {inviteCode || '—'}
@@ -245,7 +245,7 @@ export default function TeamPage() {
             </button>
           )}
         </div>
-        <p className="mt-3 text-xs font-semibold text-room-ink/55">
+        <p className="mt-3 text-xs font-semibold text-room-ink/65">
           Gửi mã này cho đồng nghiệp — họ bấm “Tham gia nhóm bằng mã” bên dưới là vào cùng không
           gian, thấy chung công việc của nhóm.
         </p>
@@ -281,11 +281,11 @@ export default function TeamPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold text-room-ink/90">
                     {m.user.fullName}
-                    {isMe && <span className="ml-1.5 text-xs font-bold text-room-ink/40">(bạn)</span>}
+                    {isMe && <span className="ml-1.5 text-xs font-bold text-room-ink/60">(bạn)</span>}
                   </p>
-                  <p className="truncate text-xs font-semibold text-room-ink/45">{m.user.email}</p>
+                  <p className="truncate text-xs font-semibold text-room-ink/65">{m.user.email}</p>
                 </div>
-                <span className="hidden shrink-0 rounded-full bg-room-oat/50 px-2 py-0.5 text-[11px] font-bold text-room-ink/55 sm:inline">
+                <span className="hidden shrink-0 rounded-full bg-room-oat/50 px-2 py-0.5 text-[11px] font-bold text-room-ink/65 sm:inline">
                   {m.openTasks} việc đang mở
                 </span>
                 <RoleBadge role={m.role} />
@@ -295,7 +295,7 @@ export default function TeamPage() {
                     onClick={() => onRemove(m)}
                     disabled={busy}
                     title={`Gỡ ${m.user.fullName} khỏi nhóm`}
-                    className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/35 transition hover:bg-room-rain/40 hover:text-room-ink disabled:opacity-50"
+                    className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/65 transition hover:bg-room-rain/40 hover:text-room-ink disabled:opacity-50"
                   >
                     <Trash size={16} weight="bold" />
                   </button>
@@ -313,7 +313,7 @@ export default function TeamPage() {
         )}
       </RoomCard>
 
-      <p className="text-center text-xs font-semibold text-room-ink/40">
+      <p className="text-center text-xs font-semibold text-room-ink/60">
         Giao việc: ở chế độ này, khi tạo công việc bạn chọn được người phụ trách trong nhóm. Việc
         của nhóm hiện ở trang Công việc; người được giao thấy nó ở mục Việc được giao.
       </p>

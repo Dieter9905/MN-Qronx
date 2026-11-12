@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import { Check, MagnifyingGlass } from '@phosphor-icons/react'
+import { MagnifyingGlass } from '@phosphor-icons/react'
 import { Spinner } from './Feedback'
 
 // ======================================================================
@@ -35,11 +35,11 @@ export function RoomField({ label, required, error, hint, children, className = 
 }
 
 const roomInputBase =
-  'w-full rounded-xl bg-room-paper text-room-ink ring-1 ring-inset ring-room-acorn/25 placeholder:text-room-ink/30 ' +
+  'w-full rounded-xl bg-room-paper text-room-ink ring-1 ring-inset ring-room-acorn/25 placeholder:text-room-ink/45 ' +
   'transition-all duration-200 hover:ring-room-acorn/45 ' +
   'focus:-translate-y-px focus:ring-2 focus:ring-inset focus:ring-room-acorn focus:outline-none ' +
   'focus:shadow-[0_0_0_4px_rgb(var(--room-acorn)/0.12)] ' +
-  'disabled:cursor-not-allowed disabled:bg-room-oat/40 disabled:text-room-ink/40'
+  'disabled:cursor-not-allowed disabled:bg-room-oat/40 disabled:text-room-ink/60'
 
 export function RoomInput({ invalid, className = '', ...props }) {
   return (
@@ -152,7 +152,7 @@ export function RoomEmpty({
 }) {
   return (
     <div className={`flex flex-col items-center justify-center gap-3 py-14 text-center ${className}`}>
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-room-oat/60 text-room-ink/35 ring-1 ring-room-acorn/25">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-room-oat/60 text-room-ink/65 ring-1 ring-room-acorn/25">
         <Icon size={30} weight="duotone" />
       </div>
       <div>
@@ -218,7 +218,7 @@ export function RoomSegmented({ options, value, onChange, size = 'md', className
               size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3.5 py-1.5 text-sm',
               selected
                 ? 'bg-room-paper text-room-ink shadow-[0_6px_12px_-8px_rgb(0_0_0/0.25)] ring-1 ring-room-acorn/30'
-                : 'text-room-ink/55 hover:text-room-ink',
+                : 'text-room-ink/65 hover:text-room-ink',
             ].join(' ')}
           >
             {opt.label}
@@ -244,7 +244,7 @@ export function RoomToggle({ checked, onChange, label, description, disabled, cl
       <span>
         <span className="block text-sm font-bold text-room-ink">{label}</span>
         {description && (
-          <span className="mt-0.5 block text-xs font-semibold text-room-ink/55">{description}</span>
+          <span className="mt-0.5 block text-xs font-semibold text-room-ink/65">{description}</span>
         )}
       </span>
       <span

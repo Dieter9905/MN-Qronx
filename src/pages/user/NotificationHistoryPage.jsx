@@ -13,7 +13,7 @@ const PAGE_SIZE = 10
 const ACTION_TONES = {
   SENT: 'bg-room-bell/25 text-room-ink/75 ring-room-bell/40',
   SNOOZED: 'bg-room-rain/40 text-room-ink/70 ring-room-rain',
-  DISMISSED: 'bg-room-oat/60 text-room-ink/55 ring-room-acorn/20',
+  DISMISSED: 'bg-room-oat/60 text-room-ink/65 ring-room-acorn/20',
   CANCELLED: 'bg-room-rain/60 text-room-ink/75 ring-room-rain',
 }
 
@@ -60,7 +60,7 @@ export default function NotificationHistoryPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold text-room-ink">Lịch sử thông báo</h1>
-          <p className="mt-1 text-sm font-semibold text-room-ink/50">
+          <p className="mt-1 text-sm font-semibold text-room-ink/60">
             Mọi báo thức đã gửi, đã hoãn hay đã tắt đều được ghi lại
           </p>
         </div>
@@ -108,7 +108,7 @@ export default function NotificationHistoryPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold text-room-ink/85">{log.taskTitle}</p>
-                  <p className="mt-0.5 text-xs font-semibold text-room-ink/45">
+                  <p className="mt-0.5 text-xs font-semibold text-room-ink/65">
                     {formatDateTime(log.sentAt)} · {log.deviceName} · {relativeTime(log.sentAt)}
                   </p>
                 </div>

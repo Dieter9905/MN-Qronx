@@ -715,8 +715,8 @@ a:hover .icon-pop,
 /* Token phòng: sáng = Porcelain + Acorn giấy nâu; tối = phòng buổi đêm + đèn ấm */
 :root {
   --room-paper: 255 246 236;
-  --room-ink: 74 59 44;
-  --room-acorn: 139 111 78;
+  --room-ink: 35 28 21;
+  --room-acorn: 108 82 54;
   --room-oat: 234 220 199;
   --room-moss: 220 232 223;
   --room-sage: 169 196 177;
@@ -816,7 +816,7 @@ body:has(.room-world)::-webkit-scrollbar-thumb {
 
 /* Chữ trên nền blush (trạng thái đến hạn) luôn là nâu đậm — không theo dark mode */
 .on-blush {
-  color: #4a3b2c;
+  color: #231c15;
 }
 
 /* Nhãn sáng/tối riêng của bối cảnh trong phòng (mặt trời/mặt trăng, …) */

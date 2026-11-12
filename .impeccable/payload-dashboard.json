@@ -9,7 +9,7 @@
       "kicker": "THE ROLL",
       "lineage": "bức tường kệ trong phòng, xếp tầng theo độ gấp",
       "thesis": "Bức tường kệ: tầng cao nhất là việc cần chạm đầu tiên (quá hạn), tầng Hôm nay là món bằng đèn mà chuông kế bên reo; không lưới số nào đối xử mọi khối ngang mặt nhau.",
-      "palette": ["#FFF6EC", "#F5C9CF", "#8B6F4E", "#4A3B2C"],
+      "palette": ["#FFF6EC", "#F5C9CF", "#6C5236", "#231C15"],
       "materials": ["thẻ giấy dán tape", "dây chấm chia tầng", "chuông Bell nhỏ"],
       "viewport": "Shell chuẩn + một cột kệ: chào tài khoản và hôm nay → kệ Quá hạn (Panel Rain/30, số Baloo to, 2 hàng làm việc inline) → kệ Hôm nay (hàng việc, Blush khi đến hạn) → nhịp đôi: thẻ dán Nhật ký đúng hạn (streak 12 ngày) + hàng Tổng quan số → dòng hạn mức AI. Sidebar trái câu chuyệnickey hallway giấy, mục active là pill Oat.",
       "risk": "An toàn nhất trong 3 phương án trên desktop; cột đơn lãng phí bề rộng nếu kệ không nở nhịp đôi đúng chỗ."
@@ -21,7 +21,7 @@
       "kicker": "TỜ NHẬT KÝ",
       "lineage": "tờ nhật ký sáng ghim trên tường phòng",
       "thesis": "Dashboard như một tờ nhật ký buổi sáng: đọc từ trên xuống, từng khối phân tách bằng dây chấm, không khối nào chồng lên khối nào.",
-      "palette": ["#FFF6EC", "#8B6F4E", "#4A3B2C", "#DCE8DF"],
+      "palette": ["#FFF6EC", "#6C5236", "#231C15", "#DCE8DF"],
       "materials": ["tờ giấy kéo dài", "dây chấm dẫn chữ", "điểm chấm tuần runner"],
       "viewport": "Một cột đọc hẹp (~860px): đề ngày + một hàng tổng quan dạng số chữ (Hôm nay / Quá hạn / Đã xong / Sắp tới – mỗi số một bậc cùng dây chấm giữa) → mục Việc hôm nay: các hàng phẳng, hàng đến hạn có nền Blush trải-full → Nhật ký đúng hạn như số streak + điểm chấm tuần → chân trang hạn mức gói. Shell trái giữ chuẩn.",
       "risk": "Hành động hoàn thành nằm ngay trên hàng, nếu không sẽ phải cuộn; chiều sâu hierarchy trên 1440 mỏng."
@@ -33,7 +33,7 @@
       "kicker": "CÁNH PHỤ",
       "lineage": "bàn làm việc với tủ phụ mở sẵn bên phải",
       "thesis": "Cánh trái để làm (việc hôm nay, chạm hoàn thành ngay trên hàng), cánh phải là tủ thông tin luôn trong tầm mắt: streak, chuông, hạn mức.",
-      "palette": ["#FFF6EC", "#F5C9CF", "#8B6F4E", "#4A3B2C"],
+      "palette": ["#FFF6EC", "#F5C9CF", "#6C5236", "#231C15"],
       "materials": ["cánh bàn giấy phẳng", "thẻ tape streak", "dây chấm chia dây tủ"],
       "viewport": "Chia 2/3–1/3: trái = panel Việc hôm nay (Blush khi đến hạn, inline quick-add) + khối Sắp tới 3 dòng; phải = cột tủ: hàng 4 số tổng quan, thẻ dán Streak 12 ngày (flame Bell), Chuông có nhãn gần đây 2 dòng, gạch hạn mức Plus/AI. Sidebar phải bỏ, giữ trái.",
       "risk": "Ở 1280 phải đổ cánh sang stack; hai số dễ chiếm ưu thế quá mức nếu không giữ weight."

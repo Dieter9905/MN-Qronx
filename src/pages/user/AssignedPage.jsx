@@ -84,7 +84,7 @@ export default function AssignedPage() {
             <Users size={26} weight="duotone" className="text-room-acorn" />
             Việc được giao
           </h1>
-          <p className="mt-1 text-sm font-semibold text-room-ink/50">
+          <p className="mt-1 text-sm font-semibold text-room-ink/60">
             Việc người khác nhờ bạn làm. Bạn vẫn nhận chuông nhắc như việc của mình, và chỉ cần
             báo xong phần của bạn.
           </p>
@@ -138,7 +138,7 @@ export default function AssignedPage() {
                 <div className="min-w-0 flex-1">
                   <p
                     className={`font-bold ${
-                      item.isDone ? 'text-room-ink/40 line-through' : 'text-room-ink/90'
+                      item.isDone ? 'text-room-ink/55 line-through' : 'text-room-ink/90'
                     }`}
                   >
                     {item.title}
@@ -156,13 +156,13 @@ export default function AssignedPage() {
                       </span>
                     )}
                     {item.closed && (
-                      <span className="rounded-full bg-room-oat/60 px-2 py-0.5 text-[11px] font-bold text-room-ink/50">
+                      <span className="rounded-full bg-room-oat/60 px-2 py-0.5 text-[11px] font-bold text-room-ink/60">
                         Chủ việc đã kết thúc
                       </span>
                     )}
                   </div>
 
-                  <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold text-room-ink/55">
+                  <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold text-room-ink/65">
                     <span className={`inline-flex items-center gap-1.5 ${item.dueOverdue && !item.isDone ? 'rounded-md bg-room-blush/45 px-1.5 py-0.5 font-bold text-room-ink/85 dark:bg-room-blush/30' : ''}`}>
                       <Clock size={14} weight="bold" />
                       {formatRelativeDay(item.dueAt)} · {formatDateTime(item.dueAt)}
@@ -188,7 +188,7 @@ export default function AssignedPage() {
                     </p>
                   )}
 
-                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-semibold text-room-ink/40">
+                  <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-semibold text-room-ink/60">
                     <span className="inline-flex items-center gap-1.5">
                       <Avatar
                         name={item.assignedBy?.fullName || '?'}
@@ -226,7 +226,7 @@ export default function AssignedPage() {
         </ul>
       )}
 
-      <p className="text-center text-xs font-semibold text-room-ink/40">
+      <p className="text-center text-xs font-semibold text-room-ink/60">
         Muốn nhờ người khác làm việc của bạn?{' '}
         <Link to="/app/billing" className="font-bold text-room-ink underline decoration-room-acorn/40 decoration-dotted decoration-2 underline-offset-4 transition hover:text-room-acorn">
           Mở khoá giao việc với gói Pro

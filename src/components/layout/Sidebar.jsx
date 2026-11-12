@@ -104,7 +104,7 @@ export default function Sidebar() {
 
           {navGroups.map((group) => (
             <div key={group.labelKey} className="relative mb-5">
-              <p className="mb-1.5 px-3 text-xs font-bold text-room-ink/40">
+              <p className="mb-1.5 px-3 text-xs font-bold text-room-ink/60">
                 {t[group.labelKey]}
               </p>
               <ul className="space-y-0.5">
@@ -131,7 +131,7 @@ export default function Sidebar() {
                               size={19}
                               weight={isActive ? 'bold' : 'regular'}
                               className={
-                                isActive ? 'text-room-acorn' : 'text-room-ink/45'
+                                isActive ? 'text-room-acorn' : 'text-room-ink/65'
                               }
                             />
                             {t[item.labelKey]}

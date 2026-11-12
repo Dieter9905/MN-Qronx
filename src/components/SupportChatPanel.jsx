@@ -42,7 +42,7 @@ function AttachmentThumb({ attachment, onOpen, room }) {
 
   if (failed) {
     return (
-      <span className={`text-[11px] font-semibold ${room ? 'text-room-ink/50' : 'text-rose-500'}`}>
+      <span className={`text-[11px] font-semibold ${room ? 'text-room-ink/60' : 'text-rose-500'}`}>
         Không tải được ảnh
       </span>
     )
@@ -69,7 +69,7 @@ function Bubble({ m, onOpenImage, room }) {
     <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
       <div className={`max-w-[85%] sm:max-w-[70%] ${mine ? 'items-end' : 'items-start'}`}>
         {!mine && (
-          <p className={`mb-1 flex items-center gap-1 text-[11px] font-bold ${room ? 'text-room-ink/50' : 'text-navy-500 dark:text-slate-400'}`}>
+          <p className={`mb-1 flex items-center gap-1 text-[11px] font-bold ${room ? 'text-room-ink/60' : 'text-navy-500 dark:text-slate-400'}`}>
             <Headset size={12} weight="fill" className={room ? 'text-room-acorn' : 'text-cyan-500'} />
             {m.authorIsAdmin ? 'Hỗ trợ MN-Qronx' : m.authorName || 'Người dùng'}
           </p>
@@ -94,7 +94,7 @@ function Bubble({ m, onOpenImage, room }) {
             ))}
           </div>
         )}
-        <p className={`mt-1 text-[10px] font-semibold ${room ? 'text-room-ink/35' : 'text-navy-400'} ${mine ? 'text-right' : ''}`}>
+        <p className={`mt-1 text-[10px] font-semibold ${room ? 'text-room-ink/65' : 'text-navy-400'} ${mine ? 'text-right' : ''}`}>
           {timeLabel(m.createdAt)}
         </p>
       </div>
@@ -182,7 +182,7 @@ export default function SupportChatPanel({
               <Headset size={22} weight={room ? 'duotone' : 'fill'} />
             </span>
             <p className={`mt-3 font-bold ${room ? 'text-room-ink' : 'text-navy-800 dark:text-white'}`}>{emptyTitle}</p>
-            <p className={`mt-1 max-w-sm text-sm ${room ? 'font-semibold text-room-ink/55' : 'text-navy-500 dark:text-slate-400'}`}>
+            <p className={`mt-1 max-w-sm text-sm ${room ? 'font-semibold text-room-ink/65' : 'text-navy-500 dark:text-slate-400'}`}>
               {emptyHint}
             </p>
           </div>
@@ -217,7 +217,7 @@ export default function SupportChatPanel({
               >
                 <X size={11} weight="bold" />
               </button>
-              <span className={`mt-0.5 block text-center text-[10px] font-semibold ${room ? 'text-room-ink/35' : 'text-navy-400'}`}>
+              <span className={`mt-0.5 block text-center text-[10px] font-semibold ${room ? 'text-room-ink/65' : 'text-navy-400'}`}>
                 {formatBytes(p.size)}
               </span>
             </div>
@@ -258,7 +258,7 @@ export default function SupportChatPanel({
           placeholder="Nhập nội dung cần hỗ trợ… (Enter để gửi, Shift+Enter xuống dòng)"
           className={
             room
-              ? 'max-h-32 min-h-10 flex-1 resize-y rounded-xl bg-room-oat/40 px-3 py-2.5 text-sm font-semibold text-room-ink ring-1 ring-inset ring-room-acorn/20 placeholder:text-room-ink/30 transition focus:ring-2 focus:ring-room-acorn focus:outline-none'
+              ? 'max-h-32 min-h-10 flex-1 resize-y rounded-xl bg-room-oat/40 px-3 py-2.5 text-sm font-semibold text-room-ink ring-1 ring-inset ring-room-acorn/20 placeholder:text-room-ink/45 transition focus:ring-2 focus:ring-room-acorn focus:outline-none'
               : 'max-h-32 min-h-10 flex-1 resize-y rounded-xl border-0 bg-navy-50 px-3 py-2.5 text-sm text-navy-900 ring-1 ring-inset ring-navy-100 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:ring-slate-600'
           }
         />

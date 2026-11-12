@@ -52,8 +52,8 @@ export default function ProfilePage() {
           <Avatar name={form.fullName || user?.fullName} src={user?.avatarUrl} size="xl" skin="room" />
           <div className="text-center sm:text-left">
             <p className="text-lg font-extrabold text-room-ink">{user?.fullName}</p>
-            <p className="text-sm font-semibold text-room-ink/50">{user?.email}</p>
-            <p className="mt-1 text-xs font-semibold text-room-ink/40">
+            <p className="text-sm font-semibold text-room-ink/60">{user?.email}</p>
+            <p className="mt-1 text-xs font-semibold text-room-ink/60">
               Thành viên từ {formatDate(user?.createdAt)} · Vai trò: {user?.role === 'ADMIN' ? 'Quản trị viên' : 'Người dùng'}
             </p>
           </div>
@@ -63,7 +63,7 @@ export default function ProfilePage() {
           <RoomField label="Họ tên" required error={errors.fullName}>
             {(fid) => (
               <div className="relative">
-                <UserCircle size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+                <UserCircle size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/65" />
                 <RoomInput
                   id={fid}
                   value={form.fullName}
@@ -80,7 +80,7 @@ export default function ProfilePage() {
           <RoomField label="Email" hint="Email không thể thay đổi – dùng để đăng nhập và khôi phục mật khẩu">
             {(fid) => (
               <div className="relative">
-                <EnvelopeSimple size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+                <EnvelopeSimple size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/65" />
                 <RoomInput id={fid} value={user?.email} disabled className="pl-10" />
               </div>
             )}
@@ -88,7 +88,7 @@ export default function ProfilePage() {
           <RoomField label="Số điện thoại" error={errors.phoneNumber}>
             {(fid) => (
               <div className="relative">
-                <Phone size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+                <Phone size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/65" />
                 <RoomInput
                   id={fid}
                   type="tel"

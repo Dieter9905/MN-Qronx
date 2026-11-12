@@ -100,13 +100,13 @@ function DemoAlarmButton() {
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-bold text-room-ink">{t.title}</span>
-                    <span className="block text-xs text-room-ink/50">{user?.fullName}</span>
+                    <span className="block text-xs text-room-ink/60">{user?.fullName}</span>
                   </span>
                 </button>
               </li>
             ))}
             {tasks.length === 0 && (
-              <li className="px-3 py-6 text-center text-sm text-room-ink/50">
+              <li className="px-3 py-6 text-center text-sm text-room-ink/60">
                 Không có công việc nào đang mở để thử báo thức.
               </li>
             )}
@@ -239,7 +239,7 @@ export default function Header({ title, onOpenDrawer }) {
               <span className="block max-w-[140px] truncate text-sm font-bold leading-tight text-room-ink">
                 {user?.fullName}
               </span>
-              <span className="flex items-center gap-1.5 text-[11px] leading-tight text-room-ink/45">
+              <span className="flex items-center gap-1.5 text-[11px] leading-tight text-room-ink/65">
                 <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[10px] font-extrabold ring-1 ring-inset ${PLAN_BADGE_ROOM[user?.plan || 'FREE']}`}>
                   {PLAN_NAMES[user?.plan || 'FREE']}
                 </span>
@@ -249,7 +249,7 @@ export default function Header({ title, onOpenDrawer }) {
             <CaretDown
               size={14}
               weight="bold"
-              className={`hidden text-room-ink/45 transition-transform duration-300 sm:block ${menuOpen ? 'rotate-180' : ''}`}
+              className={`hidden text-room-ink/65 transition-transform duration-300 sm:block ${menuOpen ? 'rotate-180' : ''}`}
             />
           </button>
           {menuOpen && (
@@ -259,7 +259,7 @@ export default function Header({ title, onOpenDrawer }) {
             >
               <div className="border-b border-room-acorn/15 px-4 py-2.5">
                 <p className="truncate text-sm font-bold text-room-ink">{user?.fullName}</p>
-                <p className="truncate text-xs text-room-ink/50">{user?.email}</p>
+                <p className="truncate text-xs text-room-ink/60">{user?.email}</p>
               </div>
               <button role="menuitem" type="button" onClick={() => go('/app/profile')} className="menu-item">
                 <UserCircle size={18} weight="bold" /> {t.profile}

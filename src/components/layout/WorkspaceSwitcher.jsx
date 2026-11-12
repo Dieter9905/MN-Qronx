@@ -20,7 +20,7 @@ function Row({ icon: Icon, label, hint, active, onClick, disabled }) {
     >
       <Icon size={15} weight={active ? 'bold' : 'regular'} className={active ? 'text-room-acorn' : ''} />
       <span className="min-w-0 flex-1 truncate">{label}</span>
-      {hint && <span className="shrink-0 text-[10px] font-bold text-room-ink/35">{hint}</span>}
+      {hint && <span className="shrink-0 text-[10px] font-bold text-room-ink/65">{hint}</span>}
       {active && <Check size={13} weight="bold" className="shrink-0 text-room-acorn" />}
     </button>
   )
@@ -48,7 +48,7 @@ export default function WorkspaceSwitcher({ onNavigate }) {
 
   return (
     <div className="mb-3 rounded-2xl bg-room-oat/40 p-1.5 ring-1 ring-room-acorn/15">
-      <p className="px-2.5 pb-1 pt-0.5 text-[11px] font-bold text-room-ink/45">
+      <p className="px-2.5 pb-1 pt-0.5 text-[11px] font-bold text-room-ink/65">
         Chế độ làm việc
       </p>
 

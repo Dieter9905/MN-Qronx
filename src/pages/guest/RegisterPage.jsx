@@ -133,7 +133,7 @@ export default function RegisterPage() {
           <RoomField label="Email" required error={errors.email}>
             {(id) => (
               <div className="relative">
-                <EnvelopeSimple size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+                <EnvelopeSimple size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/65" />
                 <RoomInput
                   id={id}
                   type="email"
@@ -173,7 +173,7 @@ export default function RegisterPage() {
         <RoomField label="Mã xác nhận" required error={errors.verificationCode} hint="Nhập mã 6 chữ số đã gửi đến email của bạn">
           {(id) => (
             <div className="relative">
-              <ShieldCheck size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+              <ShieldCheck size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/65" />
               <RoomInput
                 id={id}
                 inputMode="numeric"
@@ -192,7 +192,7 @@ export default function RegisterPage() {
         <RoomField label="Họ tên" required error={errors.fullName}>
           {(id) => (
             <div className="relative">
-              <User size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+              <User size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/65" />
               <RoomInput
                 id={id}
                 autoComplete="name"
@@ -210,7 +210,7 @@ export default function RegisterPage() {
           <RoomField label="Mật khẩu" required error={errors.password} hint="Tối thiểu 6 ký tự">
             {(id) => (
               <div className="relative">
-                <Lock size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+                <Lock size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/65" />
                 <RoomInput
                   id={id}
                   type={showPw ? 'text' : 'password'}
@@ -225,7 +225,7 @@ export default function RegisterPage() {
                   type="button"
                   onClick={() => setShowPw((s) => !s)}
                   aria-label={showPw ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                  className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-room-ink/45 transition hover:text-room-acorn"
+                  className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-room-ink/65 transition hover:text-room-acorn"
                 >
                   {showPw ? <EyeSlash size={18} /> : <Eye size={18} />}
                 </button>
@@ -250,7 +250,7 @@ export default function RegisterPage() {
         <RoomField label="Mã giới thiệu (tùy chọn)" error={errors.inviteCode} hint="Nhập mã bạn bè gửi để cả hai nhận thưởng">
           {(id) => (
             <div className="relative">
-              <Gift size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+              <Gift size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/65" />
               <RoomInput
                 id={id}
                 autoComplete="off"

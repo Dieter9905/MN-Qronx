@@ -324,7 +324,7 @@ export default function SettingsPage() {
     <div className="mx-auto max-w-3xl space-y-5 animate-fade-in">
       <div>
         <h1 className="font-display text-2xl font-bold text-room-ink">Cài đặt</h1>
-        <p className="mt-1 text-sm font-semibold text-room-ink/50">
+        <p className="mt-1 text-sm font-semibold text-room-ink/60">
           Tùy chỉnh cách MN-Qronx nhắc nhở bạn và quản lý thiết bị nhận thông báo
         </p>
       </div>
@@ -344,7 +344,7 @@ export default function SettingsPage() {
             className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 font-display text-sm font-bold transition ${
               tab === t.value
                 ? 'bg-room-paper text-room-ink shadow-[0_6px_12px_-8px_rgb(0_0_0/0.25)] ring-1 ring-room-acorn/30'
-                : 'text-room-ink/55 hover:text-room-ink'
+                : 'text-room-ink/65 hover:text-room-ink'
             }`}
           >
             {t.Icon && <t.Icon size={17} weight="duotone" />}
@@ -361,9 +361,9 @@ export default function SettingsPage() {
                 <BellRinging size={19} weight="duotone" className="text-room-bell" />
                 Cài đặt thông báo
               </h2>
-              <p className="mt-0.5 text-xs font-semibold text-room-ink/45">Áp dụng cho mọi báo thức được kích hoạt</p>
+              <p className="mt-0.5 text-xs font-semibold text-room-ink/65">Áp dụng cho mọi báo thức được kích hoạt</p>
             </div>
-            {saving && <span className="text-xs font-semibold text-room-ink/45">Đang lưu…</span>}
+            {saving && <span className="text-xs font-semibold text-room-ink/65">Đang lưu…</span>}
           </div>
 
           <div className="px-1 py-2">
@@ -419,7 +419,7 @@ export default function SettingsPage() {
                   </RoomButton>
                 </div>
                 {customSounds.length === 0 ? (
-                  <p className="text-xs font-semibold text-room-ink/50">
+                  <p className="text-xs font-semibold text-room-ink/60">
                     Chưa có âm thanh nào – nhập file MP3 (tối đa 3 MB) từ máy để làm chuông báo thức riêng.
                   </p>
                 ) : (
@@ -430,20 +430,20 @@ export default function SettingsPage() {
                           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
                             settings?.alarmSound === `custom:${s.id}`
                               ? 'bg-room-bell/25 text-room-bell ring-1 ring-inset ring-room-bell/40'
-                              : 'bg-room-oat/70 text-room-ink/45'
+                              : 'bg-room-oat/70 text-room-ink/65'
                           }`}
                         >
                           <MusicNotes size={14} weight="bold" />
                         </span>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-xs font-bold text-room-ink/90">{s.name}</p>
-                          <p className="text-[10px] font-semibold text-room-ink/35">{fmtSize(s.sizeBytes)}</p>
+                          <p className="text-[10px] font-semibold text-room-ink/65">{fmtSize(s.sizeBytes)}</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => previewCustom(s)}
                           aria-label={`Nghe thử ${s.name}`}
-                          className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/40 transition hover:bg-room-oat/75 hover:text-room-ink"
+                          className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/60 transition hover:bg-room-oat/75 hover:text-room-ink"
                         >
                           <Play size={13} weight="fill" />
                         </button>
@@ -451,7 +451,7 @@ export default function SettingsPage() {
                           type="button"
                           onClick={() => onDeleteCustom(s)}
                           aria-label={`Xóa ${s.name}`}
-                          className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/40 transition hover:bg-room-rain/40 hover:text-room-ink"
+                          className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/60 transition hover:bg-room-rain/40 hover:text-room-ink"
                         >
                           <Trash size={14} />
                         </button>
@@ -478,7 +478,7 @@ export default function SettingsPage() {
               value={String(settings.defaultSnoozeMinutes)}
               onChange={(v) => saveSettings({ defaultSnoozeMinutes: Number(v) }, `Đã đặt hoãn mặc định ${v} phút`)}
             />
-            <p className="mt-1.5 text-xs font-semibold text-room-ink/45">Áp dụng khi bạn bấm nút “Hoãn” trên màn hình báo thức.</p>
+            <p className="mt-1.5 text-xs font-semibold text-room-ink/65">Áp dụng khi bạn bấm nút “Hoãn” trên màn hình báo thức.</p>
           </div>
 
           <div className="px-1 py-2">
@@ -503,7 +503,7 @@ export default function SettingsPage() {
               </p>
             )}
             {!push.supported && (
-              <p className="mt-1.5 text-xs font-semibold text-room-ink/45">
+              <p className="mt-1.5 text-xs font-semibold text-room-ink/65">
                 Trình duyệt này chưa hỗ trợ Web Push — thử Chrome, Edge hoặc Safari.
               </p>
             )}
@@ -539,7 +539,7 @@ export default function SettingsPage() {
                   >
                     Gửi thử cho tôi ngay
                   </RoomButton>
-                  <span className="text-xs font-semibold text-room-ink/45">
+                  <span className="text-xs font-semibold text-room-ink/65">
                     Thư thật chỉ đi mỗi sáng thứ 2 — bấm đây để xem trước nội dung.
                   </span>
                 </div>
@@ -565,7 +565,7 @@ export default function SettingsPage() {
               </>
             )}
             {isPro && (
-              <p className="mt-1.5 text-xs font-semibold text-room-ink/45">
+              <p className="mt-1.5 text-xs font-semibold text-room-ink/65">
                 Cũng có thể xem ngay trong app ở mục “Báo cáo năng suất”.
               </p>
             )}
@@ -581,7 +581,7 @@ export default function SettingsPage() {
                 <Devices size={19} weight="duotone" className="text-room-acorn" />
                 Thiết bị nhận thông báo
               </h2>
-              <p className="mt-0.5 text-xs font-semibold text-room-ink/45">
+              <p className="mt-0.5 text-xs font-semibold text-room-ink/65">
                 Báo thức sẽ được gửi tới mọi thiết bị đang hoạt động của bạn
               </p>
             </div>
@@ -612,14 +612,14 @@ export default function SettingsPage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-bold text-room-ink">{d.name}</p>
-                      <p className="text-xs font-semibold text-room-ink/45">
+                      <p className="text-xs font-semibold text-room-ink/65">
                         {PLATFORM[d.platform]} · Hoạt động {relativeTime(d.lastSeenAt)}
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setConfirmDevice(d)}
-                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-1.5 font-display text-[13px] font-bold text-room-ink/55 ring-1 ring-room-acorn/25 transition hover:bg-room-rain/40 hover:text-room-ink"
+                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-1.5 font-display text-[13px] font-bold text-room-ink/65 ring-1 ring-room-acorn/25 transition hover:bg-room-rain/40 hover:text-room-ink"
                     >
                       <Trash size={14} weight="bold" />
                       Gỡ
@@ -639,7 +639,7 @@ export default function SettingsPage() {
               <CalendarBlank size={19} weight="duotone" className="text-room-acorn" />
               Đồng bộ lịch (.ics)
             </h2>
-            <p className="mt-0.5 text-xs font-semibold text-room-ink/45">
+            <p className="mt-0.5 text-xs font-semibold text-room-ink/65">
               Dán link vào Google Calendar hoặc Outlook một lần — việc của bạn tự xuất hiện ở đó và app lịch tự làm mới.
             </p>
           </div>
@@ -659,7 +659,7 @@ export default function SettingsPage() {
                 Copy
               </RoomButton>
             </div>
-            <p className="mt-1.5 text-xs font-semibold text-room-ink/50">
+            <p className="mt-1.5 text-xs font-semibold text-room-ink/60">
               Google Calendar: <b>Cài đặt → Thêm lịch → Từ URL</b>. Outlook: <b>Thêm lịch → Đăng ký từ web</b>.
             </p>
           </div>
@@ -695,7 +695,7 @@ export default function SettingsPage() {
           </span>
           <span className="flex-1">
             <span className="block text-sm font-bold text-room-ink">Gói của bạn</span>
-            <span className="block text-xs font-semibold text-room-ink/45">Nâng cấp Plus / Pro để mở rộng giới hạn</span>
+            <span className="block text-xs font-semibold text-room-ink/65">Nâng cấp Plus / Pro để mở rộng giới hạn</span>
           </span>
           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-extrabold ring-1 ring-inset ${PLAN_BADGE[user?.plan || 'FREE']}`}>
             {PLAN_NAMES[user?.plan || 'FREE']}
@@ -707,16 +707,16 @@ export default function SettingsPage() {
           </span>
           <span className="flex-1">
             <span className="block text-sm font-bold text-room-ink">Hồ sơ cá nhân</span>
-            <span className="block text-xs font-semibold text-room-ink/45">Cập nhật họ tên, số điện thoại</span>
+            <span className="block text-xs font-semibold text-room-ink/65">Cập nhật họ tên, số điện thoại</span>
           </span>
         </Link>
         <Link to="/app/change-password" className="flex items-center gap-3 rounded-xl p-3.5 transition hover:bg-room-oat/60">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-room-rain/40 text-room-ink/55 ring-1 ring-inset ring-room-rain">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-room-rain/40 text-room-ink/65 ring-1 ring-inset ring-room-rain">
             <Key size={20} weight="duotone" />
           </span>
           <span className="flex-1">
             <span className="block text-sm font-bold text-room-ink">Đổi mật khẩu</span>
-            <span className="block text-xs font-semibold text-room-ink/45">Thay đổi mật khẩu đăng nhập</span>
+            <span className="block text-xs font-semibold text-room-ink/65">Thay đổi mật khẩu đăng nhập</span>
           </span>
         </Link>
       </RoomCard>

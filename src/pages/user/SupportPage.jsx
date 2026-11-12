@@ -110,7 +110,7 @@ export default function SupportPage() {
             </span>
             Hỗ trợ trực tiếp
           </h1>
-          <p className="mt-1 text-sm font-semibold text-room-ink/50">
+          <p className="mt-1 text-sm font-semibold text-room-ink/60">
             Nhắn cho đội ngũ MN-Qronx. Phản hồi sẽ hiện ngay tại đây, bạn không cần kiểm tra email.
           </p>
         </div>
@@ -138,7 +138,7 @@ export default function SupportPage() {
         <RoomCard className="flex flex-col items-center gap-2 p-8 text-center">
           <WarningCircle size={26} className="text-room-rain" />
           <p className="font-display font-bold text-room-ink">{error}</p>
-          <p className="text-sm font-semibold text-room-ink/55">
+          <p className="text-sm font-semibold text-room-ink/65">
             Kết nối tới máy chủ bị gián đoạn — kiểm tra mạng rồi bấm thử lại nhé.
           </p>
           <button
@@ -153,7 +153,7 @@ export default function SupportPage() {
         <SupportChatPanel messages={messages} onSend={handleSend} sending={sending} skin="room" />
       )}
 
-      <p className="text-center text-xs font-semibold text-room-ink/40">
+      <p className="text-center text-xs font-semibold text-room-ink/60">
         Hội thoại được lưu lại — bạn có thể đóng trang và quay lại bất cứ lúc nào.
       </p>
     </div>

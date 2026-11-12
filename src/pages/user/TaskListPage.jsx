@@ -174,7 +174,7 @@ export default function TaskListPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold text-room-ink">Công việc</h1>
-          <p className="mt-1 text-sm font-semibold text-room-ink/55">
+          <p className="mt-1 text-sm font-semibold text-room-ink/65">
             {data ? `${data.total} công việc` : '…'} · Lên kế hoạch và hoàn thành đúng thời điểm
           </p>
         </div>
@@ -187,14 +187,14 @@ export default function TaskListPage() {
       <RoomCard className="p-3">
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative flex-1">
-            <MagnifyingGlass size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+            <MagnifyingGlass size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/65" />
             <input
               type="search"
               value={filters.keyword}
               onChange={(e) => setFilters((f) => ({ ...f, keyword: e.target.value }))}
               placeholder="Tìm công việc theo tiêu đề…"
               aria-label="Tìm kiếm công việc"
-              className="h-11 w-full rounded-xl bg-room-oat/45 pl-10 pr-4 text-sm font-semibold text-room-ink transition placeholder:text-room-ink/35 hover:bg-room-oat/70 focus:bg-room-paper focus:ring-2 focus:ring-room-acorn focus:outline-none"
+              className="h-11 w-full rounded-xl bg-room-oat/45 pl-10 pr-4 text-sm font-semibold text-room-ink transition placeholder:text-room-ink/65 hover:bg-room-oat/70 focus:bg-room-paper focus:ring-2 focus:ring-room-acorn focus:outline-none"
             />
           </div>
           <div className="flex gap-2">
@@ -303,10 +303,10 @@ export default function TaskListPage() {
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-room-acorn/15 pb-3">
             <div>
               <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
-                <Trash size={18} weight="fill" className="text-room-ink/50" />
+                <Trash size={18} weight="fill" className="text-room-ink/60" />
                 Thùng rác
               </h2>
-              <p className="mt-0.5 text-xs font-semibold text-room-ink/55">
+              <p className="mt-0.5 text-xs font-semibold text-room-ink/65">
                 Việc xoá được giữ 30 ngày rồi mới xoá thật — khôi phục được bất cứ lúc nào.
               </p>
             </div>
@@ -324,7 +324,7 @@ export default function TaskListPage() {
               ))}
             </div>
           ) : !trash || trash.items.length === 0 ? (
-            <p className="mt-4 text-sm font-semibold text-room-ink/55">
+            <p className="mt-4 text-sm font-semibold text-room-ink/65">
               Thùng rác trống — không có việc nào cần khôi phục.
             </p>
           ) : (
@@ -336,7 +336,7 @@ export default function TaskListPage() {
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-bold text-room-ink">{t.title}</span>
-                    <span className="block text-xs font-semibold text-room-ink/50">
+                    <span className="block text-xs font-semibold text-room-ink/60">
                       {t.category?.categoryName || 'Không danh mục'} · đang chờ xoá vĩnh viễn
                     </span>
                   </span>

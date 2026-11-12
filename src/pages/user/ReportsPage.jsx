@@ -89,8 +89,8 @@ function StatCard({ icon: Icon, label, value, sub, tone = 'oat', delay = 0 }) {
         <Icon size={20} weight="duotone" />
       </span>
       <p className="mt-3 font-display text-3xl font-bold tracking-tight text-room-ink">{value}</p>
-      <p className="text-sm font-semibold text-room-ink/55">{label}</p>
-      {sub && <p className="mt-0.5 text-xs font-semibold text-room-ink/45">{sub}</p>}
+      <p className="text-sm font-semibold text-room-ink/65">{label}</p>
+      {sub && <p className="mt-0.5 text-xs font-semibold text-room-ink/65">{sub}</p>}
     </RoomCard>
   )
 }
@@ -123,7 +123,7 @@ function DailyChart({ daily }) {
       </div>
       <div className="mt-1.5 flex gap-[3px]">
         {daily.map((d, i) => (
-          <span key={d.date} className="flex-1 text-center text-[9px] font-semibold text-room-ink/40">
+          <span key={d.date} className="flex-1 text-center text-[9px] font-semibold text-room-ink/60">
             {i % step === 0 || i === daily.length - 1 ? d.label : ''}
           </span>
         ))}
@@ -139,7 +139,7 @@ function WeekdayChart({ weekday }) {
     <ul className="mt-3 space-y-2">
       {weekday.map((d) => (
         <li key={d.weekday} className="flex items-center gap-3">
-          <span className="w-16 shrink-0 text-xs font-semibold text-room-ink/55">{d.label}</span>
+          <span className="w-16 shrink-0 text-xs font-semibold text-room-ink/65">{d.label}</span>
           <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-room-oat/60">
             <span
               className="block h-full rounded-full bg-room-acorn transition-all duration-500"
@@ -188,7 +188,7 @@ function LockedPanel() {
             Pro
           </span>
         </h1>
-        <p className="mt-1 text-sm font-semibold text-room-ink/55">
+        <p className="mt-1 text-sm font-semibold text-room-ink/65">
           Biết mình đang làm tốt ở đâu, và đang bỏ quên việc gì.
         </p>
       </div>
@@ -200,7 +200,7 @@ function LockedPanel() {
           </span>
           <div>
             <h2 className="font-display font-bold text-room-ink">Báo cáo là tính năng của gói Pro</h2>
-            <p className="mt-1 text-sm font-semibold text-room-ink/55">
+            <p className="mt-1 text-sm font-semibold text-room-ink/65">
               Nâng cấp Pro để mở khoá toàn bộ số liệu bên dưới — kèm xuất file Excel để gửi báo cáo.
             </p>
           </div>
@@ -304,7 +304,7 @@ export default function ReportsPage() {
               Pro
             </span>
           </h1>
-          <p className="mt-1 text-sm font-semibold text-room-ink/50">
+          <p className="mt-1 text-sm font-semibold text-room-ink/60">
             {data?.range?.from?.split('-').reverse().join('/')} → {data?.range?.to?.split('-').reverse().join('/')}
             {slow && ' · máy chủ đang khởi động…'}
           </p>
@@ -382,7 +382,7 @@ export default function ReportsPage() {
             <ChartLineUp size={19} weight="fill" className="text-room-acorn" />
             Việc hoàn thành mỗi ngày
           </h2>
-          <p className="text-xs font-semibold text-room-ink/45">
+          <p className="text-xs font-semibold text-room-ink/65">
             Tạo mới trong kỳ: {nf(totals?.created)} việc · đến hạn: {nf(totals?.dueInRange)} việc
           </p>
         </div>
@@ -405,18 +405,18 @@ export default function ReportsPage() {
             Bạn làm việc tốt nhất vào lúc nào
           </h2>
           {totals?.goldenHour == null || totals?.goldenCount === 0 ? (
-            <p className="mt-3 text-sm font-semibold text-room-ink/55">
+            <p className="mt-3 text-sm font-semibold text-room-ink/65">
               Chưa đủ dữ liệu để tìm ra giờ vàng của bạn.
             </p>
           ) : (
             <>
-              <p className="mt-2 text-sm font-semibold text-room-ink/55">
+              <p className="mt-2 text-sm font-semibold text-room-ink/65">
                 Nhiều việc được đánh dấu xong nhất vào khoảng{' '}
                 <strong className="font-extrabold text-room-ink">{totals.goldenHour}h</strong> (
                 {nf(totals.goldenCount)} việc). Hãy dành giờ đó cho việc khó nhất.
               </p>
               <HourStrip hours={data.hours} goldenHour={totals.goldenHour} />
-              <div className="mt-1 flex justify-between text-[10px] font-semibold text-room-ink/40">
+              <div className="mt-1 flex justify-between text-[10px] font-semibold text-room-ink/60">
                 <span>0h</span>
                 <span>6h</span>
                 <span>12h</span>
@@ -455,7 +455,7 @@ export default function ReportsPage() {
                       />
                       {c.name}
                     </span>
-                    <span className="text-xs font-bold text-room-ink/55">
+                    <span className="text-xs font-bold text-room-ink/65">
                       {nf(c.completed)} việc · {nf(c.share)}%
                     </span>
                   </div>
@@ -469,7 +469,7 @@ export default function ReportsPage() {
               ))}
             </ul>
           ) : (
-            <p className="mt-3 text-sm font-semibold text-room-ink/55">
+            <p className="mt-3 text-sm font-semibold text-room-ink/65">
               Chưa có việc nào gắn danh mục được hoàn thành trong kỳ này.
             </p>
           )}
@@ -494,7 +494,7 @@ export default function ReportsPage() {
               ))}
             </ul>
           ) : (
-            <p className="mt-3 text-sm font-semibold text-room-ink/55">Chưa có việc nào hoàn thành trong kỳ.</p>
+            <p className="mt-3 text-sm font-semibold text-room-ink/65">Chưa có việc nào hoàn thành trong kỳ.</p>
           )}
 
           <div className="mt-4 rounded-xl bg-room-bell/20 p-3 ring-1 ring-inset ring-room-bell/40">
@@ -515,7 +515,7 @@ export default function ReportsPage() {
           </div>
 
           {totals?.avgHoursBeforeDue !== null && totals?.avgHoursBeforeDue !== undefined && (
-            <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-room-ink/55">
+            <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-room-ink/65">
               {totals.avgHoursBeforeDue >= 0 ? (
                 <>
                   <TrendUp size={15} className="text-room-acorn" />
@@ -549,7 +549,7 @@ export default function ReportsPage() {
                   {w.title}
                 </Link>
                 {w.categoryName && (
-                  <span className="rounded-full bg-room-oat/60 px-2 py-0.5 text-[11px] font-semibold text-room-ink/55">
+                  <span className="rounded-full bg-room-oat/60 px-2 py-0.5 text-[11px] font-semibold text-room-ink/65">
                     {w.categoryName}
                   </span>
                 )}
@@ -566,19 +566,19 @@ export default function ReportsPage() {
                 <span className="rounded-full bg-room-blush/45 px-2.5 py-0.5 text-[11px] font-extrabold on-blush ring-1 ring-room-acorn/20 dark:bg-room-blush/30">
                   Quá hạn {nf(w.daysLate)} ngày
                 </span>
-                <span className="text-[11px] font-semibold text-room-ink/45">Hạn {formatDate(w.dueAt)}</span>
+                <span className="text-[11px] font-semibold text-room-ink/65">Hạn {formatDate(w.dueAt)}</span>
                 <ArrowRight size={14} className="text-room-ink/25" />
               </li>
             ))}
           </ul>
         ) : (
-          <p className="mt-3 text-sm font-semibold text-room-ink/55">
+          <p className="mt-3 text-sm font-semibold text-room-ink/65">
             Không có việc nào quá hạn. Đây là trạng thái đáng giữ.
           </p>
         )}
       </RoomCard>
 
-      <p className="text-center text-[11px] font-semibold text-room-ink/40">
+      <p className="text-center text-[11px] font-semibold text-room-ink/60">
         Số liệu tính theo giờ Việt Nam, chỉ gồm công việc đang có trong app (không tính việc trong thùng rác). Xuất
         Excel để lưu lại hoặc gửi cho người khác.
       </p>

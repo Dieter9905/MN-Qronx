@@ -51,7 +51,7 @@ function ProgressRing({ percent, label }) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="font-display text-2xl font-bold text-room-ink">{percent}%</span>
-        <span className="text-xs font-semibold text-room-ink/50">{label}</span>
+        <span className="text-xs font-semibold text-room-ink/60">{label}</span>
       </div>
     </div>
   )
@@ -69,9 +69,9 @@ function OverviewCell({ icon: Icon, label, value, to }) {
         {/* Tay nắm ngăn kéo: chi tiết đồ đạc, không phải icon trang trí */}
         <span aria-hidden="true" className="mb-1.5 block h-1 w-6 rounded-full bg-room-acorn/30" />
         <span className="block font-display text-2xl font-bold leading-none text-room-ink">{value}</span>
-        <span className="mt-1 block truncate text-[11.5px] font-bold text-room-ink/55">{label}</span>
+        <span className="mt-1 block truncate text-[11.5px] font-bold text-room-ink/65">{label}</span>
       </span>
-      <Icon size={17} weight="bold" className="shrink-0 text-room-ink/30 transition group-hover:text-room-acorn" />
+      <Icon size={17} weight="bold" className="shrink-0 text-room-ink/60 transition group-hover:text-room-acorn" />
     </Link>
   )
 }
@@ -117,7 +117,7 @@ export default function DashboardPage() {
           </div>
         </div>
         {slow && (
-          <p className="text-center text-xs font-semibold leading-relaxed text-room-ink/50">
+          <p className="text-center text-xs font-semibold leading-relaxed text-room-ink/60">
             {SERVER_WAKE_HINT}
           </p>
         )}
@@ -138,7 +138,7 @@ export default function DashboardPage() {
             Thử lại
           </RoomButton>
         </div>
-        <p className="text-center text-xs font-semibold leading-relaxed text-room-ink/50">
+        <p className="text-center text-xs font-semibold leading-relaxed text-room-ink/60">
           {SERVER_WAKE_HINT}
         </p>
       </div>
@@ -209,10 +209,10 @@ export default function DashboardPage() {
               <h1 className="font-display text-xl font-bold leading-snug text-room-ink">
                 <span className="sm:truncate">{t.welcome}, {user?.fullName}!</span>
               </h1>
-              <p className="mt-0.5 text-[13px] font-semibold text-room-ink/55">{today}</p>
+              <p className="mt-0.5 text-[13px] font-semibold text-room-ink/65">{today}</p>
             </div>
           </div>
-          <p className="hidden max-w-xs text-right text-xs italic leading-relaxed text-room-ink/50 lg:block">
+          <p className="hidden max-w-xs text-right text-xs italic leading-relaxed text-room-ink/60 lg:block">
             “{t.dashQuote}”
           </p>
         </section>
@@ -362,7 +362,7 @@ export default function DashboardPage() {
             aria-hidden="true"
             className="absolute -top-2.5 left-6 h-3 w-12 rotate-[-5deg] rounded-[3px] bg-room-oat/90 ring-1 ring-room-acorn/20"
           />
-          <p className="text-[12px] font-bold text-room-ink/55">{t.loginReward}</p>
+          <p className="text-[12px] font-bold text-room-ink/65">{t.loginReward}</p>
           <div className="mt-1.5 flex items-end gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center">
               <Flame size={27} weight="bold" className="text-room-bell" />
@@ -429,9 +429,9 @@ export default function DashboardPage() {
           <Brain size={22} weight="bold" className="shrink-0 text-room-acorn" />
           <span className="min-w-0 flex-1">
             <span className="block font-display text-[15px] font-bold text-room-ink">{t.aiAssistant}</span>
-            <span className="mt-0.5 block truncate text-[12px] font-semibold text-room-ink/55">{t.aiQuickDesc}</span>
+            <span className="mt-0.5 block truncate text-[12px] font-semibold text-room-ink/65">{t.aiQuickDesc}</span>
           </span>
-          <ArrowRight size={16} weight="bold" className="shrink-0 text-room-ink/30 transition group-hover:translate-x-0.5 group-hover:text-room-acorn" />
+          <ArrowRight size={16} weight="bold" className="shrink-0 text-room-ink/60 transition group-hover:translate-x-0.5 group-hover:text-room-acorn" />
         </Link>
 
         {/* Note Moss: gợi động lực + mời thử chuông (copy giữ nguyên vai) */}

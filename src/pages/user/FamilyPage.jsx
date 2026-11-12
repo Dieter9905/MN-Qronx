@@ -56,15 +56,15 @@ function PersonCard({ person, isMe }) {
           <div className="min-w-0">
             <p className="truncate text-sm font-extrabold text-room-ink">
               {person.fullName}
-              {isMe && <span className="ml-1.5 text-xs font-bold text-room-ink/40">(bạn)</span>}
+              {isMe && <span className="ml-1.5 text-xs font-bold text-room-ink/60">(bạn)</span>}
             </p>
-            <p className="truncate text-xs font-semibold text-room-ink/55">
+            <p className="truncate text-xs font-semibold text-room-ink/65">
               {isMe ? 'Người trả tiền cho cả nhóm' : person.email}
             </p>
           </div>
         </div>
         {!person.shared && (
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-room-oat/70 px-2.5 py-1 text-[11px] font-extrabold text-room-ink/55 ring-1 ring-inset ring-room-acorn/20">
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-room-oat/70 px-2.5 py-1 text-[11px] font-extrabold text-room-ink/65 ring-1 ring-inset ring-room-acorn/20">
             <EyeSlash size={13} weight="bold" /> Không chia sẻ
           </span>
         )}
@@ -84,7 +84,7 @@ function PersonCard({ person, isMe }) {
             <ul className="mt-3 space-y-1.5 border-t border-dashed border-room-acorn/25 pt-3">
               {person.worst.map((t) => (
                 <li key={t.taskId} className="flex items-start gap-2 text-xs">
-                  <Warning size={13} weight="fill" className="mt-0.5 shrink-0 text-room-ink/40" />
+                  <Warning size={13} weight="fill" className="mt-0.5 shrink-0 text-room-ink/60" />
                   <span className="min-w-0 flex-1 truncate font-bold text-room-ink/90">{t.title}</span>
                   <span className="shrink-0 rounded-md bg-room-blush/45 px-1.5 py-0.5 font-bold text-room-ink/85 dark:bg-room-blush/30">
                     hạn {formatDateTime(t.dueAt)}
@@ -95,7 +95,7 @@ function PersonCard({ person, isMe }) {
           )}
         </>
       ) : (
-        <p className="mt-3 text-xs font-semibold text-room-ink/50">
+        <p className="mt-3 text-xs font-semibold text-room-ink/60">
           Người này đã tắt chia sẻ tiến độ. Số liệu của họ không rời khỏi máy chủ — hãy nhắn hỏi trực tiếp.
         </p>
       )}
@@ -161,7 +161,7 @@ export default function FamilyPage() {
             <UsersThree size={26} weight="duotone" className="text-room-acorn" />
             Cả nhóm
           </h1>
-          <p className="mt-1 text-sm font-semibold text-room-ink/55">
+          <p className="mt-1 text-sm font-semibold text-room-ink/65">
             Bạn đang dùng gói Pro Doanh nghiệp của <b>{family?.owner?.fullName || 'chủ nhóm'}</b>
             {family?.owner?.expiresAt && <> — còn hiệu lực tới {formatDate(family.owner.expiresAt)}</>}.
           </p>
@@ -183,7 +183,7 @@ export default function FamilyPage() {
               </>
             ) : (
               <>
-                <EyeSlash size={14} weight="fill" className="mt-0.5 shrink-0 text-room-ink/35" />
+                <EyeSlash size={14} weight="fill" className="mt-0.5 shrink-0 text-room-ink/65" />
                 Chủ gói không thấy số liệu nào của bạn.
               </>
             )}
@@ -226,7 +226,7 @@ export default function FamilyPage() {
               <UsersThree size={26} weight="duotone" className="text-room-acorn" />
               Cả nhóm hôm nay
             </h1>
-            <p className="mt-1 text-sm font-semibold text-room-ink/55">
+            <p className="mt-1 text-sm font-semibold text-room-ink/65">
               Mọi người trong gói doanh nghiệp đang tới đâu — số liệu do máy chủ tính theo giờ Việt Nam.
             </p>
           </div>
@@ -238,19 +238,19 @@ export default function FamilyPage() {
         </div>
 
         <RoomCard className="p-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-room-ink/50">Cả nhóm</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-room-ink/60">Cả nhóm</p>
           <div className="mt-2 flex flex-wrap gap-5">
             <div>
               <p className="text-3xl font-extrabold text-room-ink">{board.totals.doneToday}</p>
-              <p className="text-xs font-bold text-room-ink/55">việc xong hôm nay</p>
+              <p className="text-xs font-bold text-room-ink/65">việc xong hôm nay</p>
             </div>
             <div>
               <p className="text-3xl font-extrabold text-room-ink">{board.totals.doneWeek}</p>
-              <p className="text-xs font-bold text-room-ink/55">việc xong trong 7 ngày</p>
+              <p className="text-xs font-bold text-room-ink/65">việc xong trong 7 ngày</p>
             </div>
             <div>
               <p className="text-3xl font-extrabold text-room-ink">{board.totals.open}</p>
-              <p className="text-xs font-bold text-room-ink/55">việc đang mở</p>
+              <p className="text-xs font-bold text-room-ink/65">việc đang mở</p>
             </div>
             <div>
               {/* Quá hạn là dữ liệu "đến hạn" — số nằm mỏ Blush/45 on-blush, số 0 để trống giấy */}
@@ -263,7 +263,7 @@ export default function FamilyPage() {
               >
                 {board.totals.overdue}
               </p>
-              <p className="text-xs font-bold text-room-ink/55">việc quá hạn</p>
+              <p className="text-xs font-bold text-room-ink/65">việc quá hạn</p>
             </div>
           </div>
           {board.hiddenCount > 0 && (
@@ -280,7 +280,7 @@ export default function FamilyPage() {
             <p className="font-display text-sm font-bold text-room-ink">
               Nhà mới có mình bạn
             </p>
-            <p className="mt-1 text-sm font-semibold text-room-ink/55">
+            <p className="mt-1 text-sm font-semibold text-room-ink/65">
               Mời chủ nhóm vào bằng email — họ dùng miễn phí và có ngay quyền lợi Pro. Nhà dùng được tối đa{' '}
               {board.maxSeats} tài khoản.
             </p>
@@ -294,7 +294,7 @@ export default function FamilyPage() {
           board.members.map((m) => <PersonCard key={m.userId} person={m} />)
         )}
 
-        <p className="text-center text-xs font-semibold text-room-ink/45">
+        <p className="text-center text-xs font-semibold text-room-ink/65">
           Bảng này là quyền lợi riêng của chủ gói Pro Doanh nghiệp. Người trong nhóm luôn thấy được là đang chia sẻ và tắt
           được bất cứ lúc nào.
         </p>
@@ -311,7 +311,7 @@ export default function FamilyPage() {
           <UsersThree size={26} weight="duotone" className="text-room-acorn" />
           Cả nhóm
         </h1>
-        <p className="mt-1 text-sm font-semibold text-room-ink/55">
+        <p className="mt-1 text-sm font-semibold text-room-ink/65">
           Trang này dành cho gói <b>Pro Doanh nghiệp</b> — một người trả tiền, cả nhóm cùng dùng.
         </p>
       </div>
@@ -333,7 +333,7 @@ export default function FamilyPage() {
           </Link>
         </div>
         {paidButNotFamily && (
-          <p className="mt-3 text-xs font-semibold text-room-ink/55">
+          <p className="mt-3 text-xs font-semibold text-room-ink/65">
             Bạn đã có quyền lợi Pro rồi; gói doanh nghiệp là để thêm chủ nhóm và mở trang này.
           </p>
         )}

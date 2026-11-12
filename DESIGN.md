@@ -3,8 +3,8 @@ name: MN-Qronx
 description: "Phòng mini-hompy — the landing is your own furnished room; a due task lights up and the bell beside it rings."
 colors:
   porcelain: "#FFF6EC"
-  ink: "#4A3B2C"
-  acorn: "#8B6F4E"
+  ink: "#231C15"
+  acorn: "#785C3C"
   oat: "#EADCC7"
   moss: "#DCE8DF"
   sage: "#A9C4B1"
@@ -147,8 +147,8 @@ Milestone 2 extends the world into the guest auth gate (`AuthLayout` + the RoomU
 A warm paper-and-ink room: brown ink text on Porcelain paper, with one working pen (Acorn) filling in structure across soft furniture fields; two reserved voice colors hold meaning — gold rings sound, pink lights up when something is due.
 
 ### Primary
-- **Acorn** (#8B6F4E — dark: rgb(199 168 133)): the pen and the hand. All outlines, hairline rings, dotted seams, primary CTAs, the desk pen details, clock hands, and the dashed focus ring are Acorn. It is the world's working accent on both themes — as `rgb(var(--room-acorn))` everywhere.
-- **Ink** (#4A3B2C — dark: rgb(233 222 208)): all reading text, from headings to card body, always paired against Porcelain-family grounds. As solid fills it parks toasts (Ink pill, Porcelain text), and any text sitting on Blush must be Ink (`#4A3B2C` via `.on-blush`, theme-independent).
+- **Acorn** (#6C5236 — dark: rgb(199 168 133)): the pen and the hand. All outlines, hairline rings, dotted seams, primary CTAs, the desk pen details, clock hands, and the dashed focus ring are Acorn. It is the world's working accent on both themes — as `rgb(var(--room-acorn))` everywhere.
+- **Ink** (#231C15 — dark: rgb(233 222 208)): all reading text, from headings to card body, always paired against Porcelain-family grounds. As solid fills it parks toasts (Ink pill, Porcelain text), and any text sitting on Blush must be Ink (`#231C15` via `.on-blush`, theme-independent).
 
 ### Secondary
 - **Bell gold** (#E2B05C — dark: rgb(232 191 118)): reserved for sounding and burning things — the desk bell, the sun, flower centers, the lamp bulb. Never used as a large field and never on body copy.
@@ -246,7 +246,7 @@ Silhouettes are hand-dressed: rail cards carry small angled tape strips on their
 - **Room pill sizes:** the `RoomButton` ramp sizes `sm h-9 px-3.5` (36px, 13px) / `md h-10 px-5` (40px, 14px) / `lg h-12 px-6` (48px, 15px) — all `font-display` bold, full pills, 16px/18px icons at `bold` weight; loading swaps the label for a small spinner + "Đang xử lý…" and self-disables. Main actions run `lg`.
 
 ### Chips
-- **MẪU/DEMO chip (`chip-demo`):** Blush field, `.on-blush` Ink text (`#4A3B2C`), 11px weight 900, tracking 0.1em, `px-2 py-0.5` — attaches to every fabricated number and to the demo task card.
+- **MẪU/DEMO chip (`chip-demo`):** Blush field, `.on-blush` Ink text (`#231C15`), 11px weight 900, tracking 0.1em, `px-2 py-0.5` — attaches to every fabricated number and to the demo task card.
 - **Nameplate pill:** Moss field, Acorn ring, Ink 900 caps text with tracking — the furniture variant (drawer nameplate, footer letterpress, "real time" caption on the scene).
 
 ### Cards / Containers
@@ -286,7 +286,7 @@ App shell và dashboard là **Operate**: thế giới phòng chỉ mượn chữ
 - **Nav pill định vị:** `top/left/width/height` đo bằng `getBoundingClientRect` so với `nav` + `scrollTop`, đo lại qua `ResizeObserver` + `MutationObserver` + `document.fonts.ready` (WorkspaceSwitcher nạp không gian bất đồng bộ). Trong phòng pill **định vị lại ngay, không trượt** — `.room-world .nav-pill` chỉ còn transition `opacity 0.3s` (sàn ONE authored motion; trượt `top 0.5s` của shell cũ sinh khung giữa chuyến khi capture/reflow). Phép đo có **zero-guard**: Chrome sập bề mặt khi capture/chuyển tab làm mọi rect về 0 — bỏ qua, không commit vẽ về `(0,0)`; đây là gốc của ghost pill trong fullPage của bản chụp trước (Sidebar + BottomNav cùng cơ chế).
 - **Rail quá hạn:** tile `bg-room-rain/30` + `WarningCircle` + số việc + link — Rain trung tính, không rose, không đỏ gấp gáp; hàng việc quá hạn trong danh sách mới là chỗ duy nhất dùng Blush (`blush/40`) và `room-due-glow` 2.6s trên chấm trạng thái của hàng đến hạn đầu tiên.
 - **Rãnh nút nổi:** cụm 3 nút `fixed right-4` (phím tắt / tạo nhanh / tập trung) là chrome chuẩn của shell; `main` chừa `lg:pr-20` để mép thẻ cánh tủ không bị cụm nút đè lên.
-- **Hàng quá hạn ở dark:** Blush 45% trên nền tối thành hồng nhạt và chữ Ink sáng chỉ còn ~3:1, nên hàng dùng `dark:bg-room-blush/30` (`hover:/40`) và nhãn "Quá hạn" đổi sang `dark:text-room-blush`; `.on-blush` (#4a3b2c) chỉ dành cho nền Blush đặc, không dùng trên hàng đã pha loãng ở dark.
+- **Hàng quá hạn ở dark:** Blush 45% trên nền tối thành hồng nhạt và chữ Ink sáng chỉ còn ~3:1, nên hàng dùng `dark:bg-room-blush/30` (`hover:/40`) và nhãn "Quá hạn" đổi sang `dark:text-room-blush`; `.on-blush` (#231c15) chỉ dành cho nền Blush đặc, không dùng trên hàng đã pha loãng ở dark.
 - **Cỡ chữ ngoài ramp & màu fallback (advisory — 20 findings, toàn advisory, không chặn ship):** nhãn phụ trong shell dùng literal `10px` (chip Pro, PLAN_BADGE, nhãn ngôn ngữ, nhãn BottomNav/WorkspaceSwitcher/SupportBadge), `12px`/`12.5px` (chú thích ngày, mô tả note) và `13px` (nút paper pill, dòng phụ dưới chào); số streak trên sticker dùng `2rem` Baloo. Đó là các bước phụ của mốc này cho nhãn phụ / số dữ liệu, không dùng cho tiêu đề hay số lớn khác (giữ `text-2xl` Baloo); màu `#7c8cff` duy nhất trong `TodayBrief` (dot màu tiết học) là fallback giữ nguyên từ bản gốc — chưa mở cửa vào bảng token phòng.
 
 ### Raster provenance
@@ -371,7 +371,8 @@ Vẫn là **Operate**: 6 trang (SettingsPage, ProfilePage, ChangePasswordPage, B
 
 ### Do:
 - **Do** wrap room-world pages in `.room-world` and theme everything through `room.*` Tailwind tokens (`bg-room-moss/70`, `ring-room-acorn/25`) so light/dark switch from the single `--room-*` variable block; never hardcode navy/slate inside it.
-- **Do** keep text-on-Blush as `.on-blush` Ink `#4A3B2C` in both themes — baked by contrast, not by theme.
+- **Do** keep text-on-Blush as `.on-blush` Ink `#231C15` in both themes — baked by contrast, not by theme.
+- **Do** keep secondary reading text no fainter than `text-room-ink/60` on light (light-contrast pass: Ink deepened to `#231C15`, Acorn `#6C5236`, alpha ladder raised twice — 30/35/40/45/50/55 → 50/55/60/65/60/65; placeholders sit at `/45`, deliberately faded *done* items at `/55 line-through`).
 - **Do** prove product truth: the wall clock ticks real time, "today" is `Intl`-formatted real date, and every invented figure wears the Blush MẪU/DEMO chip; never ship an unlabeled sample number.
 - **Do** draw all seams as dotted (`dot-divider`, dotted underlines, dashed frames) and all strokes/rings as Acorn at alpha; hairline solids only inside a footer.
 - **Do** stay flat: sticker props stand upright on the floor, motion stays at ≤2px hover lifts and once-only reveals (`threshold 0.15`, house easing `cubic-bezier(0.16, 1, 0.3, 1)`), with `prefers-reduced-motion` honored.

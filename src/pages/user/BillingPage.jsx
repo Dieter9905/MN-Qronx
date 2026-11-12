@@ -46,7 +46,7 @@ const PLAN_ICON = { FREE: Sparkle, PLUS: Rocket, PRO: Crown, BUSINESS: Crown }
 // Đĩa icon gói (trang trí bề mặt) về tông phòng — chip PLAN_BADGE (dữ liệu tên gói ở
 // Header/Admin) giữ nguyên màu dữ liệu theo luật mốc.
 const PLAN_ICON_COLOR = {
-  FREE: 'bg-room-oat/70 text-room-ink/50',
+  FREE: 'bg-room-oat/70 text-room-ink/60',
   PLUS: 'bg-room-rain/40 text-room-ink/65',
   PRO: 'bg-room-bell/25 text-room-bell ring-1 ring-inset ring-room-bell/40',
   BUSINESS: 'bg-room-acorn/20 text-room-acorn',
@@ -199,7 +199,7 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
         <p className="mt-3 flex items-start gap-2 text-xs font-semibold text-room-ink/60">
           {family?.progressShared === false ? (
             <>
-              <EyeSlash size={14} weight="fill" className="mt-0.5 shrink-0 text-room-ink/35" />
+              <EyeSlash size={14} weight="fill" className="mt-0.5 shrink-0 text-room-ink/65" />
               Bạn đã tắt chia sẻ tiến độ — chủ gói không thấy số liệu công việc của bạn.
             </>
           ) : (
@@ -210,7 +210,7 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
             </>
           )}
         </p>
-        <p className="mt-3 text-xs font-semibold text-room-ink/50">
+        <p className="mt-3 text-xs font-semibold text-room-ink/60">
           Rời gói không xoá dữ liệu nào của bạn — chỉ là trở lại gói Miễn phí, và bạn vẫn mua được gói riêng
           bất cứ lúc nào.
         </p>
@@ -240,7 +240,7 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
           <li className="flex items-center justify-between gap-3 rounded-xl bg-room-oat/70 px-3 py-2.5 ring-1 ring-room-acorn/25">
             <div className="min-w-0">
               <p className="truncate text-sm font-extrabold text-room-ink">Bạn (chủ gói)</p>
-              <p className="truncate text-xs font-semibold text-room-ink/55">Người trả tiền cho cả nhóm</p>
+              <p className="truncate text-xs font-semibold text-room-ink/65">Người trả tiền cho cả nhóm</p>
             </div>
           </li>
           {members.map((m) => (
@@ -250,7 +250,7 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-extrabold text-room-ink">{m.fullName}</p>
-                <p className="truncate text-xs font-semibold text-room-ink/55">
+                <p className="truncate text-xs font-semibold text-room-ink/65">
                   {m.email} · tham gia {formatDate(m.joinedAt)}
                 </p>
               </div>
@@ -286,7 +286,7 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
 
         {/* Form mời */}
         <div className="mt-4 rounded-xl bg-room-oat/40 p-3 ring-1 ring-room-acorn/10">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-room-ink/55">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-room-ink/65">
             Thêm chủ nhóm (tối đa {left} chỗ còn trống)
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -315,7 +315,7 @@ function FamilyCard({ family, current, isSeat, onChanged, onBuy, busy }) {
               Nhà đã đủ {family?.maxSeats || 4} tài khoản. Gỡ một người đi rồi mời người khác.
             </p>
           ) : (
-            <p className="mt-2 text-xs font-semibold text-room-ink/55">
+            <p className="mt-2 text-xs font-semibold text-room-ink/65">
               Người được mời cần ĐÃ có tài khoản MN-Qronx (dùng miễn phí). Họ nhận thông báo ngay và dùng được
               quyền Pro kể từ giây đó.
             </p>
@@ -540,7 +540,7 @@ export default function BillingPage() {
     <div className="mx-auto max-w-5xl space-y-6 animate-fade-in">
       <div>
         <h1 className="font-display text-2xl font-bold text-room-ink">Gói của bạn</h1>
-        <p className="mt-1 text-sm font-semibold text-room-ink/50">
+        <p className="mt-1 text-sm font-semibold text-room-ink/60">
           Quản lý gói, theo dõi hạn sử dụng và thanh toán bằng chuyển khoản ngân hàng
         </p>
       </div>
@@ -556,7 +556,7 @@ export default function BillingPage() {
               })()}
             </span>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-room-ink/45">Gói hiện tại</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-room-ink/65">Gói hiện tại</p>
               <div className="mt-0.5 flex flex-wrap items-center gap-2.5">
                 <h2 className="font-display text-2xl font-bold text-room-ink">{PLAN_NAMES[current] || current}</h2>
                 {overview?.subscription?.provider === 'TRIAL' && (
@@ -581,7 +581,7 @@ export default function BillingPage() {
                   Từ {overview?.planStartedAt ? formatDate(overview.planStartedAt) : '—'}
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-xl bg-room-oat/45 px-3 py-2 text-xs font-bold text-room-ink/70 ring-1 ring-inset ring-room-acorn/15">
-                  <CalendarX size={15} weight="bold" className="text-room-ink/45" />
+                  <CalendarX size={15} weight="bold" className="text-room-ink/65" />
                   Đến {overview?.planExpiresAt ? formatDate(overview.planExpiresAt) : '—'}
                 </span>
               </>
@@ -691,7 +691,7 @@ export default function BillingPage() {
               className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-extrabold transition ${
                 cycle === c.id
                   ? 'bg-room-paper text-room-ink shadow-[0_6px_12px_-8px_rgb(0_0_0/0.25)] ring-1 ring-room-acorn/30'
-                  : 'text-room-ink/55 hover:text-room-ink'
+                  : 'text-room-ink/65 hover:text-room-ink'
               }`}
             >
               {c.label}
@@ -728,12 +728,12 @@ export default function BillingPage() {
                 <Icon size={24} weight={p.id === 'FREE' || p.id === 'PLUS' ? 'duotone' : 'fill'} />
               </span>
               <h3 className="mt-4 font-display text-xl font-bold text-room-ink">{p.title}</h3>
-              <p className="mt-1 text-sm font-semibold text-room-ink/50">{p.tagline}</p>
+              <p className="mt-1 text-sm font-semibold text-room-ink/60">{p.tagline}</p>
               <p className="mt-4 flex items-baseline gap-1">
                 <span className="font-display text-3xl font-bold text-room-ink">
                   {isFree ? '0đ' : formatVnd(p.price)}
                 </span>
-                {!isFree && <span className="text-sm font-semibold text-room-ink/45">{p.period}</span>}
+                {!isFree && <span className="text-sm font-semibold text-room-ink/65">{p.period}</span>}
               </p>
               {!isFree && cycle === 'YEARLY' && (
                 <p className="mt-1 text-xs font-bold text-room-acorn">
@@ -755,8 +755,8 @@ export default function BillingPage() {
               {(p.upcoming || []).length > 0 && (
                 <ul className="mt-3 space-y-2 border-t border-dashed border-room-acorn/25 pt-3">
                   {p.upcoming.map((f) => (
-                    <li key={f} className="flex items-start gap-2.5 text-sm font-semibold text-room-ink/45">
-                      <span className="mt-0.5 shrink-0 rounded-full bg-room-oat/70 px-2 py-[1px] text-[10px] font-extrabold uppercase tracking-wide text-room-ink/55">
+                    <li key={f} className="flex items-start gap-2.5 text-sm font-semibold text-room-ink/65">
+                      <span className="mt-0.5 shrink-0 rounded-full bg-room-oat/70 px-2 py-[1px] text-[10px] font-extrabold uppercase tracking-wide text-room-ink/65">
                         Sắp có
                       </span>
                       {f}
@@ -796,12 +796,12 @@ export default function BillingPage() {
           <Receipt size={18} weight="duotone" className="text-room-acorn" /> Lịch sử đơn hàng
         </p>
         {!overview?.orders?.length ? (
-          <p className="mt-3 text-sm font-semibold text-room-ink/50">Chưa có đơn nào.</p>
+          <p className="mt-3 text-sm font-semibold text-room-ink/60">Chưa có đơn nào.</p>
         ) : (
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-[560px] text-left text-sm">
               <thead>
-                <tr className="text-[11px] font-bold uppercase tracking-wider text-room-ink/45">
+                <tr className="text-[11px] font-bold uppercase tracking-wider text-room-ink/65">
                   <th className="pb-2">Mã đơn</th>
                   <th className="pb-2">Gói</th>
                   <th className="pb-2">Số tiền</th>
@@ -825,7 +825,7 @@ export default function BillingPage() {
                           {st.label}
                         </span>
                       </td>
-                      <td className="py-2.5 font-semibold text-room-ink/55">{formatDate(o.createdAt)}</td>
+                      <td className="py-2.5 font-semibold text-room-ink/65">{formatDate(o.createdAt)}</td>
                       <td className="py-2.5 text-right">
                         {o.status === 'PENDING' && (
                           <div className="flex justify-end gap-2">
@@ -861,7 +861,7 @@ export default function BillingPage() {
         )}
       </RoomCard>
 
-      <p className="text-center text-xs font-semibold text-room-ink/45">
+      <p className="text-center text-xs font-semibold text-room-ink/65">
         Thanh toán bằng chuyển khoản ngân hàng (VietQR). Tiền vào tài khoản là gói tự kích hoạt, không cần chờ duyệt.
         Cần hỗ trợ? Nhắn cho chúng tôi ở mục <span className="font-bold text-room-ink/70">Hỗ trợ</span>.
       </p>
@@ -898,7 +898,7 @@ function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose, onCh
       <div className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-room-paper p-6 shadow-xl ring-1 ring-room-acorn/25 sm:rounded-2xl">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-room-ink/45">Thanh toán đơn</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-room-ink/65">Thanh toán đơn</p>
             <h3 className="font-display text-xl font-bold text-room-ink">
               {order.planName} · {order.cycle === 'YEARLY' ? '1 năm' : '1 tháng'}
             </h3>
@@ -907,14 +907,14 @@ function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose, onCh
             type="button"
             onClick={onClose}
             aria-label="Đóng"
-            className="rounded-lg p-1.5 text-room-ink/40 transition hover:bg-room-oat/70 hover:text-room-ink"
+            className="rounded-lg p-1.5 text-room-ink/60 transition hover:bg-room-oat/70 hover:text-room-ink"
           >
             <X size={18} weight="bold" />
           </button>
         </div>
 
         <div className="mt-4 rounded-2xl bg-room-oat/50 p-4 ring-1 ring-inset ring-room-acorn/25">
-          <p className="text-xs font-bold uppercase tracking-wider text-room-ink/55">Số tiền cần chuyển</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-room-ink/65">Số tiền cần chuyển</p>
           <p className="mt-1 font-display text-3xl font-bold text-room-ink">{formatVnd(order.amount)}</p>
           <p className="mt-2 inline-flex flex-wrap items-center gap-1.5 text-xs font-bold text-room-ink/75">
             <Clock size={14} weight="bold" className="text-room-bell" />
@@ -939,7 +939,7 @@ function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose, onCh
             )}
           </p>
           {!expired && status !== 'PAID' && (
-            <p className="mt-1 text-[11px] font-semibold text-room-ink/55">
+            <p className="mt-1 text-[11px] font-semibold text-room-ink/65">
               Hết giờ này thì mã đơn cũ không còn khớp — lúc đó bấm “Tạo mã mới”.
             </p>
           )}
@@ -976,7 +976,7 @@ function CheckoutModal({ order, payment, status, onCopy, onCancel, onClose, onCh
                     alt={`Mã VietQR cho đơn ${order.orderCode}`}
                     className="mt-2 w-full max-w-[260px] rounded-2xl ring-1 ring-room-acorn/25"
                   />
-                  <p className="mt-2 rounded-full bg-room-oat/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-room-ink/55 ring-1 ring-inset ring-room-acorn/15">
+                  <p className="mt-2 rounded-full bg-room-oat/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-room-ink/65 ring-1 ring-inset ring-room-acorn/15">
                     {payment.qrSource === 'BANK'
                       ? `Mã QR do ${payment.bankName || 'ngân hàng'} tạo cho đơn này`
                       : 'Mã QR do hệ thống tạo — có sẵn số tiền và nội dung'}
@@ -1073,14 +1073,14 @@ function Row({ label, value, onCopy, highlight }) {
       }`}
     >
       <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-room-ink/45">{label}</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-room-ink/65">{label}</p>
         <p className="truncate font-mono text-sm font-extrabold text-room-ink">{value}</p>
       </div>
       {onCopy && (
         <button
           type="button"
           onClick={onCopy}
-          className="shrink-0 cursor-pointer rounded-lg p-2 text-room-ink/40 transition hover:bg-room-oat/75 hover:text-room-ink"
+          className="shrink-0 cursor-pointer rounded-lg p-2 text-room-ink/60 transition hover:bg-room-oat/75 hover:text-room-ink"
           aria-label={`Copy ${label}`}
         >
           <Copy size={15} weight="bold" />

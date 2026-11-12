@@ -67,7 +67,7 @@ export default function DesktopBanner() {
             onClick={dismiss}
             aria-label={t.desktopBannerSkip}
             title={t.desktopBannerSkip}
-            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-room-ink/45 transition hover:bg-room-paper hover:text-room-ink"
+            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-room-ink/65 transition hover:bg-room-paper hover:text-room-ink"
           >
             <X size={16} weight="bold" />
           </button>

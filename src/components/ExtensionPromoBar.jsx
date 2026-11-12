@@ -40,7 +40,7 @@ export default function ExtensionPromoBar() {
         type="button"
         onClick={dismiss}
         aria-label="Đóng gợi ý"
-        className="absolute right-2 top-2 rounded-lg p-1 text-room-ink/40 transition-colors hover:bg-room-oat/60 hover:text-room-ink"
+        className="absolute right-2 top-2 rounded-lg p-1 text-room-ink/60 transition-colors hover:bg-room-oat/60 hover:text-room-ink"
       >
         <X size={14} weight="bold" />
       </button>

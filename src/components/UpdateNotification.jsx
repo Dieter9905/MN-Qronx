@@ -101,12 +101,12 @@ export default function UpdateNotification() {
           <div className="relative shrink-0 px-6 pb-4 pt-6">
             <div className="flex items-center gap-2">
               <Rocket size={22} weight="bold" className="text-room-acorn" />
-              <span className="text-[13px] font-bold text-room-ink/55">Cập nhật mới</span>
+              <span className="text-[13px] font-bold text-room-ink/65">Cập nhật mới</span>
             </div>
             <h2 className="mt-1.5 font-display text-xl font-bold text-room-ink">
               {currentUpdate.title}
             </h2>
-            <p className="mt-1 text-sm font-semibold text-room-ink/55">
+            <p className="mt-1 text-sm font-semibold text-room-ink/65">
               Phiên bản {currentUpdate.version} • {currentUpdate.date}
             </p>
           </div>

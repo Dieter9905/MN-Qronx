@@ -109,7 +109,7 @@ export default function Modal({
                 aria-label="Đóng"
                 className={`flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 ${
                   room
-                    ? 'text-room-ink/50 hover:bg-room-oat/70 focus-visible:ring-room-acorn'
+                    ? 'text-room-ink/60 hover:bg-room-oat/70 focus-visible:ring-room-acorn'
                     : 'text-navy-400 hover:bg-navy-100 hover:text-navy-700 focus-visible:ring-blue-500'
                 }`}
               >
