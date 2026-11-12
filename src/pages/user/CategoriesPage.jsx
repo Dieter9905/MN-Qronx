@@ -101,7 +101,7 @@ export default function CategoriesPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold text-room-ink">Danh mục</h1>
-          <p className="mt-1 text-sm font-semibold text-room-ink/50">
+          <p className="mt-1 text-sm font-semibold text-room-ink/60">
             Nhóm công việc theo lĩnh vực để theo dõi dễ dàng hơn
           </p>
         </div>
@@ -146,7 +146,7 @@ export default function CategoriesPage() {
                     type="button"
                     onClick={() => openEdit(cat)}
                     aria-label={`Sửa danh mục ${cat.name}`}
-                    className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-room-ink/35 transition hover:bg-room-oat/75 hover:text-room-ink"
+                    className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-room-ink/65 transition hover:bg-room-oat/75 hover:text-room-ink"
                   >
                     <PencilSimple size={17} weight="bold" />
                   </button>
@@ -154,7 +154,7 @@ export default function CategoriesPage() {
                     type="button"
                     onClick={() => toggleActive(cat)}
                     aria-label={cat.isActive ? `Ẩn danh mục ${cat.name}` : `Hiện danh mục ${cat.name}`}
-                    className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-room-ink/35 transition hover:bg-room-oat/75 hover:text-room-ink"
+                    className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-room-ink/65 transition hover:bg-room-oat/75 hover:text-room-ink"
                   >
                     {cat.isActive ? <EyeSlash size={17} weight="bold" /> : <Eye size={17} weight="bold" />}
                   </button>
@@ -163,12 +163,12 @@ export default function CategoriesPage() {
               <h3 className="mt-4 flex items-center gap-2 font-display font-bold text-room-ink">
                 {cat.name}
                 {!cat.isActive && (
-                  <span className="rounded-full bg-room-oat/70 px-2 py-0.5 text-[10px] font-extrabold text-room-ink/55">
+                  <span className="rounded-full bg-room-oat/70 px-2 py-0.5 text-[10px] font-extrabold text-room-ink/65">
                     Đã ẩn
                   </span>
                 )}
               </h3>
-              <p className="mt-1 text-sm font-semibold text-room-ink/45">{cat.taskCount} công việc</p>
+              <p className="mt-1 text-sm font-semibold text-room-ink/65">{cat.taskCount} công việc</p>
               <div className="mt-3 h-1.5 rounded-full bg-room-oat/70" style={{ width: `${Math.min(100, cat.taskCount * 14)}%` }}>
                 {/* Thanh đếm dùng màu của danh mục — dữ liệu giữ nguyên, chỉ thay track Oat */}
                 <div className="h-full rounded-full" style={{ backgroundColor: cat.color, width: '100%' }} />

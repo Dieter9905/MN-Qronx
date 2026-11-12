@@ -48,7 +48,7 @@ const CAPACITIES = [
 function PriorityChip({ item }) {
   const p = PRIORITY[item.priority]
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-room-oat/60 px-2.5 py-0.5 text-[11px] font-bold text-room-ink/55">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-room-oat/60 px-2.5 py-0.5 text-[11px] font-bold text-room-ink/65">
       <span className={`h-1.5 w-1.5 rounded-full ${p?.dot || 'bg-room-ink/40'}`} aria-hidden="true" />
       {item.priorityLabel}
     </span>
@@ -84,7 +84,7 @@ function LockedPanel() {
             Pro
           </span>
         </h1>
-        <p className="mt-1 text-sm font-semibold text-room-ink/55">
+        <p className="mt-1 text-sm font-semibold text-room-ink/65">
           Mỗi ngày nên làm việc nào — và biết trước khi tuần bị quá tải.
         </p>
       </div>
@@ -96,7 +96,7 @@ function LockedPanel() {
           </span>
           <div>
             <h2 className="font-display font-bold text-room-ink">Kế hoạch tuần là tính năng của gói Pro</h2>
-            <p className="mt-1 text-sm font-semibold text-room-ink/55">
+            <p className="mt-1 text-sm font-semibold text-room-ink/65">
               Nâng cấp Pro để app tự xếp việc vào từng ngày và cảnh báo khi bạn nhận nhiều hơn sức mình.
             </p>
           </div>
@@ -222,7 +222,7 @@ export default function PlannerPage() {
               Pro
             </span>
           </h1>
-          <p className="mt-1 text-sm font-semibold text-room-ink/50">
+          <p className="mt-1 text-sm font-semibold text-room-ink/60">
             {data?.range?.from?.split('-').reverse().join('/')} → {data?.range?.to?.split('-').reverse().join('/')}
             {slow && ' · máy chủ đang khởi động…'}
           </p>
@@ -289,7 +289,7 @@ export default function PlannerPage() {
             <WarningCircle size={19} weight="fill" className="text-room-bell" />
             Sẽ trễ hạn nếu giữ kế hoạch này ({data.atRisk.length} việc)
           </h2>
-          <p className="mt-1 text-xs font-semibold text-room-ink/55">
+          <p className="mt-1 text-xs font-semibold text-room-ink/65">
             Dời hạn chỉ nên bấm khi hạn thật sự linh động — nếu là việc phải xong đúng hạn thì hãy dồn vào hôm nay.
           </p>
           <ul className="mt-3 divide-y divide-room-acorn/15">
@@ -305,7 +305,7 @@ export default function PlannerPage() {
                 <span className="rounded-full bg-room-bell/25 px-2.5 py-0.5 text-[11px] font-extrabold text-room-ink ring-1 ring-inset ring-room-bell/50">
                   Trễ {r.willBeLateDays} ngày
                 </span>
-                <span className="text-[11px] font-semibold text-room-ink/45">
+                <span className="text-[11px] font-semibold text-room-ink/65">
                   {r.plannedFor ? `dự kiến ${r.plannedFor.split('-').reverse().join('/')}` : 'không còn chỗ trong tuần'}
                 </span>
                 <RoomButton
@@ -355,7 +355,7 @@ export default function PlannerPage() {
               <div className="flex items-center justify-between">
                 <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
                   {day.isToday ? 'Hôm nay' : day.weekday}
-                  <span className="text-xs font-semibold text-room-ink/45">
+                  <span className="text-xs font-semibold text-room-ink/65">
                     {day.dayNumber}/{day.month}
                   </span>
                 </h2>
@@ -371,7 +371,7 @@ export default function PlannerPage() {
               </div>
 
               {day.items.length === 0 ? (
-                <p className="mt-3 text-xs font-semibold text-room-ink/45">Ngày này trống.</p>
+                <p className="mt-3 text-xs font-semibold text-room-ink/65">Ngày này trống.</p>
               ) : (
                 <ul className="mt-3 space-y-2">
                   {day.items.map((item) => (
@@ -385,7 +385,7 @@ export default function PlannerPage() {
                           onClick={() => markDone(item)}
                           disabled={busyId === item.taskId}
                           title="Đánh dấu đã xong"
-                          className="mt-0.5 shrink-0 cursor-pointer text-room-ink/30 transition hover:text-room-sage disabled:opacity-50"
+                          className="mt-0.5 shrink-0 cursor-pointer text-room-ink/60 transition hover:text-room-sage disabled:opacity-50"
                         >
                           <CheckCircle size={18} weight="bold" />
                         </button>
@@ -420,7 +420,7 @@ export default function PlannerPage() {
                               </span>
                             )}
                             {item.categoryName && (
-                              <span className="rounded-full bg-room-oat/60 px-2 py-0.5 text-[10px] font-semibold text-room-ink/55">
+                              <span className="rounded-full bg-room-oat/60 px-2 py-0.5 text-[10px] font-semibold text-room-ink/65">
                                 {item.categoryName}
                               </span>
                             )}
@@ -466,7 +466,7 @@ export default function PlannerPage() {
                   {t.title}
                 </Link>
                 <PriorityChip item={t} />
-                <span className="text-[11px] font-semibold text-room-ink/45">
+                <span className="text-[11px] font-semibold text-room-ink/65">
                   Hạn {new Date(t.dueAt).toLocaleDateString('vi-VN')}
                 </span>
                 <ArrowRight size={14} className="text-room-ink/25" />
@@ -476,7 +476,7 @@ export default function PlannerPage() {
         </RoomCard>
       )}
 
-      <p className="text-center text-[11px] font-semibold text-room-ink/40">
+      <p className="text-center text-[11px] font-semibold text-room-ink/60">
         Cách xếp: việc quá hạn lên ngày đầu, mỗi việc còn lại nằm đúng ngày đến hạn — ngày nào hết chỗ thì việc dồn
         sang ngày sau và được cảnh báo là sẽ trễ (app không tự đẩy việc chưa tới hạn lên trước). Chỉ tính công việc
         đang mở, theo giờ Việt Nam; số việc mỗi ngày lưu trên thiết bị này.

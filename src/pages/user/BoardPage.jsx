@@ -246,7 +246,7 @@ export default function BoardPage() {
             <UsersThree size={26} weight="duotone" className="text-room-acorn" />
             Bảng công việc
           </h1>
-          <p className="mt-1 text-sm font-semibold text-room-ink/50">
+          <p className="mt-1 text-sm font-semibold text-room-ink/60">
             Bảng kéo-thả là nơi làm việc của cả nhóm — chỉ mở trong chế độ Nhóm làm việc.
           </p>
         </div>
@@ -273,12 +273,12 @@ export default function BoardPage() {
       <RoomCard className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-room-ink/50">Nhóm làm việc</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-room-ink/60">Nhóm làm việc</p>
             <h1 className="mt-1 flex items-center gap-2 font-display text-2xl font-bold text-room-ink">
               <UsersThree size={26} weight="duotone" className="text-room-acorn" />
               {workspace.name}
             </h1>
-            <p className="mt-1 max-w-xl text-sm font-semibold text-room-ink/55">
+            <p className="mt-1 max-w-xl text-sm font-semibold text-room-ink/65">
               Bảng công việc — kéo thẻ đổi cột, chọn người phụ trách ngay trên thẻ.
             </p>
 
@@ -301,7 +301,7 @@ export default function BoardPage() {
                   {overdueCount} quá hạn
                 </span>
               )}
-              <span className="text-xs font-semibold text-room-ink/50">· {openCount} việc đang mở</span>
+              <span className="text-xs font-semibold text-room-ink/60">· {openCount} việc đang mở</span>
             </div>
           </div>
 
@@ -342,13 +342,13 @@ export default function BoardPage() {
         <label className="relative flex-1 sm:max-w-xs">
           <MagnifyingGlass
             size={16}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-room-ink/35"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-room-ink/65"
           />
           <input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="Tìm việc trong nhóm…"
-            className="w-full rounded-xl bg-room-paper py-2 pl-9 pr-3 text-sm text-room-ink ring-1 ring-inset ring-room-acorn/25 outline-none transition placeholder:text-room-ink/30 hover:ring-room-acorn/45 focus:ring-2 focus:ring-room-acorn"
+            className="w-full rounded-xl bg-room-paper py-2 pl-9 pr-3 text-sm text-room-ink ring-1 ring-inset ring-room-acorn/25 outline-none transition placeholder:text-room-ink/45 hover:ring-room-acorn/45 focus:ring-2 focus:ring-room-acorn"
           />
         </label>
       </div>
@@ -387,7 +387,7 @@ export default function BoardPage() {
                   <span className={`h-2 w-2 rounded-full ${col.dot}`} aria-hidden="true" />
                   <h2 className="font-display text-sm font-bold text-room-ink/90">{col.label}</h2>
                 </div>
-                <span className="rounded-full bg-room-paper px-2 py-0.5 text-[11px] font-bold text-room-ink/55 ring-1 ring-inset ring-room-acorn/20">
+                <span className="rounded-full bg-room-paper px-2 py-0.5 text-[11px] font-bold text-room-ink/65 ring-1 ring-inset ring-room-acorn/20">
                   {cardTotal(list)}
                 </span>
               </header>
@@ -433,7 +433,7 @@ export default function BoardPage() {
                           />
                         ) : (
                           <span
-                            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-room-oat/70 text-room-ink/40 ring-1 ring-inset ring-room-acorn/15"
+                            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-room-oat/70 text-room-ink/60 ring-1 ring-inset ring-room-acorn/15"
                             title="Chưa giao cho ai"
                           >
                             <UserPlus size={13} />
@@ -452,7 +452,7 @@ export default function BoardPage() {
                               'rounded-md px-1.5 py-0.5 text-[10px] font-bold ring-1',
                               overdue
                                 ? 'bg-room-blush/45 text-room-ink/85 ring-room-acorn/20 dark:bg-room-blush/30 dark:ring-room-acorn/25'
-                                : 'bg-room-paper text-room-ink/55 ring-room-acorn/15',
+                                : 'bg-room-paper text-room-ink/65 ring-room-acorn/15',
                             ].join(' ')}
                           >
                             {formatRelativeDay(task.dueAt)}
@@ -467,7 +467,7 @@ export default function BoardPage() {
                           disabled={busyId === task.id}
                           onChange={(e) => onAssign(task, e.target.value ? Number(e.target.value) : null)}
                           onDragStart={(e) => e.preventDefault()}
-                          className="min-w-0 flex-1 cursor-pointer truncate rounded-lg border border-transparent bg-transparent px-1 py-1 text-[11px] font-semibold text-room-ink/55 outline-none transition hover:border-room-acorn/40 hover:bg-room-oat/60 focus:border-room-acorn focus:bg-room-paper"
+                          className="min-w-0 flex-1 cursor-pointer truncate rounded-lg border border-transparent bg-transparent px-1 py-1 text-[11px] font-semibold text-room-ink/65 outline-none transition hover:border-room-acorn/40 hover:bg-room-oat/60 focus:border-room-acorn focus:bg-room-paper"
                           aria-label={`Người phụ trách của ${task.title}`}
                         >
                           <option value="">Chưa giao — ai nhận cũng được</option>
@@ -488,7 +488,7 @@ export default function BoardPage() {
                               onClick={() => onMove(task, prev.key)}
                               disabled={busyId === task.id}
                               title={`Chuyển về ${prev.label}`}
-                              className="cursor-pointer rounded-md p-1 text-room-ink/35 transition hover:bg-room-oat/75 hover:text-room-ink"
+                              className="cursor-pointer rounded-md p-1 text-room-ink/65 transition hover:bg-room-oat/75 hover:text-room-ink"
                             >
                               <CaretLeft size={12} weight="bold" />
                             </button>
@@ -499,7 +499,7 @@ export default function BoardPage() {
                               onClick={() => onMove(task, next.key)}
                               disabled={busyId === task.id}
                               title={next.key === 'COMPLETED' ? 'Đánh dấu hoàn thành' : `Chuyển sang ${next.label}`}
-                              className="cursor-pointer rounded-md p-1 text-room-ink/35 transition hover:bg-room-oat/75 hover:text-room-ink"
+                              className="cursor-pointer rounded-md p-1 text-room-ink/65 transition hover:bg-room-oat/75 hover:text-room-ink"
                             >
                               {next.key === 'COMPLETED' ? (
                                 <Check size={12} weight="bold" />
@@ -523,7 +523,7 @@ export default function BoardPage() {
                     ) : (
                       <EmptyColumnArt tone="oat" />
                     )}
-                    <p className="text-xs font-semibold text-room-ink/45">
+                    <p className="text-xs font-semibold text-room-ink/65">
                       {scope === 'mine'
                         ? 'Chưa có việc nào giao cho bạn ở cột này'
                         : scope === 'unassigned'

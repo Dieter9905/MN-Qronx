@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Headset, ClockCountdown, CheckCircle, WarningCircle } from '@phosphor-icons/react'
 import SupportChatPanel from '../../components/SupportChatPanel'
-import { Skeleton } from '../../components/common/Feedback'
+import { RoomCard, RoomSkeleton } from '../../components/common/RoomUI'
 import { useToast } from '../../components/common/Toast'
 import {
   getMyConversation,
@@ -104,21 +104,21 @@ export default function SupportPage() {
     <div className="mx-auto max-w-3xl space-y-4 animate-fade-in">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-extrabold tracking-tight text-navy-900 dark:text-white">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-gradient text-white">
-              <Headset size={21} weight="fill" />
+          <h1 className="flex items-center gap-2.5 font-display text-2xl font-bold text-room-ink">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-room-oat/45 text-room-acorn ring-1 ring-inset ring-room-acorn/25">
+              <Headset size={21} weight="duotone" />
             </span>
             Hỗ trợ trực tiếp
           </h1>
-          <p className="mt-1 text-sm font-medium text-navy-400 dark:text-slate-500">
+          <p className="mt-1 text-sm font-semibold text-room-ink/60">
             Nhắn cho đội ngũ MN-Qronx. Phản hồi sẽ hiện ngay tại đây, bạn không cần kiểm tra email.
           </p>
         </div>
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider ${
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider ring-1 ring-inset ${
             resolved
-              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-              : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+              ? 'bg-room-sage/45 text-room-ink/75 ring-room-acorn/20'
+              : 'bg-room-bell/25 text-room-ink/80 ring-room-bell/40'
           }`}
         >
           {resolved ? <CheckCircle size={12} weight="fill" /> : <ClockCountdown size={12} weight="fill" />}
@@ -127,33 +127,33 @@ export default function SupportPage() {
       </div>
 
       {unread > 0 && (
-        <p className="rounded-xl bg-violet-50 px-3 py-2 text-xs font-bold text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+        <p className="rounded-xl bg-room-bell/25 px-3 py-2 text-xs font-bold text-room-ink/80 ring-1 ring-inset ring-room-bell/40">
           Bạn có {unread} tin nhắn mới từ hỗ trợ
         </p>
       )}
 
       {loading ? (
-        <Skeleton className="h-[58vh] min-h-[360px] rounded-2xl" />
+        <RoomSkeleton className="h-[58vh] min-h-[360px]" />
       ) : error ? (
-        <div className="card flex flex-col items-center gap-2 p-8 text-center">
-          <WarningCircle size={26} className="text-rose-500" />
-          <p className="font-bold text-navy-800 dark:text-white">{error}</p>
-          <p className="text-sm text-navy-400">
+        <RoomCard className="flex flex-col items-center gap-2 p-8 text-center">
+          <WarningCircle size={26} className="text-room-rain" />
+          <p className="font-display font-bold text-room-ink">{error}</p>
+          <p className="text-sm font-semibold text-room-ink/65">
             Kết nối tới máy chủ bị gián đoạn — kiểm tra mạng rồi bấm thử lại nhé.
           </p>
           <button
             type="button"
             onClick={loadInitial}
-            className="mt-1 cursor-pointer rounded-xl bg-brand-gradient px-4 py-2 text-sm font-bold text-white"
+            className="mt-1 cursor-pointer rounded-full bg-room-acorn px-5 py-2 text-sm font-bold text-room-paper shadow-[0_14px_26px_-12px_rgb(0_0_0/0.30)] transition hover:brightness-[0.96]"
           >
             Thử lại
           </button>
-        </div>
+        </RoomCard>
       ) : (
-        <SupportChatPanel messages={messages} onSend={handleSend} sending={sending} />
+        <SupportChatPanel messages={messages} onSend={handleSend} sending={sending} skin="room" />
       )}
 
-      <p className="text-center text-xs text-navy-400 dark:text-slate-500">
+      <p className="text-center text-xs font-semibold text-room-ink/60">
         Hội thoại được lưu lại — bạn có thể đóng trang và quay lại bất cứ lúc nào.
       </p>
     </div>

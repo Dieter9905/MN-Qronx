@@ -74,7 +74,7 @@ export default function ForgotPasswordPage() {
         <RoomField label="Email" required>
           {(id) => (
             <div className="relative">
-              <EnvelopeSimple size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/35" />
+              <EnvelopeSimple size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-room-ink/65" />
               <RoomInput
                 id={id}
                 type="email"

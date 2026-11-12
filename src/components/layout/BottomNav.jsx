@@ -102,7 +102,7 @@ function BottomNavItem({ to, label, icon: Icon, end, active }) {
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-room-acorn',
           isActive
             ? 'text-room-acorn'
-            : 'text-room-ink/50 hover:text-room-ink',
+            : 'text-room-ink/60 hover:text-room-ink',
         ].join(' ')
       }
     >

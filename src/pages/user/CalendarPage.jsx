@@ -77,7 +77,7 @@ const VIEWS = [
 // py-2 của bản cũ; không dùng RoomInput vì ô nhỏ có width/height riêng như w-[84px]).
 const roomFieldBase =
   'rounded-xl bg-room-paper text-room-ink ring-1 ring-inset ring-room-acorn/25 ' +
-  'placeholder:text-room-ink/30 transition hover:ring-room-acorn/45 ' +
+  'placeholder:text-room-ink/45 transition hover:ring-room-acorn/45 ' +
   'focus:ring-2 focus:ring-room-acorn focus:outline-none cursor-text'
 const roomFieldCls = `${roomFieldBase} w-full px-3 py-2 text-sm`
 const roomFieldSliceCls = `${roomFieldBase} w-[84px] px-2 py-2 text-sm`
@@ -93,10 +93,6 @@ const roomSelectArrowStyle = {
   backgroundRepeat: 'no-repeat',
 }
 const roomSelectClsSmall = `${roomSelectCls} h-10 text-xs`
-
-// Liên kết phụ da phòng (thay .btn-link navy cho chỗ không đi qua override)
-const roomLinkCls =
-  'cursor-pointer font-bold text-room-ink/55 underline decoration-room-acorn/40 decoration-2 underline-offset-4 transition hover:text-room-acorn'
 
 // Chip trạng thái/ưu tiên da phòng — dữ liệu gốc giữ nguyên, chỉ ep giấy:
 // Blush CHỈ đến hạn, Sage CHỈ hoàn thành, còn lại trung tính Oat.
@@ -118,7 +114,7 @@ function RoomStatusChip({ task }) {
   }
   const label = st === 'CANCELLED' ? 'Đã hủy' : st === 'IN_PROGRESS' ? 'Đang làm' : 'Chưa làm'
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-room-oat/60 px-2.5 py-0.5 text-xs font-extrabold text-room-ink/45">
+    <span className="inline-flex items-center gap-1 rounded-full bg-room-oat/60 px-2.5 py-0.5 text-xs font-extrabold text-room-ink/65">
       {label}
     </span>
   )
@@ -128,7 +124,7 @@ function RoomPriorityChip({ priority }) {
   const p = PRIORITY[priority]
   if (!p) return null
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-room-oat/60 px-2.5 py-0.5 text-xs font-bold text-room-ink/55">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-room-oat/60 px-2.5 py-0.5 text-xs font-bold text-room-ink/65">
       <span className={`h-1.5 w-1.5 rounded-full ${p.dot}`} aria-hidden="true" />
       {p.label}
     </span>
@@ -474,7 +470,7 @@ export default function CalendarPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold text-room-ink">Lịch</h1>
-          <p className="mt-1 text-sm font-semibold text-room-ink/55">Xem công việc theo ngày, tuần hoặc tháng</p>
+          <p className="mt-1 text-sm font-semibold text-room-ink/65">Xem công việc theo ngày, tuần hoặc tháng</p>
         </div>
         <Link to="/app/tasks/new">
           <RoomButton icon={Plus}>Tạo công việc</RoomButton>
@@ -509,7 +505,7 @@ export default function CalendarPage() {
                 className={`flex h-10 cursor-pointer items-center gap-1.5 rounded-xl px-3 text-sm font-bold transition ${
                   showSchedule
                     ? 'bg-room-moss/60 text-room-ink ring-1 ring-room-acorn/25'
-                    : 'bg-room-oat/45 text-room-ink/55 hover:bg-room-oat/75'
+                    : 'bg-room-oat/45 text-room-ink/65 hover:bg-room-oat/75'
                 }`}
               >
                 <GraduationCap size={15} weight="fill" />
@@ -600,14 +596,14 @@ export default function CalendarPage() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-room-ink/85">{e.title}</p>
-              <p className="text-[11px] font-semibold text-room-ink/50">Sự kiện lịch ngoài · {e.calendar?.name}</p>
+              <p className="text-[11px] font-semibold text-room-ink/60">Sự kiện lịch ngoài · {e.calendar?.name}</p>
             </div>
           </div>
         ))}
         <div className="mt-4 space-y-2.5">
           {selectedTasks.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8 text-center">
-              <p className="text-sm font-semibold text-room-ink/50">Không có công việc nào trong ngày này</p>
+              <p className="text-sm font-semibold text-room-ink/60">Không có công việc nào trong ngày này</p>
               <Link to="/app/tasks/new" className="btn-link text-sm">
                 Tạo công việc cho ngày này
               </Link>
@@ -630,7 +626,7 @@ export default function CalendarPage() {
                   {formatTime(t.dueAt)}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className={`truncate text-sm font-semibold ${t.status === 'COMPLETED' ? 'text-room-ink/40 line-through' : 'text-room-ink'}`}>
+                  <p className={`truncate text-sm font-semibold ${t.status === 'COMPLETED' ? 'text-room-ink/55 line-through' : 'text-room-ink'}`}>
                     {t.title}
                   </p>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -667,7 +663,7 @@ function MonthGrid({ year, month, tasksByDay, eventsByDay = {}, selected, onSele
     <div className="mt-4 overflow-x-auto">
       <div className="grid min-w-[640px] grid-cols-7 gap-1.5">
         {VI_DAYS.map((d) => (
-          <div key={d} className="pb-1 text-center text-xs font-bold uppercase tracking-wider text-room-ink/45">
+          <div key={d} className="pb-1 text-center text-xs font-bold uppercase tracking-wider text-room-ink/65">
             {d}
           </div>
         ))}
@@ -731,7 +727,7 @@ function MonthGrid({ year, month, tasksByDay, eventsByDay = {}, selected, onSele
                     </span>
                   ))}
                   {dayEvents.length > 2 && (
-                    <span className="text-[9px] font-bold text-room-ink/40">+{dayEvents.length - 2} sự kiện</span>
+                    <span className="text-[9px] font-bold text-room-ink/60">+{dayEvents.length - 2} sự kiện</span>
                   )}
                 </span>
               )}
@@ -765,7 +761,7 @@ function WeekGrid({ tasksByDay, eventsByDay = {}, selected, onSelect }) {
             ].join(' ')}
           >
             <span className="flex items-center justify-center gap-1">
-              <span className="text-[10px] font-bold uppercase text-room-ink/45">{VI_DAYS_SHORT[date.getDay()]}</span>
+              <span className="text-[10px] font-bold uppercase text-room-ink/65">{VI_DAYS_SHORT[date.getDay()]}</span>
               <span
                 className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
                   isToday ? 'bg-room-acorn text-room-paper' : 'text-room-ink/85'
@@ -800,7 +796,7 @@ function WeekGrid({ tasksByDay, eventsByDay = {}, selected, onSelect }) {
                 </span>
               ))}
               {dayTasks.length > 3 && (
-                <span className="block px-1.5 text-[10px] font-bold text-room-ink/40">+{dayTasks.length - 3} việc nữa</span>
+                <span className="block px-1.5 text-[10px] font-bold text-room-ink/60">+{dayTasks.length - 3} việc nữa</span>
               )}
             </span>
           </button>
@@ -848,7 +844,7 @@ function DayView({ tasks, events = [], day }) {
         </Link>
       ))}
       {tasks.length === 0 && events.length === 0 && (
-        <p className="py-6 text-center text-sm font-semibold text-room-ink/50">Không có công việc · {formatDate(day, { weekday: true })}</p>
+        <p className="py-6 text-center text-sm font-semibold text-room-ink/60">Không có công việc · {formatDate(day, { weekday: true })}</p>
       )}
     </div>
   )
@@ -906,7 +902,7 @@ function TimeScheduleGrid({ days, slotsByDay, tasksByDay }) {
 
   return (
     <div className="mt-5 overflow-x-auto">
-      <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-room-ink/55">
+      <p className="mb-2 flex items-center gap-1.5 text-xs font-bold text-room-ink/65">
         <GraduationCap size={14} weight="fill" className="text-room-acorn" />
         Lịch học bách khoa (Tiết lặp hằng tuần)
         {conflicts.length > 0 && (
@@ -922,9 +918,9 @@ function TimeScheduleGrid({ days, slotsByDay, tasksByDay }) {
           const dayDate = days[i]
           const isToday = isSameDay(dayDate, today)
           return (
-            <div key={d} className="pb-1 text-center text-[11px] font-bold uppercase tracking-wide text-room-ink/45">
+            <div key={d} className="pb-1 text-center text-[11px] font-bold uppercase tracking-wide text-room-ink/65">
               {d.replace('Th ', 'T')}
-              <span className={`ml-1 ${isToday ? 'text-room-acorn' : 'text-room-ink/30'}`}>
+              <span className={`ml-1 ${isToday ? 'text-room-acorn' : 'text-room-ink/60'}`}>
                 {dayDate.getDate()}
               </span>
             </div>
@@ -933,7 +929,7 @@ function TimeScheduleGrid({ days, slotsByDay, tasksByDay }) {
         {/* Body */}
         <div className="relative" style={{ height: gridH }}>
           {hours.map((h) => (
-            <span key={h} className="absolute right-1 -translate-y-1/2 text-[9px] font-semibold text-room-ink/30" style={{ top: (h - startHour) * HOUR_PX }}>
+            <span key={h} className="absolute right-1 -translate-y-1/2 text-[9px] font-semibold text-room-ink/60" style={{ top: (h - startHour) * HOUR_PX }}>
               {String(h).padStart(2, '0')}
             </span>
           ))}
@@ -1110,7 +1106,7 @@ function SchedulePanel({ open, onToggle, schedules, busy, onImport, onImportCsv,
             </span>
           )}
         </span>
-        <CaretDown size={16} weight="bold" className={`text-room-ink/40 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <CaretDown size={16} weight="bold" className={`text-room-ink/60 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
@@ -1118,13 +1114,13 @@ function SchedulePanel({ open, onToggle, schedules, busy, onImport, onImportCsv,
           {schedules.length === 0 ? (
             <form onSubmit={submitCreate} className="flex flex-wrap items-end gap-2 rounded-xl bg-room-oat/35 p-3 ring-1 ring-room-acorn/15">
               <div className="min-w-[220px] flex-1">
-                <label htmlFor="ws-class-name" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/45">Tên lớp học</label>
+                <label htmlFor="ws-class-name" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/65">Tên lớp học</label>
                 <input id="ws-class-name" value={createName} onChange={(e) => setCreateName(e.target.value)}
                   placeholder="VD: Lớp CNTT K19 · Nhóm đồ án 3"
                   className={roomFieldCls} />
               </div>
               <RoomButton type="submit" size="sm" disabled={busy}>Tạo Lớp học</RoomButton>
-              <p className="w-full text-[11px] font-semibold leading-relaxed text-room-ink/50">
+              <p className="w-full text-[11px] font-semibold leading-relaxed text-room-ink/60">
                 Gói miễn phí: 1 lớp. Tạo xong đi tên trường + dán URL .ics TKB phía dưới.
               </p>
             </form>
@@ -1170,7 +1166,7 @@ function SchedulePanel({ open, onToggle, schedules, busy, onImport, onImportCsv,
                   <p className="text-[12px] font-bold text-room-ink/70">Đăng nhập tài khoản trường</p>
                   <div className="flex flex-wrap items-end gap-2">
                     <div className="min-w-[190px] flex-1">
-                      <label htmlFor="school-code" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/45">Trường</label>
+                      <label htmlFor="school-code" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/65">Trường</label>
                       <select id="school-code" value={connect.schoolCode}
                         onChange={(e) => setConnect({ ...connect, schoolCode: e.target.value })}
                         className={`${roomSelectCls} h-10 w-full text-sm`}
@@ -1187,7 +1183,7 @@ function SchedulePanel({ open, onToggle, schedules, busy, onImport, onImportCsv,
                     ) : (
                       <>
                         <div className="min-w-[160px] flex-1">
-                          <label htmlFor="school-user" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/45">
+                          <label htmlFor="school-user" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/65">
                             {selectedSchool?.usernameLabel || 'Tài khoản trường'}
                           </label>
                           <input id="school-user" autoComplete="username" value={connect.username}
@@ -1196,7 +1192,7 @@ function SchedulePanel({ open, onToggle, schedules, busy, onImport, onImportCsv,
                             className={roomFieldCls} />
                         </div>
                         <div className="min-w-[160px] flex-1">
-                          <label htmlFor="school-pass" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/45">Mật khẩu trường</label>
+                          <label htmlFor="school-pass" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/65">Mật khẩu trường</label>
                           <input id="school-pass" type={connect.show ? 'text' : 'password'} autoComplete="current-password"
                             value={connect.password} onChange={(e) => setConnect({ ...connect, password: e.target.value })}
                             className={roomFieldCls} />
@@ -1209,18 +1205,18 @@ function SchedulePanel({ open, onToggle, schedules, busy, onImport, onImportCsv,
                   </div>
                   {!sessionSchool && (
                     <>
-                      <label className="flex w-fit cursor-pointer items-center gap-1.5 text-[11px] font-semibold text-room-ink/50">
+                      <label className="flex w-fit cursor-pointer items-center gap-1.5 text-[11px] font-semibold text-room-ink/60">
                         <input type="checkbox" checked={connect.show} onChange={(e) => setConnect({ ...connect, show: e.target.checked })} />
                         Hiện mật khẩu
                       </label>
-                      <p className="text-[11px] font-semibold leading-relaxed text-room-ink/50">
+                      <p className="text-[11px] font-semibold leading-relaxed text-room-ink/60">
                         Hệ thống dùng tài khoản này để <strong>chỉ đọc thời khoá biểu</strong>, không đăng ký môn hay sửa gì trên cổng trường.
                         Mật khẩu được mã hoá khi lưu và chỉ dùng để tự đồng bộ mỗi ngày; bạn có thể ngắt kết nối bất cứ lúc nào.
                       </p>
                     </>
                   )}
                   {!schools.length && (
-                    <p className="text-[11px] font-semibold text-room-ink/50">Đang tải danh mục trường… nếu trường bạn chưa có, dùng mục nhập thủ công bên dưới.</p>
+                    <p className="text-[11px] font-semibold text-room-ink/60">Đang tải danh mục trường… nếu trường bạn chưa có, dùng mục nhập thủ công bên dưới.</p>
                   )}
                 </form>
               )}
@@ -1232,13 +1228,13 @@ function SchedulePanel({ open, onToggle, schedules, busy, onImport, onImportCsv,
                 </summary>
               <form onSubmit={submitImport} className="mt-2 flex flex-wrap items-end gap-2">
                 <div className="min-w-[180px] flex-1">
-                  <label htmlFor="sched-school" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/45">Trường của lớp</label>
+                  <label htmlFor="sched-school" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/65">Trường của lớp</label>
                   <input id="sched-school" value={schoolName || school?.name || ''} onChange={(e) => setSchoolName(e.target.value)}
                     placeholder="VD: ĐH Bách Khoa TP.HCM"
                     className={roomFieldCls} />
                 </div>
                 <div className="min-w-[260px] flex-[2]">
-                  <label htmlFor="sched-url" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/45">URL .ics TKB (tùy chọn)</label>
+                  <label htmlFor="sched-url" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/65">URL .ics TKB (tùy chọn)</label>
                   <input id="sched-url" type="url" value={url} onChange={(e) => setUrl(e.target.value)}
                     placeholder="https://.../thoi-khoa-bieu.ics"
                     className={roomFieldCls} />
@@ -1262,7 +1258,7 @@ function SchedulePanel({ open, onToggle, schedules, busy, onImport, onImportCsv,
                   hoặc link tải — cùng đích ScheduleSlot với TKB .ics. */}
               {csvOpen ? (
                 <form onSubmit={submitCsv} className="space-y-2 rounded-xl bg-room-oat/35 p-3 ring-1 ring-room-acorn/15">
-                  <label htmlFor="sched-csv" className="block text-[11px] font-bold uppercase tracking-wide text-room-ink/45">
+                  <label htmlFor="sched-csv" className="block text-[11px] font-bold uppercase tracking-wide text-room-ink/65">
                     Dán nội dung CSV (cột: Môn học, Thứ, Bắt đầu, Kết thúc, Phòng)
                   </label>
                   <textarea id="sched-csv" rows={4} value={csvText} onChange={(e) => setCsvText(e.target.value)}
@@ -1270,7 +1266,7 @@ function SchedulePanel({ open, onToggle, schedules, busy, onImport, onImportCsv,
                     className={`${roomFieldCls} font-mono text-[12px]`} />
                   <div className="flex flex-wrap items-end gap-2">
                     <div className="min-w-[240px] flex-1">
-                      <label htmlFor="sched-csv-url" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/45">hoặc link CSV công khai (tùy chọn)</label>
+                      <label htmlFor="sched-csv-url" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/65">hoặc link CSV công khai (tùy chọn)</label>
                       <input id="sched-csv-url" type="url" value={csvUrl} onChange={(e) => setCsvUrl(e.target.value)}
                         placeholder="https://.../thoi-khoa-bieu.csv"
                         className={roomFieldCls} />
@@ -1279,7 +1275,7 @@ function SchedulePanel({ open, onToggle, schedules, busy, onImport, onImportCsv,
                     <button type="button" onClick={() => setCsvOpen(false)}
                       className="h-10 cursor-pointer rounded-xl px-3 text-sm font-bold text-room-ink/60 transition hover:bg-room-oat/75">Hủy</button>
                   </div>
-                  <p className="text-[11px] font-semibold leading-relaxed text-room-ink/50">
+                  <p className="text-[11px] font-semibold leading-relaxed text-room-ink/60">
                     Nhập CSV sẽ thay toàn bộ tiết hiện có của lớp. Cột Thứ nhận "Thứ 2"/"T2"/"Monday", giờ nhận "07:30" hoặc "7h30".
                   </p>
                 </form>
@@ -1297,22 +1293,22 @@ function SchedulePanel({ open, onToggle, schedules, busy, onImport, onImportCsv,
                     <span className="text-xs font-bold text-room-ink/75">{VI_DAYS_SHORT[s.weekDay === 7 ? 0 : s.weekDay]}</span>
                     <span className="text-xs font-semibold text-room-ink/60">{s.startTime}–{s.endTime}</span>
                     <span className="min-w-0 flex-1 truncate text-sm font-bold text-room-ink/85">{s.title}</span>
-                    {s.room && <span className="truncate text-[11px] font-semibold text-room-ink/50">{s.room}</span>}
+                    {s.room && <span className="truncate text-[11px] font-semibold text-room-ink/60">{s.room}</span>}
                     <button type="button" onClick={() => onRemoveSlot(s.scheduleSlotId)} title="Xoá tiết học"
-                      className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/30 transition hover:bg-room-oat/70 hover:text-room-acorn">
+                      className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/60 transition hover:bg-room-oat/70 hover:text-room-acorn">
                       <TrashSimple size={15} weight="bold" />
                     </button>
                   </div>
                 ))}
                 {school?.slots?.length === 0 && (
-                  <p className="py-2 text-center text-xs font-semibold text-room-ink/45">Chưa có tiết nào — đồng bộ TKB hoặc thêm thủ công bên dưới.</p>
+                  <p className="py-2 text-center text-xs font-semibold text-room-ink/65">Chưa có tiết nào — đồng bộ TKB hoặc thêm thủ công bên dưới.</p>
                 )}
               </div>
 
               {slotFormOpen ? (
                 <form onSubmit={submitSlot} className="flex flex-wrap items-end gap-2 rounded-xl bg-room-oat/35 p-3 ring-1 ring-room-acorn/15">
                   <div className="min-w-[160px] flex-[2]">
-                    <label htmlFor="slot-title" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/45">Tên môn</label>
+                    <label htmlFor="slot-title" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/65">Tên môn</label>
                     <input id="slot-title" value={slot.title} onChange={(e) => setSlot({ ...slot, title: e.target.value })}
                       placeholder="VD: Công nghệ phần mềm"
                       className={roomFieldCls} />
@@ -1381,7 +1377,7 @@ function ExternalCalendarPanel({ open, onToggle, calendars, onAdd, onRemove, onS
         <CaretDown
           size={16}
           weight="bold"
-          className={`text-room-ink/40 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`text-room-ink/60 transition-transform ${open ? 'rotate-180' : ''}`}
         />
       </button>
 
@@ -1404,7 +1400,7 @@ function ExternalCalendarPanel({ open, onToggle, calendars, onAdd, onRemove, onS
               />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-bold text-room-ink/85">{cal.name}</p>
-                <p className="truncate text-[11px] font-semibold text-room-ink/50">
+                <p className="truncate text-[11px] font-semibold text-room-ink/60">
                   {cal._count?.events ?? 0} sự kiện
                   {cal.lastSyncedAt ? ` · đồng bộ ${formatDate(cal.lastSyncedAt, { time: true })}` : ' · chưa đồng bộ'}
                   {cal.lastError ? ` · ${cal.lastError}` : ''}
@@ -1414,7 +1410,7 @@ function ExternalCalendarPanel({ open, onToggle, calendars, onAdd, onRemove, onS
                 type="button"
                 onClick={() => onSync(cal.externalCalendarId)}
                 title="Kéo sự kiện ngay"
-                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-room-ink/50 transition hover:bg-room-oat/70 hover:text-room-acorn"
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-room-ink/60 transition hover:bg-room-oat/70 hover:text-room-acorn"
               >
                 <ArrowsClockwise size={16} weight="bold" />
               </button>
@@ -1422,7 +1418,7 @@ function ExternalCalendarPanel({ open, onToggle, calendars, onAdd, onRemove, onS
                 type="button"
                 onClick={() => onRemove(cal.externalCalendarId)}
                 title="Xoá lịch ngoài"
-                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-room-ink/30 transition hover:bg-room-oat/70 hover:text-room-acorn"
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-room-ink/60 transition hover:bg-room-oat/70 hover:text-room-acorn"
               >
                 <TrashSimple size={16} weight="bold" />
               </button>
@@ -1432,7 +1428,7 @@ function ExternalCalendarPanel({ open, onToggle, calendars, onAdd, onRemove, onS
           {formOpen ? (
             <form onSubmit={submit} className="flex flex-wrap items-end gap-2 rounded-xl bg-room-oat/35 p-3 ring-1 ring-room-acorn/15">
               <div className="min-w-[220px] flex-1">
-                <label htmlFor="ext-cal-name" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/45">Tên lịch</label>
+                <label htmlFor="ext-cal-name" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/65">Tên lịch</label>
                 <input
                   id="ext-cal-name"
                   value={name}
@@ -1442,7 +1438,7 @@ function ExternalCalendarPanel({ open, onToggle, calendars, onAdd, onRemove, onS
                 />
               </div>
               <div className="min-w-[280px] flex-[2]">
-                <label htmlFor="ext-cal-url" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/45">URL .ics</label>
+                <label htmlFor="ext-cal-url" className="mb-1 block text-[11px] font-bold uppercase tracking-wide text-room-ink/65">URL .ics</label>
                 <input
                   id="ext-cal-url"
                   type="url"

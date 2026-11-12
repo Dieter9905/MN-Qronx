@@ -96,7 +96,7 @@ export default function MascotBot() {
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Đóng gợi ý"
-              className="cursor-pointer rounded-md p-0.5 text-room-ink/40 transition hover:bg-room-oat/60 hover:text-room-ink"
+              className="cursor-pointer rounded-md p-0.5 text-room-ink/60 transition hover:bg-room-oat/60 hover:text-room-ink"
             >
               <X size={12} weight="bold" />
             </button>
@@ -115,7 +115,7 @@ export default function MascotBot() {
             <button
               type="button"
               onClick={hide}
-              className="cursor-pointer rounded-full px-2 py-1 text-[11px] font-bold text-room-ink/45 transition hover:text-room-acorn"
+              className="cursor-pointer rounded-full px-2 py-1 text-[11px] font-bold text-room-ink/65 transition hover:text-room-acorn"
             >
               Ẩn bot
             </button>
@@ -161,7 +161,7 @@ export default function MascotBot() {
           type="button"
           onClick={hide}
           aria-label="Ẩn trợ lý nhỏ"
-          className="mb-12 cursor-pointer rounded-full bg-room-paper p-1 text-room-ink/45 opacity-0 shadow-[0_8px_18px_-12px_rgb(0_0_0/0.25)] ring-1 ring-room-acorn/25 transition group-hover:opacity-100 hover:text-room-ink focus-visible:opacity-100"
+          className="mb-12 cursor-pointer rounded-full bg-room-paper p-1 text-room-ink/65 opacity-0 shadow-[0_8px_18px_-12px_rgb(0_0_0/0.25)] ring-1 ring-room-acorn/25 transition group-hover:opacity-100 hover:text-room-ink focus-visible:opacity-100"
         >
           <X size={10} weight="bold" />
         </button>

@@ -283,7 +283,7 @@ export default function TaskDetailPage() {
                   <Alarm size={12} weight="bold" /> {statusInfo.label}
                 </span>
               ) : statusInfo && !closed ? (
-                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-extrabold text-room-ink/45 bg-room-oat/60">
+                <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-extrabold text-room-ink/65 bg-room-oat/60">
                   {statusInfo.label}
                 </span>
               ) : task.status === 'COMPLETED' ? (
@@ -292,7 +292,7 @@ export default function TaskDetailPage() {
                 </span>
               ) : null}
               {priorityInfo && (
-                <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold text-room-ink/55 bg-room-oat/60">
+                <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold text-room-ink/65 bg-room-oat/60">
                   <span className={`h-1.5 w-1.5 rounded-full ${priorityInfo.dot}`} aria-hidden="true" />
                   {priorityInfo.label}
                 </span>
@@ -304,7 +304,7 @@ export default function TaskDetailPage() {
                 </span>
               )}
             </div>
-            <h1 className={`mt-3 font-display text-2xl font-extrabold tracking-tight sm:text-3xl ${task.status === 'COMPLETED' ? 'text-room-ink/45 line-through' : 'text-room-ink'}`}>
+            <h1 className={`mt-3 font-display text-2xl font-extrabold tracking-tight sm:text-3xl ${task.status === 'COMPLETED' ? 'text-room-ink/65 line-through' : 'text-room-ink'}`}>
               {task.title}
             </h1>
             <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-semibold text-room-ink/60">
@@ -313,7 +313,7 @@ export default function TaskDetailPage() {
                 {formatRelativeDay(task.dueAt)} · {formatDateTime(task.dueAt)}
               </span>
               {task.repeatType !== 'NONE' && (
-                <span className="inline-flex items-center gap-1.5 text-room-ink/50">
+                <span className="inline-flex items-center gap-1.5 text-room-ink/60">
                   <Repeat size={16} weight="bold" /> Lặp lại: {repeatSummary(task.repeatType, task.repeatDays)}
                 </span>
               )}
@@ -336,7 +336,7 @@ export default function TaskDetailPage() {
               aria-haspopup="menu"
               aria-expanded={menuOpen}
               aria-label="Hành động công việc"
-              className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-room-ink/55 transition hover:bg-room-oat/70"
+              className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-room-ink/65 transition hover:bg-room-oat/70"
             >
               <DotsThree size={24} weight="bold" />
             </button>
@@ -422,12 +422,12 @@ export default function TaskDetailPage() {
               >
                 <Check size={11} weight="bold" />
               </button>
-              <p className={`flex-1 text-sm font-semibold ${sub.isCompleted ? 'text-room-ink/40 line-through' : 'text-room-ink/85'}`}>{sub.content}</p>
+              <p className={`flex-1 text-sm font-semibold ${sub.isCompleted ? 'text-room-ink/55 line-through' : 'text-room-ink/85'}`}>{sub.content}</p>
               <button
                 type="button"
                 onClick={() => onDeleteSub(sub)}
                 aria-label={`Xóa việc con: ${sub.content}`}
-                className="cursor-pointer rounded-md p-1.5 text-room-ink/30 opacity-0 transition hover:bg-room-oat/70 hover:text-room-acorn focus-visible:opacity-100 group-hover:opacity-100"
+                className="cursor-pointer rounded-md p-1.5 text-room-ink/60 opacity-0 transition hover:bg-room-oat/70 hover:text-room-acorn focus-visible:opacity-100 group-hover:opacity-100"
               >
                 <X size={15} weight="bold" />
               </button>
@@ -448,7 +448,7 @@ export default function TaskDetailPage() {
           </form>
         )}
         {task.subtasks.length === 0 && !closed && (
-          <p className="mt-2 text-xs font-semibold text-room-ink/50">Chia nhỏ công việc thành các bước để dễ hoàn thành hơn.</p>
+          <p className="mt-2 text-xs font-semibold text-room-ink/60">Chia nhỏ công việc thành các bước để dễ hoàn thành hơn.</p>
         )}
       </RoomCard>
 
@@ -468,7 +468,7 @@ export default function TaskDetailPage() {
                 <Clock size={17} weight="bold" className="shrink-0 text-room-bell" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-room-ink/85">{formatDateTime(r.remindAt)}</p>
-                  <p className="text-xs font-semibold text-room-ink/50">
+                  <p className="text-xs font-semibold text-room-ink/60">
                     {r.status === 'SCHEDULED' ? 'Sẽ báo thức đúng giờ' : r.status === 'CANCELLED' ? 'Đã bị hủy' : r.status === 'DISMISSED' ? 'Đã tắt' : 'Đã kích hoạt'}
                     {r.nagCount > 0 ? ` · đã nhắc lại ${r.nagCount} lần vì việc chưa xong` : ''}
                     {r.snoozeCount > 0 && ` · Đã hoãn ${r.snoozeCount} lần`}
@@ -479,7 +479,7 @@ export default function TaskDetailPage() {
                     type="button"
                     onClick={() => onDeleteReminder(r)}
                     aria-label="Xóa nhắc nhở"
-                    className="cursor-pointer rounded-md p-1.5 text-room-ink/30 transition hover:bg-room-oat/70 hover:text-room-acorn"
+                    className="cursor-pointer rounded-md p-1.5 text-room-ink/60 transition hover:bg-room-oat/70 hover:text-room-acorn"
                   >
                     <Trash size={16} />
                   </button>
@@ -509,7 +509,7 @@ export default function TaskDetailPage() {
             </RoomButton>
           </div>
         )}
-        {closed && <p className="mt-3 text-xs font-semibold text-room-ink/50">Công việc đã đóng – không thể thêm nhắc nhở mới.</p>}
+        {closed && <p className="mt-3 text-xs font-semibold text-room-ink/60">Công việc đã đóng – không thể thêm nhắc nhở mới.</p>}
       </RoomCard>
 
       {/* Nhờ người khác làm (Pro) */}
@@ -528,7 +528,7 @@ export default function TaskDetailPage() {
             </span>
           )}
         </div>
-        <p className="mt-2 text-xs font-semibold text-room-ink/55">
+        <p className="mt-2 text-xs font-semibold text-room-ink/65">
           Người bạn nhờ <strong>không cần trả phí</strong>. Họ vẫn nhận chuông nhắc như việc của
           chính mình, còn bạn nhận thông báo ngay khi họ báo xong.
         </p>
@@ -556,13 +556,13 @@ export default function TaskDetailPage() {
                     className="flex items-center gap-3 rounded-xl bg-room-oat/50 px-3.5 py-2.5"
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full ring-1 ring-room-acorn/25 bg-room-paper">
-                      {s.doneAt ? <SealCheck size={17} weight="bold" className="text-room-sage" /> : <Users size={17} weight="bold" className="text-room-ink/55" />}
+                      {s.doneAt ? <SealCheck size={17} weight="bold" className="text-room-sage" /> : <Users size={17} weight="bold" className="text-room-ink/65" />}
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-bold text-room-ink/85">
                         {s.assignee?.fullName || 'Người được giao'}
                       </p>
-                      <p className="truncate text-xs font-semibold text-room-ink/50">
+                      <p className="truncate text-xs font-semibold text-room-ink/60">
                         {s.doneAt
                           ? `Đã báo xong ${formatDateTime(s.doneAt)}`
                           : s.assignee?.email || 'Chưa báo xong'}
@@ -574,7 +574,7 @@ export default function TaskDetailPage() {
                       onClick={() => onRevokeShare(s)}
                       disabled={shareBusy}
                       aria-label={`Thu hồi việc đã giao cho ${s.assignee?.fullName || ''}`}
-                      className="cursor-pointer rounded-md p-1.5 text-room-ink/30 transition hover:bg-room-oat/70 hover:text-room-acorn disabled:opacity-50"
+                      className="cursor-pointer rounded-md p-1.5 text-room-ink/60 transition hover:bg-room-oat/70 hover:text-room-acorn disabled:opacity-50"
                     >
                       <X size={16} weight="bold" />
                     </button>
@@ -636,7 +636,7 @@ export default function TaskDetailPage() {
                       <ArrowsClockwise size={14} weight="bold" className="text-room-acorn" />
                       Kỳ này: <strong>{turnName || 'chưa chọn ai'}</strong>
                       {nextTurnName && (
-                        <span className="font-semibold text-room-ink/50">
+                        <span className="font-semibold text-room-ink/60">
                           · kỳ sau: {nextTurnName}
                         </span>
                       )}
@@ -654,7 +654,7 @@ export default function TaskDetailPage() {
                         </option>
                       ))}
                     </RoomSelect>
-                    <p className="text-[11px] font-semibold leading-relaxed text-room-ink/50">
+                    <p className="text-[11px] font-semibold leading-relaxed text-room-ink/60">
                       Đổi người ở đây chỉ áp dụng cho kỳ này — kỳ sau vẫn xoay đúng thứ tự
                       (tuần này con ốm thì mẹ làm, tuần sau vẫn đến lượt con).
                     </p>
@@ -663,7 +663,7 @@ export default function TaskDetailPage() {
               </div>
             )}
             {!closed && assignees.length >= 2 && task.repeatType === 'NONE' && (
-              <p className="mt-3 text-xs font-semibold text-room-ink/50">
+              <p className="mt-3 text-xs font-semibold text-room-ink/60">
                 Muốn mỗi kỳ một người làm?{' '}
                 <Link to={`/app/tasks/${task.id}/edit`} className="font-bold underline">
                   Bật lặp lại
@@ -672,12 +672,12 @@ export default function TaskDetailPage() {
               </p>
             )}
             {closed && (
-              <p className="mt-3 text-xs font-semibold text-room-ink/50">
+              <p className="mt-3 text-xs font-semibold text-room-ink/60">
                 Công việc đã kết thúc nên không giao thêm được.
               </p>
             )}
             {!closed && assignees.length >= 5 && (
-              <p className="mt-3 text-xs font-semibold text-room-ink/50">
+              <p className="mt-3 text-xs font-semibold text-room-ink/60">
                 Một việc chỉ giao được cho tối đa 5 người.
               </p>
             )}

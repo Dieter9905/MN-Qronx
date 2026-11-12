@@ -110,7 +110,7 @@ export default function RewardsPage() {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="font-display text-2xl font-bold text-room-ink">Phần thưởng</h1>
-        <p className="mt-1 text-sm font-semibold text-room-ink/50">
+        <p className="mt-1 text-sm font-semibold text-room-ink/60">
           Đăng nhập mỗi ngày, mời bạn bè và đổi điểm lấy gói trả phí miễn phí.
         </p>
       </div>
@@ -127,7 +127,7 @@ export default function RewardsPage() {
                 <span className="font-display text-5xl font-bold tracking-tight text-room-ink">{data.loginStreak}</span>
                 <span className="text-sm font-extrabold text-room-bell">ngày liên tiếp</span>
               </div>
-              <p className="mt-0.5 text-sm font-semibold text-room-ink/55">
+              <p className="mt-0.5 text-sm font-semibold text-room-ink/65">
                 {data.todayClaimed
                   ? `Đã nhận điểm hôm nay ✓ · mốc kế tiếp: ${data.nextStreakMilestone} ngày`
                   : 'Đăng nhập hôm nay để nhận +10 điểm!'}
@@ -136,8 +136,8 @@ export default function RewardsPage() {
           </div>            <div className="flex items-center gap-5 rounded-2xl bg-room-oat/50 px-6 py-4 ring-1 ring-inset ring-room-acorn/20 transition-all duration-500 hover:bg-room-oat/70">
             <Gift size={28} weight="duotone" className="text-room-acorn" />
             <div>
-              <p className="text-xs font-extrabold uppercase tracking-wider text-room-ink/50">Điểm của bạn</p>
-              <p className="font-display text-3xl font-bold text-room-ink">{data.points} <span className="text-sm font-bold text-room-ink/50">điểm</span></p>
+              <p className="text-xs font-extrabold uppercase tracking-wider text-room-ink/60">Điểm của bạn</p>
+              <p className="font-display text-3xl font-bold text-room-ink">{data.points} <span className="text-sm font-bold text-room-ink/60">điểm</span></p>
             </div>
             <Link
               to="/app/billing"
@@ -156,7 +156,7 @@ export default function RewardsPage() {
                   ? 'bg-room-bell/40 text-room-ink ring-1 ring-inset ring-room-bell/50'
                   : d.isToday
                     ? 'bg-room-oat/50 text-room-ink/70 ring-1 ring-inset ring-room-acorn/25'
-                    : 'bg-room-rain/40 text-room-ink/35'
+                    : 'bg-room-rain/40 text-room-ink/65'
               }`}
             >
               <span className="text-[10px] font-bold">{d.weekday}</span>
@@ -184,7 +184,7 @@ export default function RewardsPage() {
             </span>
             <div>
               <p className="font-display font-bold text-room-ink">{r.title}</p>
-              <p className="text-xs font-semibold text-room-ink/50">{r.desc}</p>
+              <p className="text-xs font-semibold text-room-ink/60">{r.desc}</p>
             </div>
           </RoomCard>
         ))}
@@ -197,7 +197,7 @@ export default function RewardsPage() {
             <UsersThree size={18} weight="fill" className="text-room-acorn" />
             Mời bạn bè
           </h2>
-          <p className="mt-1 text-sm font-semibold text-room-ink/50">
+          <p className="mt-1 text-sm font-semibold text-room-ink/60">
             Gửi mã hoặc link này cho bạn bè — khi họ đăng ký và đăng nhập lần đầu, cả hai cùng có lợi.
           </p>
           <div className="mt-4 flex items-center gap-2">
@@ -240,11 +240,11 @@ export default function RewardsPage() {
           </p>
 
           <div className="mt-4">
-            <p className="mb-2 text-xs font-extrabold uppercase tracking-wider text-room-ink/45">
+            <p className="mb-2 text-xs font-extrabold uppercase tracking-wider text-room-ink/65">
               Bạn đã mời ({data.invites.length})
             </p>
             {data.invites.length === 0 ? (
-              <p className="rounded-xl bg-room-oat/40 p-4 text-center text-sm font-semibold text-room-ink/45">
+              <p className="rounded-xl bg-room-oat/40 p-4 text-center text-sm font-semibold text-room-ink/65">
                 Chưa có ai đăng ký bằng mã của bạn.
               </p>
             ) : (
@@ -255,7 +255,7 @@ export default function RewardsPage() {
                     <li key={inv.id} className="flex items-center justify-between gap-3 rounded-xl bg-room-oat/40 px-3.5 py-2.5 ring-1 ring-inset ring-room-acorn/15 transition-all duration-200 hover:translate-x-0.5 hover:bg-room-oat/70">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-room-ink/80">{inv.email}</p>
-                        <p className="text-xs font-semibold text-room-ink/45">
+                        <p className="text-xs font-semibold text-room-ink/65">
                           {new Date(inv.createdAt).toLocaleDateString('vi-VN')}
                         </p>
                       </div>
@@ -276,7 +276,7 @@ export default function RewardsPage() {
             <Gift size={18} weight="fill" className="text-room-acorn" />
             Đổi thưởng
           </h2>
-          <p className="mt-1 text-sm font-semibold text-room-ink/50">
+          <p className="mt-1 text-sm font-semibold text-room-ink/60">
             Dùng điểm để mở gói trả phí — gia hạn cộng dồn khi gói cùng loại còn hạn.
           </p>
 
@@ -296,7 +296,7 @@ export default function RewardsPage() {
                         {tier.plan === 'PRO' && <Sparkle size={14} weight="fill" className="text-room-bell" />}
                         {tier.name}
                       </p>
-                      <p className="text-xs font-semibold text-room-ink/50">{tier.description}</p>
+                      <p className="text-xs font-semibold text-room-ink/60">{tier.description}</p>
                     </div>
                     <RoomButton size="sm" disabled={!tier.canClaim || claiming === tier.id} loading={claiming === tier.id} onClick={() => onClaim(tier)}>
                       {tier.canClaim ? 'Nhận thưởng' : `${tier.points}đ`}
@@ -309,7 +309,7 @@ export default function RewardsPage() {
                       style={{ width: `${pct}%`, opacity: tier.plan === 'PRO' ? 1 : 0.75 }}
                     />
                   </div>
-                  <p className="mt-1.5 text-[11px] font-semibold text-room-ink/45">
+                  <p className="mt-1.5 text-[11px] font-semibold text-room-ink/65">
                     {tier.progress}/{tier.points} điểm
                   </p>
                 </div>
@@ -319,7 +319,7 @@ export default function RewardsPage() {
 
           {data.claimed.length > 0 && (
             <div className="mt-4 rounded-xl bg-room-sage/25 p-3 ring-1 ring-inset ring-room-acorn/20">
-              <p className="text-xs font-extrabold uppercase tracking-wider text-room-ink/50">Đã đổi gần đây</p>
+              <p className="text-xs font-extrabold uppercase tracking-wider text-room-ink/60">Đã đổi gần đây</p>
               <ul className="mt-1.5 space-y-1">
                 {data.claimed.slice(0, 5).map((c, i) => (
                   <li key={i} className="flex items-center justify-between text-xs font-semibold text-room-ink/70">
@@ -341,7 +341,7 @@ export default function RewardsPage() {
         </h2>
         <div className="mt-3 space-y-1.5">
           {data.transactions.length === 0 ? (
-            <p className="rounded-xl bg-room-oat/40 p-4 text-center text-sm font-semibold text-room-ink/45">
+            <p className="rounded-xl bg-room-oat/40 p-4 text-center text-sm font-semibold text-room-ink/65">
               Chưa có giao dịch nào. Đăng nhập mỗi ngày để bắt đầu tích điểm!
             </p>
           ) : (
@@ -357,7 +357,7 @@ export default function RewardsPage() {
                   </span>
                   <div>
                     <p className="text-sm font-semibold text-room-ink/80">{tx.note || REASON_LABELS[tx.reason] || tx.reason}</p>
-                    <p className="text-[11px] font-semibold text-room-ink/45">
+                    <p className="text-[11px] font-semibold text-room-ink/65">
                       {new Date(tx.createdAt).toLocaleString('vi-VN')}
                     </p>
                   </div>
@@ -368,7 +368,7 @@ export default function RewardsPage() {
         </div>
       </RoomCard>
 
-      <p className="text-center text-xs font-semibold text-room-ink/40">
+      <p className="text-center text-xs font-semibold text-room-ink/60">
         Điểm có thể được điều chỉnh bởi nhà vận hành · {user?.email}
       </p>
     </div>

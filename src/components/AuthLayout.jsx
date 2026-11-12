@@ -90,7 +90,7 @@ export default function AuthLayout({ children, title, subtitle }) {
             </ul>
           </div>
 
-          <p className="text-xs font-semibold text-room-ink/50">© 2026 MN-Qronx · www.mn-qronx.id.vn</p>
+          <p className="text-xs font-semibold text-room-ink/60">© 2026 MN-Qronx · www.mn-qronx.id.vn</p>
         </div>
       </aside>
 

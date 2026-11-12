@@ -64,7 +64,7 @@ export default function TaskItem({ task, onToggleComplete, compact = false, onBe
           <div className="flex items-center gap-2">
             <p
               className={`truncate text-sm font-bold ${
-                completed ? 'text-room-ink/45 line-through' : 'text-room-ink'
+                completed ? 'text-room-ink/65 line-through' : 'text-room-ink'
               }`}
             >
               {task.title}
@@ -81,7 +81,7 @@ export default function TaskItem({ task, onToggleComplete, compact = false, onBe
             {task.repeatType && task.repeatType !== 'NONE' && !cancelled && (
               <span
                 title={`Lặp lại: ${repeatSummary(task.repeatType, task.repeatDays)}`}
-                className="shrink-0 text-room-ink/35"
+                className="shrink-0 text-room-ink/65"
                 aria-label={`Lặp lại: ${repeatSummary(task.repeatType, task.repeatDays)}`}
               >
                 <Repeat size={14} weight="bold" />
@@ -92,7 +92,7 @@ export default function TaskItem({ task, onToggleComplete, compact = false, onBe
             {task.shareCount > 0 && (
               <span
                 title={`Đã giao cho ${task.shareCount} người`}
-                className="inline-flex shrink-0 items-center gap-0.5 text-room-ink/45"
+                className="inline-flex shrink-0 items-center gap-0.5 text-room-ink/65"
                 aria-label={`Đã giao cho ${task.shareCount} người`}
               >
                 <UserPlus size={14} weight="bold" />
@@ -101,21 +101,21 @@ export default function TaskItem({ task, onToggleComplete, compact = false, onBe
             )}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-room-ink/55">
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-room-ink/65">
               <Clock size={12} weight="bold" />
               {formatRelativeDay(task.dueAt)} · {formatTime(task.dueAt)}
             </span>
             {statusInfo && !completed && (
               <span
                 className={`text-[10.5px] font-extrabold ${
-                  late ? 'on-blush dark:text-room-blush' : 'text-room-ink/40'
+                  late ? 'on-blush dark:text-room-blush' : 'text-room-ink/60'
                 }`}
               >
                 {statusInfo.label}
               </span>
             )}
             {priorityInfo && (
-              <span className="text-[10.5px] font-bold text-room-ink/40">· {priorityInfo.label}</span>
+              <span className="text-[10.5px] font-bold text-room-ink/60">· {priorityInfo.label}</span>
             )}
             {task.category && (
               <span className="inline-flex items-center gap-1 rounded-full bg-room-oat/60 px-2 py-0.5 text-[10.5px] font-bold text-room-ink/70">

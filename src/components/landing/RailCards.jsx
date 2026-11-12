@@ -89,11 +89,11 @@ export default function RailCards({ t, lang }) {
                 {row.name}
               </span>
               {row.done ? (
-                <span className="flex items-center gap-1 text-[11px] font-bold text-room-ink/55">
+                <span className="flex items-center gap-1 text-[11px] font-bold text-room-ink/65">
                   <CheckCircle size={12} weight="bold" className="text-room-sage" /> {t.r3Status}
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-[11px] font-bold text-room-ink/55">
+                <span className="flex items-center gap-1 text-[11px] font-bold text-room-ink/65">
                   <Clock size={12} weight="bold" className="text-room-rain" /> {t.r3Next} {row.time}
                 </span>
               )}

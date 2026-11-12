@@ -32,9 +32,7 @@ import {
 } from '../../services/notificationService'
 import { getDevices, registerCurrentDevice, removeDevice } from '../../services/deviceService'
 import { useToast } from '../../components/common/Toast'
-import { Skeleton, EmptyState } from '../../components/common/Feedback'
-import Button from '../../components/common/Button'
-import { Toggle, SegmentedControl, Select } from '../../components/common/Inputs'
+import { RoomButton, RoomCard, RoomEmpty, RoomSegmented, RoomSelect, RoomSkeleton, RoomToggle } from '../../components/common/RoomUI'
 import { ConfirmDialog } from '../../components/common/Modal'
 import { ALARM_SOUNDS, DEFAULT_SNOOZE_OPTIONS, PLATFORM } from '../../lib/constants'
 import { relativeTime } from '../../lib/format'
@@ -288,9 +286,13 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-5">
-        <Skeleton className="h-8 w-56" />
-        <Skeleton className="h-96" />
+      <div className="mx-auto max-w-3xl space-y-5">
+        <div className="space-y-2">
+          <RoomSkeleton className="h-8 w-56" />
+          <RoomSkeleton className="h-5 w-96" />
+        </div>
+        <RoomSkeleton className="h-11" />
+        <RoomSkeleton className="h-96" />
       </div>
     )
   }
@@ -321,13 +323,17 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-5 animate-fade-in">
       <div>
-        <h1 className="page-title dark:text-white">Cài đặt</h1>
-        <p className="mt-1 text-sm font-medium text-navy-400 dark:text-slate-500">
+        <h1 className="font-display text-2xl font-bold text-room-ink">Cài đặt</h1>
+        <p className="mt-1 text-sm font-semibold text-room-ink/60">
           Tùy chỉnh cách MN-Qronx nhắc nhở bạn và quản lý thiết bị nhận thông báo
         </p>
       </div>
 
-      <div className="flex rounded-xl bg-white p-1 shadow-card ring-1 ring-navy-100 dark:bg-slate-800 dark:ring-slate-700" role="tablist" aria-label="Cài đặt">
+      <div
+        className="flex gap-1 rounded-xl bg-room-oat/70 p-1 ring-1 ring-room-acorn/15"
+        role="tablist"
+        aria-label="Cài đặt"
+      >
         {TABS.map((t) => (
           <button
             key={t.value}
@@ -335,37 +341,39 @@ export default function SettingsPage() {
             role="tab"
             aria-selected={tab === t.value}
             onClick={() => setTab(t.value)}
-            className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition ${
-              tab === t.value ? 'bg-navy-900 text-white dark:bg-blue-600' : 'text-navy-500 hover:text-navy-800 dark:text-slate-400 dark:hover:text-white'
+            className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 font-display text-sm font-bold transition ${
+              tab === t.value
+                ? 'bg-room-paper text-room-ink shadow-[0_6px_12px_-8px_rgb(0_0_0/0.25)] ring-1 ring-room-acorn/30'
+                : 'text-room-ink/65 hover:text-room-ink'
             }`}
           >
-            {t.Icon && <t.Icon size={17} weight="bold" />}
+            {t.Icon && <t.Icon size={17} weight="duotone" />}
             {t.label}
           </button>
         ))}
       </div>
 
       {tab === 'notifications' && (
-        <section className="card space-y-2 p-5 sm:p-6 dark:bg-slate-800">
-          <div className="flex items-center justify-between gap-3 border-b border-navy-100 pb-4">
+        <RoomCard className="space-y-2 p-5 sm:p-6">
+          <div className="flex items-center justify-between gap-3 border-b border-room-acorn/15 pb-4">
             <div>
-              <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-                <BellRinging size={19} weight="fill" className="text-amber-500 dark:text-amber-400" />
+              <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
+                <BellRinging size={19} weight="duotone" className="text-room-bell" />
                 Cài đặt thông báo
               </h2>
-              <p className="mt-0.5 text-xs text-navy-400 dark:text-slate-500">Áp dụng cho mọi báo thức được kích hoạt</p>
+              <p className="mt-0.5 text-xs font-semibold text-room-ink/65">Áp dụng cho mọi báo thức được kích hoạt</p>
             </div>
-            {saving && <span className="text-xs font-semibold text-blue-600">Đang lưu…</span>}
+            {saving && <span className="text-xs font-semibold text-room-ink/65">Đang lưu…</span>}
           </div>
 
           <div className="px-1 py-2">
-            <label className="mb-1.5 block text-sm font-semibold text-navy-800 dark:text-white">Âm thanh báo thức</label>
+            <label className="mb-1.5 block text-sm font-bold text-room-ink">Âm thanh báo thức</label>
             <div className="flex gap-2">
-              <Select
+              <RoomSelect
                 value={settings.alarmSound}
                 onChange={(e) => saveSettings({ alarmSound: e.target.value }, 'Đã đổi âm thanh báo thức')}
                 aria-label="Âm thanh báo thức"
-                className="flex-1"
+                className="h-10 flex-1"
               >
                 {ALARM_SOUNDS.map((s) => (
                   <option key={s.id} value={s.id}>{s.label}</option>
@@ -377,18 +385,18 @@ export default function SettingsPage() {
                     ))}
                   </optgroup>
                 )}
-              </Select>
-              <Button variant="secondary" icon={Play} onClick={previewSound} aria-label="Nghe thử âm thanh">
+              </RoomSelect>
+              <RoomButton variant="secondary" icon={Play} onClick={previewSound} aria-label="Nghe thử âm thanh">
                 <span className="hidden sm:inline">Nghe thử</span>
-              </Button>
+              </RoomButton>
             </div>
 
             {/* Nhập âm thanh MP3 từ máy – Plus/Pro */}
             {isPaid ? (
-              <div className="mt-3 space-y-2 rounded-xl bg-navy-50/70 p-3 ring-1 ring-inset ring-navy-100 dark:bg-slate-900/50 dark:ring-slate-700">
+              <div className="mt-3 space-y-2 rounded-xl bg-room-oat/40 p-3 ring-1 ring-inset ring-room-acorn/15">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="flex items-center gap-1.5 text-xs font-bold text-navy-600 dark:text-slate-300">
-                    <MusicNotes size={15} weight="bold" className="text-purple-500" />
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-room-ink/70">
+                    <MusicNotes size={15} weight="bold" className="text-room-bell" />
                     Âm thanh riêng của bạn ({customSounds.length}/10)
                   </p>
                   <input
@@ -399,7 +407,7 @@ export default function SettingsPage() {
                     onChange={onPickFile}
                     aria-label="Chọn tệp âm thanh từ máy"
                   />
-                  <Button
+                  <RoomButton
                     variant="secondary"
                     size="sm"
                     icon={UploadSimple}
@@ -408,34 +416,34 @@ export default function SettingsPage() {
                     onClick={() => fileInputRef.current?.click()}
                   >
                     Nhập MP3 từ máy
-                  </Button>
+                  </RoomButton>
                 </div>
                 {customSounds.length === 0 ? (
-                  <p className="text-xs text-navy-400 dark:text-slate-500">
+                  <p className="text-xs font-semibold text-room-ink/60">
                     Chưa có âm thanh nào – nhập file MP3 (tối đa 3 MB) từ máy để làm chuông báo thức riêng.
                   </p>
                 ) : (
                   <ul className="grid gap-1.5 sm:grid-cols-2">
                     {customSounds.map((s) => (
-                      <li key={s.id} className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-2 ring-1 ring-inset ring-navy-100 dark:bg-slate-800 dark:ring-slate-600">
+                      <li key={s.id} className="flex items-center gap-2 rounded-lg bg-room-paper px-2.5 py-2 ring-1 ring-inset ring-room-acorn/20">
                         <span
                           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
                             settings?.alarmSound === `custom:${s.id}`
-                              ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300'
-                              : 'bg-navy-100 text-navy-500 dark:bg-slate-700 dark:text-slate-300'
+                              ? 'bg-room-bell/25 text-room-bell ring-1 ring-inset ring-room-bell/40'
+                              : 'bg-room-oat/70 text-room-ink/65'
                           }`}
                         >
                           <MusicNotes size={14} weight="bold" />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-xs font-bold text-navy-800 dark:text-slate-200">{s.name}</p>
-                          <p className="text-[10px] text-navy-400 dark:text-slate-500">{fmtSize(s.sizeBytes)}</p>
+                          <p className="truncate text-xs font-bold text-room-ink/90">{s.name}</p>
+                          <p className="text-[10px] font-semibold text-room-ink/65">{fmtSize(s.sizeBytes)}</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => previewCustom(s)}
                           aria-label={`Nghe thử ${s.name}`}
-                          className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-navy-400 transition hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400"
+                          className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/60 transition hover:bg-room-oat/75 hover:text-room-ink"
                         >
                           <Play size={13} weight="fill" />
                         </button>
@@ -443,7 +451,7 @@ export default function SettingsPage() {
                           type="button"
                           onClick={() => onDeleteCustom(s)}
                           aria-label={`Xóa ${s.name}`}
-                          className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-navy-400 transition hover:bg-rose-50 hover:text-rose-500 dark:hover:bg-rose-900/30 dark:hover:text-rose-400"
+                          className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-room-ink/60 transition hover:bg-room-rain/40 hover:text-room-ink"
                         >
                           <Trash size={14} />
                         </button>
@@ -453,9 +461,9 @@ export default function SettingsPage() {
                 )}
               </div>
             ) : (
-              <div className="mt-3 flex items-center gap-2 rounded-xl bg-amber-50/70 px-3 py-2.5 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/20 dark:ring-amber-800/50">
-                <Lock size={15} weight="bold" className="shrink-0 text-amber-500 dark:text-amber-400" />
-                <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+              <div className="mt-3 flex items-center gap-2 rounded-xl bg-room-bell/20 px-3 py-2.5 ring-1 ring-inset ring-room-bell/40">
+                <Lock size={15} weight="bold" className="shrink-0 text-room-bell" />
+                <p className="text-xs font-bold text-room-ink/80">
                   Nhập âm thanh MP3 của riêng bạn là tính năng của gói Plus/Pro.{' '}
                   <Link to="/app/billing" className="font-bold underline">Nâng cấp ngay</Link>
                 </p>
@@ -464,17 +472,17 @@ export default function SettingsPage() {
           </div>
 
           <div className="px-1 py-2">
-            <label className="mb-1.5 block text-sm font-semibold text-navy-800 dark:text-white">Thời gian hoãn mặc định</label>
-            <SegmentedControl
+            <label className="mb-1.5 block text-sm font-bold text-room-ink">Thời gian hoãn mặc định</label>
+            <RoomSegmented
               options={DEFAULT_SNOOZE_OPTIONS.map((m) => ({ value: String(m), label: `${m} phút` }))}
               value={String(settings.defaultSnoozeMinutes)}
               onChange={(v) => saveSettings({ defaultSnoozeMinutes: Number(v) }, `Đã đặt hoãn mặc định ${v} phút`)}
             />
-            <p className="mt-1.5 text-xs text-navy-400">Áp dụng khi bạn bấm nút “Hoãn” trên màn hình báo thức.</p>
+            <p className="mt-1.5 text-xs font-semibold text-room-ink/65">Áp dụng khi bạn bấm nút “Hoãn” trên màn hình báo thức.</p>
           </div>
 
           <div className="px-1 py-2">
-            <Toggle
+            <RoomToggle
               label="Rung khi báo thức"
               description="Rung thiết bị cùng lúc phát âm thanh (chỉ áp dụng trên Mobile App)"
               checked={settings.vibrationEnabled}
@@ -483,19 +491,19 @@ export default function SettingsPage() {
           </div>
 
           <div className="px-1 py-2">
-            <Toggle
+            <RoomToggle
               label="Nhắc khi đóng trình duyệt"
               description="Thông báo đẩy (Web Push): máy chủ gửi tận nơi nên chuông vẫn kêu dù bạn đã đóng tab — bật cho từng máy bạn muốn."
               checked={push.subscribed && push.permission === 'granted'}
               onChange={togglePush}
             />
             {push.supported && push.permission === 'denied' && (
-              <p className="mt-1.5 text-xs font-semibold text-rose-500">
+              <p className="mt-1.5 rounded-xl bg-room-rain/30 px-3 py-2 text-xs font-bold text-room-ink">
                 Trình duyệt đang chặn thông báo của trang này — mở cài đặt trình duyệt, cho phép rồi tắt/bật lại.
               </p>
             )}
             {!push.supported && (
-              <p className="mt-1.5 text-xs text-navy-400 dark:text-slate-500">
+              <p className="mt-1.5 text-xs font-semibold text-room-ink/65">
                 Trình duyệt này chưa hỗ trợ Web Push — thử Chrome, Edge hoặc Safari.
               </p>
             )}
@@ -503,7 +511,7 @@ export default function SettingsPage() {
 
           {/* Báo cáo tuần qua email — quyền lợi gói Pro */}
           <div className="px-1 py-2">
-            <Toggle
+            <RoomToggle
               label="Báo cáo tuần qua email"
               description="Sáng thứ 2 hằng tuần, MN-Qronx gửi email tóm tắt: tuần rồi bạn xong bao nhiêu việc, đúng hạn bao nhiêu, việc nào đang quá hạn, và tuần này có gì chờ. Không cần mở app vẫn biết tình hình."
               checked={weeklyReport && isPro}
@@ -511,7 +519,7 @@ export default function SettingsPage() {
               onChange={saveWeeklyReport}
             />
             {!isPro ? (
-              <p className="mt-1.5 text-xs font-semibold text-violet-600 dark:text-violet-300">
+              <p className="mt-1.5 text-xs font-bold text-room-ink/60">
                 Báo cáo tuần là quyền lợi của gói Pro.{' '}
                 <Link to="/app/billing" className="underline">
                   Nâng cấp Pro
@@ -521,7 +529,7 @@ export default function SettingsPage() {
             ) : (
               <>
                 <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                  <Button
+                  <RoomButton
                     variant="secondary"
                     size="sm"
                     icon={EnvelopeSimple}
@@ -530,25 +538,25 @@ export default function SettingsPage() {
                     disabled={weeklyReportBusy}
                   >
                     Gửi thử cho tôi ngay
-                  </Button>
-                  <span className="text-xs text-navy-400 dark:text-slate-500">
+                  </RoomButton>
+                  <span className="text-xs font-semibold text-room-ink/65">
                     Thư thật chỉ đi mỗi sáng thứ 2 — bấm đây để xem trước nội dung.
                   </span>
                 </div>
                 {testMailPreview && (
-                  <div className="mt-2 rounded-xl bg-navy-50 p-3 ring-1 ring-inset ring-navy-100 dark:bg-slate-700/60 dark:ring-slate-600">
-                    <p className="text-xs font-bold text-navy-700 dark:text-slate-200">
+                  <div className="mt-2 rounded-xl bg-room-oat/45 p-3 ring-1 ring-inset ring-room-acorn/15">
+                    <p className="text-xs font-bold text-room-ink/85">
                       {testMailPreview.sent
                         ? `Đã gửi tới ${testMailPreview.email}`
                         : 'Máy chủ chưa gửi được email — nội dung thư ở dưới là thư sẽ gửi:'}
                     </p>
                     {testMailPreview.subject && (
-                      <p className="mt-1 text-xs font-semibold text-navy-500 dark:text-slate-300">
+                      <p className="mt-1 text-xs font-semibold text-room-ink/60">
                         Tiêu đề: “{testMailPreview.subject}”
                       </p>
                     )}
                     {testMailPreview.preview && (
-                      <pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded-lg bg-white p-2.5 text-[11px] leading-relaxed text-navy-600 ring-1 ring-inset ring-navy-100 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-600">
+                      <pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded-lg bg-room-paper p-2.5 text-[11px] font-semibold leading-relaxed text-room-ink/70 ring-1 ring-inset ring-room-acorn/20">
                         {testMailPreview.preview}
                       </pre>
                     )}
@@ -557,40 +565,40 @@ export default function SettingsPage() {
               </>
             )}
             {isPro && (
-              <p className="mt-1.5 text-xs text-navy-400 dark:text-slate-500">
+              <p className="mt-1.5 text-xs font-semibold text-room-ink/65">
                 Cũng có thể xem ngay trong app ở mục “Báo cáo năng suất”.
               </p>
             )}
           </div>
-        </section>
+        </RoomCard>
       )}
 
       {tab === 'devices' && (
-        <section className="card p-5 sm:p-6 dark:bg-slate-800">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-navy-100 pb-4">
+        <RoomCard className="p-5 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-room-acorn/15 pb-4">
             <div>
-              <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-                <Devices size={19} weight="fill" className="text-purple-500 dark:text-purple-400" />
+              <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
+                <Devices size={19} weight="duotone" className="text-room-acorn" />
                 Thiết bị nhận thông báo
               </h2>
-              <p className="mt-0.5 text-xs text-navy-400 dark:text-slate-500">
+              <p className="mt-0.5 text-xs font-semibold text-room-ink/65">
                 Báo thức sẽ được gửi tới mọi thiết bị đang hoạt động của bạn
               </p>
             </div>
-            <Button variant="secondary" size="sm" icon={Plus} onClick={registerDevice}>
+            <RoomButton variant="secondary" size="sm" icon={Plus} onClick={registerDevice}>
               Đăng ký thiết bị này
-            </Button>
+            </RoomButton>
           </div>
 
           {devices.length === 0 ? (
-            <EmptyState
+            <RoomEmpty
               icon={Devices}
               title="Chưa có thiết bị nào"
               description="Đăng ký trình duyệt hoặc điện thoại để nhận báo thức đẩy."
               action={
-                <Button variant="gradient" size="sm" icon={Plus} onClick={registerDevice}>
+                <RoomButton size="sm" icon={Plus} onClick={registerDevice}>
                   Đăng ký thiết bị này
-                </Button>
+                </RoomButton>
               }
             />
           ) : (
@@ -598,41 +606,46 @@ export default function SettingsPage() {
               {devices.map((d) => {
                 const Icon = platformIcon(d.platform)
                 return (
-                  <li key={d.id} className="flex items-center gap-4 rounded-xl bg-navy-50/70 p-3.5 dark:bg-slate-900/50">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-purple-500 ring-1 ring-navy-100">
+                  <li key={d.id} className="flex items-center gap-4 rounded-xl bg-room-oat/40 p-3.5 ring-1 ring-inset ring-room-acorn/10">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-room-paper text-room-acorn ring-1 ring-inset ring-room-acorn/20">
                       <Icon size={21} weight="duotone" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-navy-900 dark:text-white">{d.name}</p>
-                      <p className="text-xs text-navy-400 dark:text-slate-500">
+                      <p className="truncate text-sm font-bold text-room-ink">{d.name}</p>
+                      <p className="text-xs font-semibold text-room-ink/65">
                         {PLATFORM[d.platform]} · Hoạt động {relativeTime(d.lastSeenAt)}
                       </p>
                     </div>
-                    <Button variant="danger-ghost" size="sm" icon={Trash} onClick={() => setConfirmDevice(d)}>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDevice(d)}
+                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-1.5 font-display text-[13px] font-bold text-room-ink/65 ring-1 ring-room-acorn/25 transition hover:bg-room-rain/40 hover:text-room-ink"
+                    >
+                      <Trash size={14} weight="bold" />
                       Gỡ
-                    </Button>
+                    </button>
                   </li>
                 )
               })}
             </ul>
           )}
-        </section>
+        </RoomCard>
       )}
 
       {tab === 'calendar' && (
-        <section className="card space-y-4 p-5 sm:p-6 dark:bg-slate-800">
-          <div className="border-b border-navy-100 pb-4">
-            <h2 className="flex items-center gap-2 font-bold text-navy-900 dark:text-white">
-              <CalendarBlank size={19} weight="fill" className="text-emerald-500 dark:text-emerald-400" />
+        <RoomCard className="space-y-4 p-5 sm:p-6">
+          <div className="border-b border-room-acorn/15 pb-4">
+            <h2 className="flex items-center gap-2 font-display font-bold text-room-ink">
+              <CalendarBlank size={19} weight="duotone" className="text-room-acorn" />
               Đồng bộ lịch (.ics)
             </h2>
-            <p className="mt-0.5 text-xs text-navy-400 dark:text-slate-500">
+            <p className="mt-0.5 text-xs font-semibold text-room-ink/65">
               Dán link vào Google Calendar hoặc Outlook một lần — việc của bạn tự xuất hiện ở đó và app lịch tự làm mới.
             </p>
           </div>
 
           <div className="px-1 py-1">
-            <label className="mb-1.5 block text-sm font-semibold text-navy-800 dark:text-white">Link lịch của bạn</label>
+            <label className="mb-1.5 block text-sm font-bold text-room-ink">Link lịch của bạn</label>
             <div className="flex gap-2">
               <input
                 readOnly
@@ -640,13 +653,13 @@ export default function SettingsPage() {
                 onFocus={(e) => e.target.select()}
                 placeholder="Đang tạo link…"
                 aria-label="Link lịch .ics"
-                className="h-11 min-w-0 flex-1 truncate rounded-xl bg-navy-50 px-3.5 font-mono text-xs text-navy-700 ring-1 ring-navy-100 focus:outline-none dark:bg-slate-900/50 dark:text-slate-300 dark:ring-slate-700"
+                className="h-11 min-w-0 flex-1 truncate rounded-xl bg-room-oat/40 px-3.5 font-mono text-xs font-semibold text-room-ink/80 ring-1 ring-inset ring-room-acorn/20 outline-none transition focus:ring-2 focus:ring-room-acorn"
               />
-              <Button variant="secondary" icon={Copy} onClick={copyIcsUrl} disabled={!icsUrl}>
+              <RoomButton variant="secondary" icon={Copy} onClick={copyIcsUrl} disabled={!icsUrl}>
                 Copy
-              </Button>
+              </RoomButton>
             </div>
-            <p className="mt-1.5 text-xs text-navy-400 dark:text-slate-500">
+            <p className="mt-1.5 text-xs font-semibold text-room-ink/60">
               Google Calendar: <b>Cài đặt → Thêm lịch → Từ URL</b>. Outlook: <b>Thêm lịch → Đăng ký từ web</b>.
             </p>
           </div>
@@ -656,57 +669,57 @@ export default function SettingsPage() {
               href={`${icsUrl}${icsUrl ? '.ics' : ''}`}
               target="_blank"
               rel="noreferrer"
-              className={`inline-flex cursor-pointer items-center gap-2 rounded-xl bg-navy-900 px-4 py-2.5 text-sm font-bold text-white transition hover:opacity-90 dark:bg-blue-600 ${!icsUrl ? 'pointer-events-none opacity-50' : ''}`}
+              className={`inline-flex cursor-pointer items-center gap-2 rounded-full bg-room-acorn px-4 py-2 font-display text-sm font-bold text-room-paper shadow-[0_14px_26px_-12px_rgb(0_0_0/0.30)] transition hover:brightness-[0.96] ${!icsUrl ? 'pointer-events-none opacity-50' : ''}`}
             >
               <DownloadSimple size={16} weight="bold" />
               Tải tệp .ics
             </a>
-            <Button variant="secondary" icon={ArrowClockwise} loading={icsBusy} disabled={!icsUrl} onClick={doRotateIcs}>
+            <RoomButton variant="secondary" icon={ArrowClockwise} loading={icsBusy} disabled={!icsUrl} onClick={doRotateIcs}>
               Tạo lại khoá
-            </Button>
+            </RoomButton>
           </div>
 
-          <div className="rounded-xl bg-amber-50/70 px-3 py-2.5 ring-1 ring-inset ring-amber-200 dark:bg-amber-900/20 dark:ring-amber-800/50">
-            <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+          <div className="rounded-xl bg-room-rain/30 px-3 py-2.5 ring-1 ring-inset ring-room-rain">
+            <p className="text-xs font-bold text-room-ink/80">
               Ai có link này cũng xem được việc của bạn — đừng chia sẻ công khai. Nghi link bị lộ thì bấm “Tạo lại khoá”, link cũ ngừng hoạt động ngay.
             </p>
           </div>
-        </section>
+        </RoomCard>
       )}
 
       {/* Liên kết tài khoản */}
-      <section className="card divide-y divide-navy-100 p-2 dark:divide-slate-700 dark:bg-slate-800">
-        <Link to="/app/billing" className="flex items-center gap-3 rounded-xl p-3.5 transition hover:bg-navy-50 dark:hover:bg-slate-700">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400">
+      <RoomCard className="divide-y divide-room-acorn/15 p-2">
+        <Link to="/app/billing" className="flex items-center gap-3 rounded-xl p-3.5 transition hover:bg-room-oat/60">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-room-bell/25 text-room-bell ring-1 ring-inset ring-room-bell/40">
             <Crown size={20} weight="duotone" />
           </span>
           <span className="flex-1">
-            <span className="block text-sm font-bold text-navy-900 dark:text-white">Gói của bạn</span>
-            <span className="block text-xs text-navy-400 dark:text-slate-500">Nâng cấp Plus / Pro để mở rộng giới hạn</span>
+            <span className="block text-sm font-bold text-room-ink">Gói của bạn</span>
+            <span className="block text-xs font-semibold text-room-ink/65">Nâng cấp Plus / Pro để mở rộng giới hạn</span>
           </span>
           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-extrabold ring-1 ring-inset ${PLAN_BADGE[user?.plan || 'FREE']}`}>
             {PLAN_NAMES[user?.plan || 'FREE']}
           </span>
         </Link>
-        <Link to="/app/profile" className="flex items-center gap-3 rounded-xl p-3.5 transition hover:bg-navy-50 dark:hover:bg-slate-700">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+        <Link to="/app/profile" className="flex items-center gap-3 rounded-xl p-3.5 transition hover:bg-room-oat/60">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-room-oat/60 text-room-acorn ring-1 ring-inset ring-room-acorn/25">
             <UserCircle size={20} weight="duotone" />
           </span>
           <span className="flex-1">
-            <span className="block text-sm font-bold text-navy-900 dark:text-white">Hồ sơ cá nhân</span>
-            <span className="block text-xs text-navy-400 dark:text-slate-500">Cập nhật họ tên, số điện thoại</span>
+            <span className="block text-sm font-bold text-room-ink">Hồ sơ cá nhân</span>
+            <span className="block text-xs font-semibold text-room-ink/65">Cập nhật họ tên, số điện thoại</span>
           </span>
         </Link>
-        <Link to="/app/change-password" className="flex items-center gap-3 rounded-xl p-3.5 transition hover:bg-navy-50 dark:hover:bg-slate-700">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+        <Link to="/app/change-password" className="flex items-center gap-3 rounded-xl p-3.5 transition hover:bg-room-oat/60">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-room-rain/40 text-room-ink/65 ring-1 ring-inset ring-room-rain">
             <Key size={20} weight="duotone" />
           </span>
           <span className="flex-1">
-            <span className="block text-sm font-bold text-navy-900 dark:text-white">Đổi mật khẩu</span>
-            <span className="block text-xs text-navy-400 dark:text-slate-500">Thay đổi mật khẩu đăng nhập</span>
+            <span className="block text-sm font-bold text-room-ink">Đổi mật khẩu</span>
+            <span className="block text-xs font-semibold text-room-ink/65">Thay đổi mật khẩu đăng nhập</span>
           </span>
         </Link>
-      </section>
+      </RoomCard>
 
       <ConfirmDialog
         open={!!confirmDevice}
@@ -717,6 +730,7 @@ export default function SettingsPage() {
         confirmLabel="Gỡ thiết bị"
         danger
         loading={removing}
+        skin="room"
       />
     </div>
   )

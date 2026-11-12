@@ -48,7 +48,7 @@ function MobileDrawer({ open, onClose }) {
             type="button"
             onClick={onClose}
             aria-label="Đóng menu"
-            className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-room-ink/50 hover:bg-room-oat/60 hover:text-room-ink"
+            className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-room-ink/60 hover:bg-room-oat/60 hover:text-room-ink"
           >
             <X size={18} weight="bold" />
           </button>
@@ -57,7 +57,7 @@ function MobileDrawer({ open, onClose }) {
           <WorkspaceSwitcher onNavigate={onClose} />
           {groups.map((group) => (
             <div key={group.labelKey} className="mb-5">
-              <p className="mb-1.5 px-3 text-xs font-bold text-room-ink/40">
+              <p className="mb-1.5 px-3 text-xs font-bold text-room-ink/60">
                 {t[group.labelKey]}
               </p>
               <ul className="space-y-0.5">
